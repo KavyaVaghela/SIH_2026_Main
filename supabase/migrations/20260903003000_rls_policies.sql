@@ -1,18 +1,20 @@
 -- ====================================================================
 -- COOPERATIVE GIG SERVICES PLATFORM - ROW LEVEL SECURITY (RLS) POLICIES
--- File: supabase/policies/rls_policies.sql
--- Description: Centralized security policies enforcing strict role access.
+-- Migration: 20260903003000_rls_policies.sql
+-- Description: Enables RLS on all 26 tables and creates explicit role-based isolation policies.
 -- ====================================================================
 
 -- --------------------------------------------------------------------
 -- 1. SQL SECURITY HELPER FUNCTIONS
 -- --------------------------------------------------------------------
 
+-- Function to return the role of the currently authenticated profile
 CREATE OR REPLACE FUNCTION public.current_user_role()
 RETURNS user_role AS $$
   SELECT role FROM public.profiles WHERE id = auth.uid();
 $$ LANGUAGE sql STABLE SECURITY DEFINER;
 
+-- Function to check if the current user is a SUPER_ADMIN
 CREATE OR REPLACE FUNCTION public.is_super_admin()
 RETURNS BOOLEAN AS $$
   SELECT COALESCE(
@@ -21,11 +23,13 @@ RETURNS BOOLEAN AS $$
   );
 $$ LANGUAGE sql STABLE SECURITY DEFINER;
 
+-- Function to return the worker ID for the currently authenticated profile
 CREATE OR REPLACE FUNCTION public.current_worker_id()
 RETURNS UUID AS $$
   SELECT id FROM public.workers WHERE profile_id = auth.uid();
 $$ LANGUAGE sql STABLE SECURITY DEFINER;
 
+-- Function to return the federation ID for the current user (worker or federation admin)
 CREATE OR REPLACE FUNCTION public.current_federation_id()
 RETURNS UUID AS $$
   SELECT federation_id FROM public.workers WHERE profile_id = auth.uid()
@@ -66,7 +70,7 @@ ALTER TABLE project_requirements ENABLE ROW LEVEL SECURITY;
 ALTER TABLE project_allocations ENABLE ROW LEVEL SECURITY;
 
 -- --------------------------------------------------------------------
--- 3. PUBLIC CATALOG READ & SUPER ADMIN MANAGEMENT
+-- 3. PUBLIC CATALOG READ POLICIES
 -- --------------------------------------------------------------------
 
 CREATE POLICY "public_read_service_categories"
@@ -81,6 +85,7 @@ CREATE POLICY "public_read_skills"
 CREATE POLICY "public_read_certifications"
   ON certifications FOR SELECT USING (TRUE);
 
+-- Super admin write access for catalog
 CREATE POLICY "super_admin_manage_categories"
   ON service_categories FOR ALL USING (public.is_super_admin());
 
@@ -108,7 +113,7 @@ CREATE POLICY "profiles_update_own"
   ON profiles FOR UPDATE USING (id = auth.uid())
   WITH CHECK (
     id = auth.uid() AND
-    role = (SELECT role FROM public.profiles WHERE id = auth.uid())
+    role = (SELECT role FROM public.profiles WHERE id = auth.uid()) -- Cannot self-escalate role
   );
 
 CREATE POLICY "super_admin_all_profiles"
@@ -132,6 +137,7 @@ CREATE POLICY "federations_admin_update_own"
 CREATE POLICY "super_admin_manage_federations"
   ON federations FOR ALL USING (public.is_super_admin());
 
+-- Workers read policy: verified active workers are public; workers see self; fed admin sees own federation workers
 CREATE POLICY "workers_select_policy"
   ON workers FOR SELECT USING (
     (verification_status = 'verified' AND account_status = 'ACTIVE') OR
@@ -140,6 +146,7 @@ CREATE POLICY "workers_select_policy"
     public.is_super_admin()
   );
 
+-- Workers update self: worker can only update self, and CANNOT alter federation_id, verification_status, or account_status
 CREATE POLICY "workers_update_self"
   ON workers FOR UPDATE USING (profile_id = auth.uid())
   WITH CHECK (

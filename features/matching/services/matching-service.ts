@@ -1,82 +1,173 @@
-import type { Worker } from "@/types";
+import type { Worker } from "../../../types";
 
-export interface CandidateWorkerMatch {
-  worker: Worker;
-  score: number;
-  skillMatchScore: number;
-  availabilityScore: number;
-  distanceKm: number;
-  ratingScore: number;
-  experienceYears: number;
-  fairDistributionScore: number;
-}
-
-export interface MatchingCriteria {
+export interface MatchingFilter {
   serviceId: string;
-  requiredSkillId: string;
+  skillId?: string;
   customerLatitude: number;
   customerLongitude: number;
-  requestedDateTime: string;
+  scheduledStartAt: string;
+  scheduledEndAt: string;
   maxRadiusKm?: number;
 }
 
+export interface WorkerMatchResult {
+  worker: Worker;
+  matchScore: number; // 0 - 100
+  tierBreakdown: {
+    skillMatch: boolean;
+    availabilityMatch: boolean;
+    distanceKm: number;
+    rating: number;
+    experienceYears: number;
+    currentWorkloadCount: number;
+  };
+}
+
 export interface IMatchingService {
-  findAndRankEligibleWorkers(criteria: MatchingCriteria): Promise<CandidateWorkerMatch[]>;
+  findEligibleWorkers(filter: MatchingFilter): Promise<WorkerMatchResult[]>;
 }
 
 export class MatchingService implements IMatchingService {
-  /**
-   * 6-Tier Fair Cooperative Ranking Algorithm:
-   * 1. Skill match requirement
-   * 2. Date/Time availability
-   * 3. Geocoded distance radius
-   * 4. Customer rating score
-   * 5. Years of experience
-   * 6. Workload / Fair distribution across cooperative members
-   */
-  async findAndRankEligibleWorkers(criteria: MatchingCriteria): Promise<CandidateWorkerMatch[]> {
-    const mockWorker: Worker = {
-      id: "w-1",
-      profileId: "p-worker-1",
-      federationId: "fed-1",
-      status: "ACTIVE",
-      availability: "AVAILABLE",
-      hourlyRate: 350,
-      experienceYears: 5,
-      currentLatitude: criteria.customerLatitude + 0.01,
-      currentLongitude: criteria.customerLongitude + 0.01,
-      createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString(),
-    };
+  // Calculate Haversine distance in km
+  private calculateDistanceKm(lat1: number, lon1: number, lat2: number, lon2: number): number {
+    const R = 6371; // Earth radius in KM
+    const dLat = ((lat2 - lat1) * Math.PI) / 180;
+    const dLon = ((lon2 - lon1) * Math.PI) / 180;
+    const a =
+      Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+      Math.cos((lat1 * Math.PI) / 180) *
+        Math.cos((lat2 * Math.PI) / 180) *
+        Math.sin(dLon / 2) *
+        Math.sin(dLon / 2);
+    const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+    return Math.round(R * c * 10) / 10;
+  }
 
-    const distanceKm = 1.8;
-    const skillMatchScore = 100;
-    const availabilityScore = 100;
-    const ratingScore = 96; // 4.8 / 5
-    const experienceYears = 5;
-    const fairDistributionScore = 90; // High priority for workers with fewer recent jobs
-
-    // Multi-factor weighted score calculation
-    const score =
-      skillMatchScore * 0.3 +
-      availabilityScore * 0.25 +
-      Math.max(0, 100 - distanceKm * 5) * 0.15 +
-      ratingScore * 0.15 +
-      experienceYears * 2 +
-      fairDistributionScore * 0.1;
-
-    return [
+  async findEligibleWorkers(filter: MatchingFilter): Promise<WorkerMatchResult[]> {
+    // Sample candidate pool
+    const candidates: Array<Worker & { rating: number; workload: number }> = [
       {
-        worker: mockWorker,
-        score,
-        skillMatchScore,
-        availabilityScore,
-        distanceKm,
-        ratingScore,
-        experienceYears,
-        fairDistributionScore,
+        id: "w-1",
+        profileId: "p-w1",
+        federationId: "fed-1",
+        status: "ACTIVE",
+        availability: "AVAILABLE",
+        hourlyRate: 350,
+        experienceYears: 5,
+        currentLatitude: 18.5204,
+        currentLongitude: 73.8567,
+        rating: 4.8,
+        workload: 1,
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString(),
+      },
+      {
+        id: "w-2",
+        profileId: "p-w2",
+        federationId: "fed-1",
+        status: "ACTIVE",
+        availability: "AVAILABLE",
+        hourlyRate: 400,
+        experienceYears: 7,
+        currentLatitude: 18.5304,
+        currentLongitude: 73.8467,
+        rating: 4.9,
+        workload: 0,
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString(),
+      },
+      {
+        id: "w-3",
+        profileId: "p-w3",
+        federationId: "fed-2",
+        status: "DEACTIVATED", // Excluded (account deactivated)
+        availability: "AVAILABLE",
+        hourlyRate: 300,
+        experienceYears: 2,
+        currentLatitude: 18.5104,
+        currentLongitude: 73.8667,
+        rating: 4.2,
+        workload: 0,
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString(),
+      },
+      {
+        id: "w-4",
+        profileId: "p-w4",
+        federationId: "fed-1",
+        status: "ACTIVE",
+        availability: "BUSY", // Excluded (busy)
+        hourlyRate: 380,
+        experienceYears: 4,
+        currentLatitude: 18.5254,
+        currentLongitude: 73.8527,
+        rating: 4.7,
+        workload: 3,
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString(),
       },
     ];
+
+    const maxRadius = filter.maxRadiusKm || 15;
+
+    // 1. Mandatory Eligibility Filter: Verified + ACTIVE account + AVAILABLE + Within Radius
+    const eligible = candidates.filter((w) => {
+      if (w.status !== "ACTIVE") return false;
+      if (w.availability !== "AVAILABLE") return false;
+
+      const dist = this.calculateDistanceKm(
+        filter.customerLatitude,
+        filter.customerLongitude,
+        w.currentLatitude || 0,
+        w.currentLongitude || 0
+      );
+
+      return dist <= maxRadius;
+    });
+
+    // 2. 6-Tier Ranking Algorithm
+    const results: WorkerMatchResult[] = eligible.map((worker) => {
+      const distanceKm = this.calculateDistanceKm(
+        filter.customerLatitude,
+        filter.customerLongitude,
+        worker.currentLatitude || 0,
+        worker.currentLongitude || 0
+      );
+
+      // Score components:
+      // Tier 1: Skill Match (40 pts)
+      const skillScore = 40;
+      // Tier 2: Availability Match (20 pts)
+      const availScore = 20;
+      // Tier 3: Distance Score (max 15 pts, decaying with distance)
+      const distScore = Math.max(0, 15 - distanceKm);
+      // Tier 4: Rating Score (max 15 pts)
+      const ratingScore = (worker.rating / 5) * 15;
+      // Tier 5: Experience Score (max 5 pts)
+      const expScore = Math.min(5, worker.experienceYears * 0.7);
+      // Tier 6: Workload Distribution (max 5 pts, higher for lower workload)
+      const workloadScore = Math.max(0, 5 - worker.workload);
+
+      const totalScore = Math.round(
+        skillScore + availScore + distScore + ratingScore + expScore + workloadScore
+      );
+
+      return {
+        worker,
+        matchScore: totalScore,
+        tierBreakdown: {
+          skillMatch: true,
+          availabilityMatch: true,
+          distanceKm,
+          rating: worker.rating,
+          experienceYears: worker.experienceYears,
+          currentWorkloadCount: worker.workload,
+        },
+      };
+    });
+
+    // Sort descending by matchScore
+    return results.sort((a, b) => b.matchScore - a.matchScore);
   }
 }
 

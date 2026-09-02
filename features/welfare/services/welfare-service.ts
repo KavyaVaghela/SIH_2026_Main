@@ -1,55 +1,72 @@
-import type { WelfareRecord, InsuranceRecord } from "@/types";
+export interface WelfareRecord {
+  id: string;
+  workerId: string;
+  federationId: string;
+  fundType: string;
+  contributionAmount: number;
+  subsidyAmount: number;
+  transactionDate: string;
+  notes?: string | null;
+  createdAt: string;
+}
+
+export interface InsuranceRecord {
+  id: string;
+  workerId: string;
+  policyNumber: string;
+  providerName: string;
+  coverageAmount: number;
+  startDate: string;
+  endDate: string;
+  isActive: boolean;
+  createdAt: string;
+  updatedAt: string;
+}
 
 export interface IWelfareService {
-  recordContribution(workerId: string, federationId: string, amount: number, fundType?: string): Promise<WelfareRecord>;
-  getWorkerWelfareSummary(workerId: string): Promise<WelfareRecord[]>;
-  getInsuranceRecords(workerId: string): Promise<InsuranceRecord[]>;
+  getWorkerWelfareRecords(workerId: string): Promise<WelfareRecord[]>;
+  getWorkerInsurance(workerId: string): Promise<InsuranceRecord | null>;
+  checkEmergencyAssistanceEligibility(workerId: string): Promise<{ eligible: boolean; reason: string }>;
 }
 
 export class WelfareService implements IWelfareService {
-  async recordContribution(workerId: string, federationId: string, amount: number, fundType = "health_and_pension"): Promise<WelfareRecord> {
-    return {
-      id: `welf-${Date.now()}`,
-      workerId,
-      federationId,
-      fundType,
-      contributionAmount: amount,
-      subsidyAmount: amount * 0.2, // 20% cooperative matching subsidy
-      transactionDate: new Date().toISOString().split("T")[0],
-      createdAt: new Date().toISOString(),
-    };
-  }
-
-  async getWorkerWelfareSummary(workerId: string): Promise<WelfareRecord[]> {
+  async getWorkerWelfareRecords(workerId: string): Promise<WelfareRecord[]> {
     return [
       {
         id: "welf-1",
         workerId,
         federationId: "fed-1",
         fundType: "health_and_pension",
-        contributionAmount: 500,
-        subsidyAmount: 100,
+        contributionAmount: 250,
+        subsidyAmount: 250,
         transactionDate: new Date().toISOString().split("T")[0],
+        notes: "Monthly cooperative contribution match",
         createdAt: new Date().toISOString(),
       },
     ];
   }
 
-  async getInsuranceRecords(workerId: string): Promise<InsuranceRecord[]> {
-    return [
-      {
-        id: "ins-1",
-        workerId,
-        policyNumber: "POL-COOP-88214",
-        providerName: "Star Health & Allied Cooperative Scheme",
-        coverageAmount: 500000,
-        startDate: "2026-01-01",
-        endDate: "2026-12-31",
-        isActive: true,
-        createdAt: new Date().toISOString(),
-        updatedAt: new Date().toISOString(),
-      },
-    ];
+  async getWorkerInsurance(workerId: string): Promise<InsuranceRecord | null> {
+    return {
+      id: "ins-1",
+      workerId,
+      policyNumber: "POL-MH-2026-9081",
+      providerName: "Cooperative Gig Worker Health Mutual",
+      coverageAmount: 500000,
+      startDate: "2026-01-01",
+      endDate: "2026-12-31",
+      isActive: true,
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
+    };
+  }
+
+  async checkEmergencyAssistanceEligibility(workerId: string): Promise<{ eligible: boolean; reason: string }> {
+    const insurance = await this.getWorkerInsurance(workerId);
+    if (insurance && insurance.isActive) {
+      return { eligible: true, reason: "Active cooperative insurance & welfare membership verified." };
+    }
+    return { eligible: false, reason: "Inactive insurance coverage." };
   }
 }
 

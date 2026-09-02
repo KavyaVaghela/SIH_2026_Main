@@ -1,63 +1,59 @@
-import type { ServiceCategory, Service, Skill, Certification } from "@/types";
+export interface ServiceCategory {
+  id: string;
+  name: string;
+  description?: string | null;
+  iconName?: string | null;
+  isActive: boolean;
+  createdAt: string;
+}
+
+export interface ServiceItem {
+  id: string;
+  categoryId: string;
+  title: string;
+  description?: string | null;
+  basePrice: number;
+  minimumVisitCharge: number;
+  priceUnit: string;
+  isActive: boolean;
+  createdAt: string;
+  updatedAt: string;
+}
 
 export interface IServiceCatalogService {
   getCategories(): Promise<ServiceCategory[]>;
-  getServicesByCategory(categoryId: string): Promise<Service[]>;
-  getServiceById(serviceId: string): Promise<Service | null>;
-  getSkills(): Promise<Skill[]>;
-  getCertifications(): Promise<Certification[]>;
+  getServicesByCategory(categoryId: string): Promise<ServiceItem[]>;
+  getServiceDetails(serviceId: string): Promise<ServiceItem | null>;
+  getAllActiveServices(): Promise<ServiceItem[]>;
 }
 
 export class ServiceCatalogService implements IServiceCatalogService {
+  private categories: ServiceCategory[] = [
+    { id: "cat-1", name: "Electrical & Wiring", description: "Home electrical repairs & installations", iconName: "Zap", isActive: true, createdAt: new Date().toISOString() },
+    { id: "cat-2", name: "Plumbing & Drainage", description: "Tap repairs, pipe leakage, water tanks", iconName: "Droplet", isActive: true, createdAt: new Date().toISOString() },
+    { id: "cat-3", name: "Deep House Cleaning", description: "Full house sanitization and deep clean", iconName: "Sparkles", isActive: true, createdAt: new Date().toISOString() },
+  ];
+
+  private services: ServiceItem[] = [
+    { id: "srv-1", categoryId: "cat-1", title: "Full Room Electrical Repair & Wiring", description: "Switch and socket repair", basePrice: 350, minimumVisitCharge: 200, priceUnit: "per_hour", isActive: true, createdAt: new Date().toISOString(), updatedAt: new Date().toISOString() },
+    { id: "srv-2", categoryId: "cat-2", title: "Pipeline Leakage & Tap Replacement", description: "Fixing pipe leaks and valves", basePrice: 400, minimumVisitCharge: 250, priceUnit: "per_hour", isActive: true, createdAt: new Date().toISOString(), updatedAt: new Date().toISOString() },
+    { id: "srv-3", categoryId: "cat-3", title: "Full 2BHK Deep Cleaning", description: "Complete sanitization and scrubbing", basePrice: 1800, minimumVisitCharge: 1500, priceUnit: "per_service", isActive: true, createdAt: new Date().toISOString(), updatedAt: new Date().toISOString() },
+  ];
+
   async getCategories(): Promise<ServiceCategory[]> {
-    return [
-      { id: "cat-1", name: "Electrical & Wiring", description: "Home electrical repairs", iconName: "Zap", isActive: true, createdAt: new Date().toISOString() },
-      { id: "cat-2", name: "Plumbing & Drainage", description: "Leakage, fittings and tank cleaning", iconName: "Droplet", isActive: true, createdAt: new Date().toISOString() },
-      { id: "cat-3", name: "Deep House Cleaning", description: "Full house sanitization and scrubbing", iconName: "Sparkles", isActive: true, createdAt: new Date().toISOString() },
-    ];
+    return this.categories.filter((c) => c.isActive);
   }
 
-  async getServicesByCategory(categoryId: string): Promise<Service[]> {
-    return [
-      {
-        id: "srv-1",
-        categoryId,
-        title: "Electrical Repair & Main Switchboard Wiring",
-        description: "Diagnostic and fix for electrical faults",
-        basePrice: 350,
-        priceUnit: "per_hour",
-        isActive: true,
-        createdAt: new Date().toISOString(),
-        updatedAt: new Date().toISOString(),
-      },
-    ];
+  async getServicesByCategory(categoryId: string): Promise<ServiceItem[]> {
+    return this.services.filter((s) => s.categoryId === categoryId && s.isActive);
   }
 
-  async getServiceById(serviceId: string): Promise<Service | null> {
-    return {
-      id: serviceId,
-      categoryId: "cat-1",
-      title: "Electrical Repair & Main Switchboard Wiring",
-      description: "Diagnostic and fix for electrical faults",
-      basePrice: 350,
-      priceUnit: "per_hour",
-      isActive: true,
-      createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString(),
-    };
+  async getServiceDetails(serviceId: string): Promise<ServiceItem | null> {
+    return this.services.find((s) => s.id === serviceId) || null;
   }
 
-  async getSkills(): Promise<Skill[]> {
-    return [
-      { id: "sk-1", name: "Main Switchboard Repair", categoryId: "cat-1", createdAt: new Date().toISOString() },
-      { id: "sk-2", name: "Concealed Pipe Fitting", categoryId: "cat-2", createdAt: new Date().toISOString() },
-    ];
-  }
-
-  async getCertifications(): Promise<Certification[]> {
-    return [
-      { id: "cert-1", title: "NSDC Electrical Certification", issuingBody: "NSDC India", validityMonths: 36, createdAt: new Date().toISOString() },
-    ];
+  async getAllActiveServices(): Promise<ServiceItem[]> {
+    return this.services.filter((s) => s.isActive);
   }
 }
 

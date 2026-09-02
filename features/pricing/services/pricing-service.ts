@@ -1,80 +1,78 @@
-import { SERVICE_CONFIG } from "@/config/services";
-import type {
-  PlatformEstimate,
-  WorkerEstimatePayload,
-  FinalBill,
-  MinimumServiceVisitCharge,
-} from "@/types";
+export interface CalculatePlatformEstimatePayload {
+  serviceBasePrice: number;
+  minimumVisitCharge: number;
+  estimatedHours?: number;
+}
+
+export interface PlatformEstimateResult {
+  basePrice: number;
+  minimumVisitCharge: number;
+  platformFee: number;
+  taxAmount: number;
+  estimatedTotal: number;
+}
+
+export interface CalculateFinalBillPayload {
+  platformEstimate: number;
+  workerEstimate?: number;
+  minimumVisitCharge: number;
+  materialCharges?: number;
+  additionalLaborCharges?: number;
+  discountAmount?: number;
+}
+
+export interface FinalBillResult {
+  subtotal: number;
+  platformFee: number;
+  taxAmount: number;
+  discountAmount: number;
+  finalTotal: number;
+}
 
 export interface IPricingService {
-  calculatePlatformEstimate(basePrice: number): PlatformEstimate;
-  calculateWorkerEstimate(payload: WorkerEstimatePayload): WorkerEstimatePayload;
-  calculateFinalBill(params: {
-    serviceCharges: number;
-    partsCharges?: number;
-    discountAmount?: number;
-  }): FinalBill;
-  applyMinimumVisitCharge(amount: number): MinimumServiceVisitCharge;
+  calculatePlatformEstimate(payload: CalculatePlatformEstimatePayload): PlatformEstimateResult;
+  calculateFinalBill(payload: CalculateFinalBillPayload): FinalBillResult;
 }
 
 export class PricingService implements IPricingService {
-  calculatePlatformEstimate(basePrice: number): PlatformEstimate {
-    const minCharge = SERVICE_CONFIG.minimumVisitChargeINR;
-    const effectiveBase = Math.max(basePrice, minCharge);
-    const platformFee = (effectiveBase * SERVICE_CONFIG.platformFeePercentage) / 100;
-    const taxAmount = (platformFee * SERVICE_CONFIG.taxGstPercentage) / 100;
+  calculatePlatformEstimate(payload: CalculatePlatformEstimatePayload): PlatformEstimateResult {
+    const hours = payload.estimatedHours && payload.estimatedHours > 0 ? payload.estimatedHours : 1;
+    const rawCost = payload.serviceBasePrice * hours;
+
+    // Enforce minimum service visit charge
+    const effectiveBase = Math.max(rawCost, payload.minimumVisitCharge);
+    const platformFee = Math.round(effectiveBase * 0.05 * 100) / 100; // 5% platform fee
+    const taxAmount = Math.round(effectiveBase * 0.18 * 100) / 100;   // 18% GST
     const estimatedTotal = effectiveBase + platformFee + taxAmount;
 
     return {
-      serviceId: "srv-estimate",
       basePrice: effectiveBase,
+      minimumVisitCharge: payload.minimumVisitCharge,
       platformFee,
       taxAmount,
       estimatedTotal,
-      currency: "INR",
     };
   }
 
-  calculateWorkerEstimate(payload: WorkerEstimatePayload): WorkerEstimatePayload {
-    return {
-      ...payload,
-      estimatedAmount: Math.max(payload.estimatedAmount, SERVICE_CONFIG.minimumVisitChargeINR),
-    };
-  }
+  calculateFinalBill(payload: CalculateFinalBillPayload): FinalBillResult {
+    const baseAmount = payload.workerEstimate ?? payload.platformEstimate;
+    const materials = payload.materialCharges || 0;
+    const additionalLabor = payload.additionalLaborCharges || 0;
+    const discount = payload.discountAmount || 0;
 
-  calculateFinalBill(params: {
-    serviceCharges: number;
-    partsCharges?: number;
-    discountAmount?: number;
-  }): FinalBill {
-    const { serviceCharges, partsCharges = 0, discountAmount = 0 } = params;
-    const effectiveService = Math.max(serviceCharges, SERVICE_CONFIG.minimumVisitChargeINR);
-    const platformFee = (effectiveService * SERVICE_CONFIG.platformFeePercentage) / 100;
-    const taxes = ((effectiveService + platformFee) * SERVICE_CONFIG.taxGstPercentage) / 100;
-    const netPayableAmount = effectiveService + partsCharges + platformFee + taxes - discountAmount;
+    const rawSubtotal = baseAmount + materials + additionalLabor;
+    const subtotal = Math.max(rawSubtotal, payload.minimumVisitCharge);
+
+    const platformFee = Math.round(subtotal * 0.05 * 100) / 100;
+    const taxAmount = Math.round(subtotal * 0.18 * 100) / 100;
+    const finalTotal = Math.max(0, subtotal + platformFee + taxAmount - discount);
 
     return {
-      bookingId: "bk-bill",
-      serviceCharges: effectiveService,
-      partsOrMaterialsCharges: partsCharges,
+      subtotal,
       platformFee,
-      taxes,
-      discountOrSubsidy: discountAmount,
-      netPayableAmount,
-      currency: "INR",
-    };
-  }
-
-  applyMinimumVisitCharge(amount: number): MinimumServiceVisitCharge {
-    const minimumVisitFeeINR = SERVICE_CONFIG.minimumVisitChargeINR;
-    const isApplied = amount < minimumVisitFeeINR;
-
-    return {
-      minimumVisitFeeINR,
-      isApplied,
-      description: isApplied
-        ? `Applied minimum visit charge threshold of ₹${minimumVisitFeeINR}`
-        : "Standard pricing applies",
+      taxAmount,
+      discountAmount: discount,
+      finalTotal,
     };
   }
 }
