@@ -1,0 +1,33 @@
+{
+  "app": {
+    "name": "Cooperative Gig Services Platform",
+    "tagline": "Dignified, Fair, and Community-Owned Household Services"
+  },
+  "common": {
+    "welcome": "Welcome",
+    "login": "Sign In",
+    "register": "Register",
+    "logout": "Sign Out",
+    "submit": "Submit",
+    "cancel": "Cancel",
+    "save": "Save Changes",
+    "loading": "Loading...",
+    "search": "Search services, workers...",
+    "status": "Status",
+    "actions": "Actions"
+  },
+  "roles": {
+    "super_admin": "Super Admin",
+    "federation_admin": "Federation Admin",
+    "worker": "Cooperative Worker",
+    "customer": "Household Customer"
+  },
+  "booking": {
+    "title": "Book Service",
+    "status_request_sent": "Request Sent",
+    "status_worker_reviewing": "Worker Reviewing",
+    "status_confirmed": "Booking Confirmed",
+    "status_completed": "Completed",
+    "status_cancelled": "Cancelled"
+  }
+}

@@ -1,0 +1,33 @@
+{
+  "app": {
+    "name": "सहकारी गिग सेवाएं मंच",
+    "tagline": "गरिमापूर्ण, निष्पक्ष और सामुदायिक स्वामित्व वाली घरेलू सेवाएं"
+  },
+  "common": {
+    "welcome": "स्वागत है",
+    "login": "साइन इन करें",
+    "register": "पंजीकरण करें",
+    "logout": "साइन आउट",
+    "submit": "सबमिट करें",
+    "cancel": "रद्द करें",
+    "save": "सहेजें",
+    "loading": "लोड हो रहा है...",
+    "search": "सेवाएं, श्रमिक खोजें...",
+    "status": "स्थिति",
+    "actions": "कार्रवाई"
+  },
+  "roles": {
+    "super_admin": "सुपर एडमिन",
+    "federation_admin": "फेडरेशन एडमिन",
+    "worker": "सहकारी श्रमिक",
+    "customer": "घरेलू ग्राहक"
+  },
+  "booking": {
+    "title": "सेवा बुक करें",
+    "status_request_sent": "अनुरोध भेजा गया",
+    "status_worker_reviewing": "श्रमिक समीक्षा कर रहे हैं",
+    "status_confirmed": "बुकिंग की पुष्टि हुई",
+    "status_completed": "पूरा हुआ",
+    "status_cancelled": "रद्द हुआ"
+  }
+}

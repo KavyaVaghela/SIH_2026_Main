@@ -1,0 +1,33 @@
+{
+  "app": {
+    "name": "સહકારી ગિગ સેવાઓ મંચ",
+    "tagline": "ગૌરવપૂર્ણ, ન્યાયી અને સમુદાય માલિકીની ઘરગથ્થુ સેવાઓ"
+  },
+  "common": {
+    "welcome": "સુસ્વાગતમ",
+    "login": "સાઇન ઇન",
+    "register": "નોંધણી કરો",
+    "logout": "સાઇન આઉટ",
+    "submit": "જમા કરો",
+    "cancel": "રદ કરો",
+    "save": "ફેરફારો સાચવો",
+    "loading": "લોડ થઈ રહ્યું છે...",
+    "search": "સેવાઓ, કાર્યકરો શોધો...",
+    "status": "સ્થિતિ",
+    "actions": "ક્રિયાઓ"
+  },
+  "roles": {
+    "super_admin": "સુપર એડમિન",
+    "federation_admin": "ફેડરેશન એડમિન",
+    "worker": "સહકારી કાર્યકર",
+    "customer": "ગ્રાહક"
+  },
+  "booking": {
+    "title": "સેવા બુક કરો",
+    "status_request_sent": "વિનંતી મોકલી",
+    "status_worker_reviewing": "કાર્યકર સમીક્ષા કરી રહ્યા છે",
+    "status_confirmed": "બુકિંગ કન્ફર્મ થયું",
+    "status_completed": "પૂર્ણ થયું",
+    "status_cancelled": "રદ થયું"
+  }
+}
