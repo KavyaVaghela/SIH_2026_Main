@@ -1,50 +1,48 @@
-import type { JobRequest, WorkerEstimate } from "@/types";
+export interface DemandAnalysisResult {
+  serviceId: string;
+  serviceTitle: string;
+  totalRequests: number;
+  availableWorkersCount: number;
+  gapStatus: "SURPLUS" | "BALANCED" | "SHORTAGE";
+  recommendedWorkforceCount: number;
+}
 
 export interface IDemandService {
-  submitJobRequest(customerId: string, serviceId: string, description: string, preferredSchedule?: string): Promise<JobRequest>;
-  getOpenJobRequests(): Promise<JobRequest[]>;
-  submitWorkerEstimate(jobRequestId: string, workerId: string, estimatedAmount: number, notes?: string): Promise<WorkerEstimate>;
+  getDemandByService(serviceId: string): Promise<DemandAnalysisResult>;
+  getTopDemandedServices(): Promise<DemandAnalysisResult[]>;
 }
 
 export class DemandService implements IDemandService {
-  async submitJobRequest(customerId: string, serviceId: string, description: string, preferredSchedule?: string): Promise<JobRequest> {
+  async getDemandByService(serviceId: string): Promise<DemandAnalysisResult> {
     return {
-      id: `job-${Date.now()}`,
-      customerId,
       serviceId,
-      description,
-      preferredSchedule,
-      status: "open",
-      createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString(),
+      serviceTitle: "Full Room Electrical Repair & Wiring",
+      totalRequests: 140,
+      availableWorkersCount: 95,
+      gapStatus: "SHORTAGE",
+      recommendedWorkforceCount: 45,
     };
   }
 
-  async getOpenJobRequests(): Promise<JobRequest[]> {
+  async getTopDemandedServices(): Promise<DemandAnalysisResult[]> {
     return [
       {
-        id: "job-1",
-        customerId: "cust-1",
         serviceId: "srv-1",
-        description: "Require complete rewiring for 2BHK flat",
-        preferredSchedule: "Next Monday 10:00 AM",
-        status: "open",
-        createdAt: new Date().toISOString(),
-        updatedAt: new Date().toISOString(),
+        serviceTitle: "Full Room Electrical Repair & Wiring",
+        totalRequests: 140,
+        availableWorkersCount: 95,
+        gapStatus: "SHORTAGE",
+        recommendedWorkforceCount: 45,
+      },
+      {
+        serviceId: "srv-2",
+        serviceTitle: "Pipeline Leakage & Tap Replacement",
+        totalRequests: 110,
+        availableWorkersCount: 120,
+        gapStatus: "BALANCED",
+        recommendedWorkforceCount: 0,
       },
     ];
-  }
-
-  async submitWorkerEstimate(jobRequestId: string, workerId: string, estimatedAmount: number, notes?: string): Promise<WorkerEstimate> {
-    return {
-      id: `est-${Date.now()}`,
-      jobRequestId,
-      workerId,
-      estimatedAmount,
-      notes,
-      status: "submitted",
-      createdAt: new Date().toISOString(),
-    };
   }
 }
 

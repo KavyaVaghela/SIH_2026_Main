@@ -1,8 +1,14 @@
 export type ErrorCategory =
   | "VALIDATION_ERROR"
+  | "UNAUTHORIZED"
+  | "FORBIDDEN"
+  | "NOT_FOUND"
+  | "INVALID_STATE_TRANSITION"
+  | "BUSINESS_RULE_VIOLATION"
+  | "DATABASE_ERROR"
+  | "PAYMENT_ERROR"
   | "AUTHORIZATION_ERROR"
   | "NOT_FOUND_ERROR"
-  | "DATABASE_ERROR"
   | "BUSINESS_RULE_ERROR";
 
 export class AppError extends Error {
