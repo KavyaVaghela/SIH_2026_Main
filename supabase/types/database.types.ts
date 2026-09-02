@@ -8,7 +8,8 @@ export type Json =
 
 export type UserRole = "SUPER_ADMIN" | "FEDERATION_ADMIN" | "WORKER" | "CUSTOMER";
 export type WorkerAccountStatus = "ACTIVE" | "DEACTIVATED";
-export type WorkerAvailability = "AVAILABLE" | "BUSY" | "UNAVAILABLE";
+export type WorkerAvailabilityStatus = "AVAILABLE" | "BUSY" | "UNAVAILABLE";
+export type WorkerAvailability = WorkerAvailabilityStatus;
 export type WorkerVerificationStatus = "pending_verification" | "verified" | "suspended";
 
 export type BookingStatus =
@@ -110,7 +111,7 @@ export interface Database {
           profile_id: string;
           federation_id: string;
           account_status: WorkerAccountStatus;
-          availability_status: WorkerAvailability;
+          availability_status: WorkerAvailabilityStatus;
           verification_status: WorkerVerificationStatus;
           profession: string | null;
           hourly_rate: number;

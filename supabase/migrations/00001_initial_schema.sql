@@ -2,10 +2,8 @@
 -- COOPERATIVE GIG SERVICES PLATFORM - INITIAL DATABASE SCHEMA
 -- Migration: 00001_initial_schema.sql
 -- Description: Core ENUMs, 26 relational tables, constraints, and indexes.
+-- Uses PostgreSQL built-in gen_random_uuid() for primary key generation.
 -- ====================================================================
-
--- Enable UUID extension if not already enabled
-CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
 
 -- ====================================================================
 -- 1. CUSTOM ENUM TYPES
@@ -23,7 +21,7 @@ CREATE TYPE worker_account_status AS ENUM (
   'DEACTIVATED'
 );
 
-CREATE TYPE worker_availability AS ENUM (
+CREATE TYPE worker_availability_status AS ENUM (
   'AVAILABLE',
   'BUSY',
   'UNAVAILABLE'
@@ -93,7 +91,7 @@ CREATE TYPE certification_status AS ENUM (
 
 -- 1. FEDERATIONS (Cooperative Federation Units)
 CREATE TABLE federations (
-  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   name VARCHAR(255) NOT NULL,
   code VARCHAR(50) NOT NULL UNIQUE,
   gst_number VARCHAR(20) UNIQUE,
@@ -125,7 +123,7 @@ CREATE TABLE profiles (
 
 -- 3. ADDRESSES (Geocoded Locations)
 CREATE TABLE addresses (
-  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   profile_id UUID NOT NULL REFERENCES profiles(id) ON DELETE CASCADE,
   title VARCHAR(100) NOT NULL DEFAULT 'Home',
   address_line1 TEXT NOT NULL,
@@ -142,11 +140,11 @@ CREATE TABLE addresses (
 
 -- 4. WORKERS (Worker Profile & Cooperative Association)
 CREATE TABLE workers (
-  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   profile_id UUID NOT NULL UNIQUE REFERENCES profiles(id) ON DELETE CASCADE,
   federation_id UUID NOT NULL REFERENCES federations(id) ON DELETE RESTRICT,
   account_status worker_account_status NOT NULL DEFAULT 'ACTIVE',
-  availability_status worker_availability NOT NULL DEFAULT 'UNAVAILABLE',
+  availability_status worker_availability_status NOT NULL DEFAULT 'UNAVAILABLE',
   verification_status worker_verification_status NOT NULL DEFAULT 'pending_verification',
   profession VARCHAR(100),
   hourly_rate NUMERIC(10, 2) NOT NULL CHECK (hourly_rate >= 0),
@@ -162,7 +160,7 @@ CREATE TABLE workers (
 
 -- 5. SERVICE CATEGORIES
 CREATE TABLE service_categories (
-  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   name VARCHAR(100) NOT NULL UNIQUE,
   description TEXT,
   icon_name VARCHAR(50),
@@ -172,7 +170,7 @@ CREATE TABLE service_categories (
 
 -- 6. SERVICES (Master Service Catalog)
 CREATE TABLE services (
-  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   category_id UUID NOT NULL REFERENCES service_categories(id) ON DELETE RESTRICT,
   title VARCHAR(255) NOT NULL,
   description TEXT,
@@ -186,7 +184,7 @@ CREATE TABLE services (
 
 -- 7. SKILLS
 CREATE TABLE skills (
-  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   name VARCHAR(100) NOT NULL UNIQUE,
   description TEXT,
   category_id UUID REFERENCES service_categories(id) ON DELETE SET NULL,
@@ -195,7 +193,7 @@ CREATE TABLE skills (
 
 -- 8. WORKER SKILLS (Bridge)
 CREATE TABLE worker_skills (
-  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   worker_id UUID NOT NULL REFERENCES workers(id) ON DELETE CASCADE,
   skill_id UUID NOT NULL REFERENCES skills(id) ON DELETE RESTRICT,
   proficiency_level VARCHAR(50) NOT NULL DEFAULT 'intermediate',
@@ -205,7 +203,7 @@ CREATE TABLE worker_skills (
 
 -- 9. CERTIFICATIONS
 CREATE TABLE certifications (
-  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   title VARCHAR(255) NOT NULL,
   issuing_body VARCHAR(255) NOT NULL,
   validity_months INTEGER,
@@ -214,7 +212,7 @@ CREATE TABLE certifications (
 
 -- 10. WORKER CERTIFICATIONS
 CREATE TABLE worker_certifications (
-  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   worker_id UUID NOT NULL REFERENCES workers(id) ON DELETE CASCADE,
   certification_id UUID NOT NULL REFERENCES certifications(id) ON DELETE RESTRICT,
   certificate_number VARCHAR(100),
@@ -229,7 +227,7 @@ CREATE TABLE worker_certifications (
 
 -- 11. WORKER AVAILABILITY (Recurring Weekly Schedule)
 CREATE TABLE worker_availability (
-  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   worker_id UUID NOT NULL REFERENCES workers(id) ON DELETE CASCADE,
   day_of_week SMALLINT NOT NULL CHECK (day_of_week BETWEEN 0 AND 6),
   start_time TIME NOT NULL,
@@ -241,7 +239,7 @@ CREATE TABLE worker_availability (
 
 -- 12. BOOKINGS (Core Service Bookings)
 CREATE TABLE bookings (
-  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   booking_number VARCHAR(50) NOT NULL UNIQUE,
   customer_id UUID NOT NULL REFERENCES profiles(id) ON DELETE RESTRICT,
   worker_id UUID REFERENCES workers(id) ON DELETE SET NULL,
@@ -265,7 +263,7 @@ CREATE TABLE bookings (
 
 -- 13. BOOKING STATUS HISTORY (Audit Trail)
 CREATE TABLE booking_status_history (
-  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   booking_id UUID NOT NULL REFERENCES bookings(id) ON DELETE CASCADE,
   previous_status booking_status,
   new_status booking_status NOT NULL,
@@ -276,7 +274,7 @@ CREATE TABLE booking_status_history (
 
 -- 14. JOB REQUESTS (Custom Customer Job Requests)
 CREATE TABLE job_requests (
-  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   customer_id UUID NOT NULL REFERENCES profiles(id) ON DELETE CASCADE,
   service_id UUID NOT NULL REFERENCES services(id) ON DELETE RESTRICT,
   description TEXT NOT NULL,
@@ -288,7 +286,7 @@ CREATE TABLE job_requests (
 
 -- 15. WORKER ESTIMATES
 CREATE TABLE worker_estimates (
-  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   job_request_id UUID NOT NULL REFERENCES job_requests(id) ON DELETE CASCADE,
   worker_id UUID NOT NULL REFERENCES workers(id) ON DELETE CASCADE,
   estimated_amount NUMERIC(10, 2) NOT NULL CHECK (estimated_amount >= 0),
@@ -300,7 +298,7 @@ CREATE TABLE worker_estimates (
 
 -- 16. INVOICES
 CREATE TABLE invoices (
-  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   invoice_number VARCHAR(50) NOT NULL UNIQUE,
   booking_id UUID NOT NULL UNIQUE REFERENCES bookings(id) ON DELETE RESTRICT,
   customer_id UUID NOT NULL REFERENCES profiles(id) ON DELETE RESTRICT,
@@ -319,7 +317,7 @@ CREATE TABLE invoices (
 
 -- 17. INVOICE ITEMS
 CREATE TABLE invoice_items (
-  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   invoice_id UUID NOT NULL REFERENCES invoices(id) ON DELETE CASCADE,
   description TEXT NOT NULL,
   quantity NUMERIC(10, 2) NOT NULL DEFAULT 1 CHECK (quantity > 0),
@@ -330,7 +328,7 @@ CREATE TABLE invoice_items (
 
 -- 18. PAYMENTS
 CREATE TABLE payments (
-  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   payment_number VARCHAR(50) NOT NULL UNIQUE,
   invoice_id UUID NOT NULL REFERENCES invoices(id) ON DELETE RESTRICT,
   booking_id UUID NOT NULL REFERENCES bookings(id) ON DELETE RESTRICT,
@@ -346,7 +344,7 @@ CREATE TABLE payments (
 
 -- 19. REVIEWS
 CREATE TABLE reviews (
-  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   booking_id UUID NOT NULL UNIQUE REFERENCES bookings(id) ON DELETE CASCADE,
   customer_id UUID NOT NULL REFERENCES profiles(id) ON DELETE CASCADE,
   worker_id UUID NOT NULL REFERENCES workers(id) ON DELETE CASCADE,
@@ -357,7 +355,7 @@ CREATE TABLE reviews (
 
 -- 20. COMPLAINTS (Dispute & Grievance Tracking)
 CREATE TABLE complaints (
-  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   complaint_number VARCHAR(50) NOT NULL UNIQUE,
   booking_id UUID REFERENCES bookings(id) ON DELETE SET NULL,
   raised_by UUID NOT NULL REFERENCES profiles(id) ON DELETE CASCADE,
@@ -373,7 +371,7 @@ CREATE TABLE complaints (
 
 -- 21. WELFARE RECORDS (Worker Cooperative Welfare Fund)
 CREATE TABLE welfare_records (
-  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   worker_id UUID NOT NULL REFERENCES workers(id) ON DELETE CASCADE,
   federation_id UUID NOT NULL REFERENCES federations(id) ON DELETE RESTRICT,
   fund_type VARCHAR(100) NOT NULL DEFAULT 'health_and_pension',
@@ -386,7 +384,7 @@ CREATE TABLE welfare_records (
 
 -- 22. INSURANCE RECORDS
 CREATE TABLE insurance_records (
-  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   worker_id UUID NOT NULL REFERENCES workers(id) ON DELETE CASCADE,
   policy_number VARCHAR(100) NOT NULL UNIQUE,
   provider_name VARCHAR(255) NOT NULL,
@@ -400,7 +398,7 @@ CREATE TABLE insurance_records (
 
 -- 23. NOTIFICATIONS
 CREATE TABLE notifications (
-  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   profile_id UUID NOT NULL REFERENCES profiles(id) ON DELETE CASCADE,
   title VARCHAR(255) NOT NULL,
   message TEXT NOT NULL,
@@ -412,7 +410,7 @@ CREATE TABLE notifications (
 
 -- 24. PROJECT REQUESTS (Community & Bulk Gig Projects)
 CREATE TABLE project_requests (
-  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   customer_id UUID NOT NULL REFERENCES profiles(id) ON DELETE RESTRICT,
   federation_id UUID NOT NULL REFERENCES federations(id) ON DELETE RESTRICT,
   project_name VARCHAR(255) NOT NULL,
@@ -425,7 +423,7 @@ CREATE TABLE project_requests (
 
 -- 25. PROJECT REQUIREMENTS
 CREATE TABLE project_requirements (
-  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   project_request_id UUID NOT NULL REFERENCES project_requests(id) ON DELETE CASCADE,
   skill_id UUID NOT NULL REFERENCES skills(id) ON DELETE RESTRICT,
   required_workers_count INTEGER NOT NULL DEFAULT 1 CHECK (required_workers_count > 0),
@@ -435,7 +433,7 @@ CREATE TABLE project_requirements (
 
 -- 26. PROJECT ALLOCATIONS
 CREATE TABLE project_allocations (
-  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   project_request_id UUID NOT NULL REFERENCES project_requests(id) ON DELETE CASCADE,
   requirement_id UUID NOT NULL REFERENCES project_requirements(id) ON DELETE CASCADE,
   worker_id UUID NOT NULL REFERENCES workers(id) ON DELETE RESTRICT,
