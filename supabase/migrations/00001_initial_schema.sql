@@ -18,31 +18,47 @@ CREATE TYPE user_role AS ENUM (
   'CUSTOMER'
 );
 
-CREATE TYPE worker_status AS ENUM (
+CREATE TYPE worker_account_status AS ENUM (
+  'ACTIVE',
+  'DEACTIVATED'
+);
+
+CREATE TYPE worker_availability AS ENUM (
+  'AVAILABLE',
+  'BUSY',
+  'UNAVAILABLE'
+);
+
+CREATE TYPE worker_verification_status AS ENUM (
   'pending_verification',
   'verified',
   'suspended'
 );
 
-CREATE TYPE availability_status AS ENUM (
-  'available',
-  'busy',
-  'offline'
-);
-
 CREATE TYPE booking_status AS ENUM (
-  'pending',
-  'assigned',
-  'in_progress',
-  'completed',
-  'cancelled'
+  'REQUEST_SENT',
+  'WORKER_REVIEWING',
+  'WORKER_INTERESTED',
+  'CUSTOMER_CONFIRMATION_PENDING',
+  'BOOKING_CONFIRMED',
+  'WORKER_ACCEPTED',
+  'ON_THE_WAY',
+  'ARRIVED',
+  'OTP_VERIFIED',
+  'SERVICE_STARTED',
+  'SERVICE_COMPLETED',
+  'BILL_GENERATED',
+  'PAYMENT_PENDING',
+  'PAYMENT_RECEIVED',
+  'BOOKING_COMPLETED',
+  'CANCELLED'
 );
 
 CREATE TYPE payment_status AS ENUM (
-  'unpaid',
-  'paid',
-  'refunded',
-  'failed'
+  'PENDING',
+  'PAID',
+  'FAILED',
+  'REFUNDED'
 );
 
 CREATE TYPE invoice_status AS ENUM (
@@ -54,14 +70,25 @@ CREATE TYPE invoice_status AS ENUM (
 );
 
 CREATE TYPE complaint_status AS ENUM (
-  'submitted',
-  'under_review',
-  'resolved',
-  'dismissed'
+  'OPEN',
+  'IN_REVIEW',
+  'RESOLVED'
+);
+
+CREATE TYPE application_status AS ENUM (
+  'PENDING',
+  'APPROVED',
+  'REJECTED'
+);
+
+CREATE TYPE certification_status AS ENUM (
+  'VERIFIED',
+  'EXPIRING_SOON',
+  'EXPIRED'
 );
 
 -- ====================================================================
--- 2. CORE RELATIONAL TABLES
+-- 2. CORE RELATIONAL TABLES (26 TABLES)
 -- ====================================================================
 
 -- 1. FEDERATIONS (Cooperative Federation Units)
@@ -76,6 +103,8 @@ CREATE TABLE federations (
   address TEXT NOT NULL,
   contact_email VARCHAR(255) NOT NULL,
   contact_phone VARCHAR(20) NOT NULL,
+  service_region TEXT,
+  official_documents JSONB,
   is_active BOOLEAN NOT NULL DEFAULT TRUE,
   created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
   updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
@@ -116,10 +145,14 @@ CREATE TABLE workers (
   id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
   profile_id UUID NOT NULL UNIQUE REFERENCES profiles(id) ON DELETE CASCADE,
   federation_id UUID NOT NULL REFERENCES federations(id) ON DELETE RESTRICT,
-  status worker_status NOT NULL DEFAULT 'pending_verification',
-  availability_status availability_status NOT NULL DEFAULT 'offline',
+  account_status worker_account_status NOT NULL DEFAULT 'ACTIVE',
+  availability_status worker_availability NOT NULL DEFAULT 'UNAVAILABLE',
+  verification_status worker_verification_status NOT NULL DEFAULT 'pending_verification',
+  profession VARCHAR(100),
   hourly_rate NUMERIC(10, 2) NOT NULL CHECK (hourly_rate >= 0),
   experience_years INTEGER NOT NULL DEFAULT 0 CHECK (experience_years >= 0),
+  service_radius_km NUMERIC(5, 2) NOT NULL DEFAULT 15.00 CHECK (service_radius_km > 0),
+  joining_date DATE NOT NULL DEFAULT CURRENT_DATE,
   current_latitude DOUBLE PRECISION,
   current_longitude DOUBLE PRECISION,
   last_active_at TIMESTAMPTZ,
@@ -144,6 +177,7 @@ CREATE TABLE services (
   title VARCHAR(255) NOT NULL,
   description TEXT,
   base_price NUMERIC(10, 2) NOT NULL CHECK (base_price >= 0),
+  minimum_visit_charge NUMERIC(10, 2) NOT NULL DEFAULT 200.00 CHECK (minimum_visit_charge >= 0),
   price_unit VARCHAR(50) NOT NULL DEFAULT 'per_hour',
   is_active BOOLEAN NOT NULL DEFAULT TRUE,
   created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
@@ -186,6 +220,7 @@ CREATE TABLE worker_certifications (
   certificate_number VARCHAR(100),
   issue_date DATE NOT NULL,
   expiry_date DATE,
+  status certification_status NOT NULL DEFAULT 'VERIFIED',
   is_verified BOOLEAN NOT NULL DEFAULT FALSE,
   verification_date TIMESTAMPTZ,
   created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
@@ -213,7 +248,10 @@ CREATE TABLE bookings (
   service_id UUID NOT NULL REFERENCES services(id) ON DELETE RESTRICT,
   federation_id UUID NOT NULL REFERENCES federations(id) ON DELETE RESTRICT,
   address_id UUID NOT NULL REFERENCES addresses(id) ON DELETE RESTRICT,
-  status booking_status NOT NULL DEFAULT 'pending',
+  status booking_status NOT NULL DEFAULT 'REQUEST_SENT',
+  problem_description TEXT,
+  problem_photo_url TEXT,
+  otp_code VARCHAR(6),
   scheduled_start_at TIMESTAMPTZ NOT NULL,
   scheduled_end_at TIMESTAMPTZ NOT NULL,
   actual_start_at TIMESTAMPTZ,
@@ -301,7 +339,7 @@ CREATE TABLE payments (
   gateway_provider VARCHAR(50) NOT NULL DEFAULT 'razorpay',
   gateway_order_id VARCHAR(100),
   gateway_payment_id VARCHAR(100),
-  status payment_status NOT NULL DEFAULT 'unpaid',
+  status payment_status NOT NULL DEFAULT 'PENDING',
   paid_at TIMESTAMPTZ,
   created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
@@ -326,7 +364,7 @@ CREATE TABLE complaints (
   target_profile_id UUID REFERENCES profiles(id) ON DELETE SET NULL,
   category VARCHAR(100) NOT NULL,
   description TEXT NOT NULL,
-  status complaint_status NOT NULL DEFAULT 'submitted',
+  status complaint_status NOT NULL DEFAULT 'OPEN',
   resolution_notes TEXT,
   resolved_at TIMESTAMPTZ,
   created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
@@ -417,7 +455,9 @@ CREATE INDEX idx_addresses_lat_lng ON addresses(latitude, longitude);
 
 -- Worker Lookup Indexes
 CREATE INDEX idx_workers_federation_id ON workers(federation_id);
-CREATE INDEX idx_workers_status ON workers(status, availability_status);
+CREATE INDEX idx_workers_account_status ON workers(account_status);
+CREATE INDEX idx_workers_availability_status ON workers(availability_status);
+CREATE INDEX idx_workers_verification_status ON workers(verification_status);
 CREATE INDEX idx_workers_lat_lng ON workers(current_latitude, current_longitude);
 
 -- Service & Skill Lookup Indexes
@@ -438,6 +478,7 @@ CREATE INDEX idx_invoices_customer_id ON invoices(customer_id, status);
 CREATE INDEX idx_payments_invoice_id ON payments(invoice_id);
 CREATE INDEX idx_payments_status ON payments(status);
 
--- Notification & Complaint Indexes
+-- Notification, Complaint, & Project Indexes
 CREATE INDEX idx_notifications_unread ON notifications(profile_id, is_read);
 CREATE INDEX idx_complaints_raised_by ON complaints(raised_by, status);
+CREATE INDEX idx_project_requests_status ON project_requests(status);
