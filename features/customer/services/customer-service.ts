@@ -456,7 +456,7 @@ export class CustomerService {
     } catch (err) {
       console.warn("DB review submission notice:", err);
     }
-    return reviewService.submitReview(bookingId, customerId, workerId, rating, comment);
+    return reviewService.createReview({ bookingId, customerId, workerId, rating, comment });
   }
 }
 
