@@ -50,6 +50,15 @@ export async function middleware(request: NextRequest) {
 
   // Case 1: Unauthenticated user accessing a protected route
   if (!user && isProtectedPath) {
+    // Development mode bypass for local prototyping/testing
+    const allowDevBypass =
+      process.env.NODE_ENV === "development" &&
+      process.env.NEXT_PUBLIC_DISABLE_DEV_BYPASS !== "true";
+
+    if (allowDevBypass) {
+      return response;
+    }
+
     const loginUrl = new URL("/login", request.url);
     loginUrl.searchParams.set("redirectTo", pathname);
     return NextResponse.redirect(loginUrl);

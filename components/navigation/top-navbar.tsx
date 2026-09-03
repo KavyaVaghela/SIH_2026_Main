@@ -16,7 +16,7 @@ export interface TopNavbarProps {
 }
 
 export function TopNavbar({
-  platformTitle = "Cooperative Gig Platform",
+  platformTitle = "KaushalyaSetu",
   userName,
   userRole,
   onToggleMobileMenu,
@@ -43,7 +43,7 @@ export function TopNavbar({
             <div className="flex flex-col">
               <span className="font-bold text-sm leading-tight text-foreground">{platformTitle}</span>
               <span className="text-[10px] text-emerald-600 dark:text-emerald-400 font-medium">
-                Community Owned Marketplace
+                Community Owned Digital Marketplace
               </span>
             </div>
           </div>
