@@ -21,6 +21,7 @@ import {
   KeyRound,
   Play,
   CheckCheck,
+  Receipt,
 } from "lucide-react";
 import { bookingService, Booking } from "@/features/bookings/services/booking-service";
 import { BookingStatusTimeline } from "./components/booking-status-timeline";
@@ -295,6 +296,34 @@ export function BookingStatusView({ bookingId }: BookingStatusViewProps) {
             >
               <CheckCircle2 className="w-4 h-4 text-emerald-700" />
               {actionLoading ? "Confirming..." : "Confirm Booking"}
+            </Button>
+          </div>
+        </Card>
+      )}
+      {/* Invoice & Payment Action Banner (SERVICE_COMPLETED, BILL_GENERATED, PAYMENT_PENDING, PAYMENT_RECEIVED, BOOKING_COMPLETED) */}
+      {["SERVICE_COMPLETED", "BILL_GENERATED", "PAYMENT_PENDING", "PAYMENT_RECEIVED", "BOOKING_COMPLETED"].includes(booking.status) && (
+        <Card className="bg-emerald-800 text-white p-5 rounded-xl shadow-md space-y-4">
+          <div className="flex items-start gap-3">
+            <Receipt className="w-6 h-6 text-emerald-300 shrink-0 mt-0.5" />
+            <div>
+              <h4 className="font-bold text-sm">
+                {booking.status === "BOOKING_COMPLETED" ? "Tax Invoice & Settlement Complete" : "Tax Invoice & Bill Ready for Payment"}
+              </h4>
+              <p className="text-xs text-emerald-200 mt-0.5">
+                {booking.status === "BOOKING_COMPLETED"
+                  ? "Your booking has been completed and payment has been settled. View your tax invoice and worker review."
+                  : "Your trade service has been completed by the worker. Review itemized charges, platform fee, GST tax, and pay your final bill."}
+              </p>
+            </div>
+          </div>
+
+          <div className="flex items-center justify-end pt-2 border-t border-emerald-700">
+            <Button
+              onClick={() => router.push(`/customer/bookings/${booking.id}/invoice`)}
+              className="bg-white text-emerald-950 hover:bg-emerald-50 font-extrabold text-xs px-6 py-2 shadow-lg gap-2"
+            >
+              <Receipt className="w-4 h-4 text-emerald-700" />
+              {booking.status === "BOOKING_COMPLETED" ? "View Tax Invoice & Review" : "View & Pay Tax Invoice"}
             </Button>
           </div>
         </Card>

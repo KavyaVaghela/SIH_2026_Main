@@ -30,14 +30,52 @@ export interface CreatePaymentPayload {
 export interface IPaymentService {
   createPaymentRecord(payload: CreatePaymentPayload): Promise<PaymentRecord>;
   getPayment(paymentId: string): Promise<PaymentRecord | null>;
+  getBookingPayment(bookingId: string): Promise<PaymentRecord | null>;
   processMockPayment(paymentId: string, simulateSuccess: boolean): Promise<PaymentRecord>;
   refundPayment(paymentId: string, reason?: string): Promise<PaymentRecord>;
 }
 
+const LOCAL_STORAGE_PAYMENTS_KEY = "kaushalyasetu_payments_db";
+
 export class PaymentService implements IPaymentService {
   private mockPayments: Map<string, PaymentRecord> = new Map();
 
+  constructor() {
+    this.syncFromStorage();
+  }
+
+  private syncFromStorage() {
+    if (typeof window === "undefined") return;
+    try {
+      const stored = localStorage.getItem(LOCAL_STORAGE_PAYMENTS_KEY);
+      if (stored) {
+        const parsed: PaymentRecord[] = JSON.parse(stored);
+        parsed.forEach((pay) => this.mockPayments.set(pay.id, pay));
+      }
+    } catch (err) {
+      console.error("Error reading payments from localStorage", err);
+    }
+  }
+
+  private saveToStorage() {
+    if (typeof window === "undefined") return;
+    try {
+      const array = Array.from(this.mockPayments.values());
+      localStorage.setItem(LOCAL_STORAGE_PAYMENTS_KEY, JSON.stringify(array));
+    } catch (err) {
+      console.error("Error writing payments to localStorage", err);
+    }
+  }
+
   async createPaymentRecord(payload: CreatePaymentPayload): Promise<PaymentRecord> {
+    this.syncFromStorage();
+
+    // Check existing payment for booking
+    const existing = Array.from(this.mockPayments.values()).find((p) => p.bookingId === payload.bookingId);
+    if (existing) {
+      return existing;
+    }
+
     const paymentId = `pay-${Date.now()}`;
     const paymentNumber = `PAY-${Date.now().toString().slice(-6)}`;
 
@@ -55,14 +93,22 @@ export class PaymentService implements IPaymentService {
     };
 
     this.mockPayments.set(paymentId, record);
+    this.saveToStorage();
     return record;
   }
 
   async getPayment(paymentId: string): Promise<PaymentRecord | null> {
+    this.syncFromStorage();
     return this.mockPayments.get(paymentId) || null;
   }
 
+  async getBookingPayment(bookingId: string): Promise<PaymentRecord | null> {
+    this.syncFromStorage();
+    return Array.from(this.mockPayments.values()).find((p) => p.bookingId === bookingId) || null;
+  }
+
   async processMockPayment(paymentId: string, simulateSuccess: boolean): Promise<PaymentRecord> {
+    this.syncFromStorage();
     const payment = await this.getPayment(paymentId);
     if (!payment) {
       throw new Error(`Payment ${paymentId} not found`);
@@ -74,6 +120,7 @@ export class PaymentService implements IPaymentService {
         status: "FAILED",
       };
       this.mockPayments.set(paymentId, failedPayment);
+      this.saveToStorage();
 
       await notificationService.sendNotification({
         profileId: payment.customerId,
@@ -94,22 +141,25 @@ export class PaymentService implements IPaymentService {
       paidAt,
     };
     this.mockPayments.set(paymentId, paidPayment);
+    this.saveToStorage();
 
     // 1. Mark invoice as paid
     try {
       await invoiceService.updateStatus(payment.invoiceId, "paid");
-    } catch {
-      // Ignored for isolated mocks
+    } catch (err) {
+      console.error("Error updating invoice status to paid", err);
     }
 
     // 2. Transition Booking: PAYMENT_PENDING -> PAYMENT_RECEIVED -> BOOKING_COMPLETED
     const booking = await bookingService.getBooking(payment.bookingId);
     if (booking) {
       try {
-        await bookingService.transitionStatus(payment.bookingId, "PAYMENT_RECEIVED", "SYSTEM", "SUPER_ADMIN", "Payment confirmed");
+        if (booking.status === "PAYMENT_PENDING") {
+          await bookingService.transitionStatus(payment.bookingId, "PAYMENT_RECEIVED", "SYSTEM", "SUPER_ADMIN", "Payment confirmed");
+        }
         await bookingService.transitionStatus(payment.bookingId, "BOOKING_COMPLETED", "SYSTEM", "SUPER_ADMIN", "Workflow complete");
-      } catch {
-        // Fallback for mocked states
+      } catch (err) {
+        console.error("Error transitioning booking to completed", err);
       }
 
       // 3. Reset Worker Availability to AVAILABLE ONLY AFTER BOOKING_COMPLETED
@@ -130,6 +180,7 @@ export class PaymentService implements IPaymentService {
   }
 
   async refundPayment(paymentId: string, reason?: string): Promise<PaymentRecord> {
+    this.syncFromStorage();
     const payment = await this.getPayment(paymentId);
     if (!payment) {
       throw new Error(`Payment ${paymentId} not found`);
@@ -141,6 +192,7 @@ export class PaymentService implements IPaymentService {
     };
 
     this.mockPayments.set(paymentId, refunded);
+    this.saveToStorage();
 
     await notificationService.sendNotification({
       profileId: payment.customerId,

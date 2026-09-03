@@ -44,10 +44,47 @@ export interface IInvoiceService {
   updateStatus(invoiceId: string, status: InvoiceStatus): Promise<Invoice>;
 }
 
+const LOCAL_STORAGE_INVOICES_KEY = "kaushalyasetu_invoices_db";
+
 export class InvoiceService implements IInvoiceService {
   private mockInvoices: Map<string, Invoice> = new Map();
 
+  constructor() {
+    this.syncFromStorage();
+  }
+
+  private syncFromStorage() {
+    if (typeof window === "undefined") return;
+    try {
+      const stored = localStorage.getItem(LOCAL_STORAGE_INVOICES_KEY);
+      if (stored) {
+        const parsed: Invoice[] = JSON.parse(stored);
+        parsed.forEach((inv) => this.mockInvoices.set(inv.id, inv));
+      }
+    } catch (err) {
+      console.error("Error reading invoices from localStorage", err);
+    }
+  }
+
+  private saveToStorage() {
+    if (typeof window === "undefined") return;
+    try {
+      const array = Array.from(this.mockInvoices.values());
+      localStorage.setItem(LOCAL_STORAGE_INVOICES_KEY, JSON.stringify(array));
+    } catch (err) {
+      console.error("Error writing invoices to localStorage", err);
+    }
+  }
+
   async createInvoice(payload: CreateInvoicePayload): Promise<Invoice> {
+    this.syncFromStorage();
+
+    // Prevent duplicate invoice for same booking
+    const existing = Array.from(this.mockInvoices.values()).find((inv) => inv.bookingId === payload.bookingId);
+    if (existing) {
+      return existing;
+    }
+
     const invoiceId = `inv-${Date.now()}`;
     const invoiceNumber = `INV-${Date.now().toString().slice(-6)}`;
 
@@ -89,18 +126,22 @@ export class InvoiceService implements IInvoiceService {
     };
 
     this.mockInvoices.set(invoiceId, invoice);
+    this.saveToStorage();
     return invoice;
   }
 
   async getInvoice(invoiceId: string): Promise<Invoice | null> {
+    this.syncFromStorage();
     return this.mockInvoices.get(invoiceId) || null;
   }
 
   async getBookingInvoice(bookingId: string): Promise<Invoice | null> {
+    this.syncFromStorage();
     return Array.from(this.mockInvoices.values()).find((inv) => inv.bookingId === bookingId) || null;
   }
 
   async updateStatus(invoiceId: string, status: InvoiceStatus): Promise<Invoice> {
+    this.syncFromStorage();
     const invoice = await this.getInvoice(invoiceId);
     if (!invoice) {
       throw new Error(`Invoice ${invoiceId} not found`);
@@ -114,6 +155,7 @@ export class InvoiceService implements IInvoiceService {
     };
 
     this.mockInvoices.set(invoiceId, updated);
+    this.saveToStorage();
     return updated;
   }
 }
