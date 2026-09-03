@@ -14,6 +14,7 @@ import {
   CreditCard,
   User,
   BarChart2,
+  Award,
 } from "lucide-react";
 import type { NavItem } from "@/components/navigation/desktop-sidebar";
 import type { MobileNavItem } from "@/components/navigation/mobile-navigation";
@@ -65,16 +66,18 @@ export const ROLE_NAVIGATION_CONFIGS: Record<PlatformRole, RoleNavigationConfig>
     role: "WORKER",
     displayName: "Cooperative Worker",
     navItems: [
-      { title: "My Gig Dashboard", href: "/worker", icon: React.createElement(Briefcase) },
-      { title: "Schedule & Jobs", href: "/worker/schedule", icon: React.createElement(Calendar) },
-      { title: "Earnings & Payouts", href: "/worker/earnings", icon: React.createElement(Wallet) },
-      { title: "Member Welfare", href: "/worker/welfare", icon: React.createElement(Clock) },
+      { title: "Home / Overview", href: "/worker", icon: React.createElement(Home) },
+      { title: "My Profile", href: "/worker/profile", icon: React.createElement(User) },
+      { title: "My Schedule & Jobs", href: "/worker/schedule", icon: React.createElement(Calendar) },
+      { title: "Earnings", href: "/worker/earnings", icon: React.createElement(Wallet) },
+      { title: "Welfare & Certification", href: "/worker/welfare", icon: React.createElement(Award) },
     ],
     mobileNavItems: [
-      { title: "Gigs", href: "/worker", icon: React.createElement(Briefcase) },
+      { title: "Overview", href: "/worker", icon: React.createElement(Home) },
+      { title: "Profile", href: "/worker/profile", icon: React.createElement(User) },
       { title: "Schedule", href: "/worker/schedule", icon: React.createElement(Calendar) },
       { title: "Earnings", href: "/worker/earnings", icon: React.createElement(Wallet) },
-      { title: "Welfare", href: "/worker/welfare", icon: React.createElement(Clock) },
+      { title: "Welfare", href: "/worker/welfare", icon: React.createElement(Award) },
     ],
   },
   CUSTOMER: {

@@ -1,7 +1,8 @@
 import { WorkerDashboardView } from "@/features/worker/dashboard-view";
 
 export const metadata = {
-  title: "Worker Gig Portal - Cooperative Platform",
+  title: "Worker Portal - KaushalyaSetu (Cooperative Services)",
+  description: "View incoming service requests, manage schedule, track earnings, and access cooperative welfare benefits.",
 };
 
 export default function WorkerPage() {
