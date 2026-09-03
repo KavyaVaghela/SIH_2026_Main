@@ -368,7 +368,12 @@ export class CustomerService {
     } catch (err) {
       console.warn("DB invoices lookup fallback:", err);
     }
-    const inv = await invoiceService.generateInvoice("bk-demo");
+    const inv = (await invoiceService.getBookingInvoice("bk-demo")) || (await invoiceService.createInvoice({
+      bookingId: "bk-demo",
+      customerId,
+      federationId: "fed-1",
+      items: [{ description: "Household Service Visit", quantity: 1, unitPrice: 350 }],
+    }));
     return [{ ...inv, customerId }];
   }
 
