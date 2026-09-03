@@ -132,7 +132,11 @@ export class CustomerService {
    * Calculate platform estimate.
    */
   calculatePlatformEstimate(basePrice: number) {
-    return pricingService.calculatePlatformEstimate(basePrice);
+    return pricingService.calculatePlatformEstimate({
+      serviceBasePrice: basePrice,
+      minimumVisitCharge: 250,
+      estimatedHours: 1,
+    });
   }
 
   /**
