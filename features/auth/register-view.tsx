@@ -674,14 +674,6 @@ export function RegisterView() {
                     <option value="Gujarati">Gujarati (ગુજરાતી)</option>
                   </Select>
                 </div>
-                <div className="space-y-1">
-                  <label className="text-xs font-medium">Profile Photo (Optional UI Upload)</label>
-                  <div className="p-3 border-2 border-dashed rounded-lg text-center bg-muted/20 space-y-1">
-                    <UploadCloud className="h-5 w-5 text-muted-foreground mx-auto" />
-                    <p className="text-xs font-medium">Upload Customer Profile Picture</p>
-                    <p className="text-[10px] text-muted-foreground">JPG/PNG up to 2MB (Mock Simulation)</p>
-                  </div>
-                </div>
                 <Button type="button" className="w-full font-semibold" onClick={() => setCurrentStepIndex(4)}>
                   Review Registration Details <ArrowRight className="ml-2 h-4 w-4" />
                 </Button>
