@@ -10,10 +10,14 @@ export async function middleware(request: NextRequest) {
     },
   });
 
-  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || "https://placeholder.supabase.co";
-  const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || "placeholder-anon-key";
+  const supabaseUrl =
+    process.env.NEXT_PUBLIC_SUPABASE_URL || "https://placeholder.supabase.co";
+  const supabasePublishableKey =
+    process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY ||
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY ||
+    "placeholder-publishable-key";
 
-  const supabase = createServerClient(supabaseUrl, supabaseAnonKey, {
+  const supabase = createServerClient(supabaseUrl, supabasePublishableKey, {
     cookies: {
       getAll() {
         return request.cookies.getAll();
@@ -46,6 +50,15 @@ export async function middleware(request: NextRequest) {
 
   // Case 1: Unauthenticated user accessing a protected route
   if (!user && isProtectedPath) {
+    // Development mode bypass for local prototyping/testing
+    const allowDevBypass =
+      process.env.NODE_ENV === "development" &&
+      process.env.NEXT_PUBLIC_DISABLE_DEV_BYPASS !== "true";
+
+    if (allowDevBypass) {
+      return response;
+    }
+
     // Sanitize open redirect: only allow relative paths starting with /
     const sanitizedRedirect = (pathname.startsWith("/") && !pathname.startsWith("//")) ? pathname : "/";
     const loginUrl = new URL("/login", request.url);
