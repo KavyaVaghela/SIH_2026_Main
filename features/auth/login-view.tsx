@@ -17,14 +17,6 @@ import { loginSchema, type LoginFormData } from "@/features/auth/schemas/login-s
 import { signInWithEmail } from "@/lib/auth/actions";
 import { isRouteAllowedForRole } from "@/lib/auth/rbac";
 
-// Quick Test Account Reference
-const TEST_ACCOUNTS = [
-  { role: "CUSTOMER", email: "customer@example.com" },
-  { role: "WORKER", email: "worker@example.com" },
-  { role: "FEDERATION_ADMIN", email: "federation@example.com" },
-  { role: "SUPER_ADMIN", email: "admin@example.com" },
-];
-
 export function LoginView() {
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -40,13 +32,12 @@ export function LoginView() {
   const {
     register,
     handleSubmit,
-    setValue,
     formState: { errors, isSubmitting },
   } = useForm<LoginFormData>({
     resolver: zodResolver(loginSchema),
     defaultValues: {
-      email: "",
-      password: "",
+      email: "customer@example.com",
+      password: "Password123!",
     },
     mode: "onTouched",
   });
@@ -81,13 +72,6 @@ export function LoginView() {
     router.push(destination);
   };
 
-  // Quick-fill test email helper
-  const prefillCredentials = (email: string) => {
-    setValue("email", email, { shouldValidate: true });
-    setValue("password", "Test@123", { shouldValidate: true });
-    setAuthError(null);
-  };
-
   const handleForgotSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!forgotEmail || !forgotEmail.includes("@")) return;
@@ -114,8 +98,6 @@ export function LoginView() {
             </Alert>
           )}
 
-
-
           <form onSubmit={handleSubmit(onSubmit)} className="space-y-4" noValidate>
             {/* Email Field */}
             <div className="space-y-1.5">
@@ -126,7 +108,7 @@ export function LoginView() {
                 <Input
                   id="email"
                   type="email"
-                  placeholder="e.g. customer@test.com"
+                  placeholder="e.g. customer@example.com"
                   autoComplete="email"
                   disabled={isSubmitting}
                   aria-invalid={!!errors.email}
@@ -199,27 +181,6 @@ export function LoginView() {
               )}
             </Button>
           </form>
-
-          {/* Quick Test Account Selector Pills */}
-          <div className="pt-2 border-t space-y-2">
-            <p className="text-[11px] font-medium text-muted-foreground text-center">
-              Quick Test Credentials (Click to prefill email):
-            </p>
-            <div className="grid grid-cols-2 gap-1.5">
-              {TEST_ACCOUNTS.map((acc) => (
-                <button
-                  key={acc.email}
-                  type="button"
-                  onClick={() => prefillCredentials(acc.email)}
-                  disabled={isSubmitting}
-                  className="text-left p-2 rounded-md border bg-muted/40 hover:bg-emerald-50 dark:hover:bg-emerald-950/40 hover:border-emerald-500/50 transition-colors text-[11px] space-y-0.5 focus:outline-none focus:ring-1 focus:ring-primary"
-                >
-                  <div className="font-semibold text-foreground truncate">{acc.role}</div>
-                  <div className="text-muted-foreground truncate">{acc.email}</div>
-                </button>
-              ))}
-            </div>
-          </div>
         </CardContent>
         <CardFooter className="justify-center text-xs text-muted-foreground border-t pt-4">
           Don&apos;t have an account?{" "}
