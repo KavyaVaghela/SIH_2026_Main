@@ -7,12 +7,34 @@ export type Json =
   | Json[];
 
 export type UserRole = "SUPER_ADMIN" | "FEDERATION_ADMIN" | "WORKER" | "CUSTOMER";
-export type WorkerStatus = "pending_verification" | "verified" | "suspended";
-export type AvailabilityStatus = "available" | "busy" | "offline";
-export type BookingStatus = "pending" | "assigned" | "in_progress" | "completed" | "cancelled";
-export type PaymentStatus = "unpaid" | "paid" | "refunded" | "failed";
+export type WorkerAccountStatus = "ACTIVE" | "DEACTIVATED";
+export type WorkerAvailabilityStatus = "AVAILABLE" | "BUSY" | "UNAVAILABLE";
+export type WorkerAvailability = WorkerAvailabilityStatus;
+export type WorkerVerificationStatus = "pending_verification" | "verified" | "suspended";
+
+export type BookingStatus =
+  | "REQUEST_SENT"
+  | "WORKER_REVIEWING"
+  | "WORKER_INTERESTED"
+  | "CUSTOMER_CONFIRMATION_PENDING"
+  | "BOOKING_CONFIRMED"
+  | "WORKER_ACCEPTED"
+  | "ON_THE_WAY"
+  | "ARRIVED"
+  | "OTP_VERIFIED"
+  | "SERVICE_STARTED"
+  | "SERVICE_COMPLETED"
+  | "BILL_GENERATED"
+  | "PAYMENT_PENDING"
+  | "PAYMENT_RECEIVED"
+  | "BOOKING_COMPLETED"
+  | "CANCELLED";
+
+export type PaymentStatus = "PENDING" | "PAID" | "FAILED" | "REFUNDED";
 export type InvoiceStatus = "draft" | "issued" | "paid" | "cancelled" | "overdue";
-export type ComplaintStatus = "submitted" | "under_review" | "resolved" | "dismissed";
+export type ComplaintStatus = "OPEN" | "IN_REVIEW" | "RESOLVED";
+export type ApplicationStatus = "PENDING" | "APPROVED" | "REJECTED";
+export type CertificationStatus = "VERIFIED" | "EXPIRING_SOON" | "EXPIRED";
 
 export interface Database {
   public: {
@@ -29,6 +51,8 @@ export interface Database {
           address: string;
           contact_email: string;
           contact_phone: string;
+          service_region: string | null;
+          official_documents: Json | null;
           is_active: boolean;
           created_at: string;
           updated_at: string;
@@ -86,10 +110,14 @@ export interface Database {
           id: string;
           profile_id: string;
           federation_id: string;
-          status: WorkerStatus;
-          availability_status: AvailabilityStatus;
+          account_status: WorkerAccountStatus;
+          availability_status: WorkerAvailabilityStatus;
+          verification_status: WorkerVerificationStatus;
+          profession: string | null;
           hourly_rate: number;
           experience_years: number;
+          service_radius_km: number;
+          joining_date: string;
           current_latitude: number | null;
           current_longitude: number | null;
           last_active_at: string | null;
@@ -125,6 +153,7 @@ export interface Database {
           title: string;
           description: string | null;
           base_price: number;
+          minimum_visit_charge: number;
           price_unit: string;
           is_active: boolean;
           created_at: string;
@@ -187,6 +216,7 @@ export interface Database {
           certificate_number: string | null;
           issue_date: string;
           expiry_date: string | null;
+          status: CertificationStatus;
           is_verified: boolean;
           verification_date: string | null;
           created_at: string;
@@ -223,6 +253,9 @@ export interface Database {
           federation_id: string;
           address_id: string;
           status: BookingStatus;
+          problem_description: string | null;
+          problem_photo_url: string | null;
+          otp_code: string | null;
           scheduled_start_at: string;
           scheduled_end_at: string;
           actual_start_at: string | null;

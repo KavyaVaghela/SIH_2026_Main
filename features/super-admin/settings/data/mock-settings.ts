@@ -1,0 +1,96 @@
+import type { PlatformSettings, ManagedServiceItem } from "../types";
+
+export const INITIAL_SERVICES: ManagedServiceItem[] = [
+  {
+    id: "srv-001",
+    title: "Emergency Electrical Diagnostic",
+    category: "Electrical",
+    basePrice: 450,
+    isActive: true,
+    description: "Rapid response diagnostic for short circuits, tripped breakers, and power loss.",
+  },
+  {
+    id: "srv-002",
+    title: "Commercial Circuit Wiring & Breakers",
+    category: "Electrical",
+    basePrice: 550,
+    isActive: true,
+    description: "Heavy load circuit installations, sub-meter fittings, and three-phase rebalancing.",
+  },
+  {
+    id: "srv-003",
+    title: "High-Voltage Transformer Maintenance",
+    category: "Electrical",
+    basePrice: 850,
+    isActive: false,
+    description: "Substation oil level tests, busbar torque audits, and industrial dielectric tests.",
+  },
+  {
+    id: "srv-004",
+    title: "Drainage Unblocking & Jetting",
+    category: "Plumbing",
+    basePrice: 350,
+    isActive: true,
+    description: "High-pressure water jetting for clogged residential sewer mains and stormwater traps.",
+  },
+  {
+    id: "srv-005",
+    title: "Pipe Hydrostatic Pressure Testing",
+    category: "Plumbing",
+    basePrice: 400,
+    isActive: true,
+    description: "Precision leak detection and burst-pipe pressure inspection using acoustic sensors.",
+  },
+  {
+    id: "srv-006",
+    title: "Hazardous Chemical Pipe Restoration",
+    category: "Plumbing",
+    basePrice: 700,
+    isActive: false,
+    description: "Industrial acid-resistant liner installations and chemical waste pipe repairs.",
+  },
+  {
+    id: "srv-007",
+    title: "Split AC Deep Cleaning & Refrigerant Top-up",
+    category: "HVAC & Cooling",
+    basePrice: 600,
+    isActive: true,
+    description: "Indoor coil foam decontamination, compressor pressure checks, and R32 gas refill.",
+  },
+  {
+    id: "srv-008",
+    title: "Chiller Plant Refrigeration Servicing",
+    category: "HVAC & Cooling",
+    basePrice: 950,
+    isActive: true,
+    description: "Commercial multi-zone VRF system diagnostics and cooling tower maintenance.",
+  },
+  {
+    id: "srv-009",
+    title: "Bespoke Teak Woodwork & Fitting",
+    category: "Carpentry",
+    basePrice: 500,
+    isActive: true,
+    description: "Handcrafted furniture restoration, door framing, and modular kitchen hardware adjustments.",
+  },
+  {
+    id: "srv-010",
+    title: "Rooftop Solar PV Array Installation",
+    category: "CleanTech & Solar",
+    basePrice: 750,
+    isActive: true,
+    description: "Grid-tie inverter sync, mono-perc panel mounting, and net metering certification.",
+  },
+];
+
+export const INITIAL_PLATFORM_SETTINGS: PlatformSettings = {
+  societyRegistrationEnabled: true,
+  emergencyBookingEnabled: true,
+  services: INITIAL_SERVICES,
+  notificationPreferences: {
+    complaintAlertsEnabled: true,
+    workerShortageAlertsEnabled: true,
+    welfareAlertsEnabled: true,
+    registrationAlertsEnabled: true,
+  },
+};
