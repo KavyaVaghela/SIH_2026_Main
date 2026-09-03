@@ -288,9 +288,12 @@ export class CustomerService {
 
     return bookingService.createRequest({
       customerId,
+      workerId,
       serviceId,
       federationId,
       addressId,
+      totalAmount,
+      problemDescription,
       scheduledStartAt: new Date().toISOString(),
       scheduledEndAt: new Date(Date.now() + 7200000).toISOString(),
     });
