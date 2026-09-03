@@ -26,9 +26,7 @@ import {
 import { bookingService, Booking } from "@/features/bookings/services/booking-service";
 import { BookingStatusTimeline } from "./components/booking-status-timeline";
 import { EstimateComparisonCard } from "./components/estimate-comparison-card";
-import { SimulateEstimateButton } from "./components/simulate-estimate-button";
 import { TrackingMapCard } from "./components/tracking-map-card";
-import { DevSimulationControls } from "./components/dev-simulation-controls";
 
 export interface BookingStatusViewProps {
   bookingId: string;
@@ -182,9 +180,6 @@ export function BookingStatusView({ bookingId }: BookingStatusViewProps) {
         />
       )}
 
-      {/* Development Mode Worker Simulation Controls */}
-      <DevSimulationControls booking={booking} onStatusUpdated={fetchBooking} />
-
       {/* Booking Overview Card */}
       <Card className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-sm rounded-xl p-5 space-y-5">
         <div className="flex flex-wrap items-start justify-between gap-3 border-b border-slate-100 dark:border-slate-800 pb-4">
@@ -254,15 +249,6 @@ export function BookingStatusView({ bookingId }: BookingStatusViewProps) {
 
       {/* Estimate Comparison Card */}
       <EstimateComparisonCard booking={booking} />
-
-      {/* Local Dev Simulator Helper Button (if estimate not submitted yet) */}
-      {!isExecutionStarted && !booking.workerEstimateAmount && (
-        <SimulateEstimateButton
-          bookingId={booking.id}
-          workerId={booking.workerId || "w-plumber-1"}
-          onEstimateSubmitted={fetchBooking}
-        />
-      )}
 
       {/* Customer Confirmation Action Card */}
       {isPendingConfirmation && (
