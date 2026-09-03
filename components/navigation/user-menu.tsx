@@ -1,7 +1,7 @@
 "use client";
 
 import * as React from "react";
-import { useRouter } from "next/navigation";
+import { useRouter, usePathname } from "next/navigation";
 import { User, Settings, LogOut, Shield } from "lucide-react";
 import { Avatar } from "@/components/ui/avatar";
 import { Dropdown, type DropdownItem } from "@/components/ui/dropdown";
@@ -25,10 +25,14 @@ export function UserMenu({
   onLogout,
 }: UserMenuProps) {
   const router = useRouter();
+  const pathname = usePathname();
+  const isSuperAdmin = pathname?.startsWith("/super-admin") || userRole?.toLowerCase().includes("super");
 
   const handleProfileClick = () => {
     if (onNavigateProfile) {
       onNavigateProfile();
+    } else if (isSuperAdmin) {
+      router.push("/super-admin/profile");
     } else {
       router.push("/customer/profile");
     }
@@ -37,6 +41,8 @@ export function UserMenu({
   const handleSettingsClick = () => {
     if (onNavigateSettings) {
       onNavigateSettings();
+    } else if (isSuperAdmin) {
+      router.push("/super-admin/settings");
     } else {
       router.push("/customer/settings");
     }
