@@ -1,10 +1,9 @@
 "use client";
 
 import * as React from "react";
-import { Building2, Search, Menu } from "lucide-react";
+import { Building2, Menu } from "lucide-react";
 import { NotificationCenter } from "./notification-center";
 import { UserMenu } from "./user-menu";
-import { Input } from "@/components/ui/input";
 import { cn } from "@/lib/utils";
 
 export interface TopNavbarProps {
@@ -49,16 +48,7 @@ export function TopNavbar({
           </div>
         </div>
 
-        <div className="hidden md:flex items-center w-full max-w-sm mx-4">
-          <div className="relative w-full">
-            <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
-            <Input
-              type="search"
-              placeholder="Search household services, workers, bookings..."
-              className="pl-8 h-9 text-xs"
-            />
-          </div>
-        </div>
+        {/* Global Search Bar removed per Customer Task 7 guidelines */}
 
         <div className="flex items-center space-x-2 sm:space-x-3">
           <NotificationCenter />

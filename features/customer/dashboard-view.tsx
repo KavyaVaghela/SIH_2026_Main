@@ -83,8 +83,8 @@ export function CustomerDashboardView() {
 
       {/* 3. Action Banners Grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
-        <EmergencyBanner onEmergencyClick={() => router.push("/customer/book?category=cat-plumbing")} />
-        <ProjectWorkforceBanner onHireProjectClick={() => router.push("/customer/book?category=cat-carpentry")} />
+        <EmergencyBanner onEmergencyClick={() => router.push("/customer/emergency")} />
+        <ProjectWorkforceBanner onHireProjectClick={() => router.push("/customer/projects")} />
       </div>
 
       {/* 4. Active Services & Schedule Section */}
