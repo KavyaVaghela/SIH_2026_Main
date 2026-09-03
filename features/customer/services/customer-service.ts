@@ -293,7 +293,7 @@ export class CustomerService {
       federationId,
       addressId,
       totalAmount,
-      problemDescription,
+      problemDescription: description,
       scheduledStartAt: new Date().toISOString(),
       scheduledEndAt: new Date(Date.now() + 7200000).toISOString(),
     });
