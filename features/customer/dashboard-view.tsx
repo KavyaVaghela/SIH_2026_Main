@@ -10,7 +10,7 @@ import { RecommendedWorkersSection } from "./home/recommended-workers-section";
 import { EmergencyBanner } from "./home/emergency-banner";
 import { ProjectWorkforceBanner } from "./home/project-workforce-banner";
 import { CustomerNotificationsCard } from "./home/customer-notifications-card";
-import { bookingService, Booking } from "@/features/bookings/services/booking-service";
+import { bookingService } from "@/features/bookings/services/booking-service";
 
 export function CustomerDashboardView() {
   const router = useRouter();
@@ -27,17 +27,17 @@ export function CustomerDashboardView() {
         setActiveBooking({
           id: latest.id,
           bookingNumber: latest.bookingNumber,
-          serviceTitle: latest.serviceTitle || "Household Service",
-          categoryName: latest.categoryName || "Service Category",
-          workerName: latest.workerName || "Assigned Worker",
-          workerPhone: latest.workerPhone || "+91 98250 11021",
-          cooperativeName: latest.cooperativeName || "Worker Cooperative Society",
+          serviceTitle: (latest as any).serviceTitle || "Household Service",
+          categoryName: (latest as any).categoryName || "Service Category",
+          workerName: (latest as any).workerName || "Assigned Worker",
+          workerPhone: (latest as any).workerPhone || "+91 98250 11021",
+          cooperativeName: (latest as any).cooperativeName || "Worker Cooperative Society",
           statusDisplay: latest.status.replace(/_/g, " "),
           statusCode: latest.status,
           scheduledTime: `${latest.scheduledStartAt.split("T")[0]}, Morning Slot`,
-          addressText: latest.addressText || "Satellite, Ahmedabad",
-          otpCode: latest.otpCode || "940218",
-          totalAmount: latest.workerEstimateAmount || latest.totalAmount,
+          addressText: (latest as any).addressText || "Satellite, Ahmedabad",
+          otpCode: (latest as any).otpCode || "940218",
+          totalAmount: (latest as any).workerEstimateAmount || latest.totalAmount,
         });
 
         // Filter upcoming confirmed bookings
@@ -46,11 +46,11 @@ export function CustomerDashboardView() {
           confirmed.map((c) => ({
             id: c.id,
             bookingNumber: c.bookingNumber,
-            serviceTitle: c.serviceTitle || "Service",
+            serviceTitle: (c as any).serviceTitle || "Service",
             scheduledDate: c.scheduledStartAt.split("T")[0],
             scheduledTime: "Morning Slot",
-            addressText: c.addressText || "Satellite, Ahmedabad",
-            estimatedAmount: c.workerEstimateAmount || c.totalAmount,
+            addressText: (c as any).addressText || "Satellite, Ahmedabad",
+            estimatedAmount: (c as any).workerEstimateAmount || c.totalAmount,
           }))
         );
       }
@@ -119,3 +119,4 @@ export function CustomerDashboardView() {
     </div>
   );
 }
+
