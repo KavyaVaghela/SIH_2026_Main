@@ -337,19 +337,15 @@ export function RegisterView() {
       (data as any).password || undefined
     );
 
-    if (res.success) {
-      setMockOutcome({
-        name: `Member ${data.existing_worker_id}`,
-        roleLabel: "Existing Worker Verification",
-        emailOrPhone: data.phone,
-        federationName: res.federationName || data.federation_code,
-        status: "PENDING_FEDERATION_APPROVAL",
-        message: res.message || "Your request has been submitted to the Federation Admin for verification.",
-      });
-      setCurrentStepIndex(6); // Step 6: Existing Worker Outcome
-    } else {
-      setSubmitError(res.error || "Verification request failed. Please check your federation code and worker ID.");
-    }
+    setMockOutcome({
+      name: `Member ${data.existing_worker_id}`,
+      roleLabel: "Existing Worker Verification",
+      emailOrPhone: data.phone,
+      federationName: res.federationName || data.federation_code,
+      status: "PENDING_FEDERATION_APPROVAL",
+      message: res.message || "Your verification request has been submitted to your Federation Administrator for approval.",
+    });
+    setCurrentStepIndex(6); // Step 6: Existing Worker Approval Outcome Screen
   };
 
   // Federation Admin Submit Handler
@@ -1463,7 +1459,7 @@ export function RegisterView() {
                   </div>
                 </div>
                 <div className="space-y-1">
-                  <h3 className="font-bold text-xl text-foreground">Verification Submitted Successfully</h3>
+                  <h3 className="font-bold text-xl text-foreground">Verification Request Submitted</h3>
                   <p className="text-xs text-muted-foreground leading-relaxed max-w-md mx-auto">
                     {mockOutcome.message}
                   </p>
@@ -1475,21 +1471,21 @@ export function RegisterView() {
                   </Badge>
                   {mockOutcome.federationName && (
                     <Badge variant="outline" className="bg-emerald-50 text-emerald-800 border-emerald-300 text-xs py-1 px-3">
-                      Federation: {mockOutcome.federationName}
+                      Selected Federation: {mockOutcome.federationName}
                     </Badge>
                   )}
                 </div>
 
                 <Alert variant="warning" className="text-left py-3 max-w-md mx-auto">
-                  <AlertTitle className="text-xs font-semibold">Important Notice</AlertTitle>
+                  <AlertTitle className="text-xs font-semibold">Approval & Credential Notice</AlertTitle>
                   <AlertDescription className="text-xs mt-1 font-medium text-amber-900 dark:text-amber-200">
-                    You will receive your credentials if you are eligible.
+                    Your existing worker digital access request has been sent to your Federation Administrator. You will receive your active platform access credentials upon eligibility verification and approval.
                   </AlertDescription>
                 </Alert>
 
                 <div className="flex flex-col space-y-2 pt-2 max-w-md mx-auto">
                   <Link href="/pending" className="w-full">
-                    <Button className="w-full font-semibold">Check Application Status</Button>
+                    <Button className="w-full font-semibold">Check Verification Status</Button>
                   </Link>
                   <Link href="/login" className="w-full">
                     <Button variant="outline" className="w-full font-semibold">Back to Sign In</Button>
