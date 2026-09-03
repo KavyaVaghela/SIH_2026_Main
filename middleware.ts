@@ -59,21 +59,31 @@ export async function middleware(request: NextRequest) {
       return response;
     }
 
+    // Sanitize open redirect: only allow relative paths starting with /
+    const sanitizedRedirect = (pathname.startsWith("/") && !pathname.startsWith("//")) ? pathname : "/";
     const loginUrl = new URL("/login", request.url);
-    loginUrl.searchParams.set("redirectTo", pathname);
+    loginUrl.searchParams.set("redirectTo", sanitizedRedirect);
     return NextResponse.redirect(loginUrl);
   }
 
   // Case 2: Authenticated user accessing auth routes or protected routes
   if (user) {
-    // Fetch profile role from DB
+    // Fetch profile role & active status from DB
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const { data: profile } = await (supabase
       .from("profiles")
-      .select("role")
+      .select("role, is_active")
       .eq("id", user.id)
-      .single() as any);
+      .maybeSingle() as any);
 
     const userRole: UserRole = profile?.role || "CUSTOMER";
+    const isActive: boolean = profile?.is_active ?? true;
+
+    // If account/profile is inactive/pending and trying to access protected routes, redirect to /pending
+    if (!isActive && isProtectedPath && userRole !== "CUSTOMER") {
+      return NextResponse.redirect(new URL("/pending", request.url));
+    }
+
     const homeRoute = getRoleHomeRoute(userRole);
 
     // If user is accessing login/register while authenticated, redirect to their role home page
