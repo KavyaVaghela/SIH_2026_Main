@@ -1,3 +1,4 @@
+import { Suspense } from "react";
 import { RegisterView } from "@/features/auth/register-view";
 
 export const metadata = {
@@ -5,5 +6,10 @@ export const metadata = {
 };
 
 export default function RegisterPage() {
-  return <RegisterView />;
+  return (
+    <Suspense>
+      <RegisterView />
+    </Suspense>
+  );
 }
+
