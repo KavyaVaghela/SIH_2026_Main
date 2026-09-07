@@ -27,12 +27,18 @@ export function UserMenu({
   const router = useRouter();
   const pathname = usePathname();
   const isSuperAdmin = pathname?.startsWith("/super-admin") || userRole?.toLowerCase().includes("super");
+  const isFederationAdmin = pathname?.startsWith("/federation-admin") || userRole?.toLowerCase().includes("federation");
+  const isWorker = pathname?.startsWith("/worker") || userRole?.toLowerCase().includes("worker");
 
   const handleProfileClick = () => {
     if (onNavigateProfile) {
       onNavigateProfile();
     } else if (isSuperAdmin) {
       router.push("/super-admin/profile");
+    } else if (isFederationAdmin) {
+      router.push("/federation-admin/federation-information");
+    } else if (isWorker) {
+      router.push("/worker/profile");
     } else {
       router.push("/customer/profile");
     }
@@ -43,6 +49,10 @@ export function UserMenu({
       onNavigateSettings();
     } else if (isSuperAdmin) {
       router.push("/super-admin/settings");
+    } else if (isFederationAdmin) {
+      router.push("/federation-admin");
+    } else if (isWorker) {
+      router.push("/worker/profile");
     } else {
       router.push("/customer/settings");
     }
