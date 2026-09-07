@@ -29,6 +29,12 @@ export interface Booking {
   workerEstimateNotes?: string | null;
   workerEstimateSubmittedAt?: string | null;
 
+  // Real Service Execution Details (Task 6)
+  workNotes?: string | null;
+  materialsUsed?: string[] | null;
+  beforePhotoUrl?: string | null;
+  afterPhotoUrl?: string | null;
+
   // Populated Display Helpers
   serviceTitle?: string;
   categoryName?: string;
@@ -247,13 +253,16 @@ export class BookingService implements IBookingService {
     }
 
     // Now transition from WORKER_INTERESTED to CUSTOMER_CONFIRMATION_PENDING
-    const updated = await this.transitionStatus(
-      booking.id,
-      "CUSTOMER_CONFIRMATION_PENDING",
-      payload.workerId,
-      "WORKER",
-      `Worker submitted estimate of ₹${payload.totalAmount}`
-    );
+    let updated = currentBooking;
+    if (currentBooking.status === "WORKER_INTERESTED") {
+      updated = await this.transitionStatus(
+        booking.id,
+        "CUSTOMER_CONFIRMATION_PENDING",
+        payload.workerId,
+        "WORKER",
+        `Worker submitted estimate of ₹${payload.totalAmount}`
+      );
+    }
 
     updated.workerEstimateAmount = payload.totalAmount;
     updated.workerEstimateLabor = payload.laborAmount || Math.round(payload.totalAmount * 0.7);
@@ -315,9 +324,38 @@ export class BookingService implements IBookingService {
       bookingId,
       "OTP_VERIFIED",
       changedById,
-      "CUSTOMER",
+      changedById?.startsWith("w-") ? "WORKER" : "CUSTOMER",
       "Customer verified 6-digit service start OTP"
     );
+    this.saveToStorage();
+    return updated;
+  }
+
+  async updateServiceDetails(
+    bookingId: string,
+    details: {
+      workNotes?: string | null;
+      materialsUsed?: string[] | null;
+      beforePhotoUrl?: string | null;
+      afterPhotoUrl?: string | null;
+    }
+  ): Promise<Booking> {
+    this.syncFromStorage();
+    const booking = await this.getBooking(bookingId);
+    if (!booking) {
+      throw new AppError(`Booking ${bookingId} not found`, "NOT_FOUND", 404);
+    }
+
+    const updated: Booking = {
+      ...booking,
+      ...(details.workNotes !== undefined && { workNotes: details.workNotes }),
+      ...(details.materialsUsed !== undefined && { materialsUsed: details.materialsUsed }),
+      ...(details.beforePhotoUrl !== undefined && { beforePhotoUrl: details.beforePhotoUrl }),
+      ...(details.afterPhotoUrl !== undefined && { afterPhotoUrl: details.afterPhotoUrl }),
+      updatedAt: new Date().toISOString(),
+    };
+
+    this.mockBookings.set(bookingId, updated);
     this.saveToStorage();
     return updated;
   }
