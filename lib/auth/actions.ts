@@ -14,7 +14,11 @@ export async function signInWithEmail(email: string, password: string) {
     password,
   });
 
-  if (!error && data?.user) {
+  if (error) {
+    return { success: false, error: error.message };
+  }
+
+  if (data?.user) {
     // Fetch role from profile
     const { data: profile } = await supabase
       .from("profiles")
@@ -28,68 +32,7 @@ export async function signInWithEmail(email: string, password: string) {
     return { success: true, redirectUrl, user: data.user, role };
   }
 
-  // Determine potential role from email pattern
-  let demoRole: UserRole = "CUSTOMER";
-  if (lowerEmail.includes("worker")) {
-    demoRole = "WORKER";
-  } else if (lowerEmail.includes("federation")) {
-    demoRole = "FEDERATION_ADMIN";
-  } else if (lowerEmail.includes("admin") || lowerEmail.includes("super")) {
-    demoRole = "SUPER_ADMIN";
-  }
-
-  // Attempt auto signup for new accounts
-  try {
-    const { data: signUpData, error: signUpError } = await supabase.auth.signUp({
-      email: lowerEmail,
-      password,
-      options: {
-        data: {
-          full_name: lowerEmail.split("@")[0] || "Member User",
-          role: demoRole,
-        },
-      },
-    });
-
-    if (!signUpError && signUpData?.user) {
-      const redirectUrl = getRoleHomeRoute(demoRole);
-      return { success: true, redirectUrl, user: signUpData.user, role: demoRole };
-    }
-  } catch (signUpErr) {
-    console.error("Auto sign-up notice:", signUpErr);
-  }
-
-  // Demo / Test account fallback to prevent blocking preview testing
-  const isTestAccount =
-    lowerEmail.includes("example.com") ||
-    lowerEmail.includes("test.com") ||
-    lowerEmail.includes("demo") ||
-    lowerEmail === "customer@example.com" ||
-    lowerEmail === "worker@example.com" ||
-    lowerEmail === "federation@example.com" ||
-    lowerEmail === "admin@example.com";
-
-  if (isTestAccount) {
-    const redirectUrl = getRoleHomeRoute(demoRole);
-    const testUserId =
-      lowerEmail === "customer@example.com"
-        ? "b0ef9604-54c8-4ad1-9a7a-c353cfd339ef"
-        : lowerEmail === "worker@example.com"
-        ? "70fbdb46-120f-459e-a616-67b4f676f5d0"
-        : lowerEmail === "federation@example.com"
-        ? "f0000000-0000-0000-0000-000000000001"
-        : lowerEmail === "admin@example.com"
-        ? "81ec03d4-4889-4e9f-a055-dcb70cc50c6e"
-        : `demo-${demoRole.toLowerCase()}`;
-    return {
-      success: true,
-      redirectUrl,
-      user: { id: testUserId, email: lowerEmail },
-      role: demoRole,
-    };
-  }
-
-  return { success: false, error: error?.message || "Invalid login credentials" };
+  return { success: false, error: "Authentication failed. Please try again." };
 }
 
 /**

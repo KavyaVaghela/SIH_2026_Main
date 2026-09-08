@@ -19,13 +19,38 @@ export async function middleware(request: NextRequest) {
 
   const supabase = createServerClient(supabaseUrl, supabasePublishableKey, {
     cookies: {
+      get(name: string) {
+        return request.cookies.get(name)?.value;
+      },
+      set(name: string, value: string, options?: CookieOptions) {
+        request.cookies.set({ name, value, ...options });
+        response = NextResponse.next({
+          request: {
+            headers: request.headers,
+          },
+        });
+        response.cookies.set({ name, value, ...options });
+      },
+      remove(name: string, options?: CookieOptions) {
+        request.cookies.set({ name, value: "", ...options, maxAge: 0 });
+        response = NextResponse.next({
+          request: {
+            headers: request.headers,
+          },
+        });
+        response.cookies.set({ name, value: "", ...options, maxAge: 0 });
+      },
       getAll() {
         return request.cookies.getAll();
       },
       setAll(cookiesToSet: Array<{ name: string; value: string; options?: CookieOptions }>) {
-        cookiesToSet.forEach(({ name, value }) => request.cookies.set(name, value));
+        cookiesToSet.forEach(({ name, value, options }) => {
+          request.cookies.set({ name, value, ...options });
+        });
         response = NextResponse.next({
-          request,
+          request: {
+            headers: request.headers,
+          },
         });
         cookiesToSet.forEach(({ name, value, options }) =>
           response.cookies.set(name, value, options)
@@ -48,6 +73,15 @@ export async function middleware(request: NextRequest) {
 
   const isAuthPath = pathname.startsWith("/login") || pathname.startsWith("/register");
 
+  // Helper to construct redirects that preserve refreshed cookies
+  const createRedirect = (url: URL) => {
+    const redirectRes = NextResponse.redirect(url);
+    response.cookies.getAll().forEach((cookie) => {
+      redirectRes.cookies.set(cookie);
+    });
+    return redirectRes;
+  };
+
   // Case 1: Unauthenticated user accessing a protected route
   if (!user && isProtectedPath) {
     // Development mode bypass for local prototyping/testing
@@ -63,7 +97,7 @@ export async function middleware(request: NextRequest) {
     const sanitizedRedirect = (pathname.startsWith("/") && !pathname.startsWith("//")) ? pathname : "/";
     const loginUrl = new URL("/login", request.url);
     loginUrl.searchParams.set("redirectTo", sanitizedRedirect);
-    return NextResponse.redirect(loginUrl);
+    return createRedirect(loginUrl);
   }
 
   // Case 2: Authenticated user accessing auth routes or protected routes
@@ -81,19 +115,19 @@ export async function middleware(request: NextRequest) {
 
     // If account/profile is inactive/pending and trying to access protected routes, redirect to /pending
     if (!isActive && isProtectedPath && userRole !== "CUSTOMER") {
-      return NextResponse.redirect(new URL("/pending", request.url));
+      return createRedirect(new URL("/pending", request.url));
     }
 
     const homeRoute = getRoleHomeRoute(userRole);
 
     // If user is accessing login/register while authenticated, redirect to their role home page
     if (isAuthPath) {
-      return NextResponse.redirect(new URL(homeRoute, request.url));
+      return createRedirect(new URL(homeRoute, request.url));
     }
 
     // Check cross-role route permission
     if (isProtectedPath && !isRouteAllowedForRole(pathname, userRole)) {
-      return NextResponse.redirect(new URL(homeRoute, request.url));
+      return createRedirect(new URL(homeRoute, request.url));
     }
   }
 
