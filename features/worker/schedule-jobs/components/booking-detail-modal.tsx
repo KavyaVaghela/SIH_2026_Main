@@ -125,11 +125,12 @@ export function BookingDetailModal({ booking, isOpen, onClose }: BookingDetailMo
           <span>Assigned through: <strong>{booking.cooperativeName}</strong></span>
         </div>
 
-        {/* Active Job Action if confirmed, accepted, or on the way */}
-        {(booking.status === "BOOKING_CONFIRMED" ||
-          booking.status === "WORKER_ACCEPTED" ||
-          booking.status === "ON_THE_WAY" ||
-          booking.status === "ARRIVED") && (
+        {/* Active Job Action if confirmed or in active service lifecycle */}
+        {booking.status !== "REQUEST_SENT" &&
+          booking.status !== "WORKER_REVIEWING" &&
+          booking.status !== "WORKER_INTERESTED" &&
+          booking.status !== "CUSTOMER_CONFIRMATION_PENDING" &&
+          booking.status !== "CANCELLED" && (
           <div className="pt-2">
             <Link href={`/worker/jobs/${booking.id}`}>
               <Button className="w-full bg-emerald-700 hover:bg-emerald-800 text-white font-semibold text-xs py-2.5">

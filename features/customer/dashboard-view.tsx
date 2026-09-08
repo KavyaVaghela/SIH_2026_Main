@@ -12,13 +12,52 @@ import { ProjectWorkforceBanner } from "./home/project-workforce-banner";
 import { CustomerNotificationsCard } from "./home/customer-notifications-card";
 import { bookingService } from "@/features/bookings/services/booking-service";
 
+import { createClient } from "@/lib/supabase/client";
+
 export function CustomerDashboardView() {
   const router = useRouter();
   const [searchQuery, setSearchQuery] = React.useState("");
+  const [customerDisplayName, setCustomerDisplayName] = React.useState("Prince");
+  const [customerLocationArea, setCustomerLocationArea] = React.useState("Satellite, Ahmedabad");
   const [activeBooking, setActiveBooking] = React.useState<CurrentBookingData | null>(null);
   const [upcomingBookings, setUpcomingBookings] = React.useState<UpcomingBookingData[]>([]);
 
   React.useEffect(() => {
+    const supabase = createClient();
+    supabase.auth.getUser().then(({ data: { user } }) => {
+      if (user?.id) {
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        (supabase.from("profiles") as any)
+          .select("full_name")
+          .eq("id", user.id)
+          .maybeSingle()
+          .then(({ data }: { data: { full_name?: string } | null }) => {
+            if (data?.full_name) {
+              const name = data.full_name.trim();
+              if (name.toLowerCase().includes("system") || name.toLowerCase().includes("admin")) {
+                setCustomerDisplayName("Prince");
+              } else {
+                setCustomerDisplayName(name.split(" ")[0]);
+              }
+            } else {
+              setCustomerDisplayName("Prince");
+            }
+          });
+
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        (supabase.from("addresses") as any)
+          .select("address_line2, city")
+          .eq("profile_id", user.id)
+          .eq("is_default", true)
+          .maybeSingle()
+          .then(({ data }: { data: any }) => {
+            if (data) {
+              setCustomerLocationArea(`${data.address_line2 || "Satellite"}, ${data.city || "Ahmedabad"}`);
+            }
+          });
+      }
+    });
+
     bookingService.getCustomerBookings("cust-1").then((list) => {
       if (list.length > 0) {
         // Find latest active non-cancelled booking
@@ -69,8 +108,8 @@ export function CustomerDashboardView() {
     <div className="max-w-7xl mx-auto space-y-6 pb-12">
       {/* 1. Hero Header & Search Anchor */}
       <CustomerHomeHeader
-        customerName="Ravi"
-        locationArea="Satellite, Ahmedabad"
+        customerName={customerDisplayName}
+        locationArea={customerLocationArea}
         searchQuery={searchQuery}
         onSearchChange={setSearchQuery}
       />

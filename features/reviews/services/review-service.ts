@@ -31,42 +31,15 @@ const LOCAL_STORAGE_REVIEWS_KEY = "kaushalyasetu_reviews_db";
 export class ReviewService implements IReviewService {
   private mockReviews: Map<string, Review> = new Map();
 
-  constructor() {
-    this.syncFromStorage();
-  }
+  constructor() {}
 
-  private syncFromStorage() {
-    if (typeof window === "undefined") return;
-    try {
-      const stored = localStorage.getItem(LOCAL_STORAGE_REVIEWS_KEY);
-      if (stored) {
-        const parsed: Review[] = JSON.parse(stored);
-        parsed.forEach((rev) => this.mockReviews.set(rev.id, rev));
-      }
-    } catch (err) {
-      console.error("Error reading reviews from localStorage", err);
-    }
-  }
-
-  private saveToStorage() {
-    if (typeof window === "undefined") return;
-    try {
-      const array = Array.from(this.mockReviews.values());
-      localStorage.setItem(LOCAL_STORAGE_REVIEWS_KEY, JSON.stringify(array));
-    } catch (err) {
-      console.error("Error writing reviews to localStorage", err);
-    }
-  }
 
   async createReview(payload: CreateReviewPayload): Promise<Review> {
-    this.syncFromStorage();
-
     const booking = await bookingService.getBooking(payload.bookingId);
     if (!booking) {
       throw new AppError("Booking not found", "NOT_FOUND", 404);
     }
 
-    // Require booking to be completed before allowing review
     if (booking.status !== "BOOKING_COMPLETED" && booking.status !== "PAYMENT_RECEIVED") {
       throw new AppError(
         "Reviews can only be submitted for completed bookings",
@@ -75,7 +48,6 @@ export class ReviewService implements IReviewService {
       );
     }
 
-    // Prevent duplicate review for same booking
     const existing = Array.from(this.mockReviews.values()).find((r) => r.bookingId === payload.bookingId);
     if (existing) {
       throw new AppError("You have already submitted a review for this booking", "BUSINESS_RULE_VIOLATION", 400);
@@ -85,7 +57,38 @@ export class ReviewService implements IReviewService {
       throw new AppError("Rating must be between 1 and 5", "VALIDATION_ERROR", 400);
     }
 
-    const review: Review = {
+    let dbReview: Review | null = null;
+    try {
+      const { createClient } = await import("@/lib/supabase/client");
+      const supabase = createClient();
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const { data, error } = await (supabase.from("reviews") as any)
+        .insert({
+          booking_id: payload.bookingId.startsWith("bk-") ? null : payload.bookingId,
+          customer_id: payload.customerId,
+          worker_id: payload.workerId.startsWith("w-") ? null : payload.workerId,
+          rating: payload.rating,
+          comment: payload.comment || null,
+        })
+        .select()
+        .single();
+
+      if (!error && data) {
+        dbReview = {
+          id: data.id,
+          bookingId: data.booking_id || payload.bookingId,
+          customerId: data.customer_id,
+          workerId: data.worker_id || payload.workerId,
+          rating: data.rating,
+          comment: data.comment,
+          createdAt: data.created_at,
+        };
+      }
+    } catch (err) {
+      console.warn("DB createReview insert notice:", err);
+    }
+
+    const review: Review = dbReview || {
       id: `rev-${Date.now()}`,
       bookingId: payload.bookingId,
       customerId: payload.customerId,
@@ -96,24 +99,71 @@ export class ReviewService implements IReviewService {
     };
 
     this.mockReviews.set(review.id, review);
-    this.saveToStorage();
     return review;
   }
 
   async getBookingReview(bookingId: string): Promise<Review | null> {
-    this.syncFromStorage();
+    try {
+      const { createClient } = await import("@/lib/supabase/client");
+      const supabase = createClient();
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const { data, error } = await (supabase.from("reviews") as any)
+        .select("*")
+        .eq("booking_id", bookingId)
+        .maybeSingle();
+
+      if (!error && data) {
+        const mapped: Review = {
+          id: data.id,
+          bookingId: data.booking_id,
+          customerId: data.customer_id,
+          workerId: data.worker_id,
+          rating: data.rating,
+          comment: data.comment,
+          createdAt: data.created_at,
+        };
+        this.mockReviews.set(mapped.id, mapped);
+        return mapped;
+      }
+    } catch (err) {
+      console.warn("DB getBookingReview query notice:", err);
+    }
     return Array.from(this.mockReviews.values()).find((r) => r.bookingId === bookingId) || null;
   }
 
   async getWorkerReviews(workerId: string): Promise<Review[]> {
-    this.syncFromStorage();
+    try {
+      const { createClient } = await import("@/lib/supabase/client");
+      const supabase = createClient();
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const { data, error } = await (supabase.from("reviews") as any)
+        .select("*")
+        .eq("worker_id", workerId)
+        .order("created_at", { ascending: false });
+
+      if (!error && data && data.length > 0) {
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        const dbReviews: Review[] = data.map((r: any) => ({
+          id: r.id,
+          bookingId: r.booking_id,
+          customerId: r.customer_id,
+          workerId: r.worker_id,
+          rating: r.rating,
+          comment: r.comment,
+          createdAt: r.created_at,
+        }));
+        dbReviews.forEach((r) => this.mockReviews.set(r.id, r));
+        return dbReviews;
+      }
+    } catch (err) {
+      console.warn("DB getWorkerReviews query notice:", err);
+    }
     return Array.from(this.mockReviews.values()).filter((r) => r.workerId === workerId);
   }
 
   async getAverageRatingForWorker(workerId: string): Promise<number> {
-    this.syncFromStorage();
     const reviews = await this.getWorkerReviews(workerId);
-    if (reviews.length === 0) return 5.0; // Default baseline rating
+    if (reviews.length === 0) return 5.0;
     const sum = reviews.reduce((acc, r) => acc + r.rating, 0);
     return Math.round((sum / reviews.length) * 10) / 10;
   }

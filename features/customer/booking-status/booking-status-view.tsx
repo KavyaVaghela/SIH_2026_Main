@@ -24,6 +24,7 @@ import {
   Receipt,
 } from "lucide-react";
 import { bookingService, Booking } from "@/features/bookings/services/booking-service";
+import { useRealtimeSubscription } from "@/hooks/use-realtime-subscription";
 import { BookingStatusTimeline } from "./components/booking-status-timeline";
 import { EstimateComparisonCard } from "./components/estimate-comparison-card";
 import { TrackingMapCard } from "./components/tracking-map-card";
@@ -50,12 +51,21 @@ export function BookingStatusView({ bookingId }: BookingStatusViewProps) {
     }
   }, [bookingId]);
 
-  // Initial fetch and 3-second polling for live estimate & status updates
+  // Initial fetch
   React.useEffect(() => {
     fetchBooking();
-    const interval = setInterval(fetchBooking, 3000);
-    return () => clearInterval(interval);
   }, [fetchBooking]);
+
+  // Native Supabase Realtime subscription for this specific booking
+  useRealtimeSubscription({
+    table: "bookings",
+    filter: `id=eq.${bookingId}`,
+    onPayload: () => {
+      fetchBooking();
+    },
+  });
+
+
 
   const handleConfirmBooking = async () => {
     if (!booking) return;
