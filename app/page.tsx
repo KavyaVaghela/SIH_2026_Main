@@ -1,4 +1,6 @@
-// Root Page Placeholder
+import { redirect } from "next/navigation";
+
 export default function HomePage() {
-  return <div>Cooperative Gig Services Platform Architecture</div>;
+  redirect("/login");
 }
+
