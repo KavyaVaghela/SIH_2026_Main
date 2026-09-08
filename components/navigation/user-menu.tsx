@@ -27,6 +27,11 @@ export function UserMenu({
   const router = useRouter();
   const pathname = usePathname();
   const isSuperAdmin = pathname?.startsWith("/super-admin") || userRole?.toLowerCase().includes("super");
+  const isCustomer = pathname?.startsWith("/customer") || userRole?.toLowerCase().includes("customer");
+
+  const displayUserName = (isCustomer && (userName?.includes("Administrator") || userName?.includes("System")))
+    ? "Prince Patel"
+    : (userName || (isCustomer ? "Prince Patel" : "Ravi Patel"));
 
   const handleProfileClick = () => {
     if (onNavigateProfile) {
@@ -67,7 +72,7 @@ export function UserMenu({
     {
       label: (
         <div className="flex flex-col text-left py-0.5">
-          <span className="font-semibold text-xs text-foreground">{userName}</span>
+          <span className="font-semibold text-xs text-foreground">{displayUserName}</span>
           <span className="text-[10px] text-muted-foreground capitalize">{userRole}</span>
         </div>
       ),
@@ -99,9 +104,9 @@ export function UserMenu({
     <Dropdown
       trigger={
         <button className="flex items-center space-x-2 rounded-full p-1 transition-colors hover:bg-accent focus:outline-none">
-          <Avatar src={avatarUrl} fallback={userName} size="sm" />
+          <Avatar src={avatarUrl} fallback={displayUserName} size="sm" />
           <div className="hidden md:block text-left text-xs">
-            <p className="font-semibold text-foreground leading-tight">{userName}</p>
+            <p className="font-semibold text-foreground leading-tight">{displayUserName}</p>
             <p className="text-[10px] text-muted-foreground capitalize">{userRole}</p>
           </div>
         </button>

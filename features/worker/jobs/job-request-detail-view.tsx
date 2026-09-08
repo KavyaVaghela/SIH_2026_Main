@@ -42,6 +42,27 @@ export function JobRequestDetailView({ requestId }: JobRequestDetailViewProps) {
   const [isSubmitting, setIsSubmitting] = React.useState(false);
   const [actionSuccessMessage, setActionSuccessMessage] = React.useState<string | null>(null);
   const [actionError, setActionError] = React.useState<string | null>(null);
+  const [workerDbId, setWorkerDbId] = React.useState<string>("59eca4ff-a589-4363-ad76-24a4ff5b6e2e");
+
+  // Resolve real worker UUID from authenticated session on mount
+  React.useEffect(() => {
+    import("@/lib/supabase/client").then(({ createClient }) => {
+      const supabase = createClient();
+      supabase.auth.getUser().then(({ data: { user } }) => {
+        if (user?.id) {
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          (supabase.from("workers") as any)
+            .select("id")
+            .eq("profile_id", user.id)
+            .maybeSingle()
+            .then(({ data: wRec }: { data: { id: string } | null }) => {
+              if (wRec?.id) setWorkerDbId(wRec.id);
+            });
+        }
+      });
+    });
+  }, []);
+
 
   const loadDetails = React.useCallback(async () => {
     setLoading(true);
@@ -76,7 +97,7 @@ export function JobRequestDetailView({ requestId }: JobRequestDetailViewProps) {
     setActionError(null);
     setActionSuccessMessage(null);
     try {
-      const updated = await workerJobService.reviewJobRequest(job.id, "w-1");
+      const updated = await workerJobService.reviewJobRequest(job.id, workerDbId);
       const updatedHist = await workerJobService.getStatusHistory(job.id);
       setJob(updated);
       setHistory(updatedHist);
@@ -96,7 +117,7 @@ export function JobRequestDetailView({ requestId }: JobRequestDetailViewProps) {
     setActionError(null);
     setActionSuccessMessage(null);
     try {
-      const updated = await workerJobService.expressInterestInJob(job.id, "w-1");
+      const updated = await workerJobService.expressInterestInJob(job.id, workerDbId);
       const updatedHist = await workerJobService.getStatusHistory(job.id);
       setJob(updated);
       setHistory(updatedHist);

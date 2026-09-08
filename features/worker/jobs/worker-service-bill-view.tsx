@@ -38,6 +38,27 @@ export function WorkerServiceBillView({ bookingId }: WorkerServiceBillViewProps)
   const [isSubmitting, setIsSubmitting] = React.useState(false);
   const [errorMessage, setErrorMessage] = React.useState<string | null>(null);
   const [successMessage, setSuccessMessage] = React.useState<string | null>(null);
+  const [workerDbId, setWorkerDbId] = React.useState<string>("59eca4ff-a589-4363-ad76-24a4ff5b6e2e");
+
+  // Resolve real worker UUID from authenticated session on mount
+  React.useEffect(() => {
+    import("@/lib/supabase/client").then(({ createClient }) => {
+      const supabase = createClient();
+      supabase.auth.getUser().then(({ data: { user } }) => {
+        if (user?.id) {
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          (supabase.from("workers") as any)
+            .select("id")
+            .eq("profile_id", user.id)
+            .maybeSingle()
+            .then(({ data: wRec }: { data: { id: string } | null }) => {
+              if (wRec?.id) setWorkerDbId(wRec.id);
+            });
+        }
+      });
+    });
+  }, []);
+
 
   // Bill Line Items
   const [laborAmount, setLaborAmount] = React.useState<number>(400);
@@ -166,7 +187,7 @@ export function WorkerServiceBillView({ bookingId }: WorkerServiceBillViewProps)
     try {
       const result = await workerJobService.generateServiceBill({
         bookingId: job.id,
-        workerId: "w-1",
+        workerId: workerDbId,
         items: allItems,
       });
 

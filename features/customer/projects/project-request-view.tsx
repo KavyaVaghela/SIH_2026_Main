@@ -67,26 +67,44 @@ export function ProjectRequestView() {
   const [submitting, setSubmitting] = React.useState(false);
   const [successMessage, setSuccessMessage] = React.useState<string | null>(null);
 
-  const loadProjects = React.useCallback(() => {
-    if (typeof window === "undefined") return;
+  const loadProjects = React.useCallback(async () => {
     try {
-      const stored = localStorage.getItem(LOCAL_STORAGE_PROJECTS_KEY);
-      if (stored) {
-        setProjects(JSON.parse(stored));
-      } else {
-        setProjects(DEFAULT_PROJECTS);
-        localStorage.setItem(LOCAL_STORAGE_PROJECTS_KEY, JSON.stringify(DEFAULT_PROJECTS));
+      const { createClient } = await import("@/lib/supabase/client");
+      const supabase = createClient();
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const { data, error } = await (supabase.from("project_requests") as any)
+        .select("*")
+        .order("created_at", { ascending: false });
+
+      if (!error && data && data.length > 0) {
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        const mapped: ProjectRequest[] = data.map((p: any) => ({
+          id: p.id,
+          projectNumber: `PRJ-2026-${p.id.slice(-4)}`,
+          title: p.project_name || "Community Gig Project",
+          categoryName: "General Project",
+          description: p.description,
+          workforceNeeded: 4,
+          location: "Gujarat Region",
+          expectedStartDate: "2026-09-20",
+          durationDays: 7,
+          status: p.status?.toUpperCase() || "SUBMITTED",
+          createdAt: p.created_at,
+        }));
+        setProjects(mapped);
+        return;
       }
-    } catch {
-      setProjects(DEFAULT_PROJECTS);
+    } catch (err) {
+      console.warn("DB project_requests query notice:", err);
     }
+    setProjects(DEFAULT_PROJECTS);
   }, []);
 
   React.useEffect(() => {
     loadProjects();
   }, [loadProjects]);
 
-  const handleSubmitProject = (e: React.FormEvent) => {
+  const handleSubmitProject = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!title.trim() || !description.trim()) return;
 
@@ -105,12 +123,23 @@ export function ProjectRequestView() {
       createdAt: new Date().toISOString(),
     };
 
-    const updated = [newProj, ...projects];
-    setProjects(updated);
-    if (typeof window !== "undefined") {
-      localStorage.setItem(LOCAL_STORAGE_PROJECTS_KEY, JSON.stringify(updated));
+    try {
+      const { createClient } = await import("@/lib/supabase/client");
+      const supabase = createClient();
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      await (supabase.from("project_requests") as any).insert({
+        customer_id: "a0000000-0000-0000-0000-000000000001",
+        federation_id: "f0000000-0000-0000-0000-000000000001",
+        project_name: title,
+        description,
+        total_budget: 55000,
+        status: "submitted",
+      });
+    } catch (err) {
+      console.warn("DB project_requests insert notice:", err);
     }
 
+    setProjects((prev) => [newProj, ...prev]);
     setSubmitting(false);
     setShowForm(false);
     setSuccessMessage("Your project request has been submitted and is awaiting cooperative review.");

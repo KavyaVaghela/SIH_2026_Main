@@ -55,10 +55,17 @@ const DEFAULT_ADDRESSES: CustomerAddress[] = [
   },
 ];
 
+import { createClient } from "@/lib/supabase/client";
+
 export function ProfileView() {
   const [addresses, setAddresses] = React.useState<CustomerAddress[]>([]);
   const [showAddForm, setShowAddForm] = React.useState(false);
   const [editingAddr, setEditingAddr] = React.useState<CustomerAddress | null>(null);
+  const [userProfile, setUserProfile] = React.useState<{ fullName: string; email: string; phone: string }>({
+    fullName: "Prince Patel",
+    email: "customer@example.com",
+    phone: "+91 98765 43210",
+  });
 
   // Form State
   const [label, setLabel] = React.useState<string>("Home");
@@ -85,6 +92,26 @@ export function ProfileView() {
 
   React.useEffect(() => {
     loadAddresses();
+
+    const supabase = createClient();
+    supabase.auth.getUser().then(({ data: { user } }) => {
+      if (user?.id) {
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        (supabase.from("profiles") as any)
+          .select("full_name, email, phone")
+          .eq("id", user.id)
+          .maybeSingle()
+          .then(({ data }: { data: { full_name?: string; email?: string; phone?: string } | null }) => {
+            if (data) {
+              setUserProfile({
+                fullName: data.full_name || "Prince Patel",
+                email: data.email || user.email || "customer@example.com",
+                phone: data.phone || "+91 98765 43210",
+              });
+            }
+          });
+      }
+    });
   }, [loadAddresses]);
 
   const saveAddressesToStorage = (updated: CustomerAddress[]) => {
@@ -151,6 +178,13 @@ export function ProfileView() {
     setShowAddForm(false);
   };
 
+  const initials = userProfile.fullName
+    .split(" ")
+    .map((n) => n[0])
+    .join("")
+    .substring(0, 2)
+    .toUpperCase();
+
   return (
     <div className="max-w-4xl mx-auto space-y-6 pb-12">
       <PageHeader
@@ -167,11 +201,11 @@ export function ProfileView() {
         <div className="flex flex-wrap items-center justify-between gap-4 border-b border-slate-100 dark:border-slate-800 pb-4">
           <div className="flex items-center gap-3">
             <div className="w-12 h-12 rounded-full bg-emerald-700 text-white font-extrabold text-lg flex items-center justify-center shadow-md">
-              RP
+              {initials}
             </div>
             <div>
               <h3 className="font-bold text-base text-slate-900 dark:text-slate-100 flex items-center gap-1.5">
-                Ravi Patel
+                {userProfile.fullName}
                 <ShieldCheck className="w-4 h-4 text-emerald-600" />
               </h3>
               <p className="text-xs text-slate-500 font-mono">Member ID: CUST-8092-AHM</p>
@@ -188,21 +222,21 @@ export function ProfileView() {
             <span className="text-[10px] text-slate-400 font-bold uppercase block flex items-center gap-1">
               <Phone className="w-3.5 h-3.5 text-emerald-600" /> Mobile Number
             </span>
-            <p className="font-bold text-slate-900 dark:text-slate-100 font-mono">+91 98250 11021</p>
+            <p className="font-bold text-slate-900 dark:text-slate-100 font-mono">{userProfile.phone}</p>
           </div>
 
           <div className="space-y-1">
             <span className="text-[10px] text-slate-400 font-bold uppercase block flex items-center gap-1">
               <Mail className="w-3.5 h-3.5 text-emerald-600" /> Email Address
             </span>
-            <p className="font-bold text-slate-900 dark:text-slate-100">ravi.patel@example.com</p>
+            <p className="font-bold text-slate-900 dark:text-slate-100">{userProfile.email}</p>
           </div>
 
           <div className="space-y-1">
             <span className="text-[10px] text-slate-400 font-bold uppercase block flex items-center gap-1">
               <Building className="w-3.5 h-3.5 text-emerald-600" /> Default Cooperative Hub
             </span>
-            <p className="font-bold text-emerald-700 dark:text-emerald-400">Satellite Artisans Cooperative Society</p>
+            <p className="font-bold text-emerald-700 dark:text-emerald-400">Gujarat Labour Cooperative Federation</p>
           </div>
         </div>
       </Card>

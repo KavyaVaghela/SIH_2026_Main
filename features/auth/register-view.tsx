@@ -59,10 +59,10 @@ import {
 type RegistrationRole = "CUSTOMER" | "WORKER_GATE" | "WORKER_NEW" | "WORKER_EXISTING" | "FEDERATION_ADMIN";
 
 const MOCK_FEDERATIONS = [
-  { id: "fed_1", code: "FED-MUM-01", name: "Mumbai Skilled Workers Cooperative Federation", state: "Maharashtra", city: "Mumbai", address: "102 Cooperative Tower, Bandra, Mumbai" },
-  { id: "fed_2", code: "FED-PUN-02", name: "Pune District Trades & Artisans Cooperative", state: "Maharashtra", city: "Pune", address: "45 Artisan Complex, FC Road, Pune" },
-  { id: "fed_3", code: "FED-GUJ-03", name: "Gujarat Craft & Service Cooperative Society", state: "Gujarat", city: "Ahmedabad", address: "12 Swaraj Bhavan, Ashram Road, Ahmedabad" },
-  { id: "fed_4", code: "FED-DEL-04", name: "Delhi National Cooperative Gig Union", state: "Delhi", city: "New Delhi", address: "88 Vikas Marg, Laxmi Nagar, New Delhi" },
+  { id: "b765df3b-c418-4a15-b79f-3cbc09e475dc", code: "FED-AMD-01", name: "Ahmedabad Skilled Workers Federation", state: "Gujarat", city: "Ahmedabad", address: "102 Cooperative Tower, Ashram Road, Ahmedabad" },
+  { id: "df5e2a43-c749-4cca-bd26-fe5826b1d1c3", code: "FED-GUJ-02", name: "Gujarat Household Services Federation", state: "Gujarat", city: "Gandhinagar", address: "45 Artisan Complex, Sector 11, Gandhinagar" },
+  { id: "42ae3cf4-507f-41af-a419-ceee67482ebf", code: "FED-VAD-03", name: "Vadodara Artisan Cooperative", state: "Gujarat", city: "Vadodara", address: "12 Swaraj Bhavan, Sayajigunj, Vadodara" },
+  { id: "3adedc5e-bfa1-4eca-b78c-e43ba957fe21", code: "FED-SUR-04", name: "Surat Technicians Guild", state: "Gujarat", city: "Surat", address: "88 Vikas Marg, Ring Road, Surat" },
 ];
 
 const SKILL_CATEGORIES = [
@@ -131,6 +131,7 @@ export function RegisterView() {
 
   // Submission error display state
   const [submitError, setSubmitError] = React.useState<string | null>(null);
+  const [existingUserEmail, setExistingUserEmail] = React.useState<string | null>(null);
 
   // Customer Form Hook
   const customerForm = useForm<CustomerRegistrationFormData>({
@@ -146,7 +147,7 @@ export function RegisterView() {
       street_area: "",
       city: "",
       district: "",
-      state: "Maharashtra",
+      state: "Gujarat",
       pincode: "",
       preferred_language: "English",
     },
@@ -169,7 +170,7 @@ export function RegisterView() {
   }>({
     resolver: zodResolver(existingWorkerSchema),
     defaultValues: {
-      federation_code: "FED-MUM-01",
+      federation_code: "FED-AMD-01",
       existing_worker_id: "",
       phone: "",
       first_name: "",
@@ -203,9 +204,9 @@ export function RegisterView() {
       street_area: "",
       city: "",
       district: "",
-      state: "Maharashtra",
+      state: "Gujarat",
       pincode: "",
-      federation_id: "fed_1",
+      federation_id: "b765df3b-c418-4a15-b79f-3cbc09e475dc",
       primary_skill_category_id: "cat_elec",
       skills: ["Domestic Wiring"],
       experience_years: 3,
@@ -236,7 +237,7 @@ export function RegisterView() {
       address: "",
       city: "",
       district: "",
-      state: "Maharashtra",
+      state: "Gujarat",
       pincode: "",
       official_email: "",
       official_phone: "",
@@ -257,6 +258,7 @@ export function RegisterView() {
   // Customer Submit Handler
   const handleCustomerSubmit = async (data: CustomerRegistrationFormData) => {
     setSubmitError(null);
+    setExistingUserEmail(null);
     const res = await signUpCustomer(
       data.email,
       data.password,
@@ -281,15 +283,21 @@ export function RegisterView() {
       });
       setCurrentStepIndex(5);
     } else {
-      setSubmitError(res.error || "Customer registration failed. Please try again.");
+      if (res.isExistingUser || res.error?.toLowerCase().includes("already exists")) {
+        setExistingUserEmail(data.email);
+        setSubmitError(res.error || "An account with this email already exists. Please sign in instead.");
+      } else {
+        setSubmitError(res.error || "Customer registration failed. Please try again.");
+      }
     }
   };
 
   // New Worker Submit Handler
   const handleNewWorkerSubmit = async (data: NewWorkerFormData) => {
     setSubmitError(null);
+    setExistingUserEmail(null);
     const fullName = `${data.first_name} ${data.last_name}`;
-    const selectedFed = MOCK_FEDERATIONS.find((f) => f.id === data.federation_id)?.name || "Mumbai Skilled Workers Cooperative Federation";
+    const selectedFed = MOCK_FEDERATIONS.find((f) => f.id === data.federation_id)?.name || "Ahmedabad Skilled Workers Federation";
 
     const res = await signUpWorker(
       data.email,
@@ -320,13 +328,19 @@ export function RegisterView() {
       });
       setCurrentStepIndex(9); // Step 9: Success Outcome Screen
     } else {
-      setSubmitError(res.error || "Worker registration failed. Please try again.");
+      if (res.isExistingUser || res.error?.toLowerCase().includes("already exists")) {
+        setExistingUserEmail(data.email);
+        setSubmitError(res.error || "An account with this email already exists. Please sign in instead.");
+      } else {
+        setSubmitError(res.error || "Worker registration failed. Please try again.");
+      }
     }
   };
 
   // Existing Worker Submit Handler
   const handleExistingWorkerSubmit = async (data: ExistingWorkerFormData) => {
     setSubmitError(null);
+    setExistingUserEmail(null);
     const res = await verifyExistingWorker(
       data.phone,
       data.federation_code,
@@ -337,20 +351,32 @@ export function RegisterView() {
       (data as any).password || undefined
     );
 
-    setMockOutcome({
-      name: `Member ${data.existing_worker_id}`,
-      roleLabel: "Existing Worker Verification",
-      emailOrPhone: data.phone,
-      federationName: res.federationName || data.federation_code,
-      status: "PENDING_FEDERATION_APPROVAL",
-      message: res.message || "Your verification request has been submitted to your Federation Administrator for approval.",
-    });
-    setCurrentStepIndex(6); // Step 6: Existing Worker Approval Outcome Screen
+    if (res.success) {
+      setMockOutcome({
+        name: `Member ${data.existing_worker_id}`,
+        roleLabel: "Existing Worker Verification",
+        emailOrPhone: data.phone,
+        federationName: res.federationName || data.federation_code,
+        status: "PENDING_FEDERATION_APPROVAL",
+        message: res.message || "Your verification request has been submitted to your Federation Administrator for approval.",
+      });
+      setCurrentStepIndex(6); // Step 6: Existing Worker Approval Outcome Screen
+    } else {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const workerEmail = (data as any).email;
+      if (res.isExistingUser || res.error?.toLowerCase().includes("already exists")) {
+        if (workerEmail) setExistingUserEmail(workerEmail);
+        setSubmitError(res.error || "An account with this email already exists. Please sign in instead.");
+      } else {
+        setSubmitError(res.error || "Existing worker verification failed. Please check your details and try again.");
+      }
+    }
   };
 
   // Federation Admin Submit Handler
   const handleFederationAdminSubmit = async (data: FederationAdminFormData) => {
     setSubmitError(null);
+    setExistingUserEmail(null);
     const fullName = `${data.first_name} ${data.last_name}`;
     const res = await signUpFederationAdmin(
       data.email,
@@ -379,7 +405,12 @@ export function RegisterView() {
       });
       setCurrentStepIndex(5); // Step 5: Federation Admin Outcome Screen
     } else {
-      setSubmitError(res.error || "Federation Admin registration failed. Please try again.");
+      if (res.isExistingUser || res.error?.toLowerCase().includes("already exists")) {
+        setExistingUserEmail(data.email);
+        setSubmitError(res.error || "An account with this email already exists. Please sign in instead.");
+      } else {
+        setSubmitError(res.error || "Federation Admin registration failed. Please try again.");
+      }
     }
   };
 
@@ -550,9 +581,23 @@ export function RegisterView() {
           <WizardProgressBar currentStep={currentStepIndex} totalSteps={5} stepTitle={customerStepTitles[currentStepIndex - 1]} />
 
           {submitError && (
-            <Alert variant="destructive" className="mb-4">
-              <AlertTitle className="text-xs font-semibold">Error</AlertTitle>
-              <AlertDescription className="text-xs">{submitError}</AlertDescription>
+            <Alert variant={existingUserEmail ? "warning" : "destructive"} className="mb-4">
+              <AlertTitle className="text-xs font-semibold">
+                {existingUserEmail ? "Account Already Exists" : "Registration Error"}
+              </AlertTitle>
+              <AlertDescription className="text-xs space-y-2">
+                <p>{submitError}</p>
+                {existingUserEmail && (
+                  <div className="pt-2">
+                    <Link
+                      href={`/login?email=${encodeURIComponent(existingUserEmail)}`}
+                      className="inline-flex items-center px-3 py-1.5 text-xs font-medium rounded-md bg-primary text-primary-foreground hover:bg-primary/90 transition-colors shadow-sm"
+                    >
+                      Sign In with this Email <ArrowRight className="ml-1.5 h-3.5 w-3.5" />
+                    </Link>
+                  </div>
+                )}
+              </AlertDescription>
             </Alert>
           )}
 
@@ -723,7 +768,10 @@ export function RegisterView() {
                   <h3 className="font-bold text-lg">Registration Submitted</h3>
                   <p className="text-xs text-muted-foreground">{mockOutcome.message}</p>
                 </div>
-                <Link href="/verify" className="block w-full">
+                <Link
+                  href={`/verify?role=CUSTOMER&email=${encodeURIComponent(getValues("email") || "")}&phone=${encodeURIComponent(getValues("phone") || "")}`}
+                  className="block w-full"
+                >
                   <Button className="w-full font-semibold">Proceed to Mobile OTP Verification</Button>
                 </Link>
               </div>
@@ -782,9 +830,23 @@ export function RegisterView() {
           )}
 
           {submitError && (
-            <Alert variant="destructive" className="mb-4">
-              <AlertTitle className="text-xs font-semibold">Registration Error</AlertTitle>
-              <AlertDescription className="text-xs">{submitError}</AlertDescription>
+            <Alert variant={existingUserEmail ? "warning" : "destructive"} className="mb-4">
+              <AlertTitle className="text-xs font-semibold">
+                {existingUserEmail ? "Account Already Exists" : "Registration Error"}
+              </AlertTitle>
+              <AlertDescription className="text-xs space-y-2">
+                <p>{submitError}</p>
+                {existingUserEmail && (
+                  <div className="pt-2">
+                    <Link
+                      href={`/login?email=${encodeURIComponent(existingUserEmail)}`}
+                      className="inline-flex items-center px-3 py-1.5 text-xs font-medium rounded-md bg-primary text-primary-foreground hover:bg-primary/90 transition-colors shadow-sm"
+                    >
+                      Sign In with this Email <ArrowRight className="ml-1.5 h-3.5 w-3.5" />
+                    </Link>
+                  </div>
+                )}
+              </AlertDescription>
             </Alert>
           )}
 
@@ -1112,8 +1174,8 @@ export function RegisterView() {
                   </div>
                   <Select value={selectedStateFilter} onChange={(e) => setSelectedStateFilter(e.target.value)} className="w-36">
                     <option value="All">All States</option>
-                    <option value="Maharashtra">Maharashtra</option>
                     <option value="Gujarat">Gujarat</option>
+                    <option value="Maharashtra">Maharashtra</option>
                     <option value="Delhi">Delhi</option>
                   </Select>
                 </div>
@@ -1241,11 +1303,17 @@ export function RegisterView() {
                 </Alert>
 
                 <div className="flex flex-col space-y-2 pt-2 max-w-md mx-auto">
+                  <Link
+                    href={`/verify?role=WORKER&email=${encodeURIComponent(getValues("email") || "")}&phone=${encodeURIComponent(getValues("phone") || "")}`}
+                    className="w-full"
+                  >
+                    <Button className="w-full font-semibold">Proceed to Mobile OTP Verification</Button>
+                  </Link>
                   <Link href="/pending" className="w-full">
-                    <Button className="w-full font-semibold">Check Application Status</Button>
+                    <Button variant="outline" className="w-full font-semibold">Check Application Status</Button>
                   </Link>
                   <Link href="/login" className="w-full">
-                    <Button variant="outline" className="w-full font-semibold">Back to Sign In</Button>
+                    <Button variant="ghost" className="w-full font-semibold">Back to Sign In</Button>
                   </Link>
                 </div>
               </div>
@@ -1289,6 +1357,27 @@ export function RegisterView() {
         <CardContent>
           {currentStepIndex <= 5 && (
             <WizardProgressBar currentStep={currentStepIndex} totalSteps={5} stepTitle={existingStepTitles[currentStepIndex - 1]} />
+          )}
+
+          {submitError && (
+            <Alert variant={existingUserEmail ? "warning" : "destructive"} className="mb-4">
+              <AlertTitle className="text-xs font-semibold">
+                {existingUserEmail ? "Account Already Exists" : "Verification Error"}
+              </AlertTitle>
+              <AlertDescription className="text-xs space-y-2">
+                <p>{submitError}</p>
+                {existingUserEmail && (
+                  <div className="pt-2">
+                    <Link
+                      href={`/login?email=${encodeURIComponent(existingUserEmail)}`}
+                      className="inline-flex items-center px-3 py-1.5 text-xs font-medium rounded-md bg-primary text-primary-foreground hover:bg-primary/90 transition-colors shadow-sm"
+                    >
+                      Sign In with this Email <ArrowRight className="ml-1.5 h-3.5 w-3.5" />
+                    </Link>
+                  </div>
+                )}
+              </AlertDescription>
+            </Alert>
           )}
 
           <form onSubmit={handleSubmit(handleExistingWorkerSubmit)} className="space-y-4" noValidate>
@@ -1534,9 +1623,23 @@ export function RegisterView() {
           )}
 
           {submitError && (
-            <Alert variant="destructive" className="mb-4">
-              <AlertTitle className="text-xs font-semibold">Error</AlertTitle>
-              <AlertDescription className="text-xs">{submitError}</AlertDescription>
+            <Alert variant={existingUserEmail ? "warning" : "destructive"} className="mb-4">
+              <AlertTitle className="text-xs font-semibold">
+                {existingUserEmail ? "Account Already Exists" : "Registration Error"}
+              </AlertTitle>
+              <AlertDescription className="text-xs space-y-2">
+                <p>{submitError}</p>
+                {existingUserEmail && (
+                  <div className="pt-2">
+                    <Link
+                      href={`/login?email=${encodeURIComponent(existingUserEmail)}`}
+                      className="inline-flex items-center px-3 py-1.5 text-xs font-medium rounded-md bg-primary text-primary-foreground hover:bg-primary/90 transition-colors shadow-sm"
+                    >
+                      Sign In with this Email <ArrowRight className="ml-1.5 h-3.5 w-3.5" />
+                    </Link>
+                  </div>
+                )}
+              </AlertDescription>
             </Alert>
           )}
 
@@ -1722,11 +1825,17 @@ export function RegisterView() {
                 </Alert>
 
                 <div className="flex flex-col space-y-2 pt-2 max-w-md mx-auto">
+                  <Link
+                    href={`/verify?role=FEDERATION_ADMIN&email=${encodeURIComponent(getValues("email") || "")}&phone=${encodeURIComponent(getValues("phone") || "")}`}
+                    className="w-full"
+                  >
+                    <Button className="w-full font-semibold">Proceed to Mobile OTP Verification</Button>
+                  </Link>
                   <Link href="/pending" className="w-full">
-                    <Button className="w-full font-semibold">Check Application Status</Button>
+                    <Button variant="outline" className="w-full font-semibold">Check Application Status</Button>
                   </Link>
                   <Link href="/login" className="w-full">
-                    <Button variant="outline" className="w-full font-semibold">Back to Sign In</Button>
+                    <Button variant="ghost" className="w-full font-semibold">Back to Sign In</Button>
                   </Link>
                 </div>
               </div>

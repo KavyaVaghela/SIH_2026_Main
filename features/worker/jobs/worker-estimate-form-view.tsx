@@ -49,6 +49,27 @@ export function WorkerEstimateFormView({ requestId }: WorkerEstimateFormViewProp
   const [step, setStep] = React.useState<"FORM" | "PREVIEW" | "SUBMITTED">("FORM");
   const [isSubmitting, setIsSubmitting] = React.useState(false);
   const [validationError, setValidationError] = React.useState<string | null>(null);
+  const [workerDbId, setWorkerDbId] = React.useState<string>("w-1");
+
+  // Resolve real worker UUID from authenticated session on mount
+  React.useEffect(() => {
+    import("@/lib/supabase/client").then(({ createClient }) => {
+      const supabase = createClient();
+      supabase.auth.getUser().then(({ data: { user } }) => {
+        if (user?.id) {
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          (supabase.from("workers") as any)
+            .select("id")
+            .eq("profile_id", user.id)
+            .maybeSingle()
+            .then(({ data: wRec }: { data: { id: string } | null }) => {
+              if (wRec?.id) setWorkerDbId(wRec.id);
+            });
+        }
+      });
+    });
+  }, []);
+
 
   React.useEffect(() => {
     async function loadData() {
@@ -124,7 +145,7 @@ export function WorkerEstimateFormView({ requestId }: WorkerEstimateFormViewProp
     try {
       const updated = await workerJobService.submitWorkerEstimate({
         bookingId: job.id,
-        workerId: "w-1",
+        workerId: workerDbId,
         laborAmount: numLabor,
         materialAmount: numMaterials,
         additionalCharges: numAdditional,
