@@ -69,6 +69,7 @@ export function LoginView() {
       }
     }
 
+    router.refresh();
     router.push(destination);
   };
 
