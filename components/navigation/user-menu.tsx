@@ -27,16 +27,29 @@ export function UserMenu({
   const router = useRouter();
   const pathname = usePathname();
   const isSuperAdmin = pathname?.startsWith("/super-admin") || userRole?.toLowerCase().includes("super");
-  const isCustomer = pathname?.startsWith("/customer") || userRole?.toLowerCase().includes("customer");
+  const isFederationAdmin = pathname?.startsWith("/federation-admin") || userRole?.toLowerCase().includes("federation");
   const isWorker = pathname?.startsWith("/worker") || userRole?.toLowerCase().includes("worker");
+  const isCustomer = pathname?.startsWith("/customer") || userRole?.toLowerCase().includes("customer");
 
-  const defaultRoleName = isCustomer ? "Prince Patel" : (isWorker ? "Ravi Patel" : "User");
+  const defaultRoleName = isSuperAdmin
+    ? "System Administrator"
+    : isFederationAdmin
+    ? "Federation Admin"
+    : isWorker
+    ? "Ravi Patel"
+    : isCustomer
+    ? "Prince Patel"
+    : "User";
 
-  // Strict role isolation: on customer routes, never display worker or system identity
+  // Strict role isolation:
+  // - On customer routes, never display worker identity ("Ravi Patel") or system identity ("Administrator", "System")
+  // - On worker routes, never display customer identity ("Prince Patel")
   const displayUserName = isCustomer
     ? (userName && !userName.includes("Administrator") && !userName.includes("System") && userName !== "Ravi Patel"
         ? userName
         : "Prince Patel")
+    : isWorker
+    ? (userName && userName !== "Prince Patel" ? userName : "Ravi Patel")
     : (userName || defaultRoleName);
 
   const handleProfileClick = () => {
@@ -44,6 +57,10 @@ export function UserMenu({
       onNavigateProfile();
     } else if (isSuperAdmin) {
       router.push("/super-admin/profile");
+    } else if (isFederationAdmin) {
+      router.push("/federation-admin/federation-information");
+    } else if (isWorker) {
+      router.push("/worker/profile");
     } else {
       router.push("/customer/profile");
     }
@@ -54,6 +71,10 @@ export function UserMenu({
       onNavigateSettings();
     } else if (isSuperAdmin) {
       router.push("/super-admin/settings");
+    } else if (isFederationAdmin) {
+      router.push("/federation-admin");
+    } else if (isWorker) {
+      router.push("/worker/profile");
     } else {
       router.push("/customer/settings");
     }
