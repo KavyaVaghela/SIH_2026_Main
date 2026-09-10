@@ -440,25 +440,54 @@ export class SocietiesService {
 
   /**
    * Update society status (Approve, Activate, Suspend)
+   * Also synchronizes the corresponding Federation Admin's profile is_active status in public.profiles
    */
   async updateSocietyStatus(id: string, newStatus: SocietyStatus): Promise<boolean> {
     const supabase = createClient();
     const isActive = newStatus === "ACTIVE";
 
     try {
+      // 1. Fetch current federation to find contact_email or registration details
+      const { data: fedData } = await (supabase.from("federations") as any)
+        .select("id, contact_email, registration_number")
+        .eq("id", id)
+        .maybeSingle();
+
+      // 2. Update federation active state in Supabase
       await (supabase.from("federations") as any)
         .update({ is_active: isActive })
         .eq("id", id);
-    } catch {
-      // Fallback mutation
+
+      // 3. Update the corresponding Federation Admin profile in public.profiles
+      const targetEmail = fedData?.contact_email;
+      if (targetEmail) {
+        await (supabase.from("profiles") as any)
+          .update({ is_active: isActive })
+          .eq("email", targetEmail)
+          .eq("role", "FEDERATION_ADMIN");
+      }
+    } catch (err) {
+      console.error("Error updating society status in database:", err);
     }
 
-    // Update in-memory fallback store
+    // 4. Update in-memory fallback store
     const target = mockSocietiesStore.find((s) => s.id === id);
     if (target) {
       target.status = newStatus;
       target.isActive = isActive;
+
+      if (target.contactEmail) {
+        try {
+          await (supabase.from("profiles") as any)
+            .update({ is_active: isActive })
+            .eq("email", target.contactEmail)
+            .eq("role", "FEDERATION_ADMIN");
+        } catch {
+          // Ignore profile sync if mock
+        }
+      }
     }
+
     return true;
   }
 

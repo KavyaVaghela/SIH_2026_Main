@@ -60,7 +60,11 @@ CREATE TRIGGER trigger_update_project_requests_updated_at
 
 -- 2. IDENTITY BRIDGE FUNCTION: Automatically create profile on auth.users insert
 CREATE OR REPLACE FUNCTION public.handle_new_user()
-RETURNS TRIGGER AS $$
+RETURNS TRIGGER
+LANGUAGE plpgsql
+SECURITY DEFINER
+SET search_path = public
+AS $$
 BEGIN
   INSERT INTO public.profiles (id, full_name, email, phone, role)
   VALUES (
@@ -68,11 +72,21 @@ BEGIN
     COALESCE(NEW.raw_user_meta_data->>'full_name', 'New Member'),
     NEW.email,
     NEW.phone,
-    COALESCE((NEW.raw_user_meta_data->>'role')::user_role, 'CUSTOMER'::user_role)
-  );
+    COALESCE((NEW.raw_user_meta_data->>'role')::public.user_role, 'CUSTOMER'::public.user_role)
+  )
+  ON CONFLICT (id) DO UPDATE
+  SET
+    full_name = EXCLUDED.full_name,
+    email = EXCLUDED.email,
+    phone = EXCLUDED.phone,
+    role = EXCLUDED.role,
+    updated_at = NOW();
+  RETURN NEW;
+EXCEPTION WHEN OTHERS THEN
+  RAISE WARNING 'handle_new_user failed for user %: %', NEW.id, SQLERRM;
   RETURN NEW;
 END;
-$$ LANGUAGE plpgsql SECURITY DEFINER;
+$$;
 
 -- Create trigger on auth.users table
 CREATE OR REPLACE TRIGGER on_auth_user_created

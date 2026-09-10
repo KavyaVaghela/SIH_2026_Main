@@ -14,6 +14,9 @@ import { workerJobService } from "../services/worker-job-service";
 import type { WorkerJobItem } from "../types";
 import type { WorkerAvailabilityStatus } from "@/supabase/types/database.types";
 
+import { useRealtimeSubscription } from "@/hooks/use-realtime-subscription";
+import { createClient } from "@/lib/supabase/client";
+
 export function ScheduleJobsView() {
   const searchParams = useSearchParams();
   const requestedTab = searchParams.get("tab");
@@ -27,18 +30,48 @@ export function ScheduleJobsView() {
 
   const [loading, setLoading] = React.useState(true);
   const [error, setError] = React.useState<string | null>(null);
+  const [workerDbId, setWorkerDbId] = React.useState<string>("59eca4ff-a589-4363-ad76-24a4ff5b6e2e");
+  // Monotonically increasing counter: only the latest fetch generation may commit state
+  const fetchGenRef = React.useRef(0);
 
-  const fetchAllData = React.useCallback(async () => {
-    setLoading(true);
-    setError(null);
+
+  React.useEffect(() => {
+    const supabase = createClient();
+    supabase.auth.getUser().then(({ data: { user } }) => {
+      if (user?.id) {
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        (supabase.from("workers") as any)
+          .select("id")
+          .eq("profile_id", user.id)
+          .maybeSingle()
+          .then(({ data: wRec }: { data: any }) => {
+            if (wRec?.id) {
+              setWorkerDbId(wRec.id);
+            }
+          });
+      }
+    });
+  }, []);
+
+  const fetchAllData = React.useCallback(async (isBackground = false) => {
+    if (!isBackground) {
+      setLoading(true);
+      setError(null);
+    }
+    const targetId = workerDbId || "w-1";
+    // Capture this fetch's generation number
+    const thisGen = ++fetchGenRef.current;
     try {
       const [reqList, sched, actList, compList, avail] = await Promise.all([
-        workerJobService.getJobRequests("w-1"),
-        workerJobService.getSchedule("w-1"),
-        workerJobService.getActiveJobs("w-1"),
-        workerJobService.getCompletedJobs("w-1"),
-        workerJobService.getWorkerAvailability("w-1"),
+        workerJobService.getJobRequests(targetId),
+        workerJobService.getSchedule(targetId),
+        workerJobService.getActiveJobs(targetId),
+        workerJobService.getCompletedJobs(targetId),
+        workerJobService.getWorkerAvailability(targetId),
       ]);
+
+      // Discard stale responses — only the newest fetch may update state
+      if (thisGen !== fetchGenRef.current) return;
 
       setRequests(reqList);
       setTodaySchedule(sched.today);
@@ -47,16 +80,31 @@ export function ScheduleJobsView() {
       setCompletedJobs(compList);
       setAvailability(avail);
     } catch (err) {
+      if (thisGen !== fetchGenRef.current) return;
       console.error("Error loading worker schedule data", err);
-      setError("We couldn't load your jobs right now. Please try again.");
+      if (!isBackground) {
+        setError("We couldn't load your jobs right now. Please try again.");
+      }
     } finally {
-      setLoading(false);
+      if (thisGen === fetchGenRef.current && !isBackground) setLoading(false);
     }
-  }, []);
+  }, [workerDbId]);
+
 
   React.useEffect(() => {
     fetchAllData();
   }, [fetchAllData]);
+
+  // Subscribe to real-time changes on bookings table for Worker Schedule & Jobs view
+  // Only subscribe once workerDbId is resolved so we don't fire stale refetches
+  useRealtimeSubscription({
+    table: "bookings",
+    enabled: !!workerDbId,
+    onPayload: () => {
+      fetchAllData(true);
+    },
+  });
+
 
   const getInitialTabId = () => {
     if (requestedTab === "requests") return "tab-requests";

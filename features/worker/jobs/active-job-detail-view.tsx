@@ -36,8 +36,10 @@ import { Button } from "@/components/ui/button";
 import { Dialog } from "@/components/ui/dialog";
 import { formatINR } from "@/lib/formatters/currency";
 import { RouteMap } from "@/components/maps/route-map";
+import { useRealtimeSubscription } from "@/hooks/use-realtime-subscription";
 import { workerJobService } from "../services/worker-job-service";
 import { CANONICAL_STATUS_LABELS, type WorkerJobItem, type BookingStatusHistoryItem } from "../types";
+
 
 export interface ActiveJobDetailViewProps {
   bookingId: string;
@@ -52,6 +54,27 @@ export function ActiveJobDetailView({ bookingId }: ActiveJobDetailViewProps) {
   const [actionSuccess, setActionSuccess] = React.useState<string | null>(null);
   const [actionError, setActionError] = React.useState<string | null>(null);
   const [computedDistance, setComputedDistance] = React.useState<number | null>(null);
+  const [workerDbId, setWorkerDbId] = React.useState<string>("59eca4ff-a589-4363-ad76-24a4ff5b6e2e");
+
+  // Resolve real worker UUID from authenticated session on mount
+  React.useEffect(() => {
+    import("@/lib/supabase/client").then(({ createClient }) => {
+      const supabase = createClient();
+      supabase.auth.getUser().then(({ data: { user } }) => {
+        if (user?.id) {
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          (supabase.from("workers") as any)
+            .select("id")
+            .eq("profile_id", user.id)
+            .maybeSingle()
+            .then(({ data: wRec }: { data: { id: string } | null }) => {
+              if (wRec?.id) setWorkerDbId(wRec.id);
+            });
+        }
+      });
+    });
+  }, []);
+
 
   // Task 6 State: OTP Verification
   const [otpInput, setOtpInput] = React.useState("");
@@ -72,9 +95,11 @@ export function ActiveJobDetailView({ bookingId }: ActiveJobDetailViewProps) {
   const [isCompleteModalOpen, setIsCompleteModalOpen] = React.useState(false);
   const [isSavingDetails, setIsSavingDetails] = React.useState(false);
 
-  const loadJobData = React.useCallback(async () => {
-    setLoading(true);
-    setActionError(null);
+  const loadJobData = React.useCallback(async (isBackground = false) => {
+    if (!isBackground) {
+      setLoading(true);
+      setActionError(null);
+    }
     try {
       const [data, hist] = await Promise.all([
         workerJobService.getJobDetails(bookingId),
@@ -87,20 +112,47 @@ export function ActiveJobDetailView({ bookingId }: ActiveJobDetailViewProps) {
         if (data.materialsUsed) setMaterialsList(data.materialsUsed);
         if (data.beforePhotoUrl) setBeforePhoto(data.beforePhotoUrl);
         if (data.afterPhotoUrl) setAfterPhoto(data.afterPhotoUrl);
-      } else {
+      } else if (!isBackground) {
         setActionError("Active job booking not found.");
       }
     } catch (err) {
       console.error("Failed to load active job details", err);
-      setActionError("Failed to load active job details.");
+      if (!isBackground) {
+        setActionError("Failed to load active job details.");
+      }
     } finally {
-      setLoading(false);
+      if (!isBackground) {
+        setLoading(false);
+      }
     }
   }, [bookingId]);
 
   React.useEffect(() => {
     loadJobData();
   }, [loadJobData]);
+
+  // Native Supabase Realtime subscription for active job details
+  useRealtimeSubscription({
+    table: "bookings",
+    filter: `id=eq.${bookingId}`,
+    onPayload: (payload) => {
+      if (payload?.new?.status) {
+        setJob((prev) => (prev ? { ...prev, status: payload.new.status } : null));
+      }
+      loadJobData(true);
+    },
+  });
+
+  // Native Supabase Realtime subscription for payment events (customer payments)
+  useRealtimeSubscription({
+    table: "payments",
+    filter: `booking_id=eq.${bookingId}`,
+    onPayload: () => {
+      loadJobData(true);
+    },
+  });
+
+
 
   // Coordinates for RouteMap
   const { origin, destination } = React.useMemo(() => {
@@ -114,7 +166,8 @@ export function ActiveJobDetailView({ bookingId }: ActiveJobDetailViewProps) {
     setActionError(null);
     setActionSuccess(null);
     try {
-      const updated = await workerJobService.acceptJob(job.id, "w-1");
+      const updated = await workerJobService.acceptJob(job.id, workerDbId);
+
       const hist = await workerJobService.getStatusHistory(job.id);
       setJob(updated);
       setHistory(hist);
@@ -134,7 +187,8 @@ export function ActiveJobDetailView({ bookingId }: ActiveJobDetailViewProps) {
     setActionError(null);
     setActionSuccess(null);
     try {
-      const updated = await workerJobService.startTravel(job.id, "w-1");
+      const updated = await workerJobService.startTravel(job.id, workerDbId);
+
       const hist = await workerJobService.getStatusHistory(job.id);
       setJob(updated);
       setHistory(hist);
@@ -154,7 +208,8 @@ export function ActiveJobDetailView({ bookingId }: ActiveJobDetailViewProps) {
     setActionError(null);
     setActionSuccess(null);
     try {
-      const updated = await workerJobService.markArrived(job.id, "w-1");
+      const updated = await workerJobService.markArrived(job.id, workerDbId);
+
       const hist = await workerJobService.getStatusHistory(job.id);
       setJob(updated);
       setHistory(hist);
@@ -178,7 +233,8 @@ export function ActiveJobDetailView({ bookingId }: ActiveJobDetailViewProps) {
     setOtpError(null);
     setActionError(null);
     try {
-      const updated = await workerJobService.verifyServiceOtp(job.id, code, "w-1");
+      const updated = await workerJobService.verifyServiceOtp(job.id, code, workerDbId);
+
       const hist = await workerJobService.getStatusHistory(job.id);
       setJob(updated);
       setHistory(hist);
@@ -199,7 +255,8 @@ export function ActiveJobDetailView({ bookingId }: ActiveJobDetailViewProps) {
     setActionError(null);
     setActionSuccess(null);
     try {
-      const updated = await workerJobService.startService(job.id, "w-1");
+      const updated = await workerJobService.startService(job.id, workerDbId);
+
       const hist = await workerJobService.getStatusHistory(job.id);
       setJob(updated);
       setHistory(hist);
@@ -225,7 +282,7 @@ export function ActiveJobDetailView({ bookingId }: ActiveJobDetailViewProps) {
           beforePhotoUrl: beforePhoto,
           afterPhotoUrl: afterPhoto,
         },
-        "w-1"
+        workerDbId
       );
       setJob(updated);
       setActionSuccess("Work documentation saved to service record.");
@@ -290,10 +347,12 @@ export function ActiveJobDetailView({ bookingId }: ActiveJobDetailViewProps) {
           beforePhotoUrl: beforePhoto,
           afterPhotoUrl: afterPhoto,
         },
-        "w-1"
+        workerDbId
+
       );
 
-      const updated = await workerJobService.completeService(job.id, "w-1");
+      const updated = await workerJobService.completeService(job.id, workerDbId);
+
       const hist = await workerJobService.getStatusHistory(job.id);
       setJob(updated);
       setHistory(hist);
@@ -316,7 +375,8 @@ export function ActiveJobDetailView({ bookingId }: ActiveJobDetailViewProps) {
     setActionError(null);
     setActionSuccess(null);
     try {
-      const result = await workerJobService.simulatePaymentSuccess(job.id, "w-1");
+      const result = await workerJobService.simulatePaymentSuccess(job.id, workerDbId);
+
       const hist = await workerJobService.getStatusHistory(job.id);
       setJob(result.job);
       setHistory(hist);
@@ -338,7 +398,8 @@ export function ActiveJobDetailView({ bookingId }: ActiveJobDetailViewProps) {
     setActionError(null);
     setActionSuccess(null);
     try {
-      const result = await workerJobService.simulatePaymentFailure(job.id, "w-1");
+      const result = await workerJobService.simulatePaymentFailure(job.id, workerDbId);
+
       const hist = await workerJobService.getStatusHistory(job.id);
       setJob(result.job);
       setHistory(hist);
