@@ -17,6 +17,23 @@ export function createClient() {
 
   return createServerClient<Database>(supabaseUrl, supabasePublishableKey, {
     cookies: {
+      get(name: string) {
+        return cookieStore.get(name)?.value;
+      },
+      set(name: string, value: string, options: CookieOptions) {
+        try {
+          cookieStore.set({ name, value, ...options });
+        } catch {
+          // Ignored if called from a Server Component
+        }
+      },
+      remove(name: string, options: CookieOptions) {
+        try {
+          cookieStore.set({ name, value: "", ...options, maxAge: 0 });
+        } catch {
+          // Ignored if called from a Server Component
+        }
+      },
       getAll() {
         return cookieStore.getAll();
       },

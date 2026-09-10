@@ -29,6 +29,9 @@ const EXECUTION_TIMELINE_STEPS: TimelineStep[] = [
   { statusCode: "OTP_VERIFIED", label: "OTP Verified", description: "Service start OTP verified" },
   { statusCode: "SERVICE_STARTED", label: "Service In Progress", description: "Worker commenced trade service" },
   { statusCode: "SERVICE_COMPLETED", label: "Service Completed", description: "Worker finished requested service" },
+  { statusCode: "BILL_GENERATED", label: "Bill Generated", description: "Itemized charges & tax invoice prepared" },
+  { statusCode: "PAYMENT_PENDING", label: "Payment Pending", description: "Awaiting customer settlement" },
+  { statusCode: "BOOKING_COMPLETED", label: "Booking Completed", description: "Payment settled & workflow complete" },
 ];
 
 export function BookingStatusTimeline({ currentStatus }: BookingStatusTimelineProps) {
@@ -37,9 +40,12 @@ export function BookingStatusTimeline({ currentStatus }: BookingStatusTimelinePr
 
   const getStepIndex = (status: BookingStatus) => {
     if (status === "CANCELLED") return -1;
+    if (status === "PAYMENT_RECEIVED") {
+      const pIdx = steps.findIndex((s) => s.statusCode === "PAYMENT_PENDING");
+      return pIdx !== -1 ? pIdx : steps.length - 1;
+    }
     const idx = steps.findIndex((s) => s.statusCode === status);
     if (idx !== -1) return idx;
-    // If state is beyond SERVICE_COMPLETED (e.g. BILL_GENERATED), consider all steps completed
     return steps.length - 1;
   };
 
@@ -73,8 +79,8 @@ export function BookingStatusTimeline({ currentStatus }: BookingStatusTimelinePr
 
       <div className="space-y-4 pt-1">
         {steps.map((step, index) => {
-          const isCompleted = activeIndex > index;
-          const isCurrent = activeIndex === index;
+          const isCompleted = activeIndex > index || (activeIndex === index && currentStatus === "BOOKING_COMPLETED");
+          const isCurrent = activeIndex === index && currentStatus !== "BOOKING_COMPLETED";
 
           return (
             <div key={step.statusCode} className="flex items-start gap-3 relative">

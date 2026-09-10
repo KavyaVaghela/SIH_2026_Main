@@ -125,10 +125,60 @@ export class ServiceCatalogService implements IServiceCatalogService {
   ];
 
   async getCategories(): Promise<ServiceCategory[]> {
+    try {
+      const { createClient } = await import("@/lib/supabase/client");
+      const supabase = createClient();
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const { data, error } = await (supabase.from("service_categories") as any)
+        .select("*")
+        .eq("is_active", true);
+
+      if (!error && data && data.length > 0) {
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        return data.map((cat: any) => ({
+          id: cat.id,
+          name: cat.name,
+          description: cat.description || "",
+          iconName: cat.icon_name || "Wrench",
+          isActive: cat.is_active,
+          createdAt: cat.created_at,
+        }));
+      }
+    } catch (err) {
+      console.warn("DB getCategories query notice:", err);
+    }
     return this.categories.filter((c) => c.isActive);
   }
 
   async getServicesByCategory(categoryId: string): Promise<ServiceItem[]> {
+    try {
+      const { createClient } = await import("@/lib/supabase/client");
+      const supabase = createClient();
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const { data, error } = await (supabase.from("services") as any)
+        .select("*")
+        .eq("category_id", categoryId)
+        .eq("is_active", true);
+
+      if (!error && data && data.length > 0) {
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        return data.map((srv: any) => ({
+          id: srv.id,
+          categoryId: srv.category_id,
+          title: srv.title,
+          description: srv.description || "",
+          basePrice: srv.base_price || 350,
+          minimumVisitCharge: srv.minimum_visit_charge || 200,
+          priceUnit: srv.price_unit || "per_hour",
+          isActive: srv.is_active,
+          createdAt: srv.created_at,
+          updatedAt: srv.updated_at,
+        }));
+      }
+    } catch (err) {
+      console.warn("DB getServicesByCategory query notice:", err);
+    }
+
     let targetId = categoryId;
     if (categoryId === "cat-1") targetId = "cat-electrical";
     if (categoryId === "cat-2") targetId = "cat-plumbing";
@@ -140,10 +190,62 @@ export class ServiceCatalogService implements IServiceCatalogService {
   }
 
   async getServiceDetails(serviceId: string): Promise<ServiceItem | null> {
+    try {
+      const { createClient } = await import("@/lib/supabase/client");
+      const supabase = createClient();
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const { data, error } = await (supabase.from("services") as any)
+        .select("*")
+        .eq("id", serviceId)
+        .maybeSingle();
+
+      if (!error && data) {
+        return {
+          id: data.id,
+          categoryId: data.category_id,
+          title: data.title,
+          description: data.description || "",
+          basePrice: data.base_price || 350,
+          minimumVisitCharge: data.minimum_visit_charge || 200,
+          priceUnit: data.price_unit || "per_hour",
+          isActive: data.is_active,
+          createdAt: data.created_at,
+          updatedAt: data.updated_at,
+        };
+      }
+    } catch (err) {
+      console.warn("DB getServiceDetails query notice:", err);
+    }
     return this.services.find((s) => s.id === serviceId) || null;
   }
 
   async getAllActiveServices(): Promise<ServiceItem[]> {
+    try {
+      const { createClient } = await import("@/lib/supabase/client");
+      const supabase = createClient();
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const { data, error } = await (supabase.from("services") as any)
+        .select("*")
+        .eq("is_active", true);
+
+      if (!error && data && data.length > 0) {
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        return data.map((srv: any) => ({
+          id: srv.id,
+          categoryId: srv.category_id,
+          title: srv.title,
+          description: srv.description || "",
+          basePrice: srv.base_price || 350,
+          minimumVisitCharge: srv.minimum_visit_charge || 200,
+          priceUnit: srv.price_unit || "per_hour",
+          isActive: srv.is_active,
+          createdAt: srv.created_at,
+          updatedAt: srv.updated_at,
+        }));
+      }
+    } catch (err) {
+      console.warn("DB getAllActiveServices query notice:", err);
+    }
     return this.services.filter((s) => s.isActive);
   }
 }

@@ -253,7 +253,7 @@ export class CustomerService {
           service_id: serviceId,
           federation_id: federationId,
           address_id: addressId,
-          status: "pending",
+          status: "REQUEST_SENT",
           scheduled_start_at: new Date().toISOString(),
           scheduled_end_at: new Date(Date.now() + 7200000).toISOString(),
           total_amount: totalAmount,

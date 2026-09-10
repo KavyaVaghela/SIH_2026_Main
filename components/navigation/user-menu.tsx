@@ -17,7 +17,7 @@ export interface UserMenuProps {
 }
 
 export function UserMenu({
-  userName = "Ravi Patel",
+  userName,
   userRole = "Household Customer",
   avatarUrl,
   onNavigateProfile,
@@ -29,6 +29,28 @@ export function UserMenu({
   const isSuperAdmin = pathname?.startsWith("/super-admin") || userRole?.toLowerCase().includes("super");
   const isFederationAdmin = pathname?.startsWith("/federation-admin") || userRole?.toLowerCase().includes("federation");
   const isWorker = pathname?.startsWith("/worker") || userRole?.toLowerCase().includes("worker");
+  const isCustomer = pathname?.startsWith("/customer") || userRole?.toLowerCase().includes("customer");
+
+  const defaultRoleName = isSuperAdmin
+    ? "System Administrator"
+    : isFederationAdmin
+    ? "Federation Admin"
+    : isWorker
+    ? "Ravi Patel"
+    : isCustomer
+    ? "Prince Patel"
+    : "User";
+
+  // Strict role isolation:
+  // - On customer routes, never display worker identity ("Ravi Patel") or system identity ("Administrator", "System")
+  // - On worker routes, never display customer identity ("Prince Patel")
+  const displayUserName = isCustomer
+    ? (userName && !userName.includes("Administrator") && !userName.includes("System") && userName !== "Ravi Patel"
+        ? userName
+        : "Prince Patel")
+    : isWorker
+    ? (userName && userName !== "Prince Patel" ? userName : "Ravi Patel")
+    : (userName || defaultRoleName);
 
   const handleProfileClick = () => {
     if (onNavigateProfile) {
@@ -77,7 +99,7 @@ export function UserMenu({
     {
       label: (
         <div className="flex flex-col text-left py-0.5">
-          <span className="font-semibold text-xs text-foreground">{userName}</span>
+          <span className="font-semibold text-xs text-foreground">{displayUserName}</span>
           <span className="text-[10px] text-muted-foreground capitalize">{userRole}</span>
         </div>
       ),
@@ -109,9 +131,9 @@ export function UserMenu({
     <Dropdown
       trigger={
         <button className="flex items-center space-x-2 rounded-full p-1 transition-colors hover:bg-accent focus:outline-none">
-          <Avatar src={avatarUrl} fallback={userName} size="sm" />
+          <Avatar src={avatarUrl} fallback={displayUserName} size="sm" />
           <div className="hidden md:block text-left text-xs">
-            <p className="font-semibold text-foreground leading-tight">{userName}</p>
+            <p className="font-semibold text-foreground leading-tight">{displayUserName}</p>
             <p className="text-[10px] text-muted-foreground capitalize">{userRole}</p>
           </div>
         </button>

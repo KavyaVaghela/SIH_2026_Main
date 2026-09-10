@@ -13,11 +13,13 @@ export interface CustomerHomeHeaderProps {
 }
 
 export function CustomerHomeHeader({
-  customerName = "Ravi",
+  customerName = "Prince",
   locationArea = "Satellite, Ahmedabad",
   searchQuery,
   onSearchChange,
 }: CustomerHomeHeaderProps) {
+  const displayGreetingName = !customerName || customerName.toLowerCase().includes("system") ? "Prince" : customerName;
+
   return (
     <div className="relative bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100 rounded-2xl p-5 md:p-6 shadow-sm border border-slate-200/80 dark:border-slate-800 space-y-4">
       {/* Top Bar: Location & Cooperative Trust Badge */}
@@ -36,7 +38,7 @@ export function CustomerHomeHeader({
       {/* Hero Greeting & Headline */}
       <div className="pt-0.5">
         <h1 className="text-2xl md:text-3xl font-extrabold tracking-tight text-slate-900 dark:text-white">
-          Good Morning, {customerName} 👋
+          Good Morning, {displayGreetingName} 👋
         </h1>
         <p className="text-xs md:text-sm text-slate-500 dark:text-slate-400 font-medium mt-1">
           What service do you need today? Select a category or search verified trade professionals.

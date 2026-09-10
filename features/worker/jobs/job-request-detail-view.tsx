@@ -29,6 +29,7 @@ import { Button } from "@/components/ui/button";
 import { formatINR } from "@/lib/formatters/currency";
 import { workerJobService } from "../services/worker-job-service";
 import { CANONICAL_STATUS_LABELS, type WorkerJobItem, type BookingStatusHistoryItem } from "../types";
+import { useRealtimeSubscription } from "@/hooks/use-realtime-subscription";
 
 export interface JobRequestDetailViewProps {
   requestId: string;
@@ -42,10 +43,33 @@ export function JobRequestDetailView({ requestId }: JobRequestDetailViewProps) {
   const [isSubmitting, setIsSubmitting] = React.useState(false);
   const [actionSuccessMessage, setActionSuccessMessage] = React.useState<string | null>(null);
   const [actionError, setActionError] = React.useState<string | null>(null);
+  const [workerDbId, setWorkerDbId] = React.useState<string>("59eca4ff-a589-4363-ad76-24a4ff5b6e2e");
 
-  const loadDetails = React.useCallback(async () => {
-    setLoading(true);
-    setActionError(null);
+  // Resolve real worker UUID from authenticated session on mount
+  React.useEffect(() => {
+    import("@/lib/supabase/client").then(({ createClient }) => {
+      const supabase = createClient();
+      supabase.auth.getUser().then(({ data: { user } }) => {
+        if (user?.id) {
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          (supabase.from("workers") as any)
+            .select("id")
+            .eq("profile_id", user.id)
+            .maybeSingle()
+            .then(({ data: wRec }: { data: { id: string } | null }) => {
+              if (wRec?.id) setWorkerDbId(wRec.id);
+            });
+        }
+      });
+    });
+  }, []);
+
+
+  const loadDetails = React.useCallback(async (isBackground = false) => {
+    if (!isBackground) {
+      setLoading(true);
+      setActionError(null);
+    }
     try {
       const [data, hist] = await Promise.all([
         workerJobService.getJobDetails(requestId),
@@ -54,20 +78,36 @@ export function JobRequestDetailView({ requestId }: JobRequestDetailViewProps) {
       if (data) {
         setJob(data);
         setHistory(hist);
-      } else {
+      } else if (!isBackground) {
         setActionError("Job request not found.");
       }
     } catch (err) {
       console.error("Error loading job details", err);
-      setActionError("Failed to load job request details.");
+      if (!isBackground) {
+        setActionError("Failed to load job request details.");
+      }
     } finally {
-      setLoading(false);
+      if (!isBackground) {
+        setLoading(false);
+      }
     }
   }, [requestId]);
 
   React.useEffect(() => {
     loadDetails();
   }, [loadDetails]);
+
+  // Realtime subscription for customer confirmation & status transitions
+  useRealtimeSubscription({
+    table: "bookings",
+    filter: `id=eq.${requestId}`,
+    onPayload: (payload) => {
+      if (payload?.new?.status) {
+        setJob((prev) => (prev ? { ...prev, status: payload.new.status } : null));
+      }
+      loadDetails(true);
+    },
+  });
 
   // Action 1: Worker Reviews Request (REQUEST_SENT -> WORKER_REVIEWING)
   const handleReview = async () => {
@@ -76,7 +116,7 @@ export function JobRequestDetailView({ requestId }: JobRequestDetailViewProps) {
     setActionError(null);
     setActionSuccessMessage(null);
     try {
-      const updated = await workerJobService.reviewJobRequest(job.id, "w-1");
+      const updated = await workerJobService.reviewJobRequest(job.id, workerDbId);
       const updatedHist = await workerJobService.getStatusHistory(job.id);
       setJob(updated);
       setHistory(updatedHist);
@@ -96,7 +136,7 @@ export function JobRequestDetailView({ requestId }: JobRequestDetailViewProps) {
     setActionError(null);
     setActionSuccessMessage(null);
     try {
-      const updated = await workerJobService.expressInterestInJob(job.id, "w-1");
+      const updated = await workerJobService.expressInterestInJob(job.id, workerDbId);
       const updatedHist = await workerJobService.getStatusHistory(job.id);
       setJob(updated);
       setHistory(updatedHist);
@@ -506,14 +546,23 @@ export function JobRequestDetailView({ requestId }: JobRequestDetailViewProps) {
 
               {/* State 4: Already Confirmed */}
               {isConfirmedOrBeyond && (
-                <div className="p-3.5 rounded-lg bg-blue-50 dark:bg-blue-950/40 border border-blue-600/40 text-xs text-blue-900 dark:text-blue-200 space-y-1.5 w-full">
-                  <div className="flex items-center font-bold text-blue-800 dark:text-blue-300">
-                    <CheckCircle2 className="h-4 w-4 mr-1.5 text-blue-600 shrink-0" />
-                    Booking Confirmed
+                <div className="space-y-3 w-full">
+                  <div className="p-3.5 rounded-lg bg-blue-50 dark:bg-blue-950/40 border border-blue-600/40 text-xs text-blue-900 dark:text-blue-200 space-y-1.5 w-full">
+                    <div className="flex items-center font-bold text-blue-800 dark:text-blue-300">
+                      <CheckCircle2 className="h-4 w-4 mr-1.5 text-blue-600 shrink-0" />
+                      Booking Confirmed
+                    </div>
+                    <p className="text-[11px] leading-relaxed text-muted-foreground dark:text-blue-200/80">
+                      This booking has been confirmed by the customer and is active on your schedule.
+                    </p>
                   </div>
-                  <p className="text-[11px] leading-relaxed text-muted-foreground dark:text-blue-200/80">
-                    This booking has been confirmed by the customer and is active on your schedule.
-                  </p>
+                  <Button
+                    onClick={() => router.push(`/worker/jobs/${job.id}`)}
+                    className="w-full text-xs font-semibold py-2.5 bg-emerald-700 hover:bg-emerald-800 text-white shadow-sm"
+                  >
+                    <CheckCircle2 className="h-3.5 w-3.5 mr-1.5" />
+                    Open Active Job Execution
+                  </Button>
                 </div>
               )}
 

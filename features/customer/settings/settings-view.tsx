@@ -25,9 +25,9 @@ export function AccountSettingsView() {
   const router = useRouter();
 
   // Account Info Form State
-  const [fullName, setFullName] = React.useState("Ravi Patel");
-  const [email, setEmail] = React.useState("ravi.patel@example.com");
-  const [phone, setPhone] = React.useState("+91 98250 11021");
+  const [fullName, setFullName] = React.useState("Prince Patel");
+  const [email, setEmail] = React.useState("customer@example.com");
+  const [phone, setPhone] = React.useState("+91 98765 43210");
   const [savingProfile, setSavingProfile] = React.useState(false);
   const [profileSuccessMsg, setProfileSuccessMsg] = React.useState<string | null>(null);
 
@@ -40,6 +40,24 @@ export function AccountSettingsView() {
   const [passwordErrorMsg, setPasswordErrorMsg] = React.useState<string | null>(null);
 
   React.useEffect(() => {
+    const supabase = createClient();
+    supabase.auth.getUser().then(({ data: { user } }) => {
+      if (user?.id) {
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        (supabase.from("profiles") as any)
+          .select("full_name, email, phone, role")
+          .eq("id", user.id)
+          .maybeSingle()
+          .then(({ data }: { data: { full_name?: string; email?: string; phone?: string; role?: string } | null }) => {
+            if (data && data.role === "CUSTOMER") {
+              if (data.full_name) setFullName(data.full_name);
+              if (data.email || user.email) setEmail(data.email || user.email || "customer@example.com");
+              if (data.phone) setPhone(data.phone);
+            }
+          });
+      }
+    });
+
     if (typeof window === "undefined") return;
     try {
       const saved = localStorage.getItem(LOCAL_STORAGE_USER_KEY);

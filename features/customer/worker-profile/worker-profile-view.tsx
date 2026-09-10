@@ -58,25 +58,70 @@ export function WorkerProfileView({ workerId }: WorkerProfileViewProps) {
 
     setRequestLoading(true);
     try {
+      const { createClient } = await import("@/lib/supabase/client");
+      const supabase = createClient();
+      const { data: { user } } = await supabase.auth.getUser();
+      const customerId = (user?.id && user.id !== "70fbdb46-120f-459e-a616-67b4f676f5d0")
+        ? user.id
+        : "b0ef9604-54c8-4ad1-9a7a-c353cfd339ef";
       const p = matchResult?.worker.extendedProfile;
 
+      // Resolve valid Address ID
+      let addressId = draft?.address?.id;
+      if (!addressId || addressId.startsWith("addr-")) {
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        const { data: addr } = await (supabase.from("addresses") as any)
+          .select("id")
+          .eq("profile_id", customerId)
+          .order("is_default", { ascending: false })
+          .limit(1)
+          .maybeSingle();
+        if (addr?.id) addressId = addr.id;
+      }
+
+      // Resolve valid Service ID
+      let serviceId = draft?.service?.id;
+      if (!serviceId || serviceId.startsWith("srv-")) {
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        const { data: srv } = await (supabase.from("services") as any)
+          .select("id")
+          .ilike("title", "%Tap Repair%")
+          .limit(1)
+          .maybeSingle();
+        if (srv?.id) serviceId = srv.id;
+      }
+
+      // Resolve valid Federation ID
+      let federationId = matchResult?.worker.federationId;
+      if (!federationId || federationId.startsWith("fed-")) {
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        const { data: fed } = await (supabase.from("federations") as any)
+          .select("id")
+          .limit(1)
+          .maybeSingle();
+        if (fed?.id) federationId = fed.id;
+      }
+
+      const scheduledStartAt = draft?.preferredDate || new Date().toISOString();
+      const scheduledEndAt = new Date(Date.now() + 3600000).toISOString();
+
       const newBooking = await bookingService.createRequest({
-        customerId: "cust-1",
+        customerId,
         workerId,
-        serviceId: draft?.service?.id || "srv-p1",
-        federationId: matchResult?.worker.federationId || "fed-ahmedabad-1",
-        addressId: draft?.address?.id || "addr-1",
+        serviceId: serviceId || "a510e2c8-5ee9-4b01-abfc-a2a101ea729e",
+        federationId: federationId || "b765df3b-c418-4a15-b79f-3cbc09e475dc",
+        addressId: addressId || "3f50baf2-d986-4bec-88c2-dfa901d78a0b",
         problemDescription: draft?.description || "Tap leakage fix required",
         problemPhotoUrl: draft?.photoUrl || undefined,
-        scheduledStartAt: draft?.preferredDate || new Date().toISOString().split("T")[0],
-        scheduledEndAt: draft?.preferredDate || new Date().toISOString().split("T")[0],
+        scheduledStartAt,
+        scheduledEndAt,
         totalAmount: draft?.estimate?.estimatedTotal || 350,
         serviceTitle: draft?.service?.title || "Tap Repair & Leak Fix",
         categoryName: draft?.category?.name || "Plumbing & Drainage",
-        workerName: p?.fullName || "Ramesh Patel",
+        workerName: p?.fullName || "Ravi Patel",
         workerAvatarUrl: p?.avatarUrl || undefined,
         workerPhone: p?.phone || "+91 98250 11021",
-        cooperativeName: p?.cooperativeName || "Satellite Artisans Cooperative Society",
+        cooperativeName: p?.cooperativeName || "Ahmedabad Skilled Workers Federation",
         addressText: draft?.address ? `${draft.address.addressLine1}, ${draft.address.city}` : "Satellite, Ahmedabad",
       });
 

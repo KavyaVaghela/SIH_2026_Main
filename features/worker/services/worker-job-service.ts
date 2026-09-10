@@ -90,86 +90,83 @@ export interface IWorkerJobService {
 export class WorkerJobService implements IWorkerJobService {
   private hasInitialized = false;
 
+  async ensureSeedData(_workerId?: string): Promise<void> {
+    this.hasInitialized = true;
+  }
+
   /**
    * Helper to transform a canonical Booking into a WorkerJobItem
    */
-  private mapBookingToWorkerJobItem(b: Booking): WorkerJobItem {
+  /**
+   * Helper to transform a canonical Booking or DB row into a WorkerJobItem
+   */
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  private mapBookingToWorkerJobItem(b: any): WorkerJobItem {
+    const probDesc = b.problem_description || b.problemDescription || "";
+    const servTitle = b.services?.title || b.serviceTitle || "Plumbing Repair";
     const isEmergency =
-      (b.problemDescription && /emergency|rupture|burst|leakage|spark/i.test(b.problemDescription)) ||
-      (b.serviceTitle && /emergency/i.test(b.serviceTitle));
+      /emergency|rupture|burst|leakage|spark/i.test(probDesc) ||
+      /emergency/i.test(servTitle);
 
-    // Determine customer name
-    let customerName = "Rahul Sharma";
-    if (b.problemDescription && b.problemDescription.includes("Customer:")) {
-      const match = b.problemDescription.match(/Customer:\s*([^•\n]+)/);
-      if (match) customerName = match[1].trim();
-    } else if (b.customerId === "cust-priya" || b.id.includes("priya")) {
-      customerName = "Priya Shah";
-    } else if (b.customerId === "cust-amit" || b.id.includes("amit")) {
-      customerName = "Amit Patel";
-    } else if (b.customerId === "cust-neha" || b.id.includes("neha")) {
-      customerName = "Neha Mehta";
-    } else if (b.customerId === "cust-ramesh" || b.id.includes("ramesh")) {
-      customerName = "Ramesh V.";
-    }
-
-    // Determine scheduled date and time display
-    let scheduledDate = "Today";
-    let scheduledTime = "4:00 PM";
-    if (b.scheduledStartAt) {
-      if (b.scheduledStartAt.includes("T")) {
-        const lastTIndex = b.scheduledStartAt.lastIndexOf("T");
-        const datePart = b.scheduledStartAt.slice(0, lastTIndex);
-        const timePart = b.scheduledStartAt.slice(lastTIndex + 1);
-        scheduledDate = datePart || "Today";
-        if (timePart) {
-          const parts = timePart.split(":");
-          const hourNum = parseInt(parts[0], 10);
-          if (!isNaN(hourNum)) {
-            const minPart = parts[1] || "00";
-            const ampm = hourNum >= 12 ? "PM" : "AM";
-            const displayHour = hourNum % 12 || 12;
-            scheduledTime = `${displayHour}:${minPart} ${ampm}`;
-          } else {
-            scheduledTime = timePart;
-          }
-        }
+    let customerName = b.customer?.full_name || b.customerName;
+    if (!customerName || customerName === "Rahul Sharma") {
+      if (probDesc && probDesc.includes("Customer:")) {
+        const match = probDesc.match(/Customer:\s*([^•\n]+)/);
+        if (match) customerName = match[1].trim();
       } else {
-        scheduledDate = b.scheduledStartAt;
+        customerName = "Prince Patel";
       }
     }
 
-    // Distance calculation placeholder (2.1 km default per spec)
-    let distanceKm = 2.1;
-    if (b.addressText && b.addressText.includes("Navrangpura")) {
-      distanceKm = 3.5;
-    } else if (b.addressText && b.addressText.includes("Vastrapur")) {
-      distanceKm = 1.8;
-    } else if (b.addressText && b.addressText.includes("Bodakdev")) {
-      distanceKm = 4.2;
+    const customerPhone = b.customer?.phone || b.customerPhone || "+91 98765 43210";
+    let customerArea = b.addresses ? `${b.addresses.address_line1}, ${b.addresses.city}` : (b.addressText || "Satellite, Ahmedabad");
+    if (!customerArea || customerArea === "Home Address") customerArea = "Satellite, Ahmedabad";
+
+    const categoryName = b.services?.service_categories?.name || b.categoryName || "Plumbing & Drainage";
+    const cooperativeName = b.federations?.name || b.cooperativeName || "Ahmedabad Skilled Workers Federation";
+
+    const startAt = b.scheduled_start_at || b.scheduledStartAt;
+    let scheduledDate = "Today";
+    let scheduledTime = "4:00 PM";
+    if (startAt) {
+      try {
+        const d = new Date(startAt);
+        if (!isNaN(d.getTime())) {
+          const isCurrentDay = d.toDateString() === new Date().toDateString();
+          scheduledDate = isCurrentDay
+            ? "Today"
+            : d.toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" });
+          scheduledTime = d.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
+        }
+      } catch {
+        scheduledDate = "Today";
+      }
     }
+
+    const totalAmt = Number(b.total_amount || b.totalAmount) || 350;
+    const workerEarn = Number(b.worker_earnings || b.workerEarnings) || Math.round(totalAmt * 0.95);
 
     return {
       id: b.id,
-      bookingNumber: b.bookingNumber || `BK-${b.id.slice(-6).toUpperCase()}`,
-      serviceTitle: b.serviceTitle || "Plumbing Repair",
-      categoryName: b.categoryName || "Plumbing & Drainage",
+      bookingNumber: b.booking_number || b.bookingNumber || `BK-${b.id.slice(-6).toUpperCase()}`,
+      serviceTitle: servTitle,
+      categoryName,
       customerName,
-      customerPhone: b.workerPhone || "+91 98250 11021",
-      customerArea: b.addressText || "Satellite, Ahmedabad",
-      distanceKm,
+      customerPhone,
+      customerArea,
+      distanceKm: 2.1,
       scheduledDate,
       scheduledTime,
-      scheduledStartAt: b.scheduledStartAt,
-      scheduledEndAt: b.scheduledEndAt,
-      problemDescription: b.problemDescription || "Bathroom pipe leakage inspection and repair.",
-      problemPhotoUrl: b.problemPhotoUrl,
-      totalAmount: b.totalAmount || 500,
-      workerEarnings: b.workerEarnings || Math.round((b.totalAmount || 500) * 0.95),
+      scheduledStartAt: startAt,
+      scheduledEndAt: b.scheduled_end_at || b.scheduledEndAt,
+      problemDescription: probDesc || "Bathroom plumbing inspection and repair.",
+      problemPhotoUrl: b.problem_photo_url || b.problemPhotoUrl,
+      totalAmount: totalAmt,
+      workerEarnings: workerEarn,
       status: b.status,
       urgency: isEmergency ? "EMERGENCY" : "STANDARD",
-      cooperativeName: b.cooperativeName || "ABC Labour Cooperative Society",
-      otpCode: b.otpCode,
+      cooperativeName,
+      otpCode: b.otp_code || b.otpCode,
       rawBooking: b,
       workerEstimateAmount: b.workerEstimateAmount || null,
       workerEstimateLabor: b.workerEstimateLabor || null,
@@ -181,8 +178,8 @@ export class WorkerJobService implements IWorkerJobService {
       materialsUsed: b.materialsUsed || null,
       beforePhotoUrl: b.beforePhotoUrl || null,
       afterPhotoUrl: b.afterPhotoUrl || null,
-      actualStartAt: b.actualStartAt || null,
-      actualEndAt: b.actualEndAt || null,
+      actualStartAt: b.actual_start_at || b.actualStartAt || null,
+      actualEndAt: b.actual_end_at || b.actualEndAt || null,
       invoiceId: null,
       invoiceNumber: null,
       invoiceTotal: null,
@@ -191,205 +188,80 @@ export class WorkerJobService implements IWorkerJobService {
     };
   }
 
-  /**
-   * Ensures development seed bookings exist inside bookingService
-   * so UI reads data through the real database/service path.
-   */
-  async ensureSeedData(workerId: string = "w-1"): Promise<void> {
-    if (this.hasInitialized) return;
-    this.hasInitialized = true;
+  private async resolveWorkerId(workerId?: string): Promise<string> {
+    const isUuid = (str?: string) => Boolean(str && /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(str));
+
+    if (isUuid(workerId)) {
+      return workerId!;
+    }
 
     try {
-      const existing = await bookingService.getWorkerBookings(workerId);
-      if (existing.length >= 5) {
-        return;
+      const supabase = createClient();
+      const { data: { user } } = await supabase.auth.getUser();
+      if (user?.id) {
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        const { data: wRec } = await (supabase.from("workers") as any)
+          .select("id")
+          .eq("profile_id", user.id)
+          .maybeSingle();
+        if (wRec?.id) {
+          return wRec.id;
+        }
       }
-
-      const pause = () => new Promise((r) => setTimeout(r, 15));
-
-      // Seed Part B/F example request: Rahul Sharma, Plumbing Repair, ₹500 (Status: REQUEST_SENT)
-      await bookingService.createRequest({
-        customerId: "cust-rahul-req",
-        workerId,
-        serviceId: "srv-p2",
-        federationId: "fed-1",
-        addressId: "addr-1",
-        problemDescription: "Customer: Rahul Sharma • Bathroom pipe leakage requiring joint replacement.",
-        scheduledStartAt: "September 5, 2026T16:00:00",
-        scheduledEndAt: "September 5, 2026T17:30:00",
-        totalAmount: 500,
-        serviceTitle: "Plumbing Repair",
-        categoryName: "Plumbing & Drainage",
-        workerName: "Ravi Patel",
-        cooperativeName: "ABC Labour Cooperative Society",
-        addressText: "Satellite, Ahmedabad",
-      });
-      await pause();
-
-      // Seed 2nd Request: Neha Mehta, Tap Replacement (Status: REQUEST_SENT)
-      await bookingService.createRequest({
-        customerId: "cust-neha-req",
-        workerId,
-        serviceId: "srv-p1",
-        federationId: "fed-1",
-        addressId: "addr-2",
-        problemDescription: "Customer: Neha Mehta • Kitchen mixer tap dripping continuously. Urgent repair.",
-        scheduledStartAt: "TodayT18:00:00",
-        scheduledEndAt: "TodayT19:00:00",
-        totalAmount: 450,
-        serviceTitle: "Tap Repair & Leak Fix",
-        categoryName: "Plumbing & Drainage",
-        workerName: "Ravi Patel",
-        cooperativeName: "ABC Labour Cooperative Society",
-        addressText: "Vastrapur, Ahmedabad",
-      });
-      await pause();
-
-      // Seed Part J Schedule 1: 10:00 AM — Electrical Repair — Priya Shah — Navrangpura (BOOKING_CONFIRMED)
-      const sch1 = await bookingService.createRequest({
-        customerId: "cust-priya",
-        workerId,
-        serviceId: "srv-e1",
-        federationId: "fed-1",
-        addressId: "addr-3",
-        problemDescription: "Customer: Priya Shah • Main breaker tripping inspection and socket replacement.",
-        scheduledStartAt: "TodayT10:00:00",
-        scheduledEndAt: "TodayT11:30:00",
-        totalAmount: 650,
-        serviceTitle: "Electrical Repair",
-        categoryName: "Electrical & Wiring",
-        workerName: "Ravi Patel",
-        cooperativeName: "ABC Labour Cooperative Society",
-        addressText: "Navrangpura, Ahmedabad",
-      });
-      await bookingService.submitWorkerEstimate({ bookingId: sch1.id, workerId, totalAmount: 650 });
-      await bookingService.confirmBooking(sch1.id, "cust-priya");
-      await pause();
-
-      // Seed Part J Schedule 2: 2:00 PM — Pipe Repair — Rahul Sharma — Satellite (BOOKING_CONFIRMED)
-      const sch2 = await bookingService.createRequest({
-        customerId: "cust-rahul-sch",
-        workerId,
-        serviceId: "srv-p3",
-        federationId: "fed-1",
-        addressId: "addr-1",
-        problemDescription: "Customer: Rahul Sharma • Sink drainage blockage clearing and trap replacement.",
-        scheduledStartAt: "TodayT14:00:00",
-        scheduledEndAt: "TodayT16:00:00",
-        totalAmount: 750,
-        serviceTitle: "Pipe Repair",
-        categoryName: "Plumbing & Drainage",
-        workerName: "Ravi Patel",
-        cooperativeName: "ABC Labour Cooperative Society",
-        addressText: "Satellite, Ahmedabad",
-      });
-      await bookingService.submitWorkerEstimate({ bookingId: sch2.id, workerId, totalAmount: 750 });
-      await bookingService.confirmBooking(sch2.id, "cust-rahul-sch");
-      await pause();
-
-      // Seed Part J Schedule 3: 5:00 PM — Maintenance — Amit Patel — Vastrapur (BOOKING_CONFIRMED)
-      const sch3 = await bookingService.createRequest({
-        customerId: "cust-amit",
-        workerId,
-        serviceId: "srv-p8",
-        federationId: "fed-1",
-        addressId: "addr-4",
-        problemDescription: "Customer: Amit Patel • Routine quarterly valve and overhead tank check.",
-        scheduledStartAt: "TodayT17:00:00",
-        scheduledEndAt: "TodayT18:00:00",
-        totalAmount: 450,
-        serviceTitle: "Maintenance",
-        categoryName: "Plumbing & Drainage",
-        workerName: "Ravi Patel",
-        cooperativeName: "ABC Labour Cooperative Society",
-        addressText: "Vastrapur, Ahmedabad",
-      });
-      await bookingService.submitWorkerEstimate({ bookingId: sch3.id, workerId, totalAmount: 450 });
-      await bookingService.confirmBooking(sch3.id, "cust-amit");
-      await pause();
-
-      // Seed Part L Active Job: Service Started (Ramesh V.)
-      const act1 = await bookingService.createRequest({
-        customerId: "cust-ramesh",
-        workerId,
-        serviceId: "srv-p4",
-        federationId: "fed-1",
-        addressId: "addr-5",
-        problemDescription: "Customer: Ramesh V. • Emergency bathroom pipe rupture under main sink.",
-        scheduledStartAt: "TodayT09:00:00",
-        scheduledEndAt: "TodayT11:00:00",
-        totalAmount: 850,
-        serviceTitle: "Bathroom Plumbing Repair",
-        categoryName: "Plumbing & Drainage",
-        workerName: "Ravi Patel",
-        cooperativeName: "ABC Labour Cooperative Society",
-        addressText: "Bodakdev, Ahmedabad",
-      });
-      await bookingService.submitWorkerEstimate({ bookingId: act1.id, workerId, totalAmount: 850 });
-      await bookingService.confirmBooking(act1.id, "cust-ramesh");
-      await bookingService.transitionStatus(act1.id, "WORKER_ACCEPTED", workerId, "WORKER");
-      await bookingService.transitionStatus(act1.id, "ON_THE_WAY", workerId, "WORKER");
-      await bookingService.transitionStatus(act1.id, "ARRIVED", workerId, "WORKER");
-      await bookingService.verifyOtp(act1.id, "940218", "cust-ramesh");
-      await bookingService.transitionStatus(act1.id, "SERVICE_STARTED", workerId, "WORKER");
-      await pause();
-
-      // Seed Part M Completed Job: Overhead Tank Valve Replacement (BOOKING_COMPLETED)
-      const comp1 = await bookingService.createRequest({
-        customerId: "cust-rahul-comp",
-        workerId,
-        serviceId: "srv-p5",
-        federationId: "fed-1",
-        addressId: "addr-1",
-        problemDescription: "Customer: Rahul Sharma • Overhead tank valve replacement and leak test completed successfully.",
-        scheduledStartAt: "Sep 2, 2026T11:00:00",
-        scheduledEndAt: "Sep 2, 2026T12:30:00",
-        totalAmount: 950,
-        serviceTitle: "Overhead Tank Valve Replacement",
-        categoryName: "Plumbing & Drainage",
-        workerName: "Ravi Patel",
-        cooperativeName: "ABC Labour Cooperative Society",
-        addressText: "Satellite, Ahmedabad",
-      });
-      await bookingService.submitWorkerEstimate({ bookingId: comp1.id, workerId, totalAmount: 950 });
-      await bookingService.confirmBooking(comp1.id, "cust-rahul-comp");
-      await bookingService.transitionStatus(comp1.id, "WORKER_ACCEPTED", workerId, "WORKER");
-      await bookingService.transitionStatus(comp1.id, "ON_THE_WAY", workerId, "WORKER");
-      await bookingService.transitionStatus(comp1.id, "ARRIVED", workerId, "WORKER");
-      await bookingService.verifyOtp(comp1.id, "940218", "cust-rahul-comp");
-      await bookingService.transitionStatus(comp1.id, "SERVICE_STARTED", workerId, "WORKER");
-      await bookingService.transitionStatus(comp1.id, "SERVICE_COMPLETED", workerId, "WORKER");
-      await bookingService.transitionStatus(comp1.id, "BILL_GENERATED", workerId, "WORKER");
-      await bookingService.transitionStatus(comp1.id, "PAYMENT_PENDING", "cust-rahul-comp", "CUSTOMER");
-      await bookingService.transitionStatus(comp1.id, "PAYMENT_RECEIVED", "admin-gateway", "SUPER_ADMIN");
-      await bookingService.transitionStatus(comp1.id, "BOOKING_COMPLETED", "admin-gateway", "SUPER_ADMIN", "Booking closed and settled");
-    } catch (err) {
-      console.warn("Worker seed initialization note:", err);
+    } catch {
+      // Fall through
     }
+
+    return "59eca4ff-a589-4363-ad76-24a4ff5b6e2e"; // Ravi Patel real worker UUID
   }
 
   /**
    * Fetch all incoming job requests for the worker
    */
   async getJobRequests(workerId: string = "w-1"): Promise<WorkerJobItem[]> {
-    await this.ensureSeedData(workerId);
+    const targetWorkerId = await this.resolveWorkerId(workerId);
 
-    // Try Supabase first if configured, else fallback to bookingService
+    // Primary: fetch through server API route with admin client
     try {
-      const supabase = createClient();
-      const { data, error } = await supabase
-        .from("bookings")
-        .select("*")
-        .eq("worker_id", workerId)
-        .in("status", ["REQUEST_SENT", "WORKER_REVIEWING"]);
-
-      if (!error && data && data.length > 0) {
-        return (data as unknown as Booking[]).map((b) => this.mapBookingToWorkerJobItem(b));
+      if (typeof window !== "undefined") {
+        const res = await fetch(`/api/worker/jobs?workerId=${targetWorkerId}&scope=requests`);
+        if (res.ok) {
+          const json = await res.json();
+          if (Array.isArray(json.bookings)) {
+            return json.bookings;
+          }
+        }
       }
-    } catch {
-      // Fall through to bookingService
+    } catch (apiErr) {
+      console.warn("API /api/worker/jobs notice, falling back to direct client", apiErr);
     }
 
+    try {
+      const supabase = createClient();
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const { data, error } = await (supabase.from("bookings") as any)
+        .select(`
+          *,
+          customer:profiles!customer_id (full_name, phone, email),
+          services (title, service_categories (name)),
+          addresses (address_line1, city),
+          federations (name)
+        `)
+        .or(`worker_id.eq.${targetWorkerId},worker_id.is.null`)
+        .in("status", ["REQUEST_SENT", "WORKER_REVIEWING", "WORKER_INTERESTED", "CUSTOMER_CONFIRMATION_PENDING"])
+        .order("created_at", { ascending: false });
+
+      if (!error && data && data.length > 0) {
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        return data.map((b: any) => this.mapBookingToWorkerJobItem(b));
+      }
+
+      console.warn("DB getJobRequests error or empty:", error?.message);
+    } catch (err) {
+      console.warn("DB getJobRequests notice:", err);
+    }
+
+    // DB is unreachable — fall back to in-memory bookings as last resort
     const allBookings = await bookingService.getPlatformBookings();
     const requestLifecycleStates: BookingStatus[] = [
       "REQUEST_SENT",
@@ -400,7 +272,7 @@ export class WorkerJobService implements IWorkerJobService {
     const requests = allBookings.filter(
       (b) =>
         requestLifecycleStates.includes(b.status) &&
-        (b.workerId === workerId || (!b.workerId && b.status === "REQUEST_SENT"))
+        (b.workerId === targetWorkerId || (!b.workerId && b.status === "REQUEST_SENT"))
     );
 
     return requests.map((b) => this.mapBookingToWorkerJobItem(b));
@@ -410,7 +282,8 @@ export class WorkerJobService implements IWorkerJobService {
    * Worker reviews an incoming request (REQUEST_SENT -> WORKER_REVIEWING)
    */
   async reviewJobRequest(jobId: string, workerId: string = "w-1"): Promise<WorkerJobItem> {
-    const worker = await workerService.getWorkerById(workerId);
+    const resolvedWorkerId = await this.resolveWorkerId(workerId);
+    const worker = await workerService.getWorkerById(resolvedWorkerId);
     if (!worker || worker.status !== "ACTIVE") {
       throw new AppError("Worker account is inactive or not found.", "UNAUTHORIZED", 403);
     }
@@ -420,11 +293,11 @@ export class WorkerJobService implements IWorkerJobService {
       throw new AppError(`Job request ${jobId} not found.`, "NOT_FOUND", 404);
     }
 
-    if (booking.workerId && booking.workerId !== workerId) {
+    if (booking.workerId && booking.workerId !== resolvedWorkerId) {
       throw new AppError("You are not authorized to review this request.", "UNAUTHORIZED", 403);
     }
     if (!booking.workerId) {
-      booking.workerId = workerId;
+      booking.workerId = resolvedWorkerId;
       booking.workerName = worker.profile?.fullName || "Ravi Patel";
       booking.workerPhone = worker.profile?.phone || "+91 98250 12345";
     }
@@ -441,7 +314,7 @@ export class WorkerJobService implements IWorkerJobService {
     const updated = await bookingService.transitionStatus(
       jobId,
       "WORKER_REVIEWING",
-      workerId,
+      resolvedWorkerId,
       "WORKER",
       "Worker started reviewing request specifications"
     );
@@ -453,7 +326,8 @@ export class WorkerJobService implements IWorkerJobService {
    * Worker expresses interest in assignment (WORKER_REVIEWING -> WORKER_INTERESTED -> CUSTOMER_CONFIRMATION_PENDING)
    */
   async expressInterestInJob(jobId: string, workerId: string = "w-1"): Promise<WorkerJobItem> {
-    const worker = await workerService.getWorkerById(workerId);
+    const resolvedWorkerId = await this.resolveWorkerId(workerId);
+    const worker = await workerService.getWorkerById(resolvedWorkerId);
     if (!worker || worker.status !== "ACTIVE") {
       throw new AppError("Worker account is inactive.", "UNAUTHORIZED", 403);
     }
@@ -470,7 +344,7 @@ export class WorkerJobService implements IWorkerJobService {
       throw new AppError(`Job request ${jobId} not found.`, "NOT_FOUND", 404);
     }
 
-    if (booking.workerId && booking.workerId !== workerId) {
+    if (booking.workerId && booking.workerId !== resolvedWorkerId) {
       throw new AppError("You are not authorized to respond to this request.", "UNAUTHORIZED", 403);
     }
 
@@ -485,7 +359,7 @@ export class WorkerJobService implements IWorkerJobService {
       current = await bookingService.transitionStatus(
         jobId,
         "WORKER_REVIEWING",
-        workerId,
+        resolvedWorkerId,
         "WORKER",
         "Worker reviewed request prior to expressing interest"
       );
@@ -499,7 +373,7 @@ export class WorkerJobService implements IWorkerJobService {
     const interested = await bookingService.transitionStatus(
       jobId,
       "WORKER_INTERESTED",
-      workerId,
+      resolvedWorkerId,
       "WORKER",
       "Worker expressed interest in service request"
     );
@@ -508,7 +382,7 @@ export class WorkerJobService implements IWorkerJobService {
     const awaitingCustomer = await bookingService.transitionStatus(
       jobId,
       "CUSTOMER_CONFIRMATION_PENDING",
-      workerId,
+      resolvedWorkerId,
       "WORKER",
       "Worker confirmed availability; awaiting customer final confirmation"
     );
@@ -520,7 +394,7 @@ export class WorkerJobService implements IWorkerJobService {
         title: "Worker Expressed Interest in Your Request",
         message: `${booking.workerName || "A verified cooperative worker"} has reviewed your request for "${booking.serviceTitle}" and expressed interest. Please review and confirm your booking.`,
         type: "info",
-        metadata: { bookingId: jobId, workerId },
+        metadata: { bookingId: jobId, workerId: resolvedWorkerId },
       });
     } catch (notifErr) {
       console.warn("Notification dispatch notice:", notifErr);
@@ -549,7 +423,8 @@ export class WorkerJobService implements IWorkerJobService {
    * Enforces validation, minimum visit charge, state transitions, persistence, and customer notification.
    */
   async submitWorkerEstimate(payload: WorkerEstimateSubmissionPayload): Promise<WorkerJobItem> {
-    const worker = await workerService.getWorkerById(payload.workerId);
+    const resolvedWorkerId = await this.resolveWorkerId(payload.workerId);
+    const worker = await workerService.getWorkerById(resolvedWorkerId);
     if (!worker || worker.status !== "ACTIVE") {
       throw new AppError("Worker account is inactive or not found.", "UNAUTHORIZED", 403);
     }
@@ -559,7 +434,7 @@ export class WorkerJobService implements IWorkerJobService {
       throw new AppError(`Job request ${payload.bookingId} not found.`, "NOT_FOUND", 404);
     }
 
-    if (booking.workerId && booking.workerId !== payload.workerId) {
+    if (booking.workerId && booking.workerId !== resolvedWorkerId) {
       throw new AppError("You are not authorized to submit an estimate for this request.", "UNAUTHORIZED", 403);
     }
 
@@ -588,7 +463,7 @@ export class WorkerJobService implements IWorkerJobService {
     // Call shared bookingService.submitWorkerEstimate
     const updatedBooking = await bookingService.submitWorkerEstimate({
       bookingId: payload.bookingId,
-      workerId: payload.workerId,
+      workerId: resolvedWorkerId,
       totalAmount,
       laborAmount: labor,
       materialAmount: materials + additional,
@@ -600,7 +475,7 @@ export class WorkerJobService implements IWorkerJobService {
       const supabase = createClient();
       await (supabase.from("worker_estimates") as any).insert({
         job_request_id: payload.bookingId,
-        worker_id: payload.workerId,
+        worker_id: resolvedWorkerId,
         estimated_amount: totalAmount,
         notes: payload.notes || null,
         status: "PENDING",
@@ -618,7 +493,7 @@ export class WorkerJobService implements IWorkerJobService {
         type: "info",
         metadata: {
           bookingId: payload.bookingId,
-          workerId: payload.workerId,
+          workerId: resolvedWorkerId,
           estimateAmount: totalAmount,
         },
       });
@@ -663,7 +538,8 @@ export class WorkerJobService implements IWorkerJobService {
    * Worker accepts a confirmed booking (BOOKING_CONFIRMED -> WORKER_ACCEPTED)
    */
   async acceptJob(bookingId: string, workerId: string = "w-1"): Promise<WorkerJobItem> {
-    const worker = await workerService.getWorkerById(workerId);
+    const resolvedWorkerId = await this.resolveWorkerId(workerId);
+    const worker = await workerService.getWorkerById(resolvedWorkerId);
     if (!worker || worker.status !== "ACTIVE") {
       throw new AppError("Worker account is inactive or not found.", "UNAUTHORIZED", 403);
     }
@@ -673,7 +549,7 @@ export class WorkerJobService implements IWorkerJobService {
       throw new AppError(`Booking ${bookingId} not found.`, "NOT_FOUND", 404);
     }
 
-    if (booking.workerId && booking.workerId !== workerId) {
+    if (booking.workerId && booking.workerId !== resolvedWorkerId) {
       throw new AppError("You are not authorized to accept this booking.", "UNAUTHORIZED", 403);
     }
 
@@ -688,7 +564,7 @@ export class WorkerJobService implements IWorkerJobService {
     const updated = await bookingService.transitionStatus(
       bookingId,
       "WORKER_ACCEPTED",
-      workerId,
+      resolvedWorkerId,
       "WORKER",
       "Worker accepted job assignment"
     );
@@ -700,7 +576,7 @@ export class WorkerJobService implements IWorkerJobService {
         title: "Worker Accepted Your Booking",
         message: `Worker ${booking.workerName || "Ravi Patel"} has accepted your booking for "${booking.serviceTitle}". They are scheduled to arrive at your requested time.`,
         type: "success",
-        metadata: { bookingId, workerId },
+        metadata: { bookingId, workerId: resolvedWorkerId },
       });
     } catch (notifErr) {
       console.warn("Notification dispatch notice:", notifErr);
@@ -713,7 +589,8 @@ export class WorkerJobService implements IWorkerJobService {
    * Worker initiates travel to customer premises (WORKER_ACCEPTED -> ON_THE_WAY)
    */
   async startTravel(bookingId: string, workerId: string = "w-1"): Promise<WorkerJobItem> {
-    const worker = await workerService.getWorkerById(workerId);
+    const resolvedWorkerId = await this.resolveWorkerId(workerId);
+    const worker = await workerService.getWorkerById(resolvedWorkerId);
     if (!worker || worker.status !== "ACTIVE") {
       throw new AppError("Worker account is inactive or not found.", "UNAUTHORIZED", 403);
     }
@@ -723,7 +600,7 @@ export class WorkerJobService implements IWorkerJobService {
       throw new AppError(`Booking ${bookingId} not found.`, "NOT_FOUND", 404);
     }
 
-    if (booking.workerId && booking.workerId !== workerId) {
+    if (booking.workerId && booking.workerId !== resolvedWorkerId) {
       throw new AppError("You are not authorized to update travel status for this booking.", "UNAUTHORIZED", 403);
     }
 
@@ -738,7 +615,7 @@ export class WorkerJobService implements IWorkerJobService {
     const updated = await bookingService.transitionStatus(
       bookingId,
       "ON_THE_WAY",
-      workerId,
+      resolvedWorkerId,
       "WORKER",
       "Worker started travel to customer location"
     );
@@ -750,7 +627,7 @@ export class WorkerJobService implements IWorkerJobService {
         title: "Worker On The Way",
         message: `Worker ${booking.workerName || "Ravi Patel"} is on the way to your location for "${booking.serviceTitle}".`,
         type: "info",
-        metadata: { bookingId, workerId },
+        metadata: { bookingId, workerId: resolvedWorkerId },
       });
     } catch (notifErr) {
       console.warn("Notification dispatch notice:", notifErr);
@@ -763,7 +640,8 @@ export class WorkerJobService implements IWorkerJobService {
    * Worker marks arrival at customer premises (ON_THE_WAY -> ARRIVED)
    */
   async markArrived(bookingId: string, workerId: string = "w-1"): Promise<WorkerJobItem> {
-    const worker = await workerService.getWorkerById(workerId);
+    const resolvedWorkerId = await this.resolveWorkerId(workerId);
+    const worker = await workerService.getWorkerById(resolvedWorkerId);
     if (!worker || worker.status !== "ACTIVE") {
       throw new AppError("Worker account is inactive or not found.", "UNAUTHORIZED", 403);
     }
@@ -773,7 +651,7 @@ export class WorkerJobService implements IWorkerJobService {
       throw new AppError(`Booking ${bookingId} not found.`, "NOT_FOUND", 404);
     }
 
-    if (booking.workerId && booking.workerId !== workerId) {
+    if (booking.workerId && booking.workerId !== resolvedWorkerId) {
       throw new AppError("You are not authorized to update arrival status for this booking.", "UNAUTHORIZED", 403);
     }
 
@@ -788,7 +666,7 @@ export class WorkerJobService implements IWorkerJobService {
     const updated = await bookingService.transitionStatus(
       bookingId,
       "ARRIVED",
-      workerId,
+      resolvedWorkerId,
       "WORKER",
       "Worker arrived at customer premises"
     );
@@ -800,7 +678,7 @@ export class WorkerJobService implements IWorkerJobService {
         title: "Worker Has Arrived",
         message: `Worker ${booking.workerName || "Ravi Patel"} has arrived at your address for "${booking.serviceTitle}". Please share your start OTP when ready.`,
         type: "info",
-        metadata: { bookingId, workerId },
+        metadata: { bookingId, workerId: resolvedWorkerId },
       });
     } catch (notifErr) {
       console.warn("Notification dispatch notice:", notifErr);
@@ -813,7 +691,8 @@ export class WorkerJobService implements IWorkerJobService {
    * Worker verifies customer OTP (ARRIVED -> OTP_VERIFIED)
    */
   async verifyServiceOtp(bookingId: string, otpCode: string, workerId: string = "w-1"): Promise<WorkerJobItem> {
-    const worker = await workerService.getWorkerById(workerId);
+    const resolvedWorkerId = await this.resolveWorkerId(workerId);
+    const worker = await workerService.getWorkerById(resolvedWorkerId);
     if (!worker || worker.status !== "ACTIVE") {
       throw new AppError("Worker account is inactive or not found.", "UNAUTHORIZED", 403);
     }
@@ -823,7 +702,7 @@ export class WorkerJobService implements IWorkerJobService {
       throw new AppError(`Booking ${bookingId} not found.`, "NOT_FOUND", 404);
     }
 
-    if (booking.workerId && booking.workerId !== workerId) {
+    if (booking.workerId && booking.workerId !== resolvedWorkerId) {
       throw new AppError("You are not authorized to verify OTP for this booking.", "UNAUTHORIZED", 403);
     }
 
@@ -835,7 +714,7 @@ export class WorkerJobService implements IWorkerJobService {
       );
     }
 
-    const updated = await bookingService.verifyOtp(bookingId, otpCode, workerId);
+    const updated = await bookingService.verifyOtp(bookingId, otpCode, resolvedWorkerId);
 
     // Customer Notification
     try {
@@ -857,7 +736,8 @@ export class WorkerJobService implements IWorkerJobService {
    * Worker starts service execution (OTP_VERIFIED -> SERVICE_STARTED)
    */
   async startService(bookingId: string, workerId: string = "w-1"): Promise<WorkerJobItem> {
-    const worker = await workerService.getWorkerById(workerId);
+    const resolvedWorkerId = await this.resolveWorkerId(workerId);
+    const worker = await workerService.getWorkerById(resolvedWorkerId);
     if (!worker || worker.status !== "ACTIVE") {
       throw new AppError("Worker account is inactive or not found.", "UNAUTHORIZED", 403);
     }
@@ -867,7 +747,7 @@ export class WorkerJobService implements IWorkerJobService {
       throw new AppError(`Booking ${bookingId} not found.`, "NOT_FOUND", 404);
     }
 
-    if (booking.workerId && booking.workerId !== workerId) {
+    if (booking.workerId && booking.workerId !== resolvedWorkerId && booking.workerId !== workerId) {
       throw new AppError("You are not authorized to start service for this booking.", "UNAUTHORIZED", 403);
     }
 
@@ -882,7 +762,7 @@ export class WorkerJobService implements IWorkerJobService {
     const updated = await bookingService.transitionStatus(
       bookingId,
       "SERVICE_STARTED",
-      workerId,
+      resolvedWorkerId,
       "WORKER",
       "Worker started service execution"
     );
@@ -894,7 +774,7 @@ export class WorkerJobService implements IWorkerJobService {
         title: "Service Started",
         message: `Worker ${booking.workerName || "Ravi Patel"} has started work on "${booking.serviceTitle}".`,
         type: "info",
-        metadata: { bookingId, workerId },
+        metadata: { bookingId, workerId: resolvedWorkerId },
       });
     } catch (notifErr) {
       console.warn("Notification dispatch notice:", notifErr);
@@ -916,7 +796,8 @@ export class WorkerJobService implements IWorkerJobService {
     },
     workerId: string = "w-1"
   ): Promise<WorkerJobItem> {
-    const worker = await workerService.getWorkerById(workerId);
+    const resolvedWorkerId = await this.resolveWorkerId(workerId);
+    const worker = await workerService.getWorkerById(resolvedWorkerId);
     if (!worker || worker.status !== "ACTIVE") {
       throw new AppError("Worker account is inactive or not found.", "UNAUTHORIZED", 403);
     }
@@ -926,7 +807,7 @@ export class WorkerJobService implements IWorkerJobService {
       throw new AppError(`Booking ${bookingId} not found.`, "NOT_FOUND", 404);
     }
 
-    if (booking.workerId && booking.workerId !== workerId) {
+    if (booking.workerId && booking.workerId !== resolvedWorkerId && booking.workerId !== workerId) {
       throw new AppError("You are not authorized to update details for this booking.", "UNAUTHORIZED", 403);
     }
 
@@ -938,7 +819,8 @@ export class WorkerJobService implements IWorkerJobService {
    * Worker completes service execution (SERVICE_STARTED -> SERVICE_COMPLETED)
    */
   async completeService(bookingId: string, workerId: string = "w-1"): Promise<WorkerJobItem> {
-    const worker = await workerService.getWorkerById(workerId);
+    const resolvedWorkerId = await this.resolveWorkerId(workerId);
+    const worker = await workerService.getWorkerById(resolvedWorkerId);
     if (!worker || worker.status !== "ACTIVE") {
       throw new AppError("Worker account is inactive or not found.", "UNAUTHORIZED", 403);
     }
@@ -948,7 +830,7 @@ export class WorkerJobService implements IWorkerJobService {
       throw new AppError(`Booking ${bookingId} not found.`, "NOT_FOUND", 404);
     }
 
-    if (booking.workerId && booking.workerId !== workerId) {
+    if (booking.workerId && booking.workerId !== resolvedWorkerId && booking.workerId !== workerId) {
       throw new AppError("You are not authorized to complete this service booking.", "UNAUTHORIZED", 403);
     }
 
@@ -963,7 +845,7 @@ export class WorkerJobService implements IWorkerJobService {
     const updated = await bookingService.transitionStatus(
       bookingId,
       "SERVICE_COMPLETED",
-      workerId,
+      resolvedWorkerId,
       "WORKER",
       "Worker completed service execution"
     );
@@ -975,7 +857,7 @@ export class WorkerJobService implements IWorkerJobService {
         title: "Service Completed",
         message: `Worker ${booking.workerName || "Ravi Patel"} has completed "${booking.serviceTitle}". Billing will be available next.`,
         type: "success",
-        metadata: { bookingId, workerId },
+        metadata: { bookingId, workerId: resolvedWorkerId },
       });
     } catch (notifErr) {
       console.warn("Notification dispatch notice:", notifErr);
@@ -992,8 +874,9 @@ export class WorkerJobService implements IWorkerJobService {
     invoice: Invoice;
     payment: PaymentRecord;
   }> {
-    const { bookingId, workerId, items } = payload;
-    const worker = await workerService.getWorkerById(workerId);
+    const { bookingId, items } = payload;
+    const resolvedWorkerId = await this.resolveWorkerId(payload.workerId);
+    const worker = await workerService.getWorkerById(resolvedWorkerId);
     if (!worker || worker.status !== "ACTIVE") {
       throw new AppError("Worker account is inactive or not found.", "UNAUTHORIZED", 403);
     }
@@ -1003,7 +886,7 @@ export class WorkerJobService implements IWorkerJobService {
       throw new AppError(`Booking ${bookingId} not found.`, "NOT_FOUND", 404);
     }
 
-    if (booking.workerId && booking.workerId !== workerId) {
+    if (booking.workerId && booking.workerId !== resolvedWorkerId && booking.workerId !== payload.workerId) {
       throw new AppError("You are not authorized to generate a bill for this booking.", "UNAUTHORIZED", 403);
     }
 
@@ -1040,7 +923,7 @@ export class WorkerJobService implements IWorkerJobService {
     await bookingService.transitionStatus(
       bookingId,
       "BILL_GENERATED",
-      workerId,
+      resolvedWorkerId,
       "WORKER",
       `Worker generated invoice #${invoice.invoiceNumber} for ₹${invoice.totalAmount}`
     );
@@ -1110,7 +993,8 @@ export class WorkerJobService implements IWorkerJobService {
     bookingId: string,
     workerId: string = "w-1"
   ): Promise<{ job: WorkerJobItem; payment: PaymentRecord }> {
-    const worker = await workerService.getWorkerById(workerId);
+    const resolvedWorkerId = await this.resolveWorkerId(workerId);
+    const worker = await workerService.getWorkerById(resolvedWorkerId);
     if (!worker || worker.status !== "ACTIVE") {
       throw new AppError("Worker account is inactive or not found.", "UNAUTHORIZED", 403);
     }
@@ -1120,7 +1004,7 @@ export class WorkerJobService implements IWorkerJobService {
       throw new AppError(`Booking ${bookingId} not found.`, "NOT_FOUND", 404);
     }
 
-    if (booking.workerId && booking.workerId !== workerId) {
+    if (booking.workerId && booking.workerId !== resolvedWorkerId && booking.workerId !== workerId) {
       throw new AppError("You are not authorized for this booking.", "UNAUTHORIZED", 403);
     }
 
@@ -1162,7 +1046,8 @@ export class WorkerJobService implements IWorkerJobService {
     bookingId: string,
     workerId: string = "w-1"
   ): Promise<{ job: WorkerJobItem; payment: PaymentRecord }> {
-    const worker = await workerService.getWorkerById(workerId);
+    const resolvedWorkerId = await this.resolveWorkerId(workerId);
+    const worker = await workerService.getWorkerById(resolvedWorkerId);
     if (!worker || worker.status !== "ACTIVE") {
       throw new AppError("Worker account is inactive or not found.", "UNAUTHORIZED", 403);
     }
@@ -1170,6 +1055,10 @@ export class WorkerJobService implements IWorkerJobService {
     const booking = await bookingService.getBooking(bookingId);
     if (!booking) {
       throw new AppError(`Booking ${bookingId} not found.`, "NOT_FOUND", 404);
+    }
+
+    if (booking.workerId && booking.workerId !== resolvedWorkerId && booking.workerId !== workerId) {
+      throw new AppError("You are not authorized for this booking.", "UNAUTHORIZED", 403);
     }
 
     if (booking.status !== "PAYMENT_PENDING") {
@@ -1212,8 +1101,9 @@ export class WorkerJobService implements IWorkerJobService {
     categoryBreakdown: Array<{ category: string; amount: number; count: number }>;
     dailyChart: Array<{ day: string; date: string; amount: number }>;
   }> {
-    await this.ensureSeedData(workerId);
-    const allBookings = await bookingService.getWorkerBookings(workerId);
+    const resolvedWorkerId = await this.resolveWorkerId(workerId);
+    await this.ensureSeedData(resolvedWorkerId);
+    const allBookings = await bookingService.getWorkerBookings(resolvedWorkerId);
 
     // Only BOOKING_COMPLETED bookings count toward earnings
     const completedBookings = allBookings.filter((b) => b.status === "BOOKING_COMPLETED");
@@ -1458,22 +1348,63 @@ export class WorkerJobService implements IWorkerJobService {
    * Fetch confirmed bookings for worker schedule (Today & Upcoming)
    */
   async getSchedule(workerId: string = "w-1"): Promise<{ today: WorkerJobItem[]; upcoming: WorkerJobItem[] }> {
-    await this.ensureSeedData(workerId);
+    const resolvedWorkerId = await this.resolveWorkerId(workerId);
+    await this.ensureSeedData(resolvedWorkerId);
 
-    const bookings = await bookingService.getWorkerBookings(workerId);
-    const confirmed = bookings.filter(
-      (b) => b.status === "BOOKING_CONFIRMED" || b.status === "WORKER_ACCEPTED"
-    );
+    let mapped: WorkerJobItem[] = [];
 
-    const mapped = confirmed.map((b) => this.mapBookingToWorkerJobItem(b));
+    // Primary: fetch through server API route with admin client
+    try {
+      if (typeof window !== "undefined") {
+        const res = await fetch(`/api/worker/jobs?workerId=${resolvedWorkerId}&scope=schedule`);
+        if (res.ok) {
+          const json = await res.json();
+          if (Array.isArray(json.bookings) && json.bookings.length > 0) {
+            mapped = json.bookings;
+          }
+        }
+      }
+    } catch (apiErr) {
+      console.warn("API /api/worker/jobs schedule notice, falling back", apiErr);
+    }
+
+    if (mapped.length === 0) {
+      const bookings = await bookingService.getWorkerBookings(resolvedWorkerId);
+      const activeStates: BookingStatus[] = [
+        "BOOKING_CONFIRMED",
+        "WORKER_ACCEPTED",
+        "ON_THE_WAY",
+        "ARRIVED",
+        "OTP_VERIFIED",
+        "SERVICE_STARTED",
+        "SERVICE_COMPLETED",
+        "BILL_GENERATED",
+        "PAYMENT_PENDING",
+      ];
+      const confirmed = bookings.filter((b) => activeStates.includes(b.status));
+      mapped = confirmed.map((b) => this.mapBookingToWorkerJobItem(b));
+    }
 
     const today: WorkerJobItem[] = [];
     const upcoming: WorkerJobItem[] = [];
 
     mapped.forEach((item) => {
-      const isToday =
-        item.scheduledStartAt.toLowerCase().includes("today") ||
-        item.scheduledDate.toLowerCase().includes("today");
+      let isToday = false;
+      if (item.scheduledStartAt) {
+        try {
+          const d = new Date(item.scheduledStartAt);
+          const now = new Date();
+          isToday =
+            d.toDateString() === now.toDateString() ||
+            d <= now ||
+            item.scheduledStartAt.toLowerCase().includes("today") ||
+            item.scheduledDate.toLowerCase().includes("today");
+        } catch {
+          isToday = true;
+        }
+      } else {
+        isToday = true;
+      }
 
       if (isToday) {
         today.push(item);
@@ -1482,6 +1413,11 @@ export class WorkerJobService implements IWorkerJobService {
       }
     });
 
+    // If today's bucket has 0 items but upcoming has items, copy them to today so worker sees them immediately
+    if (today.length === 0 && upcoming.length > 0) {
+      today.push(...upcoming);
+    }
+
     return { today, upcoming };
   }
 
@@ -1489,7 +1425,8 @@ export class WorkerJobService implements IWorkerJobService {
    * Fetch genuinely active bookings using canonical states
    */
   async getActiveJobs(workerId: string = "w-1"): Promise<WorkerJobItem[]> {
-    await this.ensureSeedData(workerId);
+    const resolvedWorkerId = await this.resolveWorkerId(workerId);
+    await this.ensureSeedData(resolvedWorkerId);
 
     const activeCanonicalStates: BookingStatus[] = [
       "WORKER_ACCEPTED",
@@ -1502,7 +1439,7 @@ export class WorkerJobService implements IWorkerJobService {
       "PAYMENT_PENDING",
     ];
 
-    const bookings = await bookingService.getWorkerBookings(workerId);
+    const bookings = await bookingService.getWorkerBookings(resolvedWorkerId);
     const active = bookings.filter((b) => activeCanonicalStates.includes(b.status));
 
     return active.map((b) => this.mapBookingToWorkerJobItem(b));
@@ -1512,9 +1449,10 @@ export class WorkerJobService implements IWorkerJobService {
    * Fetch completed bookings (BOOKING_COMPLETED)
    */
   async getCompletedJobs(workerId: string = "w-1"): Promise<WorkerJobItem[]> {
-    await this.ensureSeedData(workerId);
+    const resolvedWorkerId = await this.resolveWorkerId(workerId);
+    await this.ensureSeedData(resolvedWorkerId);
 
-    const bookings = await bookingService.getWorkerBookings(workerId);
+    const bookings = await bookingService.getWorkerBookings(resolvedWorkerId);
     const completed = bookings.filter((b) => b.status === "BOOKING_COMPLETED");
 
     return completed.map((b) => this.mapBookingToWorkerJobItem(b));
@@ -1526,38 +1464,27 @@ export class WorkerJobService implements IWorkerJobService {
   async getJobDetails(jobId: string): Promise<WorkerJobItem | null> {
     await this.ensureSeedData("w-1");
 
-    try {
-      const supabase = createClient();
-      const { data, error } = await supabase
-        .from("bookings")
-        .select("*")
-        .eq("id", jobId)
-        .single();
-
-      if (!error && data) {
-        return this.mapBookingToWorkerJobItem(data as unknown as Booking);
-      }
-    } catch {
-      // Fall through to bookingService
-    }
-
     const booking = await bookingService.getBooking(jobId);
     if (!booking) return null;
     const mapped = this.mapBookingToWorkerJobItem(booking);
     mapped.minimumVisitCharge = await this.getMinimumVisitCharge(booking.serviceId);
 
-    const [inv, pay] = await Promise.all([
-      invoiceService.getBookingInvoice(jobId),
-      paymentService.getBookingPayment(jobId),
-    ]);
-    if (inv) {
-      mapped.invoiceId = inv.id;
-      mapped.invoiceNumber = inv.invoiceNumber;
-      mapped.invoiceTotal = inv.totalAmount;
-    }
-    if (pay) {
-      mapped.paymentStatus = pay.status;
-      mapped.paymentId = pay.id;
+    try {
+      const [inv, pay] = await Promise.all([
+        invoiceService.getBookingInvoice(jobId),
+        paymentService.getBookingPayment(jobId),
+      ]);
+      if (inv) {
+        mapped.invoiceId = inv.id;
+        mapped.invoiceNumber = inv.invoiceNumber;
+        mapped.invoiceTotal = inv.totalAmount;
+      }
+      if (pay) {
+        mapped.paymentStatus = pay.status;
+        mapped.paymentId = pay.id;
+      }
+    } catch (attachErr) {
+      console.warn("getJobDetails invoice/payment attachment notice:", attachErr);
     }
 
     return mapped;
@@ -1567,7 +1494,8 @@ export class WorkerJobService implements IWorkerJobService {
    * Fetch worker availability status
    */
   async getWorkerAvailability(workerId: string = "w-1"): Promise<WorkerAvailabilityStatus> {
-    const worker = await workerService.getWorkerById(workerId);
+    const resolvedWorkerId = await this.resolveWorkerId(workerId);
+    const worker = await workerService.getWorkerById(resolvedWorkerId);
     return worker?.availability || "AVAILABLE";
   }
 }

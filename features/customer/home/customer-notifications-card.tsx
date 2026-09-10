@@ -41,15 +41,53 @@ export const SAMPLE_CUSTOMER_NOTIFICATIONS: CustomerNotificationItem[] = [
   },
 ];
 
+import { notificationService } from "@/features/notifications/services/notification-service";
+import { useRealtimeSubscription } from "@/hooks/use-realtime-subscription";
+
 export interface CustomerNotificationsCardProps {
   notifications?: CustomerNotificationItem[];
   onViewAll?: () => void;
 }
 
 export function CustomerNotificationsCard({
-  notifications = SAMPLE_CUSTOMER_NOTIFICATIONS,
+  notifications: initialNotifs,
   onViewAll,
 }: CustomerNotificationsCardProps) {
+  const [items, setItems] = React.useState<CustomerNotificationItem[]>(initialNotifs || SAMPLE_CUSTOMER_NOTIFICATIONS);
+
+  const fetchLiveNotifs = React.useCallback(async () => {
+    try {
+      const list = await notificationService.getUserNotifications("cust-1");
+      if (list && list.length > 0) {
+        const mapped: CustomerNotificationItem[] = list.map((n) => ({
+          id: n.id,
+          title: n.title,
+          message: n.message,
+          type: (n.type as any) || "info",
+          timeAgo: "Just now",
+          isRead: n.isRead,
+        }));
+        setItems(mapped);
+      }
+    } catch (err) {
+      console.warn("Live notifications fetch notice:", err);
+    }
+  }, []);
+
+  React.useEffect(() => {
+    fetchLiveNotifs();
+  }, [fetchLiveNotifs]);
+
+  // Subscribe to real-time notifications table changes for current profile
+  useRealtimeSubscription({
+    table: "notifications",
+    onPayload: () => {
+      fetchLiveNotifs();
+    },
+  });
+
+  const notifications = items;
+
   if (notifications.length === 0) {
     return (
       <Card className="bg-white dark:bg-slate-900 border border-dashed border-slate-300 dark:border-slate-800 p-5 text-center shadow-sm rounded-xl">
