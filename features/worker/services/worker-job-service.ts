@@ -1464,38 +1464,27 @@ export class WorkerJobService implements IWorkerJobService {
   async getJobDetails(jobId: string): Promise<WorkerJobItem | null> {
     await this.ensureSeedData("w-1");
 
-    try {
-      const supabase = createClient();
-      const { data, error } = await supabase
-        .from("bookings")
-        .select("*")
-        .eq("id", jobId)
-        .single();
-
-      if (!error && data) {
-        return this.mapBookingToWorkerJobItem(data as unknown as Booking);
-      }
-    } catch {
-      // Fall through to bookingService
-    }
-
     const booking = await bookingService.getBooking(jobId);
     if (!booking) return null;
     const mapped = this.mapBookingToWorkerJobItem(booking);
     mapped.minimumVisitCharge = await this.getMinimumVisitCharge(booking.serviceId);
 
-    const [inv, pay] = await Promise.all([
-      invoiceService.getBookingInvoice(jobId),
-      paymentService.getBookingPayment(jobId),
-    ]);
-    if (inv) {
-      mapped.invoiceId = inv.id;
-      mapped.invoiceNumber = inv.invoiceNumber;
-      mapped.invoiceTotal = inv.totalAmount;
-    }
-    if (pay) {
-      mapped.paymentStatus = pay.status;
-      mapped.paymentId = pay.id;
+    try {
+      const [inv, pay] = await Promise.all([
+        invoiceService.getBookingInvoice(jobId),
+        paymentService.getBookingPayment(jobId),
+      ]);
+      if (inv) {
+        mapped.invoiceId = inv.id;
+        mapped.invoiceNumber = inv.invoiceNumber;
+        mapped.invoiceTotal = inv.totalAmount;
+      }
+      if (pay) {
+        mapped.paymentStatus = pay.status;
+        mapped.paymentId = pay.id;
+      }
+    } catch (attachErr) {
+      console.warn("getJobDetails invoice/payment attachment notice:", attachErr);
     }
 
     return mapped;

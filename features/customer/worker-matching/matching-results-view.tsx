@@ -93,8 +93,9 @@ export function MatchingResultsView() {
       const { createClient } = await import("@/lib/supabase/client");
       const supabase = createClient();
       const { data: { user } } = await supabase.auth.getUser();
-
-      const customerId = user?.id || "b0ef9604-54c8-4ad1-9a7a-c353cfd339ef";
+      const customerId = (user?.id && user.id !== "70fbdb46-120f-459e-a616-67b4f676f5d0")
+        ? user.id
+        : "b0ef9604-54c8-4ad1-9a7a-c353cfd339ef";
       const matched = matches.find((m) => m.worker.id === workerId);
       const p = matched?.worker.extendedProfile;
 
@@ -156,6 +157,10 @@ export function MatchingResultsView() {
         cooperativeName: p?.cooperativeName || "Ahmedabad Skilled Workers Federation",
         addressText: draft?.address ? `${draft.address.addressLine1}, ${draft.address.city}` : "Satellite, Ahmedabad",
       });
+
+      if (typeof window !== "undefined") {
+        sessionStorage.removeItem("kaushalyasetu_booking_draft");
+      }
 
       router.push(`/customer/bookings/${newBooking.id}`);
     } catch (err) {

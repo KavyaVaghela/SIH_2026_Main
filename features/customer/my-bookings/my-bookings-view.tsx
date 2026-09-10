@@ -25,6 +25,7 @@ import {
 } from "lucide-react";
 import { bookingService, Booking } from "@/features/bookings/services/booking-service";
 import { BookingStatus } from "@/supabase/types/database.types";
+import { useRealtimeSubscription } from "@/hooks/use-realtime-subscription";
 
 type BookingFilterTab = "ALL" | "UPCOMING" | "ACTIVE" | "COMPLETED" | "CANCELLED";
 
@@ -36,21 +37,39 @@ export function MyBookingsView() {
   const [activeTab, setActiveTab] = React.useState<BookingFilterTab>("ALL");
   const [searchQuery, setSearchQuery] = React.useState<string>("");
 
-  const fetchCustomerBookings = React.useCallback(async () => {
+  const fetchCustomerBookings = React.useCallback(async (isBackground = false) => {
     try {
-      setLoading(true);
-      const list = await bookingService.getCustomerBookings("cust-1");
+      if (!isBackground) {
+        setLoading(true);
+      }
+      const { createClient } = await import("@/lib/supabase/client");
+      const supabase = createClient();
+      const { data: { user } } = await supabase.auth.getUser();
+      const customerId = (user?.id && user.id !== "70fbdb46-120f-459e-a616-67b4f676f5d0")
+        ? user.id
+        : "b0ef9604-54c8-4ad1-9a7a-c353cfd339ef";
+      const list = await bookingService.getCustomerBookings(customerId);
       setBookings(list);
     } catch (err) {
       console.error("Failed to fetch customer bookings", err);
     } finally {
-      setLoading(false);
+      if (!isBackground) {
+        setLoading(false);
+      }
     }
   }, []);
 
   React.useEffect(() => {
     fetchCustomerBookings();
   }, [fetchCustomerBookings]);
+
+  // Realtime subscription for customer's bookings
+  useRealtimeSubscription({
+    table: "bookings",
+    onPayload: () => {
+      fetchCustomerBookings(true);
+    },
+  });
 
   // Status Categorization Map
   const isUpcoming = (status: BookingStatus) =>

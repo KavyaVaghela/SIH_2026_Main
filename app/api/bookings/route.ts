@@ -1,5 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createAdminClient } from "@/lib/supabase/admin";
+import { createClient as createServerClient } from "@/lib/supabase/server";
+import { validateBookingTransition } from "@/features/bookings/utils/booking-state-machine";
+import type { BookingStatus, UserRole } from "@/supabase/types/database.types";
 
 export async function GET(request: NextRequest) {
   try {
@@ -86,6 +89,36 @@ export async function POST(request: NextRequest) {
 
       if (findErr || !existing) {
         return NextResponse.json({ error: "Booking not found" }, { status: 404 });
+      }
+
+      // Resolve actor role: prioritize verified session profile role over client-supplied role
+      let actorRole: UserRole = (body.role as UserRole) || "CUSTOMER";
+      try {
+        const serverSupabase = createServerClient();
+        const { data: { user } } = await serverSupabase.auth.getUser();
+        if (user?.id) {
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          const { data: prof } = await (supabase.from("profiles") as any)
+            .select("role")
+            .eq("id", user.id)
+            .maybeSingle();
+          if (prof?.role) {
+            actorRole = prof.role as UserRole;
+          }
+        }
+      } catch {
+        // Retain fallback role
+      }
+
+      // Validate transition using canonical state machine
+      try {
+        validateBookingTransition(existing.status as BookingStatus, status as BookingStatus, actorRole);
+      } catch (transErr: unknown) {
+        const err = transErr as { message?: string; statusCode?: number };
+        return NextResponse.json(
+          { error: err?.message || "Invalid state transition" },
+          { status: err?.statusCode || 400 }
+        );
       }
 
       const now = new Date().toISOString();

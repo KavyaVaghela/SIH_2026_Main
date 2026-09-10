@@ -310,6 +310,31 @@ export class BookingService implements IBookingService {
       Boolean(str && /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(str));
 
     if (isUuid(bookingId)) {
+      // Primary: fetch from server API route for complete joined data
+      try {
+        if (typeof window !== "undefined") {
+          const res = await fetch(`/api/bookings?bookingId=${bookingId}`);
+          if (res.ok) {
+            const json = await res.json();
+            if (json.booking) {
+              const cached = this.mockBookings.get(bookingId);
+              const mapped: Booking = {
+                ...json.booking,
+                workerEstimateAmount: cached?.workerEstimateAmount || json.booking.totalAmount,
+                workerEstimateLabor: cached?.workerEstimateLabor,
+                workerEstimateMaterials: cached?.workerEstimateMaterials,
+                workerEstimateNotes: cached?.workerEstimateNotes,
+                workerEstimateSubmittedAt: cached?.workerEstimateSubmittedAt,
+              };
+              this.mockBookings.set(bookingId, mapped);
+              return mapped;
+            }
+          }
+        }
+      } catch (apiErr) {
+        console.warn("API getBooking query notice, falling back:", apiErr);
+      }
+
       try {
         const { createClient } = await import("@/lib/supabase/client");
         const supabase = createClient();
@@ -347,6 +372,11 @@ export class BookingService implements IBookingService {
             workerPhone: cached?.workerPhone,
             cooperativeName: cached?.cooperativeName || "Cooperative Federation",
             addressText: cached?.addressText,
+            workerEstimateAmount: cached?.workerEstimateAmount || data.total_amount,
+            workerEstimateLabor: cached?.workerEstimateLabor,
+            workerEstimateMaterials: cached?.workerEstimateMaterials,
+            workerEstimateNotes: cached?.workerEstimateNotes,
+            workerEstimateSubmittedAt: cached?.workerEstimateSubmittedAt,
             createdAt: data.created_at,
             updatedAt: data.updated_at,
           };
@@ -674,6 +704,7 @@ export class BookingService implements IBookingService {
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       await (supabase.from("bookings") as any)
         .update({
+          status: "CUSTOMER_CONFIRMATION_PENDING",
           total_amount: payload.totalAmount,
           platform_fee: platformFee,
           worker_earnings: workerEarnings,
