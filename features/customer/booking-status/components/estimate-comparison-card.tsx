@@ -81,9 +81,15 @@ export function EstimateComparisonCard({ booking }: EstimateComparisonCardProps)
                 WORKER ESTIMATE
               </span>
               {hasWorkerEstimate ? (
-                <Badge className="bg-emerald-700 text-white text-[9px] font-bold gap-0.5">
-                  <CheckCircle2 className="w-3 h-3" /> Ready to Confirm
-                </Badge>
+                booking.status === "CUSTOMER_CONFIRMATION_PENDING" ? (
+                  <Badge className="bg-emerald-700 text-white text-[9px] font-bold gap-0.5">
+                    <CheckCircle2 className="w-3 h-3" /> Ready to Confirm
+                  </Badge>
+                ) : (
+                  <Badge className="bg-emerald-800 text-emerald-100 text-[9px] font-bold gap-0.5">
+                    <CheckCircle2 className="w-3 h-3" /> Estimate Approved
+                  </Badge>
+                )
               ) : (
                 <Badge variant="outline" className="text-[9px] bg-amber-100 border-amber-300 text-amber-800">
                   Reviewing Scope

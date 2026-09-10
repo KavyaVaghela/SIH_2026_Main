@@ -35,11 +35,11 @@ export function HomeOverviewView() {
       if (user?.id) {
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         (supabase.from("profiles") as any)
-          .select("full_name")
+          .select("full_name, role")
           .eq("id", user.id)
           .maybeSingle()
-          .then(({ data: prof }: { data: { full_name?: string } | null }) => {
-            if (prof?.full_name) {
+          .then(({ data: prof }: { data: { full_name?: string; role?: string } | null }) => {
+            if (prof?.full_name && prof.role === "WORKER") {
               const fullName = prof.full_name;
               setWorkerIdentity((prev) => ({ ...prev, name: fullName }));
             }

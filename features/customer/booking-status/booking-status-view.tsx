@@ -40,14 +40,21 @@ export function BookingStatusView({ bookingId }: BookingStatusViewProps) {
   const [loading, setLoading] = React.useState(true);
   const [actionLoading, setActionLoading] = React.useState(false);
 
-  const fetchBooking = React.useCallback(async () => {
+  const fetchBooking = React.useCallback(async (isBackground = false) => {
+    if (!isBackground) {
+      setLoading(true);
+    }
     try {
       const data = await bookingService.getBooking(bookingId);
-      setBooking(data);
+      if (data) {
+        setBooking(data);
+      }
     } catch (err) {
       console.error("Failed to fetch booking details", err);
     } finally {
-      setLoading(false);
+      if (!isBackground) {
+        setLoading(false);
+      }
     }
   }, [bookingId]);
 
@@ -60,8 +67,21 @@ export function BookingStatusView({ bookingId }: BookingStatusViewProps) {
   useRealtimeSubscription({
     table: "bookings",
     filter: `id=eq.${bookingId}`,
-    onPayload: () => {
-      fetchBooking();
+    onPayload: (payload) => {
+      if (payload?.new) {
+        setBooking((prev) => {
+          if (!prev) return null;
+          return {
+            ...prev,
+            status: payload.new.status || prev.status,
+            totalAmount: payload.new.total_amount !== undefined ? Number(payload.new.total_amount) : prev.totalAmount,
+            platformFee: payload.new.platform_fee !== undefined ? Number(payload.new.platform_fee) : prev.platformFee,
+            workerEarnings: payload.new.worker_earnings !== undefined ? Number(payload.new.worker_earnings) : prev.workerEarnings,
+            otpCode: payload.new.otp_code || prev.otpCode,
+          };
+        });
+      }
+      fetchBooking(true);
     },
   });
 
@@ -114,7 +134,7 @@ export function BookingStatusView({ bookingId }: BookingStatusViewProps) {
   }
 
   const isConfirmed = booking.status === "BOOKING_CONFIRMED";
-  const isPendingConfirmation = booking.status === "CUSTOMER_CONFIRMATION_PENDING" || (Boolean(booking.workerEstimateAmount) && booking.status !== "BOOKING_CONFIRMED" && booking.status !== "WORKER_ACCEPTED" && booking.status !== "ON_THE_WAY" && booking.status !== "ARRIVED" && booking.status !== "OTP_VERIFIED" && booking.status !== "SERVICE_STARTED" && booking.status !== "SERVICE_COMPLETED");
+  const isPendingConfirmation = booking.status === "CUSTOMER_CONFIRMATION_PENDING";
   const isExecutionStarted = [
     "BOOKING_CONFIRMED",
     "WORKER_ACCEPTED",

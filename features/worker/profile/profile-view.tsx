@@ -23,11 +23,11 @@ export function ProfileView() {
       if (user?.id) {
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         (supabase.from("profiles") as any)
-          .select("full_name, phone, email")
+          .select("full_name, phone, email, role")
           .eq("id", user.id)
           .maybeSingle()
-          .then(({ data: prof }: { data: { full_name?: string; phone?: string; email?: string } | null }) => {
-            if (prof?.full_name) {
+          .then(({ data: prof }: { data: { full_name?: string; phone?: string; email?: string; role?: string } | null }) => {
+            if (prof?.full_name && prof.role === "WORKER") {
               const fullName = prof.full_name;
               setProfile((prev) => ({
                 ...prev,

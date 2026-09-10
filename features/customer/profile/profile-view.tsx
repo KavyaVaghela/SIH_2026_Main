@@ -98,11 +98,11 @@ export function ProfileView() {
       if (user?.id) {
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         (supabase.from("profiles") as any)
-          .select("full_name, email, phone")
+          .select("full_name, email, phone, role")
           .eq("id", user.id)
           .maybeSingle()
-          .then(({ data }: { data: { full_name?: string; email?: string; phone?: string } | null }) => {
-            if (data) {
+          .then(({ data }: { data: { full_name?: string; email?: string; phone?: string; role?: string } | null }) => {
+            if (data && data.role === "CUSTOMER") {
               setUserProfile({
                 fullName: data.full_name || "Prince Patel",
                 email: data.email || user.email || "customer@example.com",

@@ -53,9 +53,11 @@ export function ScheduleJobsView() {
     });
   }, []);
 
-  const fetchAllData = React.useCallback(async () => {
-    setLoading(true);
-    setError(null);
+  const fetchAllData = React.useCallback(async (isBackground = false) => {
+    if (!isBackground) {
+      setLoading(true);
+      setError(null);
+    }
     const targetId = workerDbId || "w-1";
     // Capture this fetch's generation number
     const thisGen = ++fetchGenRef.current;
@@ -80,9 +82,11 @@ export function ScheduleJobsView() {
     } catch (err) {
       if (thisGen !== fetchGenRef.current) return;
       console.error("Error loading worker schedule data", err);
-      setError("We couldn't load your jobs right now. Please try again.");
+      if (!isBackground) {
+        setError("We couldn't load your jobs right now. Please try again.");
+      }
     } finally {
-      if (thisGen === fetchGenRef.current) setLoading(false);
+      if (thisGen === fetchGenRef.current && !isBackground) setLoading(false);
     }
   }, [workerDbId]);
 
@@ -97,7 +101,7 @@ export function ScheduleJobsView() {
     table: "bookings",
     enabled: !!workerDbId,
     onPayload: () => {
-      fetchAllData();
+      fetchAllData(true);
     },
   });
 

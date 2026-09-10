@@ -95,9 +95,11 @@ export function ActiveJobDetailView({ bookingId }: ActiveJobDetailViewProps) {
   const [isCompleteModalOpen, setIsCompleteModalOpen] = React.useState(false);
   const [isSavingDetails, setIsSavingDetails] = React.useState(false);
 
-  const loadJobData = React.useCallback(async () => {
-    setLoading(true);
-    setActionError(null);
+  const loadJobData = React.useCallback(async (isBackground = false) => {
+    if (!isBackground) {
+      setLoading(true);
+      setActionError(null);
+    }
     try {
       const [data, hist] = await Promise.all([
         workerJobService.getJobDetails(bookingId),
@@ -110,14 +112,18 @@ export function ActiveJobDetailView({ bookingId }: ActiveJobDetailViewProps) {
         if (data.materialsUsed) setMaterialsList(data.materialsUsed);
         if (data.beforePhotoUrl) setBeforePhoto(data.beforePhotoUrl);
         if (data.afterPhotoUrl) setAfterPhoto(data.afterPhotoUrl);
-      } else {
+      } else if (!isBackground) {
         setActionError("Active job booking not found.");
       }
     } catch (err) {
       console.error("Failed to load active job details", err);
-      setActionError("Failed to load active job details.");
+      if (!isBackground) {
+        setActionError("Failed to load active job details.");
+      }
     } finally {
-      setLoading(false);
+      if (!isBackground) {
+        setLoading(false);
+      }
     }
   }, [bookingId]);
 
@@ -129,8 +135,20 @@ export function ActiveJobDetailView({ bookingId }: ActiveJobDetailViewProps) {
   useRealtimeSubscription({
     table: "bookings",
     filter: `id=eq.${bookingId}`,
+    onPayload: (payload) => {
+      if (payload?.new?.status) {
+        setJob((prev) => (prev ? { ...prev, status: payload.new.status } : null));
+      }
+      loadJobData(true);
+    },
+  });
+
+  // Native Supabase Realtime subscription for payment events (customer payments)
+  useRealtimeSubscription({
+    table: "payments",
+    filter: `booking_id=eq.${bookingId}`,
     onPayload: () => {
-      loadJobData();
+      loadJobData(true);
     },
   });
 

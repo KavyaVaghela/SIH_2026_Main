@@ -23,21 +23,24 @@ export function RoleShell({ role, userName, children, className }: RoleShellProp
       if (user?.id) {
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         (supabase.from("profiles") as any)
-          .select("full_name")
+          .select("full_name, role")
           .eq("id", user.id)
           .maybeSingle()
-          .then(({ data }: { data: { full_name?: string } | null }) => {
-            if (data?.full_name) {
+          .then(({ data }: { data: { full_name?: string; role?: string } | null }) => {
+            if (data?.full_name && data?.role === role) {
               if (role === "CUSTOMER" && (data.full_name.includes("Administrator") || data.full_name.includes("System"))) {
                 setProfileName("Prince Patel");
               } else {
                 setProfileName(data.full_name);
               }
+            } else if (data?.role && data.role !== role) {
+              // Strict role isolation: never overwrite shell identity with an alien role profile
+              setProfileName(userName || config.displayName);
             }
           });
       }
     });
-  }, [role]);
+  }, [role, userName, config.displayName]);
 
   return (
     <AppShell

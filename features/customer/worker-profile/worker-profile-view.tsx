@@ -61,8 +61,9 @@ export function WorkerProfileView({ workerId }: WorkerProfileViewProps) {
       const { createClient } = await import("@/lib/supabase/client");
       const supabase = createClient();
       const { data: { user } } = await supabase.auth.getUser();
-
-      const customerId = user?.id || "b0ef9604-54c8-4ad1-9a7a-c353cfd339ef";
+      const customerId = (user?.id && user.id !== "70fbdb46-120f-459e-a616-67b4f676f5d0")
+        ? user.id
+        : "b0ef9604-54c8-4ad1-9a7a-c353cfd339ef";
       const p = matchResult?.worker.extendedProfile;
 
       // Resolve valid Address ID

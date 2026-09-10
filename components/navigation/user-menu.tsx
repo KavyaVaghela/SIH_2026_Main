@@ -17,7 +17,7 @@ export interface UserMenuProps {
 }
 
 export function UserMenu({
-  userName = "Ravi Patel",
+  userName,
   userRole = "Household Customer",
   avatarUrl,
   onNavigateProfile,
@@ -28,10 +28,16 @@ export function UserMenu({
   const pathname = usePathname();
   const isSuperAdmin = pathname?.startsWith("/super-admin") || userRole?.toLowerCase().includes("super");
   const isCustomer = pathname?.startsWith("/customer") || userRole?.toLowerCase().includes("customer");
+  const isWorker = pathname?.startsWith("/worker") || userRole?.toLowerCase().includes("worker");
 
-  const displayUserName = (isCustomer && (userName?.includes("Administrator") || userName?.includes("System")))
-    ? "Prince Patel"
-    : (userName || (isCustomer ? "Prince Patel" : "Ravi Patel"));
+  const defaultRoleName = isCustomer ? "Prince Patel" : (isWorker ? "Ravi Patel" : "User");
+
+  // Strict role isolation: on customer routes, never display worker or system identity
+  const displayUserName = isCustomer
+    ? (userName && !userName.includes("Administrator") && !userName.includes("System") && userName !== "Ravi Patel"
+        ? userName
+        : "Prince Patel")
+    : (userName || defaultRoleName);
 
   const handleProfileClick = () => {
     if (onNavigateProfile) {
