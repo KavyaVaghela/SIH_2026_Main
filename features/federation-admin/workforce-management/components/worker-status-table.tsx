@@ -82,7 +82,7 @@ export function WorkerStatusTable({
                 >
                   {/* Worker ID */}
                   <TableCell className="font-mono font-medium text-muted-foreground">
-                    {worker.id}
+                    {worker.memberId || worker.id}
                   </TableCell>
 
                   {/* Name */}

@@ -3,6 +3,7 @@
 import * as React from "react";
 import Link from "next/link";
 import { ArrowLeft, Star, ShieldCheck, Info } from "lucide-react";
+import { Avatar } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { WorkerStatusBadge } from "./worker-status-badge";
@@ -49,16 +50,19 @@ export function WorkerDetailHeader({ worker }: WorkerDetailHeaderProps) {
       {/* Main Identity Header */}
       <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 pt-1">
         <div className="flex items-center space-x-3.5">
-          <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-emerald-800 text-white font-bold text-lg shadow-sm">
-            {worker.personal.fullName.charAt(0)}
-          </div>
+          <Avatar
+            src={worker.avatarUrl || worker.personal.avatarUrl || undefined}
+            fallback={worker.personal.fullName}
+            size="lg"
+            className="h-14 w-14 rounded-xl border-2 border-emerald-600 shadow-sm"
+          />
           <div className="space-y-0.5">
             <div className="flex flex-wrap items-center gap-2">
               <h1 className="text-xl font-bold tracking-tight text-foreground">
                 {worker.personal.fullName}
               </h1>
               <span className="font-mono text-xs text-muted-foreground bg-muted/60 px-2 py-0.5 rounded border border-border/40">
-                {worker.id}
+                {worker.personal.workerId || worker.id}
               </span>
             </div>
             <p className="text-xs text-muted-foreground">

@@ -2,6 +2,7 @@ import type { WorkerAccountStatus, WorkerAvailabilityStatus } from "@/supabase/t
 
 export interface ManagedWorkerItem {
   id: string;
+  memberId?: string;
   fullName: string;
   profession: string;
   area: string;
@@ -14,14 +15,19 @@ export interface ManagedWorkerItem {
   joiningDate: string;
   phone: string;
   email: string;
+  avatarUrl?: string | null;
 }
 
 export interface AddWorkerPayload {
   // Personal
   fullName: string;
   dateOfBirth: string;
+  gender?: "male" | "female" | "other";
   phone: string;
   email: string;
+  password: string;
+  memberId?: string;
+  avatarUrl?: string;
   address: string;
   city: string;
   state: string;
@@ -60,6 +66,8 @@ export interface WorkerApplicationDocument {
 
 export interface WorkerApplicationItem {
   id: string;
+  memberId?: string | null;
+  registrationType: "NEW_WORKER" | "EXISTING_WORKER";
   applicantName: string;
   phone: string;
   email: string;
@@ -72,6 +80,15 @@ export interface WorkerApplicationItem {
   skills: string[];
   experienceYears: number;
   hourlyRate: number;
+  previousWorkDetails?: string | null;
+  govtIdType?: string;
+  govtIdNumber?: string;
+  govtIdDocumentUrl?: string | null;
+  avatarUrl?: string | null;
+  bankName?: string | null;
+  bankAccountHolder?: string | null;
+  bankAccountNumber?: string | null;
+  bankIfscCode?: string | null;
   documents: WorkerApplicationDocument[];
   submittedDate: string;
   status: WorkerApplicationStatus;

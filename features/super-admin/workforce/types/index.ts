@@ -19,6 +19,10 @@ export interface WorkerListItem {
   email?: string | null;
   phone?: string | null;
   avatarUrl?: string | null;
+  memberId?: string | null;
+  dateOfBirth?: string | null;
+  gender?: string | null;
+  registrationType?: string | null;
   societyId: string;
   societyName: string;
   profession: string;

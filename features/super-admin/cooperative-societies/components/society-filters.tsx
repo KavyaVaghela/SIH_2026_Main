@@ -84,6 +84,7 @@ export function SocietyFilters({
             <option value="ALL">All Statuses</option>
             <option value="ACTIVE">Active & Verified</option>
             <option value="PENDING_VERIFICATION">Pending Verification</option>
+            <option value="REJECTED">Rejected</option>
             <option value="SUSPENDED">Suspended</option>
           </Select>
         </div>

@@ -106,11 +106,18 @@ export function useSocieties() {
     }
   };
 
-  const handleUpdateStatus = async (id: string, newStatus: SocietyStatus): Promise<boolean> => {
+  const handleUpdateStatus = async (id: string, newStatus: SocietyStatus, rejectionReason?: string): Promise<boolean> => {
     setIsSubmitting(true);
     try {
-      await societiesService.updateSocietyStatus(id, newStatus);
-      const statusLabel = newStatus === "ACTIVE" ? "Activated" : newStatus === "SUSPENDED" ? "Suspended" : "Updated";
+      await societiesService.updateSocietyStatus(id, newStatus, rejectionReason);
+      const statusLabel =
+        newStatus === "ACTIVE"
+          ? "Activated"
+          : newStatus === "REJECTED"
+          ? "Rejected"
+          : newStatus === "SUSPENDED"
+          ? "Suspended"
+          : "Updated";
       addToast("Status Updated", `Cooperative society status set to ${statusLabel}.`, "success");
       setStatusDialogTarget(null);
       fetchSocieties();
