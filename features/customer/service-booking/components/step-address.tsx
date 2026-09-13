@@ -1,35 +1,13 @@
 "use client";
 
 import * as React from "react";
-import { ChevronRight, ArrowLeft, MapPin, Plus, CheckCircle2 } from "lucide-react";
+import { ChevronRight, ArrowLeft, MapPin, Plus, CheckCircle2, Loader2, AlertCircle } from "lucide-react";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { AddressItem } from "../types";
-
-const MOCK_EXISTING_ADDRESSES: AddressItem[] = [
-  {
-    id: "addr-1",
-    title: "Home",
-    addressLine1: "Flat 402, Shivam Apartments",
-    addressLine2: "Opp. Satellite Garden, Satellite",
-    city: "Ahmedabad",
-    state: "Gujarat",
-    postalCode: "380015",
-    isDefault: true,
-  },
-  {
-    id: "addr-2",
-    title: "Office",
-    addressLine1: "Suite 601, Commerce House",
-    addressLine2: "Near High Court, Navrangpura",
-    city: "Ahmedabad",
-    state: "Gujarat",
-    postalCode: "380009",
-    isDefault: false,
-  },
-];
+import { createClient } from "@/lib/supabase/client";
 
 export interface StepAddressProps {
   selectedAddress: AddressItem | null;
@@ -44,8 +22,10 @@ export function StepAddress({
   onNext,
   onBack,
 }: StepAddressProps) {
-  const [addresses, setAddresses] = React.useState<AddressItem[]>(MOCK_EXISTING_ADDRESSES);
+  const [addresses, setAddresses] = React.useState<AddressItem[]>([]);
+  const [loading, setLoading] = React.useState(true);
   const [showAddForm, setShowAddForm] = React.useState(false);
+  const [saving, setSaving] = React.useState(false);
   const [error, setError] = React.useState<string | null>(null);
 
   // New address form state
@@ -56,14 +36,61 @@ export function StepAddress({
   const [stateName, setStateName] = React.useState("Gujarat");
   const [postalCode, setPostalCode] = React.useState("380015");
 
-  // Select default on mount if none selected
+  // Load real saved addresses from database on mount
   React.useEffect(() => {
-    if (!selectedAddress && addresses.length > 0) {
-      onSelectAddress(addresses[0]);
-    }
-  }, [selectedAddress, addresses, onSelectAddress]);
+    let isMounted = true;
 
-  const handleAddNewAddress = (e: React.FormEvent) => {
+    async function loadAddresses() {
+      setLoading(true);
+      try {
+        const supabase = createClient();
+        const {
+          data: { user },
+        } = await supabase.auth.getUser();
+
+        if (user) {
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          const { data, error: fetchErr } = await (supabase.from("addresses") as any)
+            .select("*")
+            .eq("profile_id", user.id)
+            .order("is_default", { ascending: false })
+            .order("created_at", { ascending: true });
+
+          if (!fetchErr && data && isMounted) {
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            const mapped: AddressItem[] = data.map((row: any) => ({
+              id: row.id,
+              title: row.title || "Home",
+              addressLine1: row.address_line1,
+              addressLine2: row.address_line2 || undefined,
+              city: row.city,
+              state: row.state,
+              postalCode: row.postal_code,
+              isDefault: row.is_default,
+            }));
+            setAddresses(mapped);
+
+            if (!selectedAddress && mapped.length > 0) {
+              const defaultAddr = mapped.find((a) => a.isDefault) || mapped[0];
+              onSelectAddress(defaultAddr);
+            }
+          }
+        }
+      } catch (err) {
+        console.error("Failed to load customer addresses for booking:", err);
+      } finally {
+        if (isMounted) setLoading(false);
+      }
+    }
+
+    loadAddresses();
+
+    return () => {
+      isMounted = false;
+    };
+  }, [selectedAddress, onSelectAddress]);
+
+  const handleAddNewAddress = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!line1.trim()) {
       setError("Address Line 1 is required.");
@@ -74,25 +101,71 @@ export function StepAddress({
       return;
     }
 
-    const newAddr: AddressItem = {
-      id: `addr-${Date.now()}`,
-      title,
-      addressLine1: line1.trim(),
-      addressLine2: line2.trim(),
-      city: city.trim(),
-      state: stateName.trim(),
-      postalCode: postalCode.trim(),
-      isDefault: false,
-    };
-
-    setAddresses((prev) => [...prev, newAddr]);
-    onSelectAddress(newAddr);
-    setShowAddForm(false);
+    setSaving(true);
     setError(null);
 
-    // Reset form
-    setLine1("");
-    setLine2("");
+    try {
+      const supabase = createClient();
+      const {
+        data: { user },
+      } = await supabase.auth.getUser();
+
+      let createdId = "";
+      const isFirst = addresses.length === 0;
+
+      if (user) {
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        const { data: inserted, error: insertErr } = await (supabase.from("addresses") as any)
+          .insert({
+            profile_id: user.id,
+            title,
+            address_line1: line1.trim(),
+            address_line2: line2.trim() || null,
+            city: city.trim(),
+            state: stateName.trim(),
+            postal_code: postalCode.trim(),
+            is_default: isFirst,
+          })
+          .select()
+          .single();
+
+        if (insertErr) {
+          console.warn("Could not insert address into database:", insertErr);
+        } else if (inserted) {
+          createdId = inserted.id;
+        }
+      }
+
+      // If offline/unauthenticated or DB insert didn't return id, generate valid UUID fallback
+      if (!createdId) {
+        createdId = typeof crypto !== "undefined" && crypto.randomUUID ? crypto.randomUUID() : `addr-${Date.now()}`;
+      }
+
+      const newAddr: AddressItem = {
+        id: createdId,
+        title,
+        addressLine1: line1.trim(),
+        addressLine2: line2.trim() || undefined,
+        city: city.trim(),
+        state: stateName.trim(),
+        postalCode: postalCode.trim(),
+        isDefault: isFirst,
+      };
+
+      setAddresses((prev) => [...prev, newAddr]);
+      onSelectAddress(newAddr);
+      setShowAddForm(false);
+      setError(null);
+
+      // Reset form fields
+      setLine1("");
+      setLine2("");
+    } catch (err: unknown) {
+      const message = err instanceof Error ? err.message : "Failed to save address.";
+      setError(message);
+    } finally {
+      setSaving(false);
+    }
   };
 
   const handleContinue = () => {
@@ -128,8 +201,9 @@ export function StepAddress({
       </div>
 
       {error && (
-        <div className="bg-rose-50 dark:bg-rose-950/40 text-rose-700 dark:text-rose-300 p-3 rounded-xl border border-rose-200 text-xs font-medium">
-          {error}
+        <div className="flex items-center gap-2 bg-rose-50 dark:bg-rose-950/40 text-rose-700 dark:text-rose-300 p-3 rounded-xl border border-rose-200 text-xs font-medium">
+          <AlertCircle className="w-4 h-4 shrink-0 text-rose-600" />
+          <span>{error}</span>
         </div>
       )}
 
@@ -222,7 +296,13 @@ export function StepAddress({
               >
                 Cancel
               </Button>
-              <Button type="submit" size="sm" className="bg-emerald-700 text-white text-xs font-semibold">
+              <Button
+                type="submit"
+                disabled={saving}
+                size="sm"
+                className="bg-emerald-700 hover:bg-emerald-800 text-white text-xs font-semibold gap-1.5"
+              >
+                {saving && <Loader2 className="w-3.5 h-3.5 animate-spin" />}
                 Save & Select Address
               </Button>
             </div>
@@ -230,44 +310,77 @@ export function StepAddress({
         </Card>
       )}
 
+      {/* Loading Indicator */}
+      {loading && (
+        <div className="py-8 text-center space-y-2">
+          <Loader2 className="w-5 h-5 animate-spin text-emerald-600 mx-auto" />
+          <p className="text-xs text-slate-500 font-medium">Loading your saved delivery locations...</p>
+        </div>
+      )}
+
+      {/* Empty State when user has no saved addresses */}
+      {!loading && addresses.length === 0 && !showAddForm && (
+        <div className="p-8 text-center border border-dashed border-slate-200 dark:border-slate-800 rounded-xl space-y-3">
+          <div className="w-10 h-10 rounded-full bg-emerald-50 dark:bg-emerald-950/50 text-emerald-600 flex items-center justify-center mx-auto">
+            <MapPin className="w-5 h-5" />
+          </div>
+          <div>
+            <p className="font-bold text-sm text-slate-800 dark:text-slate-200">No saved addresses found</p>
+            <p className="text-xs text-slate-500 mt-1">
+              Please provide the service delivery location to proceed with booking.
+            </p>
+          </div>
+          <Button
+            size="sm"
+            onClick={() => setShowAddForm(true)}
+            className="bg-emerald-700 hover:bg-emerald-800 text-white font-bold text-xs gap-1.5"
+          >
+            <Plus className="w-3.5 h-3.5" />
+            Add Service Address
+          </Button>
+        </div>
+      )}
+
       {/* Existing Addresses Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        {addresses.map((addr) => {
-          const isSelected = selectedAddress?.id === addr.id;
+      {!loading && addresses.length > 0 && (
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          {addresses.map((addr) => {
+            const isSelected = selectedAddress?.id === addr.id;
 
-          return (
-            <Card
-              key={addr.id}
-              onClick={() => onSelectAddress(addr)}
-              className={`p-4 cursor-pointer transition-all border rounded-xl flex flex-col justify-between ${
-                isSelected
-                  ? "bg-emerald-50/90 dark:bg-emerald-950/60 border-emerald-600 dark:border-emerald-500 shadow-md ring-2 ring-emerald-500/20"
-                  : "bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-800 hover:border-emerald-400 dark:hover:border-emerald-600 hover:shadow-sm"
-              }`}
-            >
-              <div className="space-y-2">
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-2">
-                    <Badge variant="outline" className="bg-emerald-100 text-emerald-800 border-emerald-300 text-[10px] font-bold">
-                      {addr.title}
-                    </Badge>
-                    {addr.isDefault && (
-                      <span className="text-[10px] text-slate-400 font-medium">(Default)</span>
-                    )}
+            return (
+              <Card
+                key={addr.id}
+                onClick={() => onSelectAddress(addr)}
+                className={`p-4 cursor-pointer transition-all border rounded-xl flex flex-col justify-between ${
+                  isSelected
+                    ? "bg-emerald-50/90 dark:bg-emerald-950/60 border-emerald-600 dark:border-emerald-500 shadow-md ring-2 ring-emerald-500/20"
+                    : "bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-800 hover:border-emerald-400 dark:hover:border-emerald-600 hover:shadow-sm"
+                }`}
+              >
+                <div className="space-y-2">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                      <Badge variant="outline" className="bg-emerald-100 text-emerald-800 border-emerald-300 text-[10px] font-bold">
+                        {addr.title}
+                      </Badge>
+                      {addr.isDefault && (
+                        <span className="text-[10px] text-slate-400 font-medium">(Default)</span>
+                      )}
+                    </div>
+                    {isSelected && <CheckCircle2 className="w-5 h-5 text-emerald-600 shrink-0" />}
                   </div>
-                  {isSelected && <CheckCircle2 className="w-5 h-5 text-emerald-600 shrink-0" />}
-                </div>
 
-                <div className="text-xs text-slate-700 dark:text-slate-300 font-medium space-y-0.5">
-                  <p className="font-bold text-slate-900 dark:text-slate-100">{addr.addressLine1}</p>
-                  {addr.addressLine2 && <p className="text-slate-500">{addr.addressLine2}</p>}
-                  <p className="text-slate-500">{addr.city}, {addr.state} - {addr.postalCode}</p>
+                  <div className="text-xs text-slate-700 dark:text-slate-300 font-medium space-y-0.5">
+                    <p className="font-bold text-slate-900 dark:text-slate-100">{addr.addressLine1}</p>
+                    {addr.addressLine2 && <p className="text-slate-500">{addr.addressLine2}</p>}
+                    <p className="text-slate-500">{addr.city}, {addr.state} - {addr.postalCode}</p>
+                  </div>
                 </div>
-              </div>
-            </Card>
-          );
-        })}
-      </div>
+              </Card>
+            );
+          })}
+        </div>
+      )}
 
       <div className="flex items-center justify-between pt-2">
         <Button variant="outline" size="sm" onClick={onBack} className="text-xs border-slate-300">

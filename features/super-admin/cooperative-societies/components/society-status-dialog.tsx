@@ -3,7 +3,8 @@
 import * as React from "react";
 import { Dialog } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
-import { AlertTriangle, CheckCircle2, ShieldAlert } from "lucide-react";
+import { Textarea } from "@/components/ui/textarea";
+import { AlertTriangle, CheckCircle2, XCircle } from "lucide-react";
 import type { SocietyListItem, SocietyStatus } from "../types";
 
 interface SocietyStatusDialogProps {
@@ -12,7 +13,7 @@ interface SocietyStatusDialogProps {
     targetStatus: SocietyStatus;
   } | null;
   onClose: () => void;
-  onConfirm: (id: string, newStatus: SocietyStatus) => Promise<boolean>;
+  onConfirm: (id: string, newStatus: SocietyStatus, rejectionReason?: string) => Promise<boolean>;
   isSubmitting: boolean;
 }
 
@@ -22,10 +23,40 @@ export function SocietyStatusDialog({
   onConfirm,
   isSubmitting,
 }: SocietyStatusDialogProps) {
+  const [reason, setReason] = React.useState("");
+
+  React.useEffect(() => {
+    setReason("");
+  }, [target]);
+
   if (!target) return null;
 
   const { society, targetStatus } = target;
   const isActivating = targetStatus === "ACTIVE";
+  const isRejecting = targetStatus === "REJECTED";
+
+  const getTitle = () => {
+    if (isActivating) return "Approve & Activate Society";
+    if (isRejecting) return "Reject Cooperative Society Application";
+    return "Suspend Cooperative Society";
+  };
+
+  const getIcon = () => {
+    if (isActivating) return <CheckCircle2 className="h-5 w-5 text-emerald-600" />;
+    if (isRejecting) return <XCircle className="h-5 w-5 text-rose-600" />;
+    return <AlertTriangle className="h-5 w-5 text-amber-600" />;
+  };
+
+  const getButtonText = () => {
+    if (isActivating) return "Confirm Activation";
+    if (isRejecting) return "Confirm Rejection";
+    return "Confirm Suspension";
+  };
+
+  const getButtonClass = () => {
+    if (isActivating) return "bg-emerald-800 hover:bg-emerald-900 text-white";
+    return "bg-rose-700 hover:bg-rose-800 text-white";
+  };
 
   return (
     <Dialog
@@ -33,14 +64,8 @@ export function SocietyStatusDialog({
       onClose={onClose}
       title={
         <div className="flex items-center space-x-2 text-foreground">
-          {isActivating ? (
-            <CheckCircle2 className="h-5 w-5 text-emerald-600" />
-          ) : (
-            <AlertTriangle className="h-5 w-5 text-rose-600" />
-          )}
-          <span>
-            {isActivating ? "Approve & Activate Society" : "Suspend Cooperative Society"}
-          </span>
+          {getIcon()}
+          <span>{getTitle()}</span>
         </div>
       }
       description="Super Admin Administrative Confirmation"
@@ -58,7 +83,13 @@ export function SocietyStatusDialog({
               Are you sure you want to approve and activate{" "}
               <strong className="font-bold">{society.name}</strong> ({society.code})? This will grant
               the society active status, allow its assigned workers to receive live booking dispatches, and
-              enable market governance operations.
+              enable its administrator to access the Federation Admin Portal.
+            </p>
+          ) : isRejecting ? (
+            <p>
+              Are you sure you want to reject the application for{" "}
+              <strong className="font-bold">{society.name}</strong> ({society.code})? The society and its
+              admin profile will be marked as rejected and excluded from active society operations.
             </p>
           ) : (
             <p>
@@ -73,8 +104,23 @@ export function SocietyStatusDialog({
           <p className="font-semibold text-foreground">Society Details:</p>
           <p className="text-muted-foreground">Location: {society.location}</p>
           <p className="text-muted-foreground">Admin Secretary: {society.adminName} ({society.contactPhone})</p>
+          <p className="text-muted-foreground">Contact Email: {society.contactEmail}</p>
           <p className="text-muted-foreground">Registered Workers: {society.totalWorkers}</p>
         </div>
+
+        {isRejecting && (
+          <div className="space-y-1.5">
+            <label className="text-xs font-semibold text-foreground block">
+              Reason for Rejection (Visible to Federation Admin upon login)
+            </label>
+            <Textarea
+              placeholder="Enter reason for rejection (e.g., Incomplete regulatory documents, invalid registration number)..."
+              value={reason}
+              onChange={(e) => setReason(e.target.value)}
+              className="text-xs min-h-[75px]"
+            />
+          </div>
+        )}
 
         <div className="flex items-center justify-end space-x-2 pt-2 border-t">
           <Button variant="outline" size="sm" onClick={onClose} disabled={isSubmitting} className="h-8 text-xs">
@@ -83,14 +129,10 @@ export function SocietyStatusDialog({
           <Button
             size="sm"
             isLoading={isSubmitting}
-            onClick={() => onConfirm(society.id, targetStatus)}
-            className={`h-8 text-xs font-semibold ${
-              isActivating
-                ? "bg-emerald-800 hover:bg-emerald-900 text-white"
-                : "bg-rose-700 hover:bg-rose-800 text-white"
-            }`}
+            onClick={() => onConfirm(society.id, targetStatus, reason)}
+            className={`h-8 text-xs font-semibold ${getButtonClass()}`}
           >
-            {isActivating ? "Confirm Activation" : "Confirm Suspension"}
+            {getButtonText()}
           </Button>
         </div>
       </div>

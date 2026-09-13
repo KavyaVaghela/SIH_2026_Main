@@ -1,4 +1,4 @@
-export type SocietyStatus = "ACTIVE" | "PENDING_VERIFICATION" | "SUSPENDED";
+export type SocietyStatus = "ACTIVE" | "PENDING" | "PENDING_VERIFICATION" | "REJECTED" | "SUSPENDED";
 
 export interface SocietyListItem {
   id: string;
@@ -20,6 +20,9 @@ export interface SocietyListItem {
   status: SocietyStatus;
   isActive: boolean;
   registrationDate: string;
+  rejectionReason?: string | null;
+  reviewedAt?: string | null;
+  reviewedBy?: string | null;
 }
 
 export interface SocietyDetails extends SocietyListItem {

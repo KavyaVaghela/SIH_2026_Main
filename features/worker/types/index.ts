@@ -155,6 +155,15 @@ export interface WorkerProfileDetails {
   };
   hourlyRate: number;
   bio?: string;
+  avatarUrl?: string | null;
+  email?: string;
+  memberId?: string | null;
+  registrationType?: string | null;
+  dateOfBirth?: string | null;
+  gender?: string | null;
+  address?: string | null;
+  accountStatus?: string;
+  verificationStatus?: string;
 }
 
 export interface WorkerEarningsSummary {

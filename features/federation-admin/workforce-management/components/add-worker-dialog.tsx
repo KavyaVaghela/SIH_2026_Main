@@ -8,6 +8,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Select } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
+import { Avatar } from "@/components/ui/avatar";
 import {
   UserPlus,
   AlertCircle,
@@ -15,6 +16,8 @@ import {
   User,
   Briefcase,
   FileCheck2,
+  Camera,
+  Loader2,
 } from "lucide-react";
 import {
   addWorkerSchema,
@@ -37,18 +40,29 @@ export function AddWorkerDialog({
   onSubmit,
   isSubmitting,
 }: AddWorkerDialogProps) {
+  const fileInputRef = React.useRef<HTMLInputElement>(null);
+  const [isUploadingPhoto, setIsUploadingPhoto] = React.useState(false);
+  const [photoError, setPhotoError] = React.useState<string | null>(null);
+  const [avatarPreview, setAvatarPreview] = React.useState<string | null>(null);
+
   const {
     register,
     handleSubmit,
     reset,
+    setValue,
+    watch,
     formState: { errors },
   } = useForm<AddWorkerFormData>({
     resolver: zodResolver(addWorkerSchema),
     defaultValues: {
       fullName: "",
       dateOfBirth: "",
+      gender: "male",
       phone: "",
       email: "",
+      password: "",
+      memberId: "",
+      avatarUrl: "",
       address: "",
       city: "Ahmedabad",
       state: "Gujarat",
@@ -63,13 +77,20 @@ export function AddWorkerDialog({
     },
   });
 
+  const currentFullName = watch("fullName");
+  const currentAvatarUrl = watch("avatarUrl");
+
   React.useEffect(() => {
     if (isOpen) {
       reset({
         fullName: "",
         dateOfBirth: "",
+        gender: "male",
         phone: "",
         email: "",
+        password: "",
+        memberId: "",
+        avatarUrl: "",
         address: "",
         city: "Ahmedabad",
         state: "Gujarat",
@@ -82,8 +103,53 @@ export function AddWorkerDialog({
         professionalCertificate: "",
         skillCertificate: "",
       });
+      setAvatarPreview(null);
+      setPhotoError(null);
     }
   }, [isOpen, reset]);
+
+  const handlePhotoSelect = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    if (file.size > 5 * 1024 * 1024) {
+      setPhotoError("Photo must be less than 5MB");
+      return;
+    }
+
+    if (!["image/jpeg", "image/png", "image/webp"].includes(file.type)) {
+      setPhotoError("Please select a valid image (JPEG, PNG, or WebP)");
+      return;
+    }
+
+    setPhotoError(null);
+    setIsUploadingPhoto(true);
+    setAvatarPreview(URL.createObjectURL(file));
+
+    try {
+      const formData = new FormData();
+      formData.append("file", file);
+      formData.append("bucket", "avatars");
+
+      const res = await fetch("/api/storage/upload", {
+        method: "POST",
+        body: formData,
+      });
+
+      const data = await res.json();
+      if (!res.ok || !data.url) {
+        throw new Error(data.error || "Failed to upload photo.");
+      }
+
+      setValue("avatarUrl", data.url);
+      setAvatarPreview(data.url);
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : "Upload failed";
+      setPhotoError(msg);
+    } finally {
+      setIsUploadingPhoto(false);
+    }
+  };
 
   const onFormSubmit = async (data: AddWorkerFormData) => {
     await onSubmit(data);
@@ -116,6 +182,52 @@ export function AddWorkerDialog({
           <div className="flex items-center space-x-1.5 font-semibold text-foreground text-xs border-b border-border/60 pb-1.5">
             <User className="h-3.5 w-3.5 text-blue-700" />
             <span>Personal Information</span>
+          </div>
+
+          {/* Profile Photo Upload */}
+          <div className="flex items-center space-x-4 p-3 rounded-lg bg-background border border-border/60">
+            <div className="relative">
+              <Avatar
+                src={avatarPreview || currentAvatarUrl || undefined}
+                fallback={currentFullName || "W"}
+                size="lg"
+                className="h-16 w-16 border-2 border-emerald-600/30"
+              />
+              {isUploadingPhoto && (
+                <div className="absolute inset-0 bg-black/40 rounded-full flex items-center justify-center">
+                  <Loader2 className="h-5 w-5 text-white animate-spin" />
+                </div>
+              )}
+            </div>
+            <div className="space-y-1 flex-1">
+              <label className="block font-medium text-foreground text-xs">
+                Profile Photograph <span className="text-muted-foreground font-normal">(Optional)</span>
+              </label>
+              <p className="text-[11px] text-muted-foreground">
+                Official portrait displayed across customer and federation directories (JPG/PNG, max 5MB).
+              </p>
+              <div className="flex items-center space-x-2 pt-1">
+                <input
+                  ref={fileInputRef}
+                  type="file"
+                  accept="image/jpeg,image/png,image/webp"
+                  className="hidden"
+                  onChange={handlePhotoSelect}
+                />
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  disabled={isUploadingPhoto}
+                  onClick={() => fileInputRef.current?.click()}
+                  className="h-7 text-xs flex items-center space-x-1.5"
+                >
+                  <Camera className="h-3.5 w-3.5 text-muted-foreground" />
+                  <span>{avatarPreview || currentAvatarUrl ? "Change Photo" : "Upload Photo"}</span>
+                </Button>
+                {photoError && <span className="text-[10px] text-destructive">{photoError}</span>}
+              </div>
+            </div>
           </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
@@ -154,6 +266,18 @@ export function AddWorkerDialog({
               )}
             </div>
 
+            {/* Gender */}
+            <div className="space-y-1">
+              <label className="block font-medium text-foreground">
+                Gender <span className="text-destructive">*</span>
+              </label>
+              <Select {...register("gender")} className="h-8 text-xs">
+                <option value="male">Male</option>
+                <option value="female">Female</option>
+                <option value="other">Other</option>
+              </Select>
+            </div>
+
             {/* Contact Phone */}
             <div className="space-y-1">
               <label className="block font-medium text-foreground">
@@ -171,7 +295,7 @@ export function AddWorkerDialog({
             </div>
 
             {/* Email */}
-            <div className="space-y-1 sm:col-span-2">
+            <div className="space-y-1">
               <label className="block font-medium text-foreground">
                 Email Address <span className="text-destructive">*</span>
               </label>
@@ -184,6 +308,39 @@ export function AddWorkerDialog({
               />
               {errors.email && (
                 <p className="text-[10px] text-destructive">{errors.email.message}</p>
+              )}
+            </div>
+
+            {/* Password */}
+            <div className="space-y-1">
+              <label className="block font-medium text-foreground">
+                Sign-In Password <span className="text-destructive">*</span>
+              </label>
+              <Input
+                type="password"
+                placeholder="Min 8 characters (used by worker to sign in)"
+                {...register("password")}
+                error={!!errors.password}
+                className="h-8 text-xs"
+              />
+              {errors.password && (
+                <p className="text-[10px] text-destructive">{errors.password.message}</p>
+              )}
+            </div>
+
+            {/* Member ID */}
+            <div className="space-y-1">
+              <label className="block font-medium text-foreground">
+                Federation Member ID <span className="text-muted-foreground font-normal">(Optional)</span>
+              </label>
+              <Input
+                placeholder="Leave blank to generate automatically"
+                {...register("memberId")}
+                error={!!errors.memberId}
+                className="h-8 text-xs font-mono"
+              />
+              {errors.memberId && (
+                <p className="text-[10px] text-destructive">{errors.memberId.message}</p>
               )}
             </div>
 

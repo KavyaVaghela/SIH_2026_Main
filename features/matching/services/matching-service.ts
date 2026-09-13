@@ -399,7 +399,7 @@ export class MatchingService implements IMatchingService {
       const supabase = createClient();
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const { data: dbWorkers, error } = await (supabase.from("workers") as any)
-        .select("*, profiles(*), federations(*)")
+        .select("*, profiles(*), federations(*), worker_skills(skills(name))")
         .eq("account_status", "ACTIVE")
         .eq("verification_status", "verified")
         .eq("availability_status", "AVAILABLE");
@@ -415,6 +415,14 @@ export class MatchingService implements IMatchingService {
             w.current_latitude || 23.0325,
             w.current_longitude || 72.5205
           );
+
+          // Extract real skill names
+          const realSkills: string[] = Array.isArray(w.worker_skills)
+            ? w.worker_skills
+                // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                .map((ws: any) => ws.skills?.name)
+                .filter(Boolean)
+            : [];
 
           const candidateWorker: Worker & { extendedProfile: ExtendedWorkerProfile } = {
             id: w.id,
@@ -434,8 +442,8 @@ export class MatchingService implements IMatchingService {
               email: p.email || "worker@cooplabour.org",
               avatarUrl: p.avatar_url || undefined,
               cooperativeName: f.name || "Cooperative Federation Society",
-              primarySkill: w.profession || "Trade Professional",
-              secondarySkills: ["Quality Service", "Verified Trade Worker"],
+              primarySkill: realSkills[0] || w.profession || "Trade Professional",
+              secondarySkills: realSkills.slice(1).length > 0 ? realSkills.slice(1) : ["Quality Service", "Verified Trade Worker"],
               rating: 4.9,
               completedJobsCount: 45,
               experienceYears: w.experience_years || 5,
@@ -539,7 +547,7 @@ export class MatchingService implements IMatchingService {
       const supabase = createClient();
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const { data, error } = await (supabase.from("workers") as any)
-        .select("*, profiles(*), federations(*)")
+        .select("*, profiles(*), federations(*), worker_skills(skills(name))")
         .or(`id.eq.${workerId},profile_id.eq.${workerId}`)
         .maybeSingle();
 
@@ -552,6 +560,14 @@ export class MatchingService implements IMatchingService {
           data.current_latitude || 23.0300,
           data.current_longitude || 72.5178
         );
+
+        // Extract real skill names
+        const realSkills: string[] = Array.isArray(data.worker_skills)
+          ? data.worker_skills
+              // eslint-disable-next-line @typescript-eslint/no-explicit-any
+              .map((ws: any) => ws.skills?.name)
+              .filter(Boolean)
+          : [];
 
         return {
           worker: {
@@ -572,8 +588,8 @@ export class MatchingService implements IMatchingService {
               email: p.email || "worker@cooplabour.org",
               avatarUrl: p.avatar_url || undefined,
               cooperativeName: f.name || "Cooperative Federation Society",
-              primarySkill: data.profession || "Trade Professional",
-              secondarySkills: ["Quality Service", "Verified Trade Worker"],
+              primarySkill: realSkills[0] || data.profession || "Trade Professional",
+              secondarySkills: realSkills.slice(1).length > 0 ? realSkills.slice(1) : ["Quality Service", "Verified Trade Worker"],
               rating: 4.9,
               completedJobsCount: 45,
               experienceYears: data.experience_years || 5,

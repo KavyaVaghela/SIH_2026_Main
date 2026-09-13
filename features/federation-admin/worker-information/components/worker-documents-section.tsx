@@ -30,7 +30,11 @@ export function WorkerDocumentsSection({ documents }: WorkerDocumentsSectionProp
   };
 
   const handleDownload = (doc: WorkerDocumentItem) => {
-    alert(`Document Download: Initiating certified copy download for "${doc.name}"`);
+    if (doc.url && doc.url !== "#") {
+      window.open(doc.url, "_blank");
+    } else {
+      alert(`Document Download: Initiating certified copy download for "${doc.name}"`);
+    }
   };
 
   return (

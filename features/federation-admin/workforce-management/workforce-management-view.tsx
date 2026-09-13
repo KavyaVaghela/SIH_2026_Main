@@ -62,6 +62,10 @@ export function WorkforceManagementView() {
 
     // Applications (Task 5)
     applications,
+    newWorkerApplications,
+    existingWorkerApplications,
+    pendingNewWorkersCount,
+    pendingExistingWorkersCount,
     applicationSearch,
     setApplicationSearch,
     applicationStatusFilter,
@@ -135,7 +139,7 @@ export function WorkforceManagementView() {
         </div>
       )}
 
-      {/* TAB NAVIGATION: 3 Administrative Pillars */}
+      {/* TAB NAVIGATION: 4 Administrative Pillars */}
       <div className="flex items-center space-x-2 border-b border-border/60 pb-px text-xs">
         <button
           onClick={() => setActiveTab("roster")}
@@ -146,25 +150,42 @@ export function WorkforceManagementView() {
           }`}
         >
           <Users className="h-3.5 w-3.5" />
-          <span>Worker Status & Roster</span>
+          <span>Worker Status & Active Roster</span>
           <span className="ml-1 px-1.5 py-0.2 rounded-full text-[10px] bg-muted font-mono">
             {totalCount}
           </span>
         </button>
 
         <button
-          onClick={() => setActiveTab("applications")}
+          onClick={() => setActiveTab("new-worker-requests")}
           className={`flex items-center space-x-2 px-3.5 py-2 rounded-t-lg font-medium transition-colors border-b-2 ${
-            activeTab === "applications"
+            activeTab === "new-worker-requests"
+              ? "border-emerald-700 text-emerald-800 dark:text-emerald-300 bg-muted/40 font-semibold"
+              : "border-transparent text-muted-foreground hover:text-foreground hover:bg-muted/20"
+          }`}
+        >
+          <UserPlus className="h-3.5 w-3.5" />
+          <span>New Worker Requests</span>
+          {pendingNewWorkersCount > 0 && (
+            <span className="ml-1 px-1.5 py-0.2 rounded-full text-[10px] bg-amber-500/20 text-amber-800 dark:text-amber-300 font-semibold">
+              {pendingNewWorkersCount}
+            </span>
+          )}
+        </button>
+
+        <button
+          onClick={() => setActiveTab("existing-worker-requests")}
+          className={`flex items-center space-x-2 px-3.5 py-2 rounded-t-lg font-medium transition-colors border-b-2 ${
+            activeTab === "existing-worker-requests"
               ? "border-emerald-700 text-emerald-800 dark:text-emerald-300 bg-muted/40 font-semibold"
               : "border-transparent text-muted-foreground hover:text-foreground hover:bg-muted/20"
           }`}
         >
           <UserCheck className="h-3.5 w-3.5" />
-          <span>New Worker Requests</span>
-          {pendingApplicationsCount > 0 && (
-            <span className="ml-1 px-1.5 py-0.2 rounded-full text-[10px] bg-amber-500/20 text-amber-800 dark:text-amber-300 font-semibold">
-              {pendingApplicationsCount}
+          <span>Existing Worker Requests</span>
+          {pendingExistingWorkersCount > 0 && (
+            <span className="ml-1 px-1.5 py-0.2 rounded-full text-[10px] bg-emerald-500/20 text-emerald-800 dark:text-emerald-300 font-semibold">
+              {pendingExistingWorkersCount}
             </span>
           )}
         </button>
@@ -223,7 +244,7 @@ export function WorkforceManagementView() {
       {/* ==================================================== */}
       {/* TAB 2: NEW WORKER REQUESTS (TASK 5) */}
       {/* ==================================================== */}
-      {activeTab === "applications" && (
+      {activeTab === "new-worker-requests" && (
         <section aria-label="New Worker Requests" className="space-y-4 animate-in fade-in-50">
           <div className="border-b border-border/60 pb-3 space-y-1">
             <div className="flex items-center space-x-2">
@@ -235,12 +256,45 @@ export function WorkforceManagementView() {
               </Badge>
             </div>
             <p className="text-xs text-muted-foreground max-w-3xl">
-              Review craftsmen and tradespeople applying to join your federation. Accepting an application inducts the applicant with verified Active status, while rejecting archives the record with a statutory reason.
+              Review craftsmen and tradespeople applying to join your federation. Accepting an application generates a unique Member ID and inducts the applicant with verified Active status, while rejecting archives the record with a statutory reason.
             </p>
           </div>
 
           <WorkerApplicationTable
-            applications={applications}
+            applications={newWorkerApplications}
+            searchQuery={applicationSearch}
+            onSearchChange={setApplicationSearch}
+            statusFilter={applicationStatusFilter}
+            onStatusFilterChange={setApplicationStatusFilter}
+            onViewDetails={(app) => setSelectedAppForDetail(app)}
+            onAccept={(app) => setTargetAppForAccept(app)}
+            onReject={(app) => setTargetAppForReject(app)}
+            isLoading={isLoading}
+          />
+        </section>
+      )}
+
+      {/* ==================================================== */}
+      {/* TAB 3: EXISTING WORKER REQUESTS (TASK 5) */}
+      {/* ==================================================== */}
+      {activeTab === "existing-worker-requests" && (
+        <section aria-label="Existing Worker Requests" className="space-y-4 animate-in fade-in-50">
+          <div className="border-b border-border/60 pb-3 space-y-1">
+            <div className="flex items-center space-x-2">
+              <h2 className="text-base font-bold text-foreground">
+                Existing Worker Digital Access Requests
+              </h2>
+              <Badge variant="outline" className="border-emerald-500/30 text-emerald-700 dark:text-emerald-300 text-[10px]">
+                Existing Member Digital Access Queue
+              </Badge>
+            </div>
+            <p className="text-xs text-muted-foreground max-w-3xl">
+              Review pre-existing cooperative members requesting digital access to KaushalyaSetu. Verifying an existing worker confirms their identity, member ID, and banking details before activating their digital account.
+            </p>
+          </div>
+
+          <WorkerApplicationTable
+            applications={existingWorkerApplications}
             searchQuery={applicationSearch}
             onSearchChange={setApplicationSearch}
             statusFilter={applicationStatusFilter}

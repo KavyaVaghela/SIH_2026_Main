@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Check, ShieldCheck, Info } from "lucide-react";
+import { createClient } from "@/lib/supabase/client";
 import type { WorkerProfileDetails } from "../types";
 
 export interface ProfileEditDialogsProps {
@@ -30,6 +31,12 @@ export function ProfileEditDialogs({
   const [selectedSkills, setSelectedSkills] = React.useState<string[]>(profile.skills);
   const [newSkillInput, setNewSkillInput] = React.useState("");
 
+  React.useEffect(() => {
+    setName(profile.name);
+    setPhone(profile.phone);
+    setSelectedSkills(profile.skills);
+  }, [profile]);
+
   const availableSkillCatalog = [
     "Pipe Repair",
     "Leakage Repair",
@@ -39,6 +46,10 @@ export function ProfileEditDialogs({
     "Drainage Clearing",
     "Kitchen Sink Trap Fitting",
     "Submersible Pump Installation",
+    "Electrical Maintenance",
+    "House Cleaning",
+    "Painting",
+    "Carpentry",
   ];
 
   const handleToggleSkill = (skill: string) => {
@@ -56,12 +67,70 @@ export function ProfileEditDialogs({
     }
   };
 
-  const handleSaveProfile = () => {
-    onSaveProfileSuccess?.({ name, phone });
+  const handleSaveProfile = async () => {
+    try {
+      const supabase = createClient();
+      const {
+        data: { user },
+      } = await supabase.auth.getUser();
+      if (user) {
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        await (supabase.from("profiles") as any)
+          .update({
+            full_name: name.trim(),
+            phone: phone.trim(),
+            updated_at: new Date().toISOString(),
+          })
+          .eq("id", user.id);
+      }
+    } catch (err) {
+      console.warn("Notice: Failed to persist profile details update:", err);
+    }
+    onSaveProfileSuccess?.({ name: name.trim(), phone: phone.trim() });
     onCloseEditProfile();
   };
 
-  const handleSaveSkills = () => {
+  const handleSaveSkills = async () => {
+    try {
+      const supabase = createClient();
+      const {
+        data: { user },
+      } = await supabase.auth.getUser();
+      if (user) {
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        const { data: w } = await (supabase.from("workers") as any)
+          .select("id")
+          .eq("profile_id", user.id)
+          .maybeSingle();
+
+        if (w?.id) {
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          const { data: dbSkills } = await (supabase.from("skills") as any).select("id, name");
+          if (dbSkills && dbSkills.length > 0) {
+            // Delete current worker skills
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            await (supabase.from("worker_skills") as any).delete().eq("worker_id", w.id);
+
+            // Re-insert selected skills
+            for (const sName of selectedSkills) {
+              const matched = dbSkills.find(
+                (ds: { id: string; name: string }) => ds.name.toLowerCase() === sName.toLowerCase()
+              );
+              if (matched) {
+                // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                await (supabase.from("worker_skills") as any).insert({
+                  worker_id: w.id,
+                  skill_id: matched.id,
+                  proficiency_level: "intermediate",
+                });
+              }
+            }
+          }
+        }
+      }
+    } catch (err) {
+      console.warn("Notice: Failed to persist worker skills update:", err);
+    }
     onSaveProfileSuccess?.({ skills: selectedSkills });
     onCloseUpdateSkills();
   };

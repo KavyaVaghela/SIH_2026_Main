@@ -179,6 +179,18 @@ export class SocietiesService {
         .select("*");
 
       if (!error && dbFederations && dbFederations.length > 0) {
+        // Look up Federation Admin profile names
+        const { data: adminProfiles } = await (supabase.from("profiles") as any)
+          .select("email, full_name")
+          .eq("role", "FEDERATION_ADMIN");
+
+        const adminMap = new Map<string, string>();
+        if (adminProfiles) {
+          adminProfiles.forEach((p: any) => {
+            if (p.email && p.full_name) adminMap.set(p.email.toLowerCase(), p.full_name);
+          });
+        }
+
         const typedFederations = dbFederations as Array<{
           id: string;
           name: string;
@@ -190,13 +202,19 @@ export class SocietiesService {
           contact_email: string;
           contact_phone: string;
           service_region?: string | null;
+          status?: string;
           is_active: boolean;
           created_at?: string;
+          rejection_reason?: string | null;
+          reviewed_at?: string | null;
+          reviewed_by?: string | null;
         }>;
 
         // Merge DB data with populated metrics
         const items: SocietyListItem[] = typedFederations.map((fed) => {
           const matchedMock = mockSocietiesStore.find((m) => m.id === fed.id || m.code === fed.code);
+          const realAdminName = fed.contact_email ? adminMap.get(fed.contact_email.toLowerCase()) : null;
+          const status = (fed.status as SocietyStatus) || (fed.is_active ? "ACTIVE" : "PENDING");
           return {
             id: fed.id,
             name: fed.name,
@@ -207,16 +225,19 @@ export class SocietiesService {
             location: `${fed.city}, ${fed.state}`,
             contactEmail: fed.contact_email,
             contactPhone: fed.contact_phone,
-            adminName: matchedMock?.adminName || "Cooperative Secretary",
+            adminName: realAdminName || matchedMock?.adminName || "Cooperative Secretary",
             serviceRegion: fed.service_region,
-            totalWorkers: matchedMock?.totalWorkers || 45,
-            activeJobs: matchedMock?.activeJobs || 3,
-            totalBookings: matchedMock?.totalBookings || 210,
-            completedBookings: matchedMock?.completedBookings || 195,
-            averageRating: matchedMock?.averageRating || 4.7,
-            status: fed.is_active ? "ACTIVE" : matchedMock?.status || "PENDING_VERIFICATION",
+            totalWorkers: matchedMock?.totalWorkers || 0,
+            activeJobs: matchedMock?.activeJobs || 0,
+            totalBookings: matchedMock?.totalBookings || 0,
+            completedBookings: matchedMock?.completedBookings || 0,
+            averageRating: matchedMock?.averageRating || 5.0,
+            status,
             isActive: fed.is_active,
             registrationDate: fed.created_at ? new Date(fed.created_at).toISOString().split("T")[0] : "2024-01-01",
+            rejectionReason: fed.rejection_reason || null,
+            reviewedAt: fed.reviewed_at || null,
+            reviewedBy: fed.reviewed_by || null,
           };
         });
 
@@ -257,7 +278,12 @@ export class SocietiesService {
 
     // 3. Filter by Status
     if (options.status && options.status !== "ALL") {
-      filtered = filtered.filter((i) => i.status === options.status);
+      filtered = filtered.filter((i) => {
+        if (options.status === "PENDING_VERIFICATION" || options.status === "PENDING") {
+          return i.status === "PENDING" || i.status === "PENDING_VERIFICATION";
+        }
+        return i.status === options.status;
+      });
     }
 
     // 4. Sorting
@@ -305,7 +331,20 @@ export class SocietiesService {
 
       if (!error && fed) {
         const fedRecord = fed as any;
+        let realAdminName: string | null = null;
+        if (fedRecord.contact_email) {
+          const { data: prof } = await (supabase.from("profiles") as any)
+            .select("full_name")
+            .eq("email", fedRecord.contact_email)
+            .eq("role", "FEDERATION_ADMIN")
+            .maybeSingle();
+          if (prof?.full_name) {
+            realAdminName = prof.full_name;
+          }
+        }
+
         const matchedMock = mockSocietiesStore.find((m) => m.id === id || m.code === fedRecord.code);
+        const status = (fedRecord.status as SocietyStatus) || (fedRecord.is_active ? "ACTIVE" : "PENDING");
         return {
           id: fedRecord.id,
           name: fedRecord.name,
@@ -317,23 +356,26 @@ export class SocietiesService {
           address: fedRecord.address,
           contactEmail: fedRecord.contact_email,
           contactPhone: fedRecord.contact_phone,
-          adminName: matchedMock?.adminName || "Cooperative Secretary",
+          adminName: realAdminName || matchedMock?.adminName || "Cooperative Secretary",
           serviceRegion: fedRecord.service_region,
-          totalWorkers: matchedMock?.totalWorkers || 45,
-          activeJobs: matchedMock?.activeJobs || 3,
-          totalBookings: matchedMock?.totalBookings || 210,
-          completedBookings: matchedMock?.completedBookings || 195,
-          averageRating: matchedMock?.averageRating || 4.7,
-          status: fedRecord.is_active ? "ACTIVE" : matchedMock?.status || "PENDING_VERIFICATION",
+          totalWorkers: matchedMock?.totalWorkers || 0,
+          activeJobs: matchedMock?.activeJobs || 0,
+          totalBookings: matchedMock?.totalBookings || 0,
+          completedBookings: matchedMock?.completedBookings || 0,
+          averageRating: matchedMock?.averageRating || 5.0,
+          status,
           isActive: fedRecord.is_active,
           registrationDate: fedRecord.created_at ? new Date(fedRecord.created_at).toISOString().split("T")[0] : "2024-01-01",
-          cancellationRate: matchedMock?.cancellationRate || 3.5,
-          complaintCount: matchedMock?.complaintCount || 2,
-          utilizationRate: matchedMock?.utilizationRate || 78,
-          completionRate: matchedMock?.completionRate || 92.5,
-          officialDocuments: matchedMock?.officialDocuments || [
+          cancellationRate: matchedMock?.cancellationRate || 0,
+          complaintCount: matchedMock?.complaintCount || 0,
+          utilizationRate: matchedMock?.utilizationRate || 0,
+          completionRate: matchedMock?.completionRate || 100,
+          officialDocuments: fedRecord.official_documents || matchedMock?.officialDocuments || [
             { title: "Cooperative Registration Certificate", url: "#", verified: true },
           ],
+          rejectionReason: fedRecord.rejection_reason || null,
+          reviewedAt: fedRecord.reviewed_at || null,
+          reviewedBy: fedRecord.reviewed_by || null,
         };
       }
     } catch {
@@ -349,14 +391,12 @@ export class SocietiesService {
    */
   async createSociety(payload: AddSocietyFormPayload): Promise<SocietyDetails> {
     const supabase = createClient();
-
-    const newId = `fed-${Date.now()}`;
     const isActive = payload.status === "ACTIVE";
+    const fallbackId = `fed-${Date.now()}`;
 
     try {
       const { data, error } = await (supabase.from("federations") as any)
         .insert({
-          id: newId,
           name: payload.name,
           code: payload.code,
           registration_number: payload.registrationNumber,
@@ -366,6 +406,7 @@ export class SocietiesService {
           contact_email: payload.contactEmail,
           contact_phone: payload.contactPhone,
           service_region: payload.serviceRegion || null,
+          status: payload.status,
           is_active: isActive,
         })
         .select()
@@ -408,7 +449,7 @@ export class SocietiesService {
     }
 
     const createdMock: SocietyDetails = {
-      id: newId,
+      id: fallbackId,
       name: payload.name,
       code: payload.code,
       registrationNumber: payload.registrationNumber,
@@ -439,26 +480,62 @@ export class SocietiesService {
   }
 
   /**
-   * Update society status (Approve, Activate, Suspend)
-   * Also synchronizes the corresponding Federation Admin's profile is_active status in public.profiles
+   * Update society status (Approve, Reject, Suspend, Activate)
+   * Synchronizes public.federations and corresponding Federation Admin's profile is_active status in public.profiles
    */
-  async updateSocietyStatus(id: string, newStatus: SocietyStatus): Promise<boolean> {
-    const supabase = createClient();
+  async updateSocietyStatus(id: string, newStatus: SocietyStatus, rejectionReason?: string): Promise<boolean> {
     const isActive = newStatus === "ACTIVE";
+    let action = "approve";
+    if (newStatus === "REJECTED") {
+      action = "reject";
+    } else if (newStatus === "SUSPENDED") {
+      action = "suspend";
+    } else if (newStatus === "ACTIVE") {
+      action = "approve";
+    }
 
     try {
-      // 1. Fetch current federation to find contact_email or registration details
+      const res = await fetch("/api/super-admin/societies", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          action,
+          societyId: id,
+          rejectionReason,
+        }),
+      });
+
+      if (res.ok) {
+        // Also sync local fallback store
+        const target = mockSocietiesStore.find((s) => s.id === id);
+        if (target) {
+          target.status = newStatus;
+          target.isActive = isActive;
+          if (rejectionReason) target.rejectionReason = rejectionReason;
+        }
+        return true;
+      }
+    } catch (apiErr) {
+      console.warn("Notice: /api/super-admin/societies fetch error:", apiErr);
+    }
+
+    // Direct fallback if API route is unreachable
+    const supabase = createClient();
+    try {
       const { data: fedData } = await (supabase.from("federations") as any)
         .select("id, contact_email, registration_number")
         .eq("id", id)
         .maybeSingle();
 
-      // 2. Update federation active state in Supabase
       await (supabase.from("federations") as any)
-        .update({ is_active: isActive })
+        .update({
+          status: newStatus,
+          is_active: isActive,
+          rejection_reason: rejectionReason || null,
+          reviewed_at: new Date().toISOString(),
+        })
         .eq("id", id);
 
-      // 3. Update the corresponding Federation Admin profile in public.profiles
       const targetEmail = fedData?.contact_email;
       if (targetEmail) {
         await (supabase.from("profiles") as any)
@@ -470,11 +547,12 @@ export class SocietiesService {
       console.error("Error updating society status in database:", err);
     }
 
-    // 4. Update in-memory fallback store
+    // Update in-memory fallback store
     const target = mockSocietiesStore.find((s) => s.id === id);
     if (target) {
       target.status = newStatus;
       target.isActive = isActive;
+      if (rejectionReason) target.rejectionReason = rejectionReason;
 
       if (target.contactEmail) {
         try {

@@ -19,6 +19,7 @@ import {
   Eye,
   CheckCircle2,
   AlertTriangle,
+  XCircle,
   MoreVertical,
   Star,
   Users,
@@ -122,6 +123,7 @@ export function SocietyTable({
 
         <TableBody>
           {data.map((society) => {
+            const isPending = society.status === "PENDING" || society.status === "PENDING_VERIFICATION";
             const dropdownItems = [
               {
                 label: "View Society Details",
@@ -143,6 +145,16 @@ export function SocietyTable({
                       label: "Approve & Activate",
                       icon: <CheckCircle2 className="h-3.5 w-3.5 text-emerald-600" />,
                       onClick: () => onStatusAction(society, "ACTIVE"),
+                    },
+                  ]
+                : []),
+              ...(isPending
+                ? [
+                    {
+                      label: "Reject Application",
+                      icon: <XCircle className="h-3.5 w-3.5 text-rose-600" />,
+                      destructive: true,
+                      onClick: () => onStatusAction(society, "REJECTED"),
                     },
                   ]
                 : []),
