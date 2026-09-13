@@ -12,6 +12,7 @@ import {
 } from "@/components/ui/table";
 import { Dropdown } from "@/components/ui/dropdown";
 import { Button } from "@/components/ui/button";
+import { Avatar } from "@/components/ui/avatar";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Pagination } from "@/components/ui/pagination";
 import { WorkerStatusBadge } from "./worker-status-badge";
@@ -150,14 +151,22 @@ export function WorkerTable({
             return (
               <TableRow key={worker.id} className="hover:bg-muted/40 transition-colors">
                 <TableCell>
-                  <div className="space-y-0.5">
-                    <Link
-                      href={`/super-admin/workforce/${worker.id}`}
-                      className="font-bold text-sm text-foreground hover:text-emerald-700 hover:underline"
-                    >
-                      {worker.fullName}
-                    </Link>
-                    <p className="text-[11px] text-muted-foreground">{worker.phone || worker.email}</p>
+                  <div className="flex items-center space-x-3">
+                    <Avatar
+                      src={worker.avatarUrl || undefined}
+                      fallback={worker.fullName}
+                      size="sm"
+                      className="h-8 w-8 shrink-0 border border-border/80"
+                    />
+                    <div className="space-y-0.5 min-w-0">
+                      <Link
+                        href={`/super-admin/workforce/${worker.id}`}
+                        className="font-bold text-sm text-foreground hover:text-emerald-700 hover:underline block truncate"
+                      >
+                        {worker.fullName}
+                      </Link>
+                      <p className="text-[11px] text-muted-foreground truncate">{worker.phone || worker.email}</p>
+                    </div>
                   </div>
                 </TableCell>
 

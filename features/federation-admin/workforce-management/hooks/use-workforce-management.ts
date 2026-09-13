@@ -13,7 +13,11 @@ import type {
 } from "../types";
 import type { ToastMessage } from "@/components/ui/toast";
 
-export type WorkforceTab = "roster" | "applications" | "change-requests";
+export type WorkforceTab =
+  | "roster"
+  | "new-worker-requests"
+  | "existing-worker-requests"
+  | "change-requests";
 
 export function useWorkforceManagement() {
   // Navigation tabs
@@ -309,6 +313,26 @@ export function useWorkforceManagement() {
     }
   };
 
+  const newWorkerApplications = React.useMemo(
+    () => applications.filter((a) => a.registrationType === "NEW_WORKER"),
+    [applications]
+  );
+
+  const existingWorkerApplications = React.useMemo(
+    () => applications.filter((a) => a.registrationType === "EXISTING_WORKER"),
+    [applications]
+  );
+
+  const pendingNewWorkersCount = React.useMemo(
+    () => newWorkerApplications.filter((a) => a.status === "PENDING").length,
+    [newWorkerApplications]
+  );
+
+  const pendingExistingWorkersCount = React.useMemo(
+    () => existingWorkerApplications.filter((a) => a.status === "PENDING").length,
+    [existingWorkerApplications]
+  );
+
   const pendingApplicationsCount = applications.filter((a) => a.status === "PENDING").length;
   const pendingChangeRequestsCount = changeRequests.filter((r) => r.status === "PENDING").length;
 
@@ -317,7 +341,13 @@ export function useWorkforceManagement() {
     activeTab,
     setActiveTab,
     pendingApplicationsCount,
+    pendingNewWorkersCount,
+    pendingExistingWorkersCount,
     pendingChangeRequestsCount,
+
+    // Separated Applications
+    newWorkerApplications,
+    existingWorkerApplications,
 
     // Roster & Status (Task 4)
     workers: data?.workers || [],

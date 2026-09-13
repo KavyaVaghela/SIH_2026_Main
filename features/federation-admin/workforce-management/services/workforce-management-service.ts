@@ -143,6 +143,7 @@ export class WorkforceManagementService {
   private fallbackApplications: WorkerApplicationItem[] = [
     {
       id: "APP-2026-081",
+      registrationType: "NEW_WORKER",
       applicantName: "Arvind Solanki",
       phone: "+91 98251 99112",
       email: "arvind.solanki@gmail.com",
@@ -174,6 +175,7 @@ export class WorkforceManagementService {
     },
     {
       id: "APP-2026-082",
+      registrationType: "NEW_WORKER",
       applicantName: "Meena Rathod",
       phone: "+91 98251 99114",
       email: "meena.rathod@gmail.com",
@@ -205,6 +207,7 @@ export class WorkforceManagementService {
     },
     {
       id: "APP-2026-083",
+      registrationType: "NEW_WORKER",
       applicantName: "Vikram Prajapati",
       phone: "+91 98251 99116",
       email: "vikram.prajapati@gmail.com",
@@ -332,24 +335,28 @@ export class WorkforceManagementService {
         .from("workers")
         .select(`
           id,
+          member_id,
           profession,
           hourly_rate,
           experience_years,
           account_status,
           availability_status,
-          joining_date,
+          created_at,
+          verification_status,
           profiles:profile_id (
             full_name,
             email,
             phone
           )
-        `);
+        `)
+        .eq("verification_status", "verified");
 
       if (!error && dbWorkers && dbWorkers.length > 0) {
         workersList = (dbWorkers as any[]).map((w) => {
           const profile = w.profiles || {};
           return {
             id: w.id,
+            memberId: w.member_id || undefined,
             fullName: profile.full_name || "Cooperative Member",
             profession: w.profession || "Skilled Craftsman",
             area: "Ahmedabad Central",
@@ -359,7 +366,7 @@ export class WorkforceManagementService {
             availabilityStatus: (w.availability_status || "AVAILABLE") as any,
             hourlyRate: w.hourly_rate || 350,
             experienceYears: w.experience_years || 5,
-            joiningDate: w.joining_date || "2024-01-01",
+            joiningDate: w.created_at ? w.created_at.split("T")[0] : "2024-01-01",
             phone: profile.phone || "+91 98250 00000",
             email: profile.email || "worker@kaushalya.coop.in",
           };
@@ -379,7 +386,10 @@ export class WorkforceManagementService {
     if (searchQuery.trim()) {
       const q = searchQuery.toLowerCase().trim();
       filtered = filtered.filter(
-        (w) => w.fullName.toLowerCase().includes(q) || w.id.toLowerCase().includes(q)
+        (w) =>
+          w.fullName.toLowerCase().includes(q) ||
+          w.id.toLowerCase().includes(q) ||
+          (w.memberId && w.memberId.toLowerCase().includes(q))
       );
     }
 
@@ -399,59 +409,47 @@ export class WorkforceManagementService {
 
   /**
    * Registers a new worker to the authenticated Federation Admin's federation.
+   * Delegates authoritatively to /api/federation/workers (action: "create") backed by real Supabase Auth + DB.
    */
   async addWorker(payload: AddWorkerPayload): Promise<ManagedWorkerItem> {
-    const supabase = createClient();
-    const newId = `WRK-AHM-01${Math.floor(10 + Math.random() * 90)}`;
-    const today = new Date().toISOString().split("T")[0];
+    if (typeof window !== "undefined") {
+      const res = await fetch("/api/federation/workers", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          action: "create",
+          ...payload,
+        }),
+      });
 
-    const newWorker: ManagedWorkerItem = {
-      id: newId,
-      fullName: payload.fullName,
-      profession: payload.profession,
-      area: payload.city,
-      city: payload.city,
-      state: payload.state,
-      accountStatus: "ACTIVE",
-      availabilityStatus: "AVAILABLE",
-      hourlyRate: payload.hourlyRate,
-      experienceYears: payload.experienceYears,
-      joiningDate: today,
-      phone: payload.phone,
-      email: payload.email,
-    };
-
-    try {
-      const {
-        data: { user },
-      } = await supabase.auth.getUser();
-
-      if (user) {
-        const { data: fedData } = await supabase
-          .from("federations")
-          .select("id")
-          .limit(1)
-          .maybeSingle();
-
-        const fedRecord = fedData as { id: string } | null;
-        if (fedRecord?.id) {
-          await (supabase.from("workers") as any).insert({
-            profile_id: user.id,
-            federation_id: fedRecord.id,
-            profession: payload.profession,
-            hourly_rate: payload.hourlyRate,
-            experience_years: payload.experienceYears,
-            account_status: "ACTIVE",
-            availability_status: "AVAILABLE",
-          });
-        }
+      const json = await res.json();
+      if (!res.ok || !json.success) {
+        throw new Error(json.error || "Failed to register worker in federation roster.");
       }
-    } catch (err) {
-      console.warn("Notice: Live worker registration failed or unauthenticated, persisting to dev store.", err);
+
+      const today = new Date().toISOString().split("T")[0];
+      const w = json.worker;
+      const createdWorker: ManagedWorkerItem = {
+        id: w.id,
+        memberId: w.memberId,
+        fullName: w.fullName,
+        profession: w.profession,
+        area: payload.city || "Ahmedabad Central",
+        city: payload.city || "Ahmedabad",
+        state: payload.state || "Gujarat",
+        accountStatus: "ACTIVE",
+        availabilityStatus: "UNAVAILABLE",
+        hourlyRate: Number(w.hourlyRate) || 350,
+        experienceYears: Number(w.experienceYears) || 0,
+        joiningDate: today,
+        phone: payload.phone,
+        email: w.email,
+      };
+
+      return createdWorker;
     }
 
-    this.fallbackWorkers = [newWorker, ...this.fallbackWorkers];
-    return newWorker;
+    throw new Error("Add worker operation must be executed within browser context.");
   }
 
   /**
@@ -461,29 +459,34 @@ export class WorkforceManagementService {
     workerId: string,
     newStatus: WorkerAccountStatus
   ): Promise<{ success: boolean; workerId: string; updatedStatus: WorkerAccountStatus }> {
-    const supabase = createClient();
+    if (typeof window !== "undefined") {
+      const res = await fetch("/api/federation/workers", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ action: "status", workerId, status: newStatus }),
+      });
 
-    try {
-      const { error } = await (supabase.from("workers") as any)
-        .update({ account_status: newStatus })
-        .eq("id", workerId);
-
-      if (!error) {
-        // Live DB updated
+      const json = await res.json();
+      if (!res.ok || !json.success) {
+        throw new Error(json.error || `Failed to update worker status to ${newStatus}.`);
       }
-    } catch (err) {
-      console.warn("Notice: Live worker status update unpopulated, updating dev store.", err);
+
+      this.fallbackWorkers = this.fallbackWorkers.map((w) => {
+        if (w.id === workerId || w.memberId === workerId) {
+          return {
+            ...w,
+            accountStatus: newStatus,
+          };
+        }
+        return w;
+      });
+
+      return {
+        success: true,
+        workerId: json.workerId || workerId,
+        updatedStatus: newStatus,
+      };
     }
-
-    this.fallbackWorkers = this.fallbackWorkers.map((w) => {
-      if (w.id === workerId) {
-        return {
-          ...w,
-          accountStatus: newStatus,
-        };
-      }
-      return w;
-    });
 
     return {
       success: true,
@@ -493,37 +496,53 @@ export class WorkforceManagementService {
   }
 
   // ==========================================
-  // STAGE 5: NEW WORKER REQUESTS
+  // STAGE 5: WORKER REQUESTS
   // ==========================================
 
   /**
    * Retrieves incoming worker applications scoped to authenticated federation context.
-   * Priority: Reads real records from public.workers joined with public.profiles.
+   * Priority: Reads real records from public.workers joined with public.profiles and public.addresses.
    */
   async getWorkerApplications(
     searchQuery: string = "",
-    statusFilter: WorkerApplicationStatus | "ALL" = "ALL"
+    statusFilter: WorkerApplicationStatus | "ALL" = "ALL",
+    registrationTypeFilter: "NEW_WORKER" | "EXISTING_WORKER" | "ALL" = "ALL"
   ): Promise<WorkerApplicationItem[]> {
     const supabase = createClient();
     let applications: WorkerApplicationItem[] = [];
 
     try {
-      // 1. Fetch pending/recent workers from Supabase
+      // 1. Fetch workers from Supabase
       let query = (supabase.from("workers") as any)
         .select(`
           id,
           profile_id,
           federation_id,
+          member_id,
+          registration_type,
           experience_years,
           hourly_rate,
           verification_status,
           account_status,
           created_at,
+          date_of_birth,
+          gender,
+          profession,
+          previous_work_details,
+          govt_id_type,
+          govt_id_number,
+          govt_id_document_url,
+          bank_name,
+          bank_account_holder,
+          bank_account_number,
+          bank_ifsc_code,
+          rejection_reason,
           profiles:profile_id (
             id,
             full_name,
             email,
-            phone
+            phone,
+            avatar_url
           ),
           federations:federation_id (
             id,
@@ -541,11 +560,32 @@ export class WorkforceManagementService {
         query = query.eq("verification_status", "suspended");
       }
 
+      if (registrationTypeFilter !== "ALL") {
+        query = query.eq("registration_type", registrationTypeFilter);
+      }
+
       const { data: dbWorkers, error } = await query;
 
       if (!error && dbWorkers && dbWorkers.length > 0) {
+        // Collect profile ids to batch fetch addresses
+        const profileIds = dbWorkers.map((w: any) => w.profile_id).filter(Boolean);
+        const addressMap: Record<string, any> = {};
+        if (profileIds.length > 0) {
+          const { data: addresses } = await (supabase.from("addresses") as any)
+            .select("profile_id, house_building, street_area, city, district, state, pincode")
+            .in("profile_id", profileIds);
+          if (addresses) {
+            for (const addr of addresses) {
+              if (addr.profile_id && !addressMap[addr.profile_id]) {
+                addressMap[addr.profile_id] = addr;
+              }
+            }
+          }
+        }
+
         applications = dbWorkers.map((w: any) => {
           const profile = w.profiles || {};
+          const addr = addressMap[w.profile_id];
           const status: WorkerApplicationStatus =
             w.verification_status === "pending_verification"
               ? "PENDING"
@@ -553,49 +593,54 @@ export class WorkforceManagementService {
               ? "ACCEPTED"
               : "REJECTED";
 
+          const regType: "NEW_WORKER" | "EXISTING_WORKER" =
+            w.registration_type === "EXISTING_WORKER" ? "EXISTING_WORKER" : "NEW_WORKER";
+
+          const formattedAddress = addr
+            ? `${addr.house_building ? addr.house_building + ", " : ""}${addr.street_area || ""}`.trim() || "Address on File"
+            : "Address on File";
+
           return {
             id: w.id,
-            applicantName: profile.full_name || "New Worker Applicant",
-            phone: profile.phone || "+91 98000 00000",
-            email: profile.email || "applicant@example.com",
-            dateOfBirth: "1995-01-01",
-            address: "Registered Residential Address",
-            city: "Ahmedabad",
-            state: "Gujarat",
-            profession: "Skilled Tradesperson",
-            skills: ["Technical Repair", "Domestic Services"],
+            memberId: w.member_id || null,
+            registrationType: regType,
+            applicantName: profile.full_name || (regType === "EXISTING_WORKER" ? "Existing Worker Member" : "New Worker Applicant"),
+            phone: profile.phone || "",
+            email: profile.email || "",
+            dateOfBirth: w.date_of_birth || "",
+            gender: w.gender || "male",
+            address: formattedAddress,
+            city: addr?.city || "Ahmedabad",
+            state: addr?.state || "Gujarat",
+            profession: w.profession || "Skilled Tradesperson",
+            skills: [w.profession || "General Trades"],
             experienceYears: w.experience_years || 1,
             hourlyRate: Number(w.hourly_rate) || 300,
-            documents: [
+            previousWorkDetails: w.previous_work_details || null,
+            govtIdType: w.govt_id_type || "aadhar",
+            govtIdNumber: w.govt_id_number || "",
+            govtIdDocumentUrl: w.govt_id_document_url || null,
+            avatarUrl: profile.avatar_url || null,
+            bankName: w.bank_name || null,
+            bankAccountHolder: w.bank_account_holder || null,
+            bankAccountNumber: w.bank_account_number || null,
+            bankIfscCode: w.bank_ifsc_code || null,
+            documents: w.govt_id_document_url ? [
               {
-                name: "Government_ID_Proof.pdf",
+                name: `${w.govt_id_type?.toUpperCase() || "GOVT"}_Document`,
                 category: "IDENTITY" as const,
-                fileType: "PDF",
-                fileSize: "1.4 MB",
-              },
-              {
-                name: "Trade_Skill_Certificate.pdf",
-                category: "SKILL_CERTIFICATE" as const,
-                fileType: "PDF",
-                fileSize: "2.1 MB",
-              },
-            ],
+                fileType: "Document",
+                fileSize: "Uploaded",
+              }
+            ] : [],
             submittedDate: w.created_at ? w.created_at.split("T")[0] : new Date().toISOString().split("T")[0],
             status,
+            rejectionReason: w.rejection_reason || undefined,
           };
         });
       }
     } catch (err) {
-      console.warn("Notice: Real worker applications query failed, engaging local fallback:", err);
-    }
-
-    // Combine with fallback fixture if no database applications exist
-    if (applications.length === 0) {
-      let list = this.fallbackApplications;
-      if (statusFilter !== "ALL") {
-        list = list.filter((app) => app.status === statusFilter);
-      }
-      applications = list;
+      console.warn("Notice: Real worker applications query failed:", err);
     }
 
     // Apply search filter
@@ -605,6 +650,7 @@ export class WorkforceManagementService {
         (app) =>
           app.applicantName.toLowerCase().includes(q) ||
           app.id.toLowerCase().includes(q) ||
+          (app.memberId && app.memberId.toLowerCase().includes(q)) ||
           app.profession.toLowerCase().includes(q)
       );
     }
@@ -620,33 +666,55 @@ export class WorkforceManagementService {
   async acceptWorkerApplication(
     applicationId: string
   ): Promise<{ success: boolean; worker: ManagedWorkerItem }> {
-    const supabase = createClient();
     const today = new Date().toISOString().split("T")[0];
+    let updatedWorker: any = null;
 
-    // 1. Update the real worker record in Supabase
-    const { data: updatedWorker, error } = await (supabase.from("workers") as any)
-      .update({
-        verification_status: "verified",
-        account_status: "ACTIVE",
-        availability_status: "AVAILABLE",
-      })
-      .eq("id", applicationId)
-      .select(`
-        id,
-        experience_years,
-        hourly_rate,
-        account_status,
-        availability_status,
-        profiles:profile_id (
-          full_name,
-          email,
-          phone
-        )
-      `)
-      .maybeSingle();
+    // 1. Invoke server-side route to update workers AND synchronize profiles.is_active = true
+    try {
+      if (typeof window !== "undefined") {
+        const res = await fetch("/api/federation/workers", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ action: "accept", workerId: applicationId }),
+        });
+        if (res.ok) {
+          const json = await res.json();
+          updatedWorker = json.worker;
+        }
+      }
+    } catch (apiErr) {
+      console.warn("API worker approval notice, falling back to direct client:", apiErr);
+    }
 
-    if (error) {
-      console.error("Failed to approve worker in database:", error);
+    if (!updatedWorker) {
+      const supabase = createClient();
+      const { data, error } = await (supabase.from("workers") as any)
+        .update({
+          verification_status: "verified",
+          account_status: "ACTIVE",
+          availability_status: "AVAILABLE",
+        })
+        .eq("id", applicationId)
+        .select(`
+          id,
+          profile_id,
+          experience_years,
+          hourly_rate,
+          account_status,
+          availability_status,
+          profiles:profile_id (
+            full_name,
+            email,
+            phone
+          )
+        `)
+        .maybeSingle();
+
+      if (error) {
+        console.error("Failed to approve worker in database:", error);
+      } else {
+        updatedWorker = data;
+      }
     }
 
     // Update local fallback application if present
@@ -667,9 +735,9 @@ export class WorkforceManagementService {
     } : {});
 
     const inductedWorker: ManagedWorkerItem = {
-      id: updatedWorker?.id || applicationId,
+      id: updatedWorker?.member_id || updatedWorker?.id || applicationId,
       fullName: profile.full_name || "Verified Worker",
-      profession: "Skilled Tradesperson",
+      profession: updatedWorker?.profession || "Skilled Tradesperson",
       area: "Ahmedabad Central",
       city: "Ahmedabad",
       state: "Gujarat",
@@ -693,28 +761,35 @@ export class WorkforceManagementService {
   /**
    * Rejects worker application:
    * 1. Updates real worker in Supabase: verification_status = 'suspended', account_status = 'DEACTIVATED'
-   * 2. Preserves historical record
+   * 2. Synchronizes profiles.is_active = false
+   * 3. Preserves historical record
    */
   async rejectWorkerApplication(
     applicationId: string,
     rejectionReason: string
   ): Promise<{ success: boolean; applicationId: string }> {
-    const supabase = createClient();
     const today = new Date().toISOString().split("T")[0];
 
-    // 1. Update real database record
-    const { error } = await (supabase.from("workers") as any)
-      .update({
-        verification_status: "suspended",
-        account_status: "DEACTIVATED",
-      })
-      .eq("id", applicationId);
-
-    if (error) {
-      console.error("Failed to reject worker in database:", error);
+    try {
+      if (typeof window !== "undefined") {
+        await fetch("/api/federation/workers", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ action: "reject", workerId: applicationId, rejectionReason }),
+        });
+      }
+    } catch (apiErr) {
+      console.warn("API worker rejection notice, falling back to direct client:", apiErr);
+      const supabase = createClient();
+      await (supabase.from("workers") as any)
+        .update({
+          verification_status: "suspended",
+          account_status: "DEACTIVATED",
+        })
+        .eq("id", applicationId);
     }
 
-    // 2. Update local fallback list if present
+    // Update local fallback list if present
     const appIndex = this.fallbackApplications.findIndex((a) => a.id === applicationId);
     if (appIndex !== -1) {
       this.fallbackApplications[appIndex] = {

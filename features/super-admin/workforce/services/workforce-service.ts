@@ -97,6 +97,10 @@ export class WorkforceService {
         id,
         profile_id,
         federation_id,
+        member_id,
+        date_of_birth,
+        gender,
+        registration_type,
         account_status,
         availability_status,
         verification_status,
@@ -119,6 +123,10 @@ export class WorkforceService {
             email: w.profiles?.email,
             phone: w.profiles?.phone,
             avatarUrl: w.profiles?.avatar_url,
+            memberId: w.member_id || null,
+            dateOfBirth: w.date_of_birth || null,
+            gender: w.gender || null,
+            registrationType: w.registration_type || null,
             societyId: w.federation_id || w.federations?.id || "fed-001",
             societyName: w.federations?.name || "Mumbai Central Worker Cooperative",
             profession: w.profession || "Skilled Craftsman",
@@ -247,6 +255,10 @@ export class WorkforceService {
           id,
           profile_id,
           federation_id,
+          member_id,
+          date_of_birth,
+          gender,
+          registration_type,
           account_status,
           availability_status,
           verification_status,
@@ -259,10 +271,22 @@ export class WorkforceService {
           profiles (full_name, email, phone, avatar_url),
           federations (id, name)
         `)
-        .eq("id", id)
-        .single();
+        .or(`id.eq.${id},member_id.eq.${id}`)
+        .maybeSingle();
 
       if (!error && w) {
+        // Query residential address
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        const { data: addr } = await (supabase.from("addresses") as any)
+          .select("address_line1, city, state, postal_code")
+          .eq("profile_id", w.profile_id)
+          .limit(1)
+          .maybeSingle();
+
+        const realAddress = addr
+          ? `${addr.address_line1}, ${addr.city}, ${addr.state} - ${addr.postal_code}`
+          : undefined;
+
         const matchedMock = MOCK_WORKERS.find((m) => m.id === id);
         return {
           id: w.id,
@@ -271,6 +295,10 @@ export class WorkforceService {
           email: w.profiles?.email,
           phone: w.profiles?.phone,
           avatarUrl: w.profiles?.avatar_url,
+          memberId: w.member_id || null,
+          dateOfBirth: w.date_of_birth || null,
+          gender: w.gender || null,
+          registrationType: w.registration_type || null,
           societyId: w.federation_id || w.federations?.id || "fed-001",
           societyName: w.federations?.name || "Mumbai Central Worker Cooperative",
           profession: w.profession || "Skilled Craftsman",
@@ -284,7 +312,7 @@ export class WorkforceService {
           completedJobs: matchedMock?.completedJobs || 40,
           joiningDate: w.joining_date ? new Date(w.joining_date).toISOString().split("T")[0] : "2024-01-01",
           lastActiveAt: w.last_active_at || "Recently",
-          address: matchedMock?.address || "Mumbai Metropolitan Region",
+          address: realAddress || matchedMock?.address || "Gujarat, India",
           serviceRadiusKm: w.service_radius_km || 15,
         };
       }
@@ -300,6 +328,28 @@ export class WorkforceService {
    * Fetch worker skills
    */
   async getWorkerSkills(workerId: string): Promise<WorkerSkillItem[]> {
+    const supabase = createClient();
+    try {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const { data, error } = await (supabase.from("worker_skills") as any)
+        .select("id, proficiency_level, skills(id, name)")
+        .eq("worker_id", workerId);
+
+      if (!error && data && data.length > 0) {
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        return data.map((item: any) => ({
+          id: item.id,
+          name: item.skills?.name || "Trade Skill",
+          category: "Verified Trade",
+          proficiencyLevel: (item.proficiency_level
+            ? item.proficiency_level.charAt(0).toUpperCase() + item.proficiency_level.slice(1)
+            : "Intermediate") as any,
+        }));
+      }
+    } catch (err) {
+      console.warn("Notice: Real worker skills query in super-admin:", err);
+    }
+
     return (
       MOCK_WORKER_SKILLS[workerId] || [
         { id: "skl-def-1", name: "General Electrical Wiring", category: "Electrical", proficiencyLevel: "Advanced" },

@@ -113,6 +113,77 @@ export async function middleware(request: NextRequest) {
     const userRole: UserRole = profile?.role || "CUSTOMER";
     const isActive: boolean = profile?.is_active ?? true;
 
+    // Authoritative check for WORKER lifecycle
+    if (userRole === "WORKER") {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const { data: worker } = await (supabase
+        .from("workers")
+        .select("verification_status, account_status")
+        .eq("profile_id", user.id)
+        .maybeSingle() as any);
+
+      const workerAccountStatus = worker?.account_status || "ACTIVE";
+      const workerVerificationStatus = worker?.verification_status || "pending_verification";
+
+      // If worker is deactivated or suspended/rejected:
+      if (workerAccountStatus === "DEACTIVATED" || workerVerificationStatus === "suspended") {
+        if (isProtectedPath) {
+          const loginUrl = new URL("/login", request.url);
+          loginUrl.searchParams.set("error", "account_deactivated");
+          return createRedirect(loginUrl);
+        }
+        if (isAuthPath) {
+          // Allow rendering the login page without auto-redirecting to dashboard
+          return response;
+        }
+      }
+
+      // If worker is pending approval:
+      if (!isActive || workerVerificationStatus === "pending_verification") {
+        if (isProtectedPath) {
+          return createRedirect(new URL("/pending", request.url));
+        }
+        if (isAuthPath) {
+          return createRedirect(new URL("/pending", request.url));
+        }
+      }
+    }
+
+    // Authoritative check for FEDERATION_ADMIN lifecycle
+    if (userRole === "FEDERATION_ADMIN") {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const { data: federation } = await (supabase
+        .from("federations")
+        .select("status, is_active")
+        .eq("contact_email", user.email)
+        .maybeSingle() as any);
+
+      const fedStatus = federation?.status || "ACTIVE";
+      const isFedActive = federation?.is_active ?? true;
+
+      // If federation is suspended or rejected:
+      if (fedStatus === "REJECTED" || fedStatus === "SUSPENDED") {
+        if (isProtectedPath) {
+          const loginUrl = new URL("/login", request.url);
+          loginUrl.searchParams.set("error", "account_deactivated");
+          return createRedirect(loginUrl);
+        }
+        if (isAuthPath) {
+          return response;
+        }
+      }
+
+      // If federation is pending approval:
+      if (!isActive || !isFedActive || fedStatus === "PENDING") {
+        if (isProtectedPath) {
+          return createRedirect(new URL("/pending", request.url));
+        }
+        if (isAuthPath) {
+          return createRedirect(new URL("/pending", request.url));
+        }
+      }
+    }
+
     // If account/profile is inactive/pending and trying to access protected routes, redirect to /pending
     if (!isActive && isProtectedPath && userRole !== "CUSTOMER") {
       return createRedirect(new URL("/pending", request.url));
@@ -122,6 +193,9 @@ export async function middleware(request: NextRequest) {
 
     // If user is accessing login/register while authenticated, redirect to their role home page
     if (isAuthPath) {
+      if (!isActive && userRole !== "CUSTOMER") {
+        return createRedirect(new URL("/pending", request.url));
+      }
       return createRedirect(new URL(homeRoute, request.url));
     }
 

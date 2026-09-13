@@ -27,6 +27,7 @@ import {
   ShieldCheck,
   AlertCircle,
   Lock,
+  RefreshCw,
 } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
@@ -37,7 +38,10 @@ import { Card, CardHeader, CardTitle, CardDescription, CardContent, CardFooter }
 import { Alert, AlertTitle, AlertDescription } from "@/components/ui/alert";
 import { Badge } from "@/components/ui/badge";
 
+import { createClient } from "@/lib/supabase/client";
 import { signUpCustomer, signUpWorker, signUpFederationAdmin, verifyExistingWorker } from "@/lib/auth/actions";
+import { MAJOR_INDIAN_BANKS } from "@/constants/banks";
+import { uploadFileToStorage } from "@/lib/storage/upload";
 
 import {
   customerRegistrationSchema,
@@ -112,12 +116,18 @@ export function RegisterView() {
   const [federationSearchQuery, setFederationSearchQuery] = React.useState("");
   const [selectedStateFilter, setSelectedStateFilter] = React.useState("All");
 
-  // Selected File UI State (Frontend UI only)
+  // Selected File States for Real Document & Avatar Uploads
   const [selectedGovtIdFile, setSelectedGovtIdFile] = React.useState<string | null>(null);
+  const [newWorkerAvatarFile, setNewWorkerAvatarFile] = React.useState<File | null>(null);
+  const [newWorkerAvatarPreview, setNewWorkerAvatarPreview] = React.useState<string | null>(null);
+  const [newWorkerGovtFile, setNewWorkerGovtFile] = React.useState<File | null>(null);
+  const [existingWorkerGovtFile, setExistingWorkerGovtFile] = React.useState<File | null>(null);
 
   // Bank Confirmation state for validation check
   const [confirmBankAccountNumber, setConfirmBankAccountNumber] = React.useState("");
   const [bankConfirmError, setBankConfirmError] = React.useState<string | null>(null);
+  const [confirmExistingBankAccountNumber, setConfirmExistingBankAccountNumber] = React.useState("");
+  const [existingBankConfirmError, setExistingBankConfirmError] = React.useState<string | null>(null);
 
   // Registration Result State
   const [mockOutcome, setMockOutcome] = React.useState<{
@@ -155,35 +165,31 @@ export function RegisterView() {
   });
 
   // Existing Worker Form Hook
-  const existingWorkerForm = useForm<ExistingWorkerFormData & {
-    first_name?: string;
-    last_name?: string;
-    email?: string;
-    date_of_birth?: string;
-    gender?: string;
-    govt_id_type?: string;
-    govt_id_number?: string;
-    bank_account_holder?: string;
-    bank_name?: string;
-    bank_account_number?: string;
-    bank_ifsc_code?: string;
-  }>({
+  const existingWorkerForm = useForm<ExistingWorkerFormData>({
     resolver: zodResolver(existingWorkerSchema),
     defaultValues: {
-      federation_code: "FED-AMD-01",
-      existing_worker_id: "",
-      phone: "",
       first_name: "",
       last_name: "",
       email: "",
-      date_of_birth: "1995-01-01",
+      password: "",
+      confirm_password: "",
+      phone: "",
+      date_of_birth: "",
       gender: "male",
+      federation_id: "",
+      existing_worker_id: "",
+      house_building: "",
+      street_area: "",
+      city: "",
+      district: "",
+      state: "Gujarat",
+      pincode: "",
       govt_id_type: "aadhar",
-      govt_id_number: "123456789012",
+      govt_id_number: "",
       bank_account_holder: "",
-      bank_name: "State Bank of India",
+      bank_name: MAJOR_INDIAN_BANKS[0],
       bank_account_number: "",
-      bank_ifsc_code: "SBIN0001234",
+      bank_ifsc_code: "",
     },
     mode: "onTouched",
   });
@@ -194,7 +200,7 @@ export function RegisterView() {
     defaultValues: {
       first_name: "",
       last_name: "",
-      date_of_birth: "1995-01-01",
+      date_of_birth: "",
       gender: "male",
       email: "",
       password: "",
@@ -206,18 +212,17 @@ export function RegisterView() {
       district: "",
       state: "Gujarat",
       pincode: "",
-      federation_id: "b765df3b-c418-4a15-b79f-3cbc09e475dc",
+      federation_id: "",
       primary_skill_category_id: "cat_elec",
       skills: ["Domestic Wiring"],
-      experience_years: 3,
+      experience_years: 1,
       previous_work_details: "",
       govt_id_type: "aadhar",
-      govt_id_number: "123456789012",
-      govt_id_document: "mock_aadhaar_file.pdf",
+      govt_id_number: "",
       bank_account_holder: "",
-      bank_name: "State Bank of India",
+      bank_name: MAJOR_INDIAN_BANKS[0],
       bank_account_number: "",
-      bank_ifsc_code: "SBIN0001234",
+      bank_ifsc_code: "",
     },
     mode: "onTouched",
   });
@@ -246,6 +251,32 @@ export function RegisterView() {
     mode: "onTouched",
   });
 
+  // Dynamic Active Federations from PostgreSQL
+  const [federationsList, setFederationsList] = React.useState(MOCK_FEDERATIONS);
+
+  React.useEffect(() => {
+    const supabase = createClient();
+    supabase
+      .from("federations")
+      .select("id, code, name, state, city, address")
+      .eq("is_active", true)
+      .then(({ data }) => {
+        if (data && data.length > 0) {
+          const mapped = data.map((f: any) => ({
+            id: f.id,
+            code: f.code || "FED-COOP",
+            name: f.name,
+            state: f.state || "Gujarat",
+            city: f.city || "Ahmedabad",
+            address: f.address || "",
+          }));
+          setFederationsList(mapped);
+          newWorkerForm.setValue("federation_id", mapped[0].id);
+          existingWorkerForm.setValue("federation_id", mapped[0].id);
+        }
+      });
+  }, [newWorkerForm, existingWorkerForm]);
+
   // Section Validation before advancing steps
   const validateCurrentStep = async (fieldsToValidate: string[], triggerFn: (fields?: any) => Promise<boolean>) => {
     setSubmitError(null);
@@ -271,7 +302,8 @@ export function RegisterView() {
         district: data.district,
         state: data.state,
         pincode: data.pincode,
-      }
+      },
+      data.preferred_language
     );
     if (res.success) {
       setMockOutcome({
@@ -297,7 +329,23 @@ export function RegisterView() {
     setSubmitError(null);
     setExistingUserEmail(null);
     const fullName = `${data.first_name} ${data.last_name}`;
-    const selectedFed = MOCK_FEDERATIONS.find((f) => f.id === data.federation_id)?.name || "Ahmedabad Skilled Workers Federation";
+    const selectedFed = federationsList.find((f) => f.id === data.federation_id)?.name || "Gujarat Labour Cooperative Federation";
+
+    let avatarUrl: string | undefined = undefined;
+    if (newWorkerAvatarFile) {
+      const up = await uploadFileToStorage(newWorkerAvatarFile, "avatars");
+      if (up.success && up.url) {
+        avatarUrl = up.url;
+      }
+    }
+
+    let govtDocUrl: string | undefined = undefined;
+    if (newWorkerGovtFile) {
+      const up = await uploadFileToStorage(newWorkerGovtFile, "documents");
+      if (up.success && (up.filePath || up.url)) {
+        govtDocUrl = up.filePath || up.url;
+      }
+    }
 
     const res = await signUpWorker(
       data.email,
@@ -314,6 +362,17 @@ export function RegisterView() {
         pincode: data.pincode,
         experience_years: data.experience_years,
         skills: data.skills,
+        date_of_birth: data.date_of_birth,
+        gender: data.gender,
+        previous_work_details: data.previous_work_details,
+        govt_id_type: data.govt_id_type,
+        govt_id_number: data.govt_id_number,
+        govt_id_document_url: govtDocUrl,
+        avatar_url: avatarUrl,
+        bank_name: data.bank_name,
+        bank_account_holder: data.bank_account_holder,
+        bank_account_number: data.bank_account_number,
+        bank_ifsc_code: data.bank_ifsc_code,
       }
     );
 
@@ -324,7 +383,7 @@ export function RegisterView() {
         emailOrPhone: data.email,
         federationName: selectedFed,
         status: "PENDING_FEDERATION_APPROVAL",
-        message: res.message || "Your application has been submitted to the selected Federation Admin for verification.",
+        message: res.message || "Your worker application has been submitted to the selected Federation Administrator for verification. Once approved, you can sign in with your email and password to access your dashboard.",
       });
       setCurrentStepIndex(9); // Step 9: Success Outcome Screen
     } else {
@@ -341,29 +400,57 @@ export function RegisterView() {
   const handleExistingWorkerSubmit = async (data: ExistingWorkerFormData) => {
     setSubmitError(null);
     setExistingUserEmail(null);
+
+    let govtDocUrl: string | undefined = undefined;
+    if (existingWorkerGovtFile) {
+      const up = await uploadFileToStorage(existingWorkerGovtFile, "documents");
+      if (up.success && (up.filePath || up.url)) {
+        govtDocUrl = up.filePath || up.url;
+      }
+    }
+
+    const selectedFedObj = federationsList.find((f) => f.id === data.federation_id);
+    const fullName = `${data.first_name} ${data.last_name}`.trim();
+
     const res = await verifyExistingWorker(
       data.phone,
-      data.federation_code,
+      selectedFedObj?.code || data.federation_id,
       data.existing_worker_id,
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      (data as any).email || undefined,
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      (data as any).password || undefined
+      data.email,
+      data.password,
+      {
+        fullName: fullName || undefined,
+        federationId: data.federation_id,
+        date_of_birth: data.date_of_birth,
+        gender: data.gender,
+        govt_id_type: data.govt_id_type,
+        govt_id_number: data.govt_id_number,
+        govt_id_document_url: govtDocUrl,
+        bank_name: data.bank_name,
+        bank_account_holder: data.bank_account_holder,
+        bank_account_number: data.bank_account_number,
+        bank_ifsc_code: data.bank_ifsc_code,
+        house_building: data.house_building,
+        street_area: data.street_area,
+        city: data.city,
+        district: data.district,
+        state: data.state,
+        pincode: data.pincode,
+      }
     );
 
     if (res.success) {
       setMockOutcome({
-        name: `Member ${data.existing_worker_id}`,
+        name: fullName || `Member ${data.existing_worker_id}`,
         roleLabel: "Existing Worker Verification",
-        emailOrPhone: data.phone,
-        federationName: res.federationName || data.federation_code,
+        emailOrPhone: data.email || data.phone,
+        federationName: res.federationName || selectedFedObj?.name || data.federation_id,
         status: "PENDING_FEDERATION_APPROVAL",
-        message: res.message || "Your verification request has been submitted to your Federation Administrator for approval.",
+        message: res.message || "Your existing worker verification request has been submitted to your Federation Administrator for approval. Once verified, you can sign in with your credentials to access your dashboard.",
       });
-      setCurrentStepIndex(6); // Step 6: Existing Worker Approval Outcome Screen
+      setCurrentStepIndex(7); // Step 7: Existing Worker Approval Outcome Screen
     } else {
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      const workerEmail = (data as any).email;
+      const workerEmail = data.email;
       if (res.isExistingUser || res.error?.toLowerCase().includes("already exists")) {
         if (workerEmail) setExistingUserEmail(workerEmail);
         setSubmitError(res.error || "An account with this email already exists. Please sign in instead.");
@@ -392,7 +479,8 @@ export function RegisterView() {
         pincode: data.pincode,
         official_email: data.official_email,
         official_phone: data.official_phone,
-      }
+      },
+      data.phone
     );
     if (res.success) {
       setMockOutcome({
@@ -799,7 +887,7 @@ export function RegisterView() {
       "Review & Submit",
     ];
 
-    const filteredFederations = MOCK_FEDERATIONS.filter((f) => {
+    const filteredFederations = federationsList.filter((f) => {
       const matchesSearch = f.name.toLowerCase().includes(federationSearchQuery.toLowerCase()) ||
                             f.code.toLowerCase().includes(federationSearchQuery.toLowerCase()) ||
                             f.city.toLowerCase().includes(federationSearchQuery.toLowerCase());
@@ -807,7 +895,7 @@ export function RegisterView() {
       return matchesSearch && matchesState;
     });
 
-    const selectedFedObj = MOCK_FEDERATIONS.find((f) => f.id === getValues("federation_id"));
+    const selectedFedObj = federationsList.find((f) => f.id === getValues("federation_id"));
 
     return (
       <Card className="w-full max-w-2xl shadow-lg border-emerald-900/10">
@@ -926,11 +1014,61 @@ export function RegisterView() {
                 </div>
 
                 <div className="space-y-1 pt-1">
-                  <label className="text-xs font-medium">Profile Photo (Frontend UI Only)</label>
-                  <div className="p-3 border-2 border-dashed rounded-lg text-center bg-muted/20 space-y-1">
-                    <UploadCloud className="h-5 w-5 text-muted-foreground mx-auto" />
-                    <p className="text-xs font-medium">Upload Worker Profile Picture</p>
-                    <p className="text-[10px] text-muted-foreground">Frontend simulation - file is not uploaded or stored in browser storage</p>
+                  <label className="text-xs font-medium">Profile Photo (Public Avatar)</label>
+                  <div className="p-3 border-2 border-dashed rounded-lg text-center bg-muted/20 space-y-2">
+                    {newWorkerAvatarPreview ? (
+                      <div className="flex flex-col items-center space-y-2">
+                        {/* eslint-disable-next-line @next/next/no-img-element */}
+                        <img
+                          src={newWorkerAvatarPreview}
+                          alt="Avatar preview"
+                          className="h-16 w-16 rounded-full object-cover border-2 border-primary"
+                        />
+                        <div className="flex items-center space-x-2">
+                          <label
+                            htmlFor="worker-avatar-input"
+                            className="cursor-pointer text-xs font-semibold text-primary hover:underline"
+                          >
+                            Change Photo
+                          </label>
+                          <span className="text-xs text-muted-foreground">•</span>
+                          <button
+                            type="button"
+                            onClick={() => {
+                              setNewWorkerAvatarFile(null);
+                              setNewWorkerAvatarPreview(null);
+                            }}
+                            className="text-xs text-destructive hover:underline"
+                          >
+                            Remove
+                          </button>
+                        </div>
+                      </div>
+                    ) : (
+                      <div className="space-y-1">
+                        <UploadCloud className="h-5 w-5 text-muted-foreground mx-auto" />
+                        <label
+                          htmlFor="worker-avatar-input"
+                          className="cursor-pointer text-xs font-semibold text-primary hover:underline block"
+                        >
+                          Choose Profile Picture
+                        </label>
+                        <p className="text-[10px] text-muted-foreground">JPG, PNG, or WEBP up to 5MB (Stored in avatars bucket)</p>
+                      </div>
+                    )}
+                    <input
+                      type="file"
+                      id="worker-avatar-input"
+                      accept="image/png,image/jpeg,image/webp,image/jpg"
+                      className="hidden"
+                      onChange={(e) => {
+                        if (e.target.files && e.target.files[0]) {
+                          const file = e.target.files[0];
+                          setNewWorkerAvatarFile(file);
+                          setNewWorkerAvatarPreview(URL.createObjectURL(file));
+                        }
+                      }}
+                    />
                   </div>
                 </div>
 
@@ -1043,38 +1181,41 @@ export function RegisterView() {
                   </div>
                 </div>
 
-                {/* Mock Document Selection UI */}
+                {/* Real Document Selection UI */}
                 <div className="space-y-1.5 pt-1">
-                  <label className="text-xs font-semibold">Government ID Document Upload (Frontend UI Only)</label>
+                  <label className="text-xs font-semibold">Government ID Document Upload (Private Documents Bucket)</label>
                   <div className="p-3 border-2 border-dashed rounded-lg text-center bg-muted/20 space-y-1.5">
                     <UploadCloud className="h-6 w-6 text-primary mx-auto" />
                     <div className="flex items-center justify-center space-x-2">
                       <input
                         type="file"
                         id="govt-file-input"
+                        accept=".pdf,image/png,image/jpeg,image/jpg"
                         className="hidden"
                         onChange={(e) => {
                           if (e.target.files && e.target.files[0]) {
-                            setSelectedGovtIdFile(e.target.files[0].name);
+                            const file = e.target.files[0];
+                            setNewWorkerGovtFile(file);
+                            setSelectedGovtIdFile(file.name);
                           }
                         }}
                       />
                       <label htmlFor="govt-file-input" className="cursor-pointer text-xs font-semibold text-primary hover:underline">
-                        Choose Document File
+                        {newWorkerGovtFile ? "Change Document File" : "Choose Document File"}
                       </label>
                     </div>
-                    {selectedGovtIdFile ? (
+                    {newWorkerGovtFile ? (
                       <p className="text-xs font-semibold text-emerald-600 flex items-center justify-center space-x-1">
-                        <Check className="h-3.5 w-3.5" /> <span>Selected: {selectedGovtIdFile}</span>
+                        <Check className="h-3.5 w-3.5" /> <span>Selected: {newWorkerGovtFile.name} ({(newWorkerGovtFile.size / 1024).toFixed(0)} KB)</span>
                       </p>
                     ) : (
-                      <p className="text-[10px] text-muted-foreground">PDF, JPG, or PNG up to 5MB (Frontend state only)</p>
+                      <p className="text-[10px] text-muted-foreground">PDF, JPG, or PNG up to 10MB (Protected document bucket)</p>
                     )}
                   </div>
                   <Alert variant="info" className="py-2 text-[11px]">
                     <AlertDescription className="flex items-center space-x-1">
                       <Lock className="h-3.5 w-3.5 text-primary shrink-0 mr-1" />
-                      <span><strong>Privacy Note:</strong> Sensitive identity data is kept strictly in React form state and is not stored in browser storage.</span>
+                      <span><strong>Confidential:</strong> Uploaded identity documents are securely saved to the private documents bucket and accessible only to Federation Admins.</span>
                     </AlertDescription>
                   </Alert>
                 </div>
@@ -1100,7 +1241,11 @@ export function RegisterView() {
                   </div>
                   <div className="space-y-1">
                     <label className="text-xs font-medium">Bank Name *</label>
-                    <Input placeholder="State Bank of India" {...register("bank_name")} aria-invalid={!!errors.bank_name} />
+                    <Select {...register("bank_name")}>
+                      {MAJOR_INDIAN_BANKS.map((bank) => (
+                        <option key={bank} value={bank}>{bank}</option>
+                      ))}
+                    </Select>
                     {errors.bank_name && <p className="text-xs text-destructive">{errors.bank_name.message}</p>}
                   </div>
                 </div>
@@ -1127,8 +1272,16 @@ export function RegisterView() {
 
                 <div className="space-y-1">
                   <label className="text-xs font-medium">IFSC Code (11 characters) *</label>
-                  <Input placeholder="SBIN0001234" {...register("bank_ifsc_code")} aria-invalid={!!errors.bank_ifsc_code} />
+                  <Input
+                    placeholder="e.g. SBIN0001234"
+                    {...register("bank_ifsc_code")}
+                    onChange={(e) => {
+                      setValue("bank_ifsc_code", e.target.value.toUpperCase());
+                    }}
+                    aria-invalid={!!errors.bank_ifsc_code}
+                  />
                   {errors.bank_ifsc_code && <p className="text-xs text-destructive">{errors.bank_ifsc_code.message}</p>}
+                  <p className="text-[10px] text-muted-foreground">Format: 4 letters, 0, followed by 6 alphanumeric characters</p>
                 </div>
 
                 <Alert variant="info" className="py-2 text-[11px]">
@@ -1295,25 +1448,19 @@ export function RegisterView() {
                   )}
                 </div>
 
-                <Alert variant="warning" className="text-left py-3 max-w-md mx-auto">
-                  <AlertTitle className="text-xs font-semibold">Important Notice</AlertTitle>
-                  <AlertDescription className="text-xs mt-1 font-medium text-amber-900 dark:text-amber-200">
-                    You will receive your credentials if you are eligible.
+                <Alert variant="info" className="text-left py-3 max-w-md mx-auto">
+                  <AlertTitle className="text-xs font-semibold">Account Activation Note</AlertTitle>
+                  <AlertDescription className="text-xs mt-1 font-medium text-blue-900 dark:text-blue-200">
+                    Your account has been registered with email <strong>{getValues("email")}</strong>. It is currently in a pending state until reviewed by your Federation Administrator. Once approved, you will be able to sign in directly with your registered credentials.
                   </AlertDescription>
                 </Alert>
 
                 <div className="flex flex-col space-y-2 pt-2 max-w-md mx-auto">
-                  <Link
-                    href={`/verify?role=WORKER&email=${encodeURIComponent(getValues("email") || "")}&phone=${encodeURIComponent(getValues("phone") || "")}`}
-                    className="w-full"
-                  >
-                    <Button className="w-full font-semibold">Proceed to Mobile OTP Verification</Button>
-                  </Link>
                   <Link href="/pending" className="w-full">
-                    <Button variant="outline" className="w-full font-semibold">Check Application Status</Button>
+                    <Button className="w-full font-semibold">Check Application Status</Button>
                   </Link>
                   <Link href="/login" className="w-full">
-                    <Button variant="ghost" className="w-full font-semibold">Back to Sign In</Button>
+                    <Button variant="outline" className="w-full font-semibold">Go to Sign In</Button>
                   </Link>
                 </div>
               </div>
@@ -1325,19 +1472,22 @@ export function RegisterView() {
   }
 
   // ----------------------------------------------------
-  // FLOW 3: EXISTING WORKER REGISTRATION (5 STEPS)
+  // ----------------------------------------------------
+  // FLOW 3: EXISTING WORKER REGISTRATION (6 STEPS)
   // ----------------------------------------------------
   if (activeRole === "WORKER_EXISTING") {
-    const { register, handleSubmit, trigger, getValues, formState: { errors, isSubmitting } } = existingWorkerForm;
+    const { register, handleSubmit, trigger, getValues, setValue, formState: { errors, isSubmitting } } = existingWorkerForm;
 
     const existingStepTitles = [
-      "Personal Information",
-      "Federation & Worker Information",
-      "Identity Details",
+      "Personal & Account",
+      "Federation & Member ID",
+      "Residential Address",
+      "Identity Verification",
       "Bank Details",
-      "Review & Verification",
-      "Submission Result",
+      "Review & Submit",
     ];
+
+    const selectedFed = federationsList.find((f) => f.id === getValues("federation_id"));
 
     return (
       <Card className="w-full max-w-xl shadow-lg border-emerald-900/10">
@@ -1355,8 +1505,8 @@ export function RegisterView() {
           <CardDescription>Register your pre-existing cooperative membership for digital platform access</CardDescription>
         </CardHeader>
         <CardContent>
-          {currentStepIndex <= 5 && (
-            <WizardProgressBar currentStep={currentStepIndex} totalSteps={5} stepTitle={existingStepTitles[currentStepIndex - 1]} />
+          {currentStepIndex <= 6 && (
+            <WizardProgressBar currentStep={currentStepIndex} totalSteps={6} stepTitle={existingStepTitles[currentStepIndex - 1]} />
           )}
 
           {submitError && (
@@ -1381,70 +1531,171 @@ export function RegisterView() {
           )}
 
           <form onSubmit={handleSubmit(handleExistingWorkerSubmit)} className="space-y-4" noValidate>
-            {/* Step 1: Personal Information */}
+            {/* Step 1: Personal & Account */}
             {currentStepIndex === 1 && (
               <div className="space-y-3">
-                <div className="grid grid-cols-2 gap-2">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                   <div className="space-y-1">
-                    <label className="text-xs font-medium">First Name</label>
-                    <Input placeholder="First name" {...register("first_name")} />
+                    <label className="text-xs font-medium">First Name *</label>
+                    <Input placeholder="Ramesh" {...register("first_name")} aria-invalid={!!errors.first_name} />
+                    {errors.first_name && <p className="text-xs text-destructive">{errors.first_name.message}</p>}
                   </div>
                   <div className="space-y-1">
-                    <label className="text-xs font-medium">Last Name</label>
-                    <Input placeholder="Last name" {...register("last_name")} />
+                    <label className="text-xs font-medium">Last Name *</label>
+                    <Input placeholder="Kumar" {...register("last_name")} aria-invalid={!!errors.last_name} />
+                    {errors.last_name && <p className="text-xs text-destructive">{errors.last_name.message}</p>}
                   </div>
                 </div>
-                <div className="space-y-1">
-                  <label className="text-xs font-medium">Registered Phone Number *</label>
-                  <Input placeholder="9876543210" {...register("phone")} aria-invalid={!!errors.phone} />
-                  {errors.phone && <p className="text-xs text-destructive">{errors.phone.message}</p>}
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                  <div className="space-y-1">
+                    <label className="text-xs font-medium">Email Address *</label>
+                    <Input type="email" placeholder="worker@example.com" {...register("email")} aria-invalid={!!errors.email} />
+                    {errors.email && <p className="text-xs text-destructive">{errors.email.message}</p>}
+                  </div>
+                  <div className="space-y-1">
+                    <label className="text-xs font-medium">Registered Phone Number (10 digits) *</label>
+                    <Input placeholder="9876543210" {...register("phone")} aria-invalid={!!errors.phone} />
+                    {errors.phone && <p className="text-xs text-destructive">{errors.phone.message}</p>}
+                  </div>
                 </div>
-                <div className="space-y-1">
-                  <label className="text-xs font-medium">Email Address (Optional)</label>
-                  <Input type="email" placeholder="worker@example.com" {...register("email")} />
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                  <div className="space-y-1">
+                    <label className="text-xs font-medium">Password *</label>
+                    <div className="relative">
+                      <Input type={showPassword ? "text" : "password"} placeholder="••••••••" {...register("password")} aria-invalid={!!errors.password} />
+                      <button type="button" onClick={() => setShowPassword(!showPassword)} className="absolute right-3 top-2.5 text-muted-foreground">
+                        {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                      </button>
+                    </div>
+                    {errors.password && <p className="text-xs text-destructive">{errors.password.message}</p>}
+                  </div>
+                  <div className="space-y-1">
+                    <label className="text-xs font-medium">Confirm Password *</label>
+                    <Input type="password" placeholder="••••••••" {...register("confirm_password")} aria-invalid={!!errors.confirm_password} />
+                    {errors.confirm_password && <p className="text-xs text-destructive">{errors.confirm_password.message}</p>}
+                  </div>
+                </div>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                  <div className="space-y-1">
+                    <label className="text-xs font-medium">Date of Birth (Must be ≥ 18) *</label>
+                    <Input type="date" {...register("date_of_birth")} aria-invalid={!!errors.date_of_birth} />
+                    {errors.date_of_birth && <p className="text-xs text-destructive">{errors.date_of_birth.message}</p>}
+                  </div>
+                  <div className="space-y-1">
+                    <label className="text-xs font-medium">Gender *</label>
+                    <Select {...register("gender")}>
+                      <option value="male">Male</option>
+                      <option value="female">Female</option>
+                      <option value="other">Other</option>
+                      <option value="prefer_not_to_say">Prefer not to say</option>
+                    </Select>
+                  </div>
                 </div>
                 <Button
                   type="button"
                   className="w-full mt-2 font-semibold"
-                  onClick={() => validateCurrentStep(["phone"], trigger)}
+                  onClick={() => validateCurrentStep(["first_name", "last_name", "email", "phone", "password", "confirm_password", "date_of_birth", "gender"], trigger)}
                 >
-                  Next: Federation & Worker Info <ArrowRight className="ml-2 h-4 w-4" />
+                  Next: Federation & Member ID <ArrowRight className="ml-2 h-4 w-4" />
                 </Button>
               </div>
             )}
 
-            {/* Step 2: Federation & Worker Information */}
+            {/* Step 2: Federation & Member ID */}
             {currentStepIndex === 2 && (
               <div className="space-y-3">
                 <div className="space-y-1">
-                  <label className="text-xs font-medium">Federation Code *</label>
-                  <Select {...register("federation_code")}>
-                    {MOCK_FEDERATIONS.map((f) => (
-                      <option key={f.id} value={f.code}>{f.code} - {f.name}</option>
+                  <label className="text-xs font-medium">Cooperative Federation *</label>
+                  <Select {...register("federation_id")}>
+                    {federationsList.map((f) => (
+                      <option key={f.id} value={f.id}>{f.code} - {f.name}</option>
                     ))}
                   </Select>
-                  {errors.federation_code && <p className="text-xs text-destructive">{errors.federation_code.message}</p>}
+                  {errors.federation_id && <p className="text-xs text-destructive">{errors.federation_id.message}</p>}
                 </div>
-                <div className="space-y-1">
-                  <label className="text-xs font-medium">Worker UUID *</label>
-                  <Input placeholder="WRK-2024-8841" {...register("existing_worker_id")} aria-invalid={!!errors.existing_worker_id} />
+                <div className="space-y-2">
+                  <div className="flex items-center justify-between">
+                    <label className="text-xs font-medium">Existing Member / Worker ID *</label>
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      className="h-7 text-xs px-2 text-primary"
+                      onClick={() => {
+                        const fed = federationsList.find((f) => f.id === getValues("federation_id"));
+                        const codePrefix = fed?.code ? fed.code.replace("FED-", "").replace(/-\d+$/, "") : "AHM";
+                        const randomNum = Math.floor(1000 + Math.random() * 9000);
+                        setValue("existing_worker_id", `WRK-${codePrefix}-${randomNum}`, { shouldValidate: true });
+                      }}
+                    >
+                      <RefreshCw className="mr-1 h-3 w-3" /> Generate Demo Worker ID
+                    </Button>
+                  </div>
+                  <Input placeholder="e.g. WRK-AMD-1042" {...register("existing_worker_id")} aria-invalid={!!errors.existing_worker_id} />
                   {errors.existing_worker_id && <p className="text-xs text-destructive">{errors.existing_worker_id.message}</p>}
-                  <p className="text-[11px] text-muted-foreground mt-1">
-                    Enter the UUID provided by your cooperative federation. This is not a membership or registration number.
+                  <p className="text-[11px] text-muted-foreground">
+                    Enter your official cooperative membership ID or click &quot;Generate Demo Worker ID&quot; for simulation.
                   </p>
                 </div>
                 <Button
                   type="button"
                   className="w-full mt-2 font-semibold"
-                  onClick={() => validateCurrentStep(["federation_code", "existing_worker_id"], trigger)}
+                  onClick={() => validateCurrentStep(["federation_id", "existing_worker_id"], trigger)}
                 >
-                  Next: Identity Details <ArrowRight className="ml-2 h-4 w-4" />
+                  Next: Residential Address <ArrowRight className="ml-2 h-4 w-4" />
                 </Button>
               </div>
             )}
 
-            {/* Step 3: Identity Details */}
+            {/* Step 3: Residential Address */}
             {currentStepIndex === 3 && (
+              <div className="space-y-3">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                  <div className="space-y-1">
+                    <label className="text-xs font-medium">House / Building *</label>
+                    <Input placeholder="House / Flat details" {...register("house_building")} aria-invalid={!!errors.house_building} />
+                    {errors.house_building && <p className="text-xs text-destructive">{errors.house_building.message}</p>}
+                  </div>
+                  <div className="space-y-1">
+                    <label className="text-xs font-medium">Street / Area *</label>
+                    <Input placeholder="Street / Colony" {...register("street_area")} aria-invalid={!!errors.street_area} />
+                    {errors.street_area && <p className="text-xs text-destructive">{errors.street_area.message}</p>}
+                  </div>
+                </div>
+                <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+                  <div className="space-y-1">
+                    <label className="text-[11px] font-medium">City *</label>
+                    <Input placeholder="City" {...register("city")} aria-invalid={!!errors.city} />
+                    {errors.city && <p className="text-[10px] text-destructive">{errors.city.message}</p>}
+                  </div>
+                  <div className="space-y-1">
+                    <label className="text-[11px] font-medium">District *</label>
+                    <Input placeholder="District" {...register("district")} aria-invalid={!!errors.district} />
+                    {errors.district && <p className="text-[10px] text-destructive">{errors.district.message}</p>}
+                  </div>
+                  <div className="space-y-1">
+                    <label className="text-[11px] font-medium">State *</label>
+                    <Input placeholder="State" {...register("state")} aria-invalid={!!errors.state} />
+                    {errors.state && <p className="text-[10px] text-destructive">{errors.state.message}</p>}
+                  </div>
+                  <div className="space-y-1">
+                    <label className="text-[11px] font-medium">Pincode *</label>
+                    <Input placeholder="380001" {...register("pincode")} aria-invalid={!!errors.pincode} />
+                    {errors.pincode && <p className="text-[10px] text-destructive">{errors.pincode.message}</p>}
+                  </div>
+                </div>
+                <Button
+                  type="button"
+                  className="w-full font-semibold"
+                  onClick={() => validateCurrentStep(["house_building", "street_area", "city", "district", "state", "pincode"], trigger)}
+                >
+                  Next: Identity Verification <ArrowRight className="ml-2 h-4 w-4" />
+                </Button>
+              </div>
+            )}
+
+            {/* Step 4: Identity Verification */}
+            {currentStepIndex === 4 && (
               <div className="space-y-3">
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                   <div className="space-y-1">
@@ -1459,88 +1710,153 @@ export function RegisterView() {
                   </div>
                   <div className="space-y-1">
                     <label className="text-xs font-medium">Government ID Number *</label>
-                    <Input placeholder="e.g. 1234 5678 9012" {...register("govt_id_number")} />
+                    <Input placeholder="e.g. 1234 5678 9012" {...register("govt_id_number")} aria-invalid={!!errors.govt_id_number} />
+                    {errors.govt_id_number && <p className="text-xs text-destructive">{errors.govt_id_number.message}</p>}
                   </div>
                 </div>
 
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                  <div className="space-y-1">
-                    <label className="text-xs font-medium">Date of Birth</label>
-                    <Input type="date" {...register("date_of_birth")} />
-                  </div>
-                  <div className="space-y-1">
-                    <label className="text-xs font-medium">Gender</label>
-                    <Select {...register("gender")}>
-                      <option value="male">Male</option>
-                      <option value="female">Female</option>
-                      <option value="other">Other</option>
-                    </Select>
+                <div className="space-y-1.5 pt-1">
+                  <label className="text-xs font-semibold">Government ID Document Upload (Private Documents Bucket)</label>
+                  <div className="p-3 border-2 border-dashed rounded-lg text-center bg-muted/20 space-y-1.5">
+                    <UploadCloud className="h-6 w-6 text-primary mx-auto" />
+                    <div className="flex items-center justify-center space-x-2">
+                      <input
+                        type="file"
+                        id="existing-govt-file-input"
+                        accept=".pdf,image/png,image/jpeg,image/jpg"
+                        className="hidden"
+                        onChange={(e) => {
+                          if (e.target.files && e.target.files[0]) {
+                            setExistingWorkerGovtFile(e.target.files[0]);
+                          }
+                        }}
+                      />
+                      <label htmlFor="existing-govt-file-input" className="cursor-pointer text-xs font-semibold text-primary hover:underline">
+                        {existingWorkerGovtFile ? "Change Document File" : "Choose Document File"}
+                      </label>
+                    </div>
+                    {existingWorkerGovtFile ? (
+                      <p className="text-xs font-semibold text-emerald-600 flex items-center justify-center space-x-1">
+                        <Check className="h-3.5 w-3.5" /> <span>Selected: {existingWorkerGovtFile.name} ({(existingWorkerGovtFile.size / 1024).toFixed(0)} KB)</span>
+                      </p>
+                    ) : (
+                      <p className="text-[10px] text-muted-foreground">PDF, JPG, or PNG up to 10MB (Saved to protected documents bucket)</p>
+                    )}
                   </div>
                 </div>
 
                 <Button
                   type="button"
                   className="w-full font-semibold"
-                  onClick={() => setCurrentStepIndex(4)}
+                  onClick={() => validateCurrentStep(["govt_id_type", "govt_id_number"], trigger)}
                 >
                   Next: Bank Details <ArrowRight className="ml-2 h-4 w-4" />
                 </Button>
               </div>
             )}
 
-            {/* Step 4: Bank Details */}
-            {currentStepIndex === 4 && (
+            {/* Step 5: Bank Details */}
+            {currentStepIndex === 5 && (
               <div className="space-y-3">
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                   <div className="space-y-1">
-                    <label className="text-xs font-medium">Account Holder Name</label>
-                    <Input placeholder="As per bank record" {...register("bank_account_holder")} />
+                    <label className="text-xs font-medium">Account Holder Name *</label>
+                    <Input placeholder="As per bank passbook" {...register("bank_account_holder")} aria-invalid={!!errors.bank_account_holder} />
+                    {errors.bank_account_holder && <p className="text-xs text-destructive">{errors.bank_account_holder.message}</p>}
                   </div>
                   <div className="space-y-1">
-                    <label className="text-xs font-medium">Bank Name</label>
-                    <Input placeholder="State Bank of India" {...register("bank_name")} />
+                    <label className="text-xs font-medium">Bank Name *</label>
+                    <Select {...register("bank_name")}>
+                      {MAJOR_INDIAN_BANKS.map((b) => (
+                        <option key={b} value={b}>{b}</option>
+                      ))}
+                    </Select>
+                    {errors.bank_name && <p className="text-xs text-destructive">{errors.bank_name.message}</p>}
                   </div>
                 </div>
 
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                   <div className="space-y-1">
-                    <label className="text-xs font-medium">Account Number</label>
-                    <Input placeholder="9-18 digit account number" {...register("bank_account_number")} />
+                    <label className="text-xs font-medium">Bank Account Number (9–18 digits) *</label>
+                    <Input placeholder="9-18 digit account number" {...register("bank_account_number")} aria-invalid={!!errors.bank_account_number} />
+                    {errors.bank_account_number && <p className="text-xs text-destructive">{errors.bank_account_number.message}</p>}
                   </div>
                   <div className="space-y-1">
-                    <label className="text-xs font-medium">IFSC Code</label>
-                    <Input placeholder="SBIN0001234" {...register("bank_ifsc_code")} />
+                    <label className="text-xs font-medium">Confirm Bank Account Number *</label>
+                    <Input
+                      placeholder="Re-enter account number"
+                      value={confirmExistingBankAccountNumber}
+                      onChange={(e) => {
+                        setConfirmExistingBankAccountNumber(e.target.value);
+                        if (existingBankConfirmError) setExistingBankConfirmError(null);
+                      }}
+                    />
+                    {existingBankConfirmError && <p className="text-xs text-destructive">{existingBankConfirmError}</p>}
                   </div>
+                </div>
+
+                <div className="space-y-1">
+                  <label className="text-xs font-medium">IFSC Code (11 characters) *</label>
+                  <Input
+                    placeholder="e.g. SBIN0001234"
+                    {...register("bank_ifsc_code")}
+                    onChange={(e) => {
+                      setValue("bank_ifsc_code", e.target.value.toUpperCase());
+                    }}
+                    aria-invalid={!!errors.bank_ifsc_code}
+                  />
+                  {errors.bank_ifsc_code && <p className="text-xs text-destructive">{errors.bank_ifsc_code.message}</p>}
+                  <p className="text-[10px] text-muted-foreground">Format: 4 letters, 0, followed by 6 alphanumeric characters</p>
                 </div>
 
                 <Button
                   type="button"
                   className="w-full font-semibold"
-                  onClick={() => setCurrentStepIndex(5)}
+                  onClick={async () => {
+                    if (getValues("bank_account_number") !== confirmExistingBankAccountNumber) {
+                      setExistingBankConfirmError("Account numbers do not match");
+                      return;
+                    }
+                    validateCurrentStep(["bank_account_holder", "bank_name", "bank_account_number", "bank_ifsc_code"], trigger);
+                  }}
                 >
-                  Next: Review & Verification <ArrowRight className="ml-2 h-4 w-4" />
+                  Next: Review & Submit <ArrowRight className="ml-2 h-4 w-4" />
                 </Button>
               </div>
             )}
 
-            {/* Step 5: Review & Verification */}
-            {currentStepIndex === 5 && (
+            {/* Step 6: Review & Submit */}
+            {currentStepIndex === 6 && (
               <div className="space-y-4">
+                <Alert variant="info" className="py-2.5 text-left">
+                  <AlertTitle className="text-xs font-semibold">Existing Worker Request Summary</AlertTitle>
+                  <AlertDescription className="text-xs">
+                    Please review your details before submitting for federation verification. Sensitive information is masked.
+                  </AlertDescription>
+                </Alert>
+
                 <div className="bg-muted/40 p-4 rounded-xl space-y-2 text-xs border">
-                  <div><span className="font-semibold">Registered Phone:</span> {getValues("phone")}</div>
-                  <div><span className="font-semibold">Federation Code:</span> {getValues("federation_code")}</div>
-                  <div><span className="font-semibold">Worker UUID:</span> {getValues("existing_worker_id")}</div>
-                  <div><span className="font-semibold">Govt ID (Masked):</span> {getValues("govt_id_type")?.toUpperCase()} ({maskSensitiveValue(getValues("govt_id_number"))})</div>
-                  <div><span className="font-semibold">Bank Account (Masked):</span> {getValues("bank_name")} ({maskSensitiveValue(getValues("bank_account_number"))})</div>
+                  <div><span className="font-semibold text-muted-foreground">Name:</span> <span className="font-medium">{getValues("first_name")} {getValues("last_name")}</span></div>
+                  <div><span className="font-semibold text-muted-foreground">Contact:</span> <span className="font-medium">{getValues("email")} | {getValues("phone")}</span></div>
+                  <div><span className="font-semibold text-muted-foreground">Federation & Member ID:</span> <span className="font-medium text-primary">{selectedFed?.name} ({getValues("existing_worker_id")})</span></div>
+                  <div><span className="font-semibold text-muted-foreground">Address:</span> <span className="font-medium">{getValues("house_building")}, {getValues("street_area")}, {getValues("city")}, {getValues("state")} - {getValues("pincode")}</span></div>
+                  <div><span className="font-semibold text-muted-foreground">Govt ID (Masked):</span> <span className="font-medium">{getValues("govt_id_type")?.toUpperCase()} ({maskSensitiveValue(getValues("govt_id_number"))})</span></div>
+                  <div><span className="font-semibold text-muted-foreground">Bank Account (Masked):</span> <span className="font-medium">{getValues("bank_name")} ({maskSensitiveValue(getValues("bank_account_number"))}) - IFSC: {getValues("bank_ifsc_code")}</span></div>
                 </div>
-                <Button type="submit" className="w-full font-semibold" disabled={isSubmitting}>
-                  {isSubmitting ? <><Loader2 className="mr-2 h-4 w-4 animate-spin" /> Submitting Request...</> : "Submit Verification Request"}
-                </Button>
+
+                <div className="flex space-x-2">
+                  <Button type="button" variant="outline" className="w-1/3" onClick={() => setCurrentStepIndex(1)}>
+                    Edit
+                  </Button>
+                  <Button type="submit" className="w-2/3 font-semibold" disabled={isSubmitting}>
+                    {isSubmitting ? <><Loader2 className="mr-2 h-4 w-4 animate-spin" /> Submitting Request...</> : "Submit Verification Request"}
+                  </Button>
+                </div>
               </div>
             )}
 
-            {/* Step 6: Submission Outcome */}
-            {currentStepIndex === 6 && mockOutcome && (
+            {/* Step 7: Submission Outcome */}
+            {currentStepIndex === 7 && mockOutcome && (
               <div className="text-center space-y-4 py-2">
                 <div className="flex justify-center">
                   <div className="flex h-14 w-14 items-center justify-center rounded-full bg-amber-100 text-amber-600 dark:bg-amber-950">
@@ -1565,10 +1881,10 @@ export function RegisterView() {
                   )}
                 </div>
 
-                <Alert variant="warning" className="text-left py-3 max-w-md mx-auto">
-                  <AlertTitle className="text-xs font-semibold">Approval & Credential Notice</AlertTitle>
-                  <AlertDescription className="text-xs mt-1 font-medium text-amber-900 dark:text-amber-200">
-                    Your existing worker digital access request has been sent to your Federation Administrator. You will receive your active platform access credentials upon eligibility verification and approval.
+                <Alert variant="info" className="text-left py-3 max-w-md mx-auto">
+                  <AlertTitle className="text-xs font-semibold">Verification Notice</AlertTitle>
+                  <AlertDescription className="text-xs mt-1 font-medium text-blue-900 dark:text-blue-200">
+                    Your request has been submitted with your registered email <strong>{getValues("email")}</strong>. Once your cooperative administrator approves your membership record, you will be able to sign in directly.
                   </AlertDescription>
                 </Alert>
 
