@@ -4,6 +4,7 @@ export type WorkerPerformanceTier = "High" | "Medium" | "Low";
 
 export interface WorkerListItem {
   id: string;
+  memberId?: string | null;
   profileId: string;
   fullName: string;
   avatarUrl?: string | null;
@@ -54,6 +55,7 @@ export interface WorkerDocumentItem {
 export interface WorkerPersonalDetails {
   fullName: string;
   workerId: string;
+  avatarUrl?: string | null;
   dateOfBirth: string;
   gender: string;
   address: string;
@@ -97,6 +99,8 @@ export interface WorkerComplaintSummary {
 
 export interface WorkerFullDetails {
   id: string;
+  memberId?: string | null;
+  avatarUrl?: string | null;
   personal: WorkerPersonalDetails;
   professional: WorkerProfessionalDetails;
   certifications: WorkerCertificationItem[];

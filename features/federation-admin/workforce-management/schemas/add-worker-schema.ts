@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { validateWorkerAge } from "@/constants/banks";
 
 export const AUTHORIZED_PROFESSIONS = [
   "Electrician",
@@ -28,15 +29,10 @@ export const addWorkerSchema = z.object({
     .string()
     .min(1, "Date of birth is required")
     .refine((dob) => {
-      const birthDate = new Date(dob);
-      const today = new Date();
-      let age = today.getFullYear() - birthDate.getFullYear();
-      const m = today.getMonth() - birthDate.getMonth();
-      if (m < 0 || (m === 0 && today.getDate() < birthDate.getDate())) {
-        age--;
-      }
-      return age >= 18;
-    }, "Member must be at least 18 years of age to register"),
+      const res = validateWorkerAge(dob);
+      return res.isValid;
+    }, "Worker must be at least 18 years of age and not in the future"),
+  gender: z.enum(["male", "female", "other"]).default("male"),
   phone: z
     .string()
     .regex(
@@ -47,6 +43,18 @@ export const addWorkerSchema = z.object({
     .string()
     .email("Enter a valid email address")
     .max(100, "Email cannot exceed 100 characters"),
+  password: z
+    .string()
+    .min(8, "Worker sign-in password must be at least 8 characters"),
+  memberId: z
+    .string()
+    .max(50, "Member ID cannot exceed 50 characters")
+    .optional()
+    .or(z.literal("")),
+  avatarUrl: z
+    .string()
+    .optional()
+    .or(z.literal("")),
   address: z
     .string()
     .min(8, "Address must be at least 8 characters long")
@@ -90,3 +98,4 @@ export const addWorkerSchema = z.object({
 });
 
 export type AddWorkerFormData = z.infer<typeof addWorkerSchema>;
+

@@ -1,8 +1,8 @@
 import { z } from "zod";
+import { INDIAN_IFSC_REGEX, validateWorkerAge } from "@/constants/banks";
 
 const indianPhoneRegex = /^(?:\+91|0)?[6-9]\d{9}$/;
 const pincodeRegex = /^\d{6}$/;
-const ifscRegex = /^[A-Z]{4}0[A-Z0-9]{6}$/;
 const bankAccountRegex = /^\d{9,18}$/;
 
 export const newWorkerSchema = z
@@ -20,14 +20,12 @@ export const newWorkerSchema = z
     date_of_birth: z
       .string()
       .min(1, "Date of birth is required")
-      .refine((val) => !isNaN(Date.parse(val)), "Please enter a valid date")
       .refine((val) => {
-        const dob = new Date(val);
-        const ageDifMs = Date.now() - dob.getTime();
-        const ageDate = new Date(ageDifMs);
-        const age = Math.abs(ageDate.getUTCFullYear() - 1970);
-        return age >= 18;
-      }, "Worker must be at least 18 years of age"),
+        const { isValid } = validateWorkerAge(val);
+        return isValid;
+      }, {
+        message: "Worker must be at least 18 years of age and DOB cannot be in the future",
+      }),
     gender: z.enum(["male", "female", "other", "prefer_not_to_say"], {
       errorMap: () => ({ message: "Please select a valid gender" }),
     }),
@@ -108,11 +106,7 @@ export const newWorkerSchema = z
       .string()
       .min(1, "Government ID number is required")
       .trim(),
-    govt_id_document: z
-      .any()
-      .refine((file) => file !== null && file !== undefined && file !== "", {
-        message: "Government ID document is required",
-      }),
+    govt_id_document: z.any().optional(),
 
     // Payment Information
     bank_account_holder: z
@@ -133,7 +127,7 @@ export const newWorkerSchema = z
       .min(1, "Bank IFSC code is required")
       .trim()
       .toUpperCase()
-      .regex(ifscRegex, "Please enter a valid 11-character Indian IFSC code (e.g. SBIN0001234)"),
+      .regex(INDIAN_IFSC_REGEX, "Please enter a valid 11-character Indian IFSC code (e.g. SBIN0001234)"),
   })
   .refine((data) => data.password === data.confirm_password, {
     message: "Passwords do not match",

@@ -1,7 +1,7 @@
 "use client";
 
 import * as React from "react";
-import { Building2, MapPin, Mail, Phone, FileCheck, ShieldCheck, User, Calendar } from "lucide-react";
+import { Building2, MapPin, Mail, Phone, FileCheck, ShieldCheck, User, Calendar, XCircle } from "lucide-react";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { SocietyStatusBadge } from "./society-status-badge";
@@ -14,6 +14,17 @@ interface SocietyOverviewTabProps {
 export function SocietyOverviewTab({ society }: SocietyOverviewTabProps) {
   return (
     <div className="space-y-6">
+      {society.status === "REJECTED" && (
+        <div className="p-4 rounded-lg bg-rose-50 border border-rose-200 text-rose-900 dark:bg-rose-950/40 dark:border-rose-900/60 dark:text-rose-200 text-xs">
+          <p className="font-bold text-sm flex items-center gap-1.5 mb-1 text-rose-700">
+            <XCircle className="h-4 w-4" /> Application Rejected
+          </p>
+          <p className="leading-relaxed">
+            <strong>Rejection Reason:</strong> {society.rejectionReason || "Application was rejected during administrative verification."}
+          </p>
+        </div>
+      )}
+
       {/* Quick Summary Cards */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
         <Card className="border shadow-xs p-4">

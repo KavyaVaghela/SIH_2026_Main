@@ -10,6 +10,7 @@ import {
   TableRow,
   TableCell,
 } from "@/components/ui/table";
+import { Avatar } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Eye, Users, FolderOpen } from "lucide-react";
@@ -95,9 +96,12 @@ export function WorkerTable({
                 {/* 2. Name & Avatar */}
                 <TableCell>
                   <div className="flex items-center space-x-2.5">
-                    <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-emerald-100 dark:bg-emerald-950/70 text-emerald-800 dark:text-emerald-300 font-bold text-[11px]">
-                      {worker.fullName.charAt(0)}
-                    </div>
+                    <Avatar
+                      src={worker.avatarUrl || undefined}
+                      fallback={worker.fullName}
+                      size="sm"
+                      className="h-7 w-7 border border-border/80"
+                    />
                     <div className="flex flex-col min-w-0">
                       <span className="font-semibold text-foreground truncate group-hover:text-emerald-800 dark:group-hover:text-emerald-300 transition-colors">
                         {worker.fullName}

@@ -19,47 +19,101 @@ export function ProfileView() {
 
   React.useEffect(() => {
     const supabase = createClient();
-    supabase.auth.getUser().then(({ data: { user } }) => {
-      if (user?.id) {
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        (supabase.from("profiles") as any)
-          .select("full_name, phone, email, role")
-          .eq("id", user.id)
-          .maybeSingle()
-          .then(({ data: prof }: { data: { full_name?: string; phone?: string; email?: string; role?: string } | null }) => {
-            if (prof?.full_name && prof.role === "WORKER") {
-              const fullName = prof.full_name;
-              setProfile((prev) => ({
-                ...prev,
-                name: fullName,
-                phone: prof.phone || prev.phone,
-              }));
-            }
-          });
+    supabase.auth.getUser().then(async ({ data: { user } }) => {
+      if (!user?.id) return;
 
+      try {
+        // 1. Fetch Profile
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        (supabase.from("workers") as any)
-          .select("profession, hourly_rate, experience_years, federations(name, city, state)")
+        const { data: prof } = await (supabase.from("profiles") as any)
+          .select("full_name, phone, email, role, avatar_url")
+          .eq("id", user.id)
+          .maybeSingle();
+
+        // 2. Fetch Worker Record
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        const { data: wRec } = await (supabase.from("workers") as any)
+          .select(`
+            id,
+            member_id,
+            profession,
+            hourly_rate,
+            experience_years,
+            verification_status,
+            account_status,
+            availability_status,
+            date_of_birth,
+            gender,
+            registration_type,
+            federations (id, name, city, state, code)
+          `)
           .eq("profile_id", user.id)
-          .maybeSingle()
-          .then(({ data: wRec }: { data: any }) => {
-            if (wRec) {
-              setProfile((prev) => ({
-                ...prev,
-                trade: wRec.profession || "Plumber",
-                hourlyRate: Number(wRec.hourly_rate) || prev.hourlyRate,
-                experienceYears: wRec.experience_years || prev.experienceYears,
-                federationName: wRec.federations?.name || prev.federationName,
-                location: wRec.federations?.city ? `${wRec.federations.city}, ${wRec.federations.state}` : prev.location,
-              }));
-            }
-          });
+          .maybeSingle();
+
+        // 3. Fetch Residential Address
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        const { data: addr } = await (supabase.from("addresses") as any)
+          .select("address_line1, city, state, postal_code")
+          .eq("profile_id", user.id)
+          .order("is_default", { ascending: false })
+          .limit(1)
+          .maybeSingle();
+
+        // 4. Fetch Worker Skills
+        let fetchedSkills: string[] = [];
+        if (wRec?.id) {
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          const { data: wSkills } = await (supabase.from("worker_skills") as any)
+            .select("skills(name)")
+            .eq("worker_id", wRec.id);
+
+          if (wSkills && wSkills.length > 0) {
+            fetchedSkills = wSkills
+              // eslint-disable-next-line @typescript-eslint/no-explicit-any
+              .map((ws: any) => ws.skills?.name)
+              .filter(Boolean);
+          }
+        }
+
+        const addressText = addr
+          ? `${addr.address_line1}, ${addr.city}, ${addr.state} ${addr.postal_code ? `- ${addr.postal_code}` : ""}`
+          : undefined;
+
+        setProfile((prev) => ({
+          ...prev,
+          name: prof?.full_name || prev.name,
+          email: prof?.email || prev.email,
+          phone: prof?.phone || prev.phone,
+          avatarUrl: prof?.avatar_url || null,
+          memberId: wRec?.member_id || prev.cooperativeId,
+          cooperativeId: wRec?.member_id || prev.cooperativeId,
+          trade: wRec?.profession || prev.trade,
+          hourlyRate: Number(wRec?.hourly_rate) || prev.hourlyRate,
+          experienceYears: wRec?.experience_years ?? prev.experienceYears,
+          federationName: wRec?.federations?.name || prev.federationName,
+          location: wRec?.federations?.city
+            ? `${wRec.federations.city}, ${wRec.federations.state}`
+            : prev.location,
+          dateOfBirth: wRec?.date_of_birth || null,
+          gender: wRec?.gender || null,
+          registrationType: wRec?.registration_type || null,
+          accountStatus: wRec?.account_status || "ACTIVE",
+          verificationStatus: wRec?.verification_status || "verified",
+          address: addressText || prev.location,
+          skills: fetchedSkills.length > 0 ? fetchedSkills : prev.skills,
+        }));
+      } catch (err) {
+        console.warn("Notice: Worker profile Supabase query:", err);
       }
     });
   }, []);
 
   const handleProfileSuccess = (updated: Partial<WorkerProfileDetails>) => {
     setProfile((prev) => ({ ...prev, ...updated }));
+  };
+
+  const handleUpdateAvatar = (newUrl: string) => {
+    setProfile((prev) => ({ ...prev, avatarUrl: newUrl }));
   };
 
   return (
@@ -78,6 +132,7 @@ export function ProfileView() {
         profile={profile}
         onEditProfile={() => setIsEditProfileOpen(true)}
         onUpdateSkills={() => setIsUpdateSkillsOpen(true)}
+        onUpdateAvatar={handleUpdateAvatar}
       />
 
       {/* 2. Institutional Cooperative & Federation Affiliation */}
