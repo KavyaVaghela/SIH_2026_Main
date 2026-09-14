@@ -361,15 +361,33 @@ export function JobRequestsTab({
 
       {/* Empty State */}
       {!loading && !error && filteredRequests.length === 0 && (
-        <Card className="p-8 text-center text-muted-foreground space-y-2 border-dashed">
-          <p className="text-sm font-medium text-foreground">
+        <Card className="p-8 text-center text-muted-foreground space-y-3 border-dashed bg-muted/10">
+          <p className="text-sm font-semibold text-foreground">
             {searchQuery.trim() || filterOption !== "ALL"
               ? "No job requests matching your filters."
-              : "No new job requests right now."}
+              : "No requests yet"}
           </p>
-          <p className="text-xs text-muted-foreground max-w-md mx-auto">
-            New requests submitted by households in your cooperative territory will appear here automatically.
+          <p className="text-xs text-muted-foreground max-w-md mx-auto leading-relaxed">
+            Your profile and availability are active. New service requests will appear here when customers select you.
           </p>
+          <div className="pt-2 flex items-center justify-center gap-2">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => (window.location.href = "/worker/profile")}
+              className="text-xs"
+            >
+              Check Availability Status
+            </Button>
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => (window.location.href = "/worker/guidance?q=estimate")}
+              className="text-xs text-emerald-700 dark:text-emerald-400"
+            >
+              How to prepare estimates →
+            </Button>
+          </div>
         </Card>
       )}
 

@@ -51,9 +51,44 @@ export class ComplaintsService {
           const categoryKey = (c.category?.toUpperCase() || "OTHER") as ComplaintCategory;
           const status = (c.status?.toUpperCase() || "OPEN") as ComplaintStatus;
 
+          let descText = c.description || "";
+          let refNumber = c.complaint_number || `CMP-${c.id.slice(0, 8)}`;
+          let isEscalated = false;
+          let escalationReason: string | null = null;
+          let escalatedAt: string | null = null;
+          let escalatedBy: string | null = null;
+          let priority: "LOW" | "MEDIUM" | "HIGH" | "CRITICAL" = "MEDIUM";
+          let notes: ComplaintNote[] = [];
+
+          if (descText.startsWith("{") && descText.includes('"referenceNumber"')) {
+            try {
+              const parsed = JSON.parse(descText);
+              descText = parsed.description || descText;
+              if (parsed.referenceNumber) refNumber = parsed.referenceNumber;
+              if (parsed.priority) priority = parsed.priority;
+              if (parsed.escalation) {
+                isEscalated = true;
+                escalationReason = parsed.escalation.reason || null;
+                escalatedAt = parsed.escalation.escalatedAt || null;
+                escalatedBy = parsed.escalation.escalatedBy || null;
+              }
+              if (Array.isArray(parsed.internalNotes)) {
+                notes = parsed.internalNotes.map((n: any) => ({
+                  id: n.id,
+                  authorName: n.authorName || "Officer",
+                  authorRole: n.authorRole || "Officer",
+                  content: n.note,
+                  createdAt: n.timestamp ? new Date(n.timestamp).toLocaleDateString("en-IN") : "Recent",
+                }));
+              }
+            } catch {
+              // Ignore json parse error
+            }
+          }
+
           return {
             id: c.id,
-            complaintNumber: c.complaint_number || `CMP-${c.id.slice(0, 8)}`,
+            complaintNumber: refNumber,
             category: categoryKey,
             categoryLabel: CATEGORY_LABELS[categoryKey] || c.category || "General",
             customerName: c.profiles?.full_name || "Complainant",
@@ -79,17 +114,22 @@ export class ComplaintsService {
               minute: "2-digit",
             }),
             status,
-            isSafetyCritical: categoryKey === "SAFETY_ISSUE",
-            description: c.description || "",
+            priority,
+            isEscalated,
+            escalationReason,
+            escalatedAt,
+            escalatedBy,
+            isSafetyCritical: categoryKey === "SAFETY_ISSUE" || priority === "CRITICAL",
+            description: descText,
             assignedTo: null,
             resolutionNotes: c.resolution_notes || null,
             resolvedAt: c.resolved_at || null,
             resolvedBy: null,
-            notes: [],
+            notes,
           };
         });
 
-        if (mappedDb.length >= 3) {
+        if (mappedDb.length > 0) {
           records = mappedDb;
         }
       }
@@ -195,9 +235,44 @@ export class ComplaintsService {
         const categoryKey = (data.category?.toUpperCase() || "OTHER") as ComplaintCategory;
         const status = (data.status?.toUpperCase() || "OPEN") as ComplaintStatus;
 
+        let descText = data.description || "";
+        let refNumber = data.complaint_number || `CMP-${data.id.slice(0, 8)}`;
+        let isEscalated = false;
+        let escalationReason: string | null = null;
+        let escalatedAt: string | null = null;
+        let escalatedBy: string | null = null;
+        let priority: "LOW" | "MEDIUM" | "HIGH" | "CRITICAL" = "MEDIUM";
+        let notes: ComplaintNote[] = [];
+
+        if (descText.startsWith("{") && descText.includes('"referenceNumber"')) {
+          try {
+            const parsed = JSON.parse(descText);
+            descText = parsed.description || descText;
+            if (parsed.referenceNumber) refNumber = parsed.referenceNumber;
+            if (parsed.priority) priority = parsed.priority;
+            if (parsed.escalation) {
+              isEscalated = true;
+              escalationReason = parsed.escalation.reason || null;
+              escalatedAt = parsed.escalation.escalatedAt || null;
+              escalatedBy = parsed.escalation.escalatedBy || null;
+            }
+            if (Array.isArray(parsed.internalNotes)) {
+              notes = parsed.internalNotes.map((n: any) => ({
+                id: n.id,
+                authorName: n.authorName || "Officer",
+                authorRole: n.authorRole || "Officer",
+                content: n.note,
+                createdAt: n.timestamp ? new Date(n.timestamp).toLocaleDateString("en-IN") : "Recent",
+              }));
+            }
+          } catch {
+            // Ignore json parse error
+          }
+        }
+
         return {
           id: data.id,
-          complaintNumber: data.complaint_number || `CMP-${data.id.slice(0, 8)}`,
+          complaintNumber: refNumber,
           category: categoryKey,
           categoryLabel: CATEGORY_LABELS[categoryKey] || data.category || "General",
           customerName: data.profiles?.full_name || "Complainant",
@@ -223,13 +298,18 @@ export class ComplaintsService {
             minute: "2-digit",
           }),
           status,
-          isSafetyCritical: categoryKey === "SAFETY_ISSUE",
-          description: data.description || "",
+          priority,
+          isEscalated,
+          escalationReason,
+          escalatedAt,
+          escalatedBy,
+          isSafetyCritical: categoryKey === "SAFETY_ISSUE" || priority === "CRITICAL",
+          description: descText,
           assignedTo: null,
           resolutionNotes: data.resolution_notes || null,
           resolvedAt: data.resolved_at || null,
           resolvedBy: null,
-          notes: [],
+          notes,
         };
       }
     } catch {

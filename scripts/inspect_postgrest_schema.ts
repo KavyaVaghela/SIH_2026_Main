@@ -55,8 +55,8 @@ async function checkOpenApi() {
   if (spec.definitions?.booking_status_history) {
     console.log("\nbooking_status_history columns:", Object.keys(spec.definitions.booking_status_history.properties || {}));
   }
-  if (spec.definitions?.notifications) {
-    console.log("\nnotifications columns:", Object.keys(spec.definitions.notifications.properties || {}));
+  if (spec.definitions?.complaints) {
+    console.log("\ncomplaints columns and definitions:", JSON.stringify(spec.definitions.complaints, null, 2));
   }
 }
 

@@ -49,10 +49,10 @@ export function AppShell({
         onToggleMobileMenu={() => setMobileSidebarOpen(!mobileSidebarOpen)}
       />
 
-      <div className="flex-1 flex">
+      <div className="flex-1 flex min-w-0">
         <DesktopSidebar items={navItems} />
 
-        <main className={cn("flex-1 p-4 md:p-6 mb-16 md:mb-0 max-w-7xl w-full mx-auto", className)}>
+        <main className={cn("flex-1 min-w-0 p-4 md:p-6 lg:p-8 mb-16 md:mb-0 w-full max-w-[1500px] mx-auto", className)}>
           {children}
         </main>
       </div>

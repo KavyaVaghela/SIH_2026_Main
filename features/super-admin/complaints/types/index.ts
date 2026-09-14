@@ -40,6 +40,8 @@ export interface ComplaintListItem {
   createdAt: string;
   status: ComplaintStatus;
   isSafetyCritical?: boolean;
+  priority?: "LOW" | "MEDIUM" | "HIGH" | "CRITICAL";
+  isEscalated?: boolean;
 }
 
 export interface ComplaintDetails extends ComplaintListItem {
@@ -54,6 +56,9 @@ export interface ComplaintDetails extends ComplaintListItem {
   resolutionNotes: string | null;
   resolvedAt: string | null;
   resolvedBy: string | null;
+  escalationReason?: string | null;
+  escalatedAt?: string | null;
+  escalatedBy?: string | null;
   notes: ComplaintNote[];
 }
 
