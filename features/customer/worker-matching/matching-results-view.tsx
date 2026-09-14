@@ -7,55 +7,90 @@ import { RequestSummaryCard } from "./components/request-summary-card";
 import { MatchingExplanationBanner } from "./components/matching-explanation-banner";
 import { SortFilterBar, WorkerSortOption } from "./components/sort-filter-bar";
 import { WorkerCard } from "./components/worker-card";
-import { loadBookingDraft, saveBookingDraft, ServiceBookingDraft } from "@/features/customer/service-booking/types";
+import { loadBookingDraft, ServiceBookingDraft } from "@/features/customer/service-booking/types";
 import { matchingService, WorkerMatchResult } from "@/features/matching/services/matching-service";
-import { bookingService } from "@/features/bookings/services/booking-service";
+import { multiWorkerService } from "@/features/customer/services/multi-worker-service";
 import { Button } from "@/components/ui/button";
-import { AlertCircle, RefreshCw, ArrowLeft, CheckCircle2 } from "lucide-react";
+import { AlertCircle, RefreshCw, ArrowLeft, CheckCircle2, Users, Send } from "lucide-react";
 import { Card } from "@/components/ui/card";
+import { createClient } from "@/lib/supabase/client";
 
 export function MatchingResultsView() {
   const router = useRouter();
 
   const [draft, setDraft] = React.useState<ServiceBookingDraft | null>(null);
+  const [hasDraftLoaded, setHasDraftLoaded] = React.useState(false);
   const [matches, setMatches] = React.useState<WorkerMatchResult[]>([]);
   const [loading, setLoading] = React.useState(true);
   const [requestLoading, setRequestLoading] = React.useState(false);
   const [error, setError] = React.useState<string | null>(null);
   const [sortOption, setSortOption] = React.useState<WorkerSortOption>("best_match");
-  const [selectedWorkerId, setSelectedWorkerId] = React.useState<string | null>(null);
+  
+  // Phase 3 Multi-Worker Selection Set
+  const [selectedWorkerIds, setSelectedWorkerIds] = React.useState<Set<string>>(new Set());
 
-  // Load booking draft and trigger matching
+  const fetchMatches = React.useCallback(async (d: ServiceBookingDraft) => {
+    setLoading(true);
+    setError(null);
+    try {
+      const results = await matchingService.findEligibleWorkers({
+        categoryId: d.category?.id,
+        categoryName: d.category?.name,
+        serviceId: d.service?.id,
+        subServiceTitle: d.service?.title,
+        customerLatitude: 23.0300, // Satellite, Ahmedabad default
+        customerLongitude: 72.5178,
+        scheduledStartAt: d.preferredDate,
+        maxRadiusKm: 25,
+      });
+      setMatches(results);
+
+      // Pre-select top 3 best matching workers by default for convenience if available
+      if (results.length > 0) {
+        const topIds = results.slice(0, Math.min(3, results.length)).map((m) => m.worker.id);
+        setSelectedWorkerIds(new Set(topIds));
+      }
+    } catch (err) {
+      console.error("Failed to fetch worker matches", err);
+      setError("We couldn't load worker matches right now. Please try again.");
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  // 1. Initial Draft Loading
   React.useEffect(() => {
     const d = loadBookingDraft();
     setDraft(d);
+    setHasDraftLoaded(true);
 
-    if (d?.selectedWorkerId) {
-      setSelectedWorkerId(d.selectedWorkerId);
+    if (d && d.category && d.service) {
+      fetchMatches(d);
+    } else {
+      setLoading(false);
     }
+  }, [fetchMatches]);
 
-    const fetchMatches = async () => {
-      setLoading(true);
-      setError(null);
-      try {
-        const results = await matchingService.findEligibleWorkers({
-          categoryId: d?.category?.id || "cat-plumbing",
-          serviceId: d?.service?.id,
-          customerLatitude: 23.0300, // Satellite, Ahmedabad
-          customerLongitude: 72.5178,
-          maxRadiusKm: 15,
-        });
-        setMatches(results);
-      } catch (err) {
-        console.error("Failed to fetch worker matches", err);
-        setError("We couldn't load worker matches right now. Please try again.");
-      } finally {
-        setLoading(false);
-      }
+  // 2. Realtime listener for worker status & availability updates
+  React.useEffect(() => {
+    if (!draft || !draft.category || !draft.service) return;
+
+    const supabase = createClient();
+    const channel = supabase
+      .channel("matching_workers_realtime")
+      .on(
+        "postgres_changes",
+        { event: "*", schema: "public", table: "workers" },
+        () => {
+          fetchMatches(draft);
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
     };
-
-    fetchMatches();
-  }, []);
+  }, [draft, fetchMatches]);
 
   // Sorted Workers
   const sortedMatches = React.useMemo(() => {
@@ -79,38 +114,45 @@ export function MatchingResultsView() {
     router.push(`/customer/find-worker/${workerId}`);
   };
 
-  const handleRequestWorker = async (workerId: string) => {
-    setSelectedWorkerId(workerId);
-    if (draft) {
-      const updatedDraft = { ...draft, selectedWorkerId: workerId };
-      setDraft(updatedDraft);
-      saveBookingDraft(updatedDraft);
+  // Toggle selection for a worker
+  const handleToggleWorker = (workerId: string) => {
+    setSelectedWorkerIds((prev) => {
+      const next = new Set(prev);
+      if (next.has(workerId)) {
+        next.delete(workerId);
+      } else {
+        next.add(workerId);
+      }
+      return next;
+    });
+  };
+
+  const handleSelectAll = () => {
+    const allIds = matches.map((m) => m.worker.id);
+    setSelectedWorkerIds(new Set(allIds));
+  };
+
+  const handleDeselectAll = () => {
+    setSelectedWorkerIds(new Set());
+  };
+
+  // Phase 3 Multi-Worker Request Submission
+  const handleRequestSelectedWorkers = async () => {
+    if (selectedWorkerIds.size === 0) {
+      setError("Please select at least one worker to send your service request.");
+      return;
     }
 
-    // Create real booking request in bookingService
+    if (requestLoading) return; // Prevent double submission
     setRequestLoading(true);
+    setError(null);
+
     try {
-      const { createClient } = await import("@/lib/supabase/client");
       const supabase = createClient();
       const { data: { user } } = await supabase.auth.getUser();
       const customerId = (user?.id && user.id !== "70fbdb46-120f-459e-a616-67b4f676f5d0")
         ? user.id
         : "b0ef9604-54c8-4ad1-9a7a-c353cfd339ef";
-      const matched = matches.find((m) => m.worker.id === workerId);
-      const p = matched?.worker.extendedProfile;
-
-      // Resolve valid Address ID
-      let addressId = draft?.address?.id;
-      if (!addressId || addressId.startsWith("addr-")) {
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        const { data: addr } = await (supabase.from("addresses") as any)
-          .select("id")
-          .eq("profile_id", customerId)
-          .order("is_default", { ascending: false })
-          .limit(1)
-          .maybeSingle();
-        if (addr?.id) addressId = addr.id;
-      }
 
       // Resolve valid Service ID
       let serviceId = draft?.service?.id;
@@ -118,55 +160,31 @@ export function MatchingResultsView() {
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         const { data: srv } = await (supabase.from("services") as any)
           .select("id")
-          .ilike("title", "%Tap Repair%")
+          .ilike("title", `%${draft?.service?.title || "Tap Repair"}%`)
           .limit(1)
           .maybeSingle();
         if (srv?.id) serviceId = srv.id;
       }
 
-      // Resolve valid Federation ID
-      let federationId = matched?.worker.federationId;
-      if (!federationId || federationId.startsWith("fed-")) {
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        const { data: fed } = await (supabase.from("federations") as any)
-          .select("id")
-          .limit(1)
-          .maybeSingle();
-        if (fed?.id) federationId = fed.id;
-      }
+      const scheduledStartAt = draft?.preferredDate || new Date(Date.now() + 86400000).toISOString();
 
-      const scheduledStartAt = draft?.preferredDate || new Date().toISOString();
-      const scheduledEndAt = new Date(Date.now() + 3600000).toISOString();
-
-      const newBooking = await bookingService.createRequest({
+      const result = await multiWorkerService.createMultiWorkerRequest({
         customerId,
-        workerId,
         serviceId: serviceId || "a510e2c8-5ee9-4b01-abfc-a2a101ea729e",
-        federationId: federationId || "b765df3b-c418-4a15-b79f-3cbc09e475dc",
-        addressId: addressId || "3f50baf2-d986-4bec-88c2-dfa901d78a0b",
-        problemDescription: draft?.description || "Tap leakage fix required",
-        problemPhotoUrl: draft?.photoUrl || undefined,
-        scheduledStartAt,
-        scheduledEndAt,
-        totalAmount: draft?.estimate?.estimatedTotal || 350,
-        serviceTitle: draft?.service?.title || "Tap Repair & Leak Fix",
-        categoryName: draft?.category?.name || "Plumbing & Drainage",
-        workerName: p?.fullName || "Ravi Patel",
-        workerAvatarUrl: p?.avatarUrl || undefined,
-        workerPhone: p?.phone || "+91 98250 11021",
-        cooperativeName: p?.cooperativeName || "Ahmedabad Skilled Workers Federation",
-        addressText: draft?.address ? `${draft.address.addressLine1}, ${draft.address.city}` : "Satellite, Ahmedabad",
+        description: draft?.description || "Service requested by customer",
+        preferredSchedule: scheduledStartAt,
+        workerIds: Array.from(selectedWorkerIds),
       });
 
       if (typeof window !== "undefined") {
         sessionStorage.removeItem("kaushalyasetu_booking_draft");
       }
 
-      router.push(`/customer/bookings/${newBooking.id}`);
-    } catch (err) {
-      console.error("Failed to create booking request", err);
-      setError("Unable to send your request right now. Please try again.");
-    } finally {
+      // Navigate to dedicated Competing Estimates comparison view
+      router.push(`/customer/requests/${result.requestId}`);
+    } catch (err: any) {
+      console.error("Failed to create multi-worker request", err);
+      setError(err?.message || "Unable to send your request right now. Please try again.");
       setRequestLoading(false);
     }
   };
@@ -175,8 +193,48 @@ export function MatchingResultsView() {
     router.push("/customer/book");
   };
 
+  // Guard: If accessed without draft after initialization, display helpful empty state
+  if (hasDraftLoaded && (!draft || !draft.category || !draft.service)) {
+    return (
+      <div className="max-w-2xl mx-auto space-y-6 py-12 px-4">
+        <PageHeader
+          title="Find a Verified Worker"
+          description="We match verified cooperative workers based on your service requirements."
+          breadcrumbs={[
+            { label: "Customer Portal", href: "/customer" },
+            { label: "Service Booking", href: "/customer/book" },
+            { label: "Find Worker" },
+          ]}
+        />
+
+        <Card className="p-8 text-center bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl space-y-4 shadow-sm">
+          <div className="p-3 bg-amber-50 dark:bg-amber-950 text-amber-600 dark:text-amber-400 rounded-full w-12 h-12 mx-auto flex items-center justify-center border border-amber-200 dark:border-amber-800">
+            <AlertCircle className="w-6 h-6" />
+          </div>
+          <div className="space-y-1">
+            <h3 className="text-base font-bold text-slate-900 dark:text-slate-100">
+              Please create a service request first.
+            </h3>
+            <p className="text-xs text-slate-500 dark:text-slate-400 max-w-md mx-auto">
+              To find and match eligible cooperative workers, please select your trade category, specific service, and address first.
+            </p>
+          </div>
+
+          <div className="pt-2">
+            <Button
+              onClick={() => router.push("/customer/book")}
+              className="bg-emerald-700 hover:bg-emerald-800 text-white text-xs font-semibold px-5"
+            >
+              Create Service Request
+            </Button>
+          </div>
+        </Card>
+      </div>
+    );
+  }
+
   return (
-    <div className="max-w-5xl mx-auto space-y-6 pb-12">
+    <div className="max-w-5xl mx-auto space-y-6 pb-28">
       <PageHeader
         title="Find a Verified Cooperative Worker"
         description="We matched verified cooperative workers based on your service, location, and preferred time."
@@ -193,12 +251,45 @@ export function MatchingResultsView() {
       {/* 6-Tier Matching Explanation Banner */}
       <MatchingExplanationBanner />
 
-      {/* Sort & Filter Bar */}
-      <SortFilterBar
-        currentSort={sortOption}
-        onSortChange={setSortOption}
-        resultCount={sortedMatches.length}
-      />
+      {/* Sort & Filter Bar with Multi-select controls */}
+      <div className="space-y-3">
+        <SortFilterBar
+          currentSort={sortOption}
+          onSortChange={setSortOption}
+          resultCount={sortedMatches.length}
+        />
+
+        {sortedMatches.length > 0 && (
+          <div className="flex items-center justify-between px-1 text-xs text-slate-600 dark:text-slate-400">
+            <div className="flex items-center gap-2">
+              <span className="font-semibold text-slate-900 dark:text-slate-100">
+                Select workers to request competing estimates:
+              </span>
+              <span className="bg-emerald-100 dark:bg-emerald-900/60 text-emerald-800 dark:text-emerald-300 font-bold px-2 py-0.5 rounded-full text-[11px]">
+                {selectedWorkerIds.size} selected
+              </span>
+            </div>
+
+            <div className="flex items-center gap-2">
+              <button
+                type="button"
+                onClick={handleSelectAll}
+                className="text-emerald-700 dark:text-emerald-400 hover:underline font-medium"
+              >
+                Select All
+              </button>
+              <span>•</span>
+              <button
+                type="button"
+                onClick={handleDeselectAll}
+                className="text-slate-500 hover:underline font-medium"
+              >
+                Clear
+              </button>
+            </div>
+          </div>
+        )}
+      </div>
 
       {/* Loading State */}
       {loading && (
@@ -222,7 +313,9 @@ export function MatchingResultsView() {
           </p>
           <Button
             size="sm"
-            onClick={() => window.location.reload()}
+            onClick={() => {
+              if (draft) fetchMatches(draft);
+            }}
             className="text-xs bg-rose-700 hover:bg-rose-800 text-white"
           >
             Retry Matching
@@ -259,43 +352,69 @@ export function MatchingResultsView() {
         </Card>
       )}
 
-      {/* Matched Workers Grid */}
+      {/* Matched Workers Grid with Checkbox Selection */}
       {!loading && !error && sortedMatches.length > 0 && (
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           {sortedMatches.map((match) => (
             <WorkerCard
               key={match.worker.id}
               matchResult={match}
-              isSelected={selectedWorkerId === match.worker.id}
+              isSelected={selectedWorkerIds.has(match.worker.id)}
               onViewProfile={handleViewProfile}
-              onRequestWorker={handleRequestWorker}
+              onToggleSelect={handleToggleWorker}
             />
           ))}
         </div>
       )}
 
-      {/* Selected Worker Task 4 Request Banner */}
-      {selectedWorkerId && (
-        <Card className="bg-emerald-900 text-white p-5 rounded-xl shadow-md flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <CheckCircle2 className="w-6 h-6 text-emerald-400 shrink-0" />
-            <div>
-              <h4 className="font-bold text-sm">Worker Selected</h4>
-              <p className="text-xs text-emerald-200 mt-0.5">
-                Worker selection saved into booking draft. Ready to dispatch real booking request.
-              </p>
+      {/* Sticky Bottom Action Bar (Phase 3 Multi-Worker Request) */}
+      {!loading && sortedMatches.length > 0 && (
+        <div className="fixed bottom-0 left-0 right-0 z-40 bg-white/95 dark:bg-slate-900/95 backdrop-blur-md border-t border-slate-200 dark:border-slate-800 p-4 shadow-lg">
+          <div className="max-w-5xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-4">
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 rounded-full bg-emerald-100 dark:bg-emerald-950/80 text-emerald-700 dark:text-emerald-400 flex items-center justify-center shrink-0">
+                <Users className="w-5 h-5" />
+              </div>
+              <div>
+                <div className="flex items-center gap-2">
+                  <span className="font-bold text-sm text-slate-900 dark:text-slate-100">
+                    {selectedWorkerIds.size === 1
+                      ? "1 worker selected"
+                      : `${selectedWorkerIds.size} workers selected`}
+                  </span>
+                  {selectedWorkerIds.size > 0 && (
+                    <span className="flex items-center text-[11px] text-emerald-600 dark:text-emerald-400 font-semibold gap-0.5">
+                      <CheckCircle2 className="w-3.5 h-3.5" />
+                      Ready to request bids
+                    </span>
+                  )}
+                </div>
+                <p className="text-xs text-slate-500 dark:text-slate-400">
+                  Workers will receive your job details and submit itemized competitive estimates.
+                </p>
+              </div>
             </div>
-          </div>
 
-          <Button
-            size="sm"
-            disabled={requestLoading}
-            onClick={() => handleRequestWorker(selectedWorkerId)}
-            className="bg-white text-emerald-950 hover:bg-emerald-50 font-bold text-xs px-5 py-2"
-          >
-            {requestLoading ? "Sending Request..." : "Dispatch Service Request"}
-          </Button>
-        </Card>
+            <Button
+              size="lg"
+              disabled={requestLoading || selectedWorkerIds.size === 0}
+              onClick={handleRequestSelectedWorkers}
+              className="w-full sm:w-auto bg-emerald-700 hover:bg-emerald-800 text-white font-bold text-sm px-6 py-2.5 shadow-sm gap-2"
+            >
+              {requestLoading ? (
+                <>
+                  <RefreshCw className="w-4 h-4 animate-spin" />
+                  Sending Requests...
+                </>
+              ) : (
+                <>
+                  <Send className="w-4 h-4" />
+                  Request Selected Workers
+                </>
+              )}
+            </Button>
+          </div>
+        </div>
       )}
     </div>
   );

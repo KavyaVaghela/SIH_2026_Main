@@ -61,6 +61,12 @@ export const addWorkerSchema = z.object({
     .max(250, "Address cannot exceed 250 characters"),
   city: z.string().min(2, "City is required"),
   state: z.string().min(2, "State is required"),
+  pincode: z
+    .string()
+    .regex(/^\d{6}$/, "Enter a valid 6-digit Indian PIN code")
+    .optional()
+    .or(z.literal(""))
+    .default("380001"),
 
   // Professional Information
   profession: z.string().min(1, "Please select a trade profession"),

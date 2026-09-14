@@ -1,6 +1,7 @@
 "use client";
 
 import * as React from "react";
+import { createClient } from "@/lib/supabase/client";
 import { workforceManagementService } from "../services/workforce-management-service";
 import type {
   ManagedWorkerItem,
@@ -132,6 +133,66 @@ export function useWorkforceManagement() {
   React.useEffect(() => {
     fetchChangeRequests(changeRequestSearch, changeRequestStatusFilter);
   }, [changeRequestSearch, changeRequestStatusFilter, fetchChangeRequests]);
+
+  // Realtime Workforce Subscriptions (Task 1)
+  React.useEffect(() => {
+    const supabase = createClient();
+    let debounceTimer: NodeJS.Timeout | null = null;
+
+    const triggerRefresh = () => {
+      if (debounceTimer) clearTimeout(debounceTimer);
+      debounceTimer = setTimeout(() => {
+        fetchWorkers(searchQuery);
+        fetchApplications(applicationSearch, applicationStatusFilter);
+      }, 500);
+    };
+
+    // 1. Broadcast channel for instantaneous workforce updates
+    const broadcastChannel = supabase
+      .channel("federation-workforce")
+      .on("broadcast", { event: "workforce_updated" }, (payload) => {
+        console.log("Realtime: Received workforce_updated broadcast", payload);
+        triggerRefresh();
+      })
+      .on("broadcast", { event: "worker_registered" }, (payload) => {
+        console.log("Realtime: Received worker_registered broadcast", payload);
+        triggerRefresh();
+      })
+      .subscribe();
+
+    // 2. Database CDC changes on workers & notifications tables
+    const dbChannel = supabase
+      .channel("workforce-db-changes")
+      .on(
+        "postgres_changes",
+        {
+          event: "*",
+          schema: "public",
+          table: "workers",
+        },
+        () => {
+          triggerRefresh();
+        }
+      )
+      .on(
+        "postgres_changes",
+        {
+          event: "INSERT",
+          schema: "public",
+          table: "notifications",
+        },
+        () => {
+          triggerRefresh();
+        }
+      )
+      .subscribe();
+
+    return () => {
+      if (debounceTimer) clearTimeout(debounceTimer);
+      supabase.removeChannel(broadcastChannel);
+      supabase.removeChannel(dbChannel);
+    };
+  }, [searchQuery, applicationSearch, applicationStatusFilter, fetchWorkers, fetchApplications]);
 
   // Task 4 Operations
   const handleAddWorker = async (payload: AddWorkerPayload): Promise<boolean> => {

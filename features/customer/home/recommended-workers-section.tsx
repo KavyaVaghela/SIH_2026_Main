@@ -116,10 +116,16 @@ export function RecommendedWorkersSection({
                     </div>
                   </div>
 
-                  <Badge variant="outline" className="bg-amber-50 dark:bg-amber-950/40 text-amber-700 dark:text-amber-300 border-amber-200 dark:border-amber-800 text-[10px] gap-0.5 font-bold">
-                    <Star className="w-3 h-3 fill-amber-500 text-amber-500" />
-                    {p.rating.toFixed(1)}
-                  </Badge>
+                  {p.isNew || (p.reviewsCount ?? 0) === 0 ? (
+                    <Badge variant="outline" className="bg-emerald-50 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-300 border-emerald-200 dark:border-emerald-800 text-[10px] font-bold">
+                      New
+                    </Badge>
+                  ) : (
+                    <Badge variant="outline" className="bg-amber-50 dark:bg-amber-950/40 text-amber-700 dark:text-amber-300 border-amber-200 dark:border-amber-800 text-[10px] gap-0.5 font-bold">
+                      <Star className="w-3 h-3 fill-amber-500 text-amber-500" />
+                      {p.rating.toFixed(1)}
+                    </Badge>
+                  )}
                 </div>
               </CardHeader>
 

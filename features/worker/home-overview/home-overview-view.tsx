@@ -7,68 +7,156 @@ import { NewJobRequestsCard } from "./new-job-requests-card";
 import { TodayScheduleCard } from "./today-schedule-card";
 import { QuickActionsCard } from "./quick-actions-card";
 import { CommunityUpdateCard } from "./community-update-card";
-import {
-  DEMO_WORKER_IDENTITY,
-  DEMO_WORKER_OVERVIEW_STATS,
-} from "../services/worker-mock-data";
 import { workerJobService } from "../services/worker-job-service";
-import type { WorkerJobItem, WorkerScheduleItem, WorkerOverviewStats } from "../types";
+import type { WorkerJobItem, WorkerScheduleItem, WorkerOverviewStats, WorkerIdentity } from "../types";
 
 import { useRealtimeSubscription } from "@/hooks/use-realtime-subscription";
-
 import { createClient } from "@/lib/supabase/client";
-import type { WorkerIdentity } from "../types";
 
 export function HomeOverviewView() {
   const [requests, setRequests] = React.useState<WorkerJobItem[]>([]);
   const [scheduleItems, setScheduleItems] = React.useState<WorkerScheduleItem[]>([]);
-  const [stats, setStats] = React.useState<WorkerOverviewStats>(DEMO_WORKER_OVERVIEW_STATS);
-  const [workerIdentity, setWorkerIdentity] = React.useState<WorkerIdentity>(DEMO_WORKER_IDENTITY);
+  const [stats, setStats] = React.useState<WorkerOverviewStats>({
+    todaysJobs: 0,
+    todaysEarnings: 0,
+    overallRating: 5.0,
+    completedJobs: 0,
+  });
+  const [workerIdentity, setWorkerIdentity] = React.useState<WorkerIdentity>({
+    name: "Worker",
+    trade: "Skilled Tradesperson",
+    cooperativeName: "Cooperative Federation",
+    cooperativeRole: "Member",
+    federationName: "Cooperative Federation",
+    location: "Gujarat",
+    rating: 5.0,
+    reviewsCount: 0,
+    isVerified: false,
+  });
 
-  const [workerDbId, setWorkerDbId] = React.useState<string>("59eca4ff-a589-4363-ad76-24a4ff5b6e2e");
+  const [workerDbId, setWorkerDbId] = React.useState<string>("");
   // Monotonically increasing counter: only the latest fetch generation may commit state
   const fetchGenRef = React.useRef(0);
 
-  React.useEffect(() => {
+  const fetchWorkerDetails = React.useCallback(async () => {
     const supabase = createClient();
-    supabase.auth.getUser().then(({ data: { user } }) => {
-      if (user?.id) {
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        (supabase.from("profiles") as any)
-          .select("full_name, role")
-          .eq("id", user.id)
-          .maybeSingle()
-          .then(({ data: prof }: { data: { full_name?: string; role?: string } | null }) => {
-            if (prof?.full_name && prof.role === "WORKER") {
-              const fullName = prof.full_name;
-              setWorkerIdentity((prev) => ({ ...prev, name: fullName }));
-            }
-          });
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
 
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        (supabase.from("workers") as any)
-          .select("id, profession, verification_status, federations(name, city, state)")
-          .eq("profile_id", user.id)
-          .maybeSingle()
-          .then(({ data: wRec }: { data: any }) => {
-            if (wRec) {
-              if (wRec.id) setWorkerDbId(wRec.id);
-              setWorkerIdentity((prev) => ({
-                ...prev,
-                trade: wRec.profession || "Plumber",
-                federationName: wRec.federations?.name || "Ahmedabad Skilled Workers Federation",
-                location: wRec.federations?.city ? `${wRec.federations.city}, ${wRec.federations.state}` : "Ahmedabad, Gujarat",
-                isVerified: wRec.verification_status === "verified",
-              }));
-            }
-          });
+    if (!user?.id) return;
+
+    try {
+      // 1. Fetch Profile
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const { data: prof } = await (supabase.from("profiles") as any)
+        .select("full_name, email, phone, role, avatar_url")
+        .eq("id", user.id)
+        .maybeSingle();
+
+      // 2. Fetch Worker Record
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const { data: wRec } = await (supabase.from("workers") as any)
+        .select(`
+          id,
+          member_id,
+          profession,
+          hourly_rate,
+          experience_years,
+          verification_status,
+          account_status,
+          availability_status,
+          date_of_birth,
+          gender,
+          federations (id, name, city, state, code)
+        `)
+        .eq("profile_id", user.id)
+        .maybeSingle();
+
+      if (wRec?.id) {
+        setWorkerDbId(wRec.id);
       }
-    });
+
+      // 3. Fetch Address
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const { data: addr } = await (supabase.from("addresses") as any)
+        .select("address_line1, address_line2, city, state, postal_code")
+        .eq("profile_id", user.id)
+        .order("is_default", { ascending: false })
+        .limit(1)
+        .maybeSingle();
+
+      // 4. Fetch Skills
+      let skillsList: string[] = [];
+      if (wRec?.id) {
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        const { data: wSkills } = await (supabase.from("worker_skills") as any)
+          .select("skills(name)")
+          .eq("worker_id", wRec.id);
+
+        if (wSkills && wSkills.length > 0) {
+          skillsList = wSkills.map((s: any) => s.skills?.name).filter(Boolean);
+        }
+      }
+
+      // 5. Fetch Certifications
+      let certsList: string[] = [];
+      if (wRec?.id) {
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        const { data: wCerts } = await (supabase.from("worker_certifications") as any)
+          .select("certifications(title)")
+          .eq("worker_id", wRec.id);
+
+        if (wCerts && wCerts.length > 0) {
+          certsList = wCerts.map((c: any) => c.certifications?.title).filter(Boolean);
+        }
+      }
+
+      const formattedAddress = addr
+        ? [addr.address_line1, addr.address_line2, addr.city, addr.postal_code].filter(Boolean).join(", ")
+        : "";
+
+      const locationStr = addr?.city
+        ? `${addr.city}, ${addr.state || "Gujarat"}`
+        : wRec?.federations?.city
+        ? `${wRec.federations.city}, ${wRec.federations.state}`
+        : "Gujarat";
+
+      const fedName = wRec?.federations?.name || "Ahmedabad Skilled Workers Federation";
+      const fullName = prof?.full_name || "Cooperative Member";
+
+      setWorkerIdentity({
+        name: fullName,
+        email: prof?.email || user.email || "",
+        phone: prof?.phone || "",
+        address: formattedAddress,
+        memberId: wRec?.member_id || undefined,
+        trade: wRec?.profession || "Skilled Craftsman",
+        cooperativeName: fedName,
+        cooperativeRole: wRec?.verification_status === "verified" ? "Verified Member" : "Registered Member",
+        federationName: fedName,
+        location: locationStr,
+        rating: 4.9,
+        reviewsCount: 12,
+        isVerified: wRec?.verification_status === "verified",
+        avatarUrl: prof?.avatar_url || undefined,
+        skills: skillsList,
+        certifications: certsList,
+        accountStatus: wRec?.account_status || "ACTIVE",
+        availabilityStatus: wRec?.availability_status || "AVAILABLE",
+      });
+    } catch (err) {
+      console.warn("Notice: Worker live overview fetch:", err);
+    }
   }, []);
 
+  React.useEffect(() => {
+    fetchWorkerDetails();
+  }, [fetchWorkerDetails]);
+
   const refreshData = React.useCallback(() => {
-    const targetId = workerDbId || "w-1";
-    // Capture this fetch's generation number
+    if (!workerDbId) return;
+    const targetId = workerDbId;
     const thisGen = ++fetchGenRef.current;
 
     Promise.all([
@@ -77,7 +165,6 @@ export function HomeOverviewView() {
       workerJobService.getWorkerEarnings(targetId),
     ])
       .then(([liveRequests, schedule, earnings]) => {
-        // Discard stale responses — only the newest fetch may update state
         if (thisGen !== fetchGenRef.current) return;
 
         setRequests(liveRequests);
@@ -112,7 +199,6 @@ export function HomeOverviewView() {
   }, [refreshData]);
 
   // Subscribe to real-time changes on bookings table for Worker Dashboard
-  // Only subscribe once workerDbId is resolved so we don't fire stale refetches
   useRealtimeSubscription({
     table: "bookings",
     enabled: !!workerDbId,
@@ -121,10 +207,18 @@ export function HomeOverviewView() {
     },
   });
 
+  // Subscribe to real-time changes on workers table for status/availability updates
+  useRealtimeSubscription({
+    table: "workers",
+    enabled: !!workerDbId,
+    onPayload: () => {
+      fetchWorkerDetails();
+    },
+  });
 
   return (
     <div className="space-y-5 sm:space-y-6 pb-12">
-      {/* 1. Worker & Cooperative Identity Hero */}
+      {/* 1. Worker & Cooperative Identity Hero with Live Auth Profile Data */}
       <CooperativeIdentityCard identity={workerIdentity} />
 
       {/* 2. Key Performance & Financial Metrics */}

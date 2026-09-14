@@ -8,8 +8,7 @@ import {
   MapPin,
   Clock,
   Award,
-  ChevronRight,
-  UserCheck,
+  Check,
 } from "lucide-react";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -19,7 +18,8 @@ import { WorkerMatchResult } from "@/features/matching/services/matching-service
 export interface WorkerCardProps {
   matchResult: WorkerMatchResult;
   onViewProfile: (workerId: string) => void;
-  onRequestWorker: (workerId: string) => void;
+  onRequestWorker?: (workerId: string) => void;
+  onToggleSelect?: (workerId: string) => void;
   isSelected?: boolean;
 }
 
@@ -27,23 +27,51 @@ export function WorkerCard({
   matchResult,
   onViewProfile,
   onRequestWorker,
-  isSelected,
+  onToggleSelect,
+  isSelected = false,
 }: WorkerCardProps) {
   const { worker, matchScore, tierBreakdown } = matchResult;
   const p = worker.extendedProfile;
 
+  const handleSelectToggle = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    if (onToggleSelect) {
+      onToggleSelect(worker.id);
+    } else if (onRequestWorker) {
+      onRequestWorker(worker.id);
+    }
+  };
+
   return (
     <Card
-      className={`p-4 md:p-5 transition-all border rounded-xl flex flex-col justify-between space-y-4 ${
+      onClick={handleSelectToggle}
+      className={`p-4 md:p-5 transition-all border rounded-xl flex flex-col justify-between space-y-4 cursor-pointer relative ${
         isSelected
-          ? "bg-emerald-50/90 dark:bg-emerald-950/60 border-emerald-600 dark:border-emerald-500 shadow-md ring-2 ring-emerald-500/20"
+          ? "bg-emerald-50/90 dark:bg-emerald-950/60 border-emerald-600 dark:border-emerald-500 shadow-md ring-2 ring-emerald-500/30"
           : "bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-800 hover:border-emerald-400 dark:hover:border-emerald-600 hover:shadow-sm"
       }`}
     >
       <div className="space-y-3">
-        {/* Top Header: Avatar, Name, Cooperative Society & Match Score Pill */}
+        {/* Top Header: Selection Checkbox, Avatar, Name, Cooperative Society & Match Score */}
         <div className="flex items-start justify-between gap-3">
           <div className="flex items-start gap-3">
+            {/* Custom Multi-select Checkbox */}
+            <div className="pt-1 shrink-0" onClick={(e) => e.stopPropagation()}>
+              <button
+                type="button"
+                role="checkbox"
+                aria-checked={isSelected}
+                onClick={handleSelectToggle}
+                className={`w-5 h-5 rounded flex items-center justify-center border transition-colors ${
+                  isSelected
+                    ? "bg-emerald-700 border-emerald-700 text-white"
+                    : "bg-white dark:bg-slate-900 border-slate-300 dark:border-slate-700 hover:border-emerald-500"
+                }`}
+              >
+                {isSelected && <Check className="w-3.5 h-3.5 stroke-[3]" />}
+              </button>
+            </div>
+
             {/* Avatar with Status Indicator */}
             <div className="relative shrink-0">
               {p.avatarUrl ? (
@@ -70,11 +98,13 @@ export function WorkerCard({
                 <ShieldCheck className="w-4 h-4 text-emerald-600 shrink-0" />
               </div>
 
-              <p className="text-xs font-semibold text-emerald-700 dark:text-emerald-400">
-                {p.primarySkill}
-              </p>
+              <div className="flex items-center gap-1.5 flex-wrap pt-0.5">
+                <Badge variant="outline" className="bg-emerald-50 text-emerald-800 border-emerald-300 dark:bg-emerald-950 dark:text-emerald-300 text-[10px] font-semibold">
+                  {p.matchedSkillName || p.primarySkill}
+                </Badge>
+              </div>
 
-              <p className="text-[11px] text-slate-500 dark:text-slate-400 font-normal line-clamp-1">
+              <p className="text-[11px] text-slate-500 dark:text-slate-400 font-normal line-clamp-1 pt-0.5">
                 {p.cooperativeName}
               </p>
             </div>
@@ -92,11 +122,25 @@ export function WorkerCard({
         {/* Metrics Grid */}
         <div className="grid grid-cols-3 gap-2 bg-slate-50 dark:bg-slate-950 p-2.5 rounded-lg border border-slate-100 dark:border-slate-800 text-xs">
           <div className="flex items-center gap-1.5">
-            <Star className="w-3.5 h-3.5 text-amber-500 fill-amber-500 shrink-0" />
-            <div>
-              <span className="font-bold text-slate-900 dark:text-slate-100 block">{p.rating}</span>
-              <span className="text-[9px] text-slate-400 block font-normal">Rating</span>
-            </div>
+            {p.isNew || tierBreakdown.isNew || (p.reviewsCount ?? 0) === 0 ? (
+              <>
+                <Star className="w-3.5 h-3.5 text-slate-400 shrink-0" />
+                <div>
+                  <span className="font-bold text-emerald-600 dark:text-emerald-400 block">New</span>
+                  <span className="text-[9px] text-slate-400 block font-normal">0 reviews</span>
+                </div>
+              </>
+            ) : (
+              <>
+                <Star className="w-3.5 h-3.5 text-amber-500 fill-amber-500 shrink-0" />
+                <div>
+                  <span className="font-bold text-slate-900 dark:text-slate-100 block">{p.rating.toFixed(1)}</span>
+                  <span className="text-[9px] text-slate-400 block font-normal">
+                    {p.reviewsCount} {p.reviewsCount === 1 ? "review" : "reviews"}
+                  </span>
+                </div>
+              </>
+            )}
           </div>
 
           <div className="flex items-center gap-1.5">
@@ -137,7 +181,7 @@ export function WorkerCard({
       </div>
 
       {/* Action Buttons */}
-      <div className="pt-3 border-t border-slate-100 dark:border-slate-800 flex items-center gap-2">
+      <div className="pt-3 border-t border-slate-100 dark:border-slate-800 flex items-center gap-2" onClick={(e) => e.stopPropagation()}>
         <Button
           variant="outline"
           size="sm"
@@ -149,16 +193,15 @@ export function WorkerCard({
 
         <Button
           size="sm"
-          onClick={() => onRequestWorker(worker.id)}
-          className={`flex-1 text-xs font-semibold gap-1 ${
+          onClick={handleSelectToggle}
+          className={`flex-1 text-xs font-semibold gap-1.5 ${
             isSelected
               ? "bg-emerald-800 text-white hover:bg-emerald-900"
               : "bg-emerald-700 hover:bg-emerald-800 text-white"
           }`}
         >
-          {isSelected ? <UserCheck className="w-3.5 h-3.5" /> : null}
-          {isSelected ? "Worker Selected" : "Request Worker"}
-          {!isSelected && <ChevronRight className="w-3.5 h-3.5" />}
+          {isSelected ? <Check className="w-3.5 h-3.5 stroke-[3]" /> : null}
+          {isSelected ? "Selected" : "Select Worker"}
         </Button>
       </div>
     </Card>

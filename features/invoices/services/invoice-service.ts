@@ -46,11 +46,56 @@ export interface IInvoiceService {
 
 const LOCAL_STORAGE_INVOICES_KEY = "kaushalyasetu_invoices_db";
 
+async function getSupabase() {
+  if (typeof window === "undefined") {
+    try {
+      const { createAdminClient } = await import("@/lib/supabase/admin");
+      return createAdminClient();
+    } catch {
+      // ignore
+    }
+  }
+  const { createClient } = await import("@/lib/supabase/client");
+  return createClient();
+}
+
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+function mapDbInvoice(data: any): Invoice {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const items: InvoiceItem[] = (data.invoice_items || []).map((it: any) => ({
+    id: it.id,
+    invoiceId: it.invoice_id,
+    description: it.description,
+    quantity: Number(it.quantity),
+    unitPrice: Number(it.unit_price),
+    amount: Number(it.amount),
+    createdAt: it.created_at,
+  }));
+
+  return {
+    id: data.id,
+    invoiceNumber: data.invoice_number,
+    bookingId: data.booking_id,
+    customerId: data.customer_id,
+    federationId: data.federation_id,
+    subtotal: Number(data.subtotal),
+    platformFee: Number(data.platform_fee),
+    taxAmount: Number(data.tax_amount),
+    totalAmount: Number(data.total_amount),
+    status: data.status,
+    issueDate: data.issue_date,
+    dueDate: data.due_date,
+    paidAt: data.paid_at,
+    items,
+    createdAt: data.created_at,
+    updatedAt: data.updated_at,
+  };
+}
+
 export class InvoiceService implements IInvoiceService {
   private mockInvoices: Map<string, Invoice> = new Map();
 
   constructor() {}
-
 
   async createInvoice(payload: CreateInvoicePayload): Promise<Invoice> {
     const existing = Array.from(this.mockInvoices.values()).find((inv) => inv.bookingId === payload.bookingId);
@@ -58,7 +103,31 @@ export class InvoiceService implements IInvoiceService {
       return existing;
     }
 
-    // 1. Try server-side API endpoint with full admin privileges & RLS bypass
+    const isUuid = (str?: string | null) =>
+      Boolean(str && /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(str));
+
+    // Check existing in DB first
+    try {
+      const supabase = await getSupabase();
+      if (isUuid(payload.bookingId)) {
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        const { data: existingDb } = await (supabase.from("invoices") as any)
+          .select("*, invoice_items(*)")
+          .eq("booking_id", payload.bookingId)
+          .maybeSingle();
+
+        if (existingDb) {
+          const mapped = mapDbInvoice(existingDb);
+          this.mockInvoices.set(mapped.id, mapped);
+          this.mockInvoices.set(mapped.bookingId, mapped);
+          return mapped;
+        }
+      }
+    } catch (err) {
+      console.warn("Check existing invoice notice:", err);
+    }
+
+    // 1. Try server-side API endpoint with full admin privileges & RLS bypass in browser
     try {
       if (typeof window !== "undefined") {
         const res = await fetch("/api/invoices", {
@@ -86,27 +155,26 @@ export class InvoiceService implements IInvoiceService {
       id: `item-${Date.now()}-${index}`,
       invoiceId,
       description: item.description,
-      quantity: item.quantity,
-      unitPrice: item.unitPrice,
-      amount: Math.round(item.quantity * item.unitPrice * 100) / 100,
+      quantity: Number(item.quantity),
+      unitPrice: Number(item.unitPrice),
+      amount: Math.round(Number(item.quantity) * Number(item.unitPrice) * 100) / 100,
       createdAt: new Date().toISOString(),
     }));
 
     const subtotal = items.reduce((sum, item) => sum + item.amount, 0);
+    // Cooperative platform fee (5%) is an internal fee deducted from worker earnings
     const platformFee = Math.round(subtotal * 0.05 * 100) / 100;
-    const taxAmount = Math.round(subtotal * 0.18 * 100) / 100;
+    const taxAmount = 0;
     const discount = payload.discountAmount || 0;
-    const totalAmount = Math.max(0, subtotal + platformFee + taxAmount - discount);
+    // Final bill total strictly equals the itemized components (Labor + Materials = Final Bill)
+    const totalAmount = Math.max(0, Math.round((subtotal - discount) * 100) / 100);
 
     const issueDate = new Date().toISOString().split("T")[0];
     const dueDate = new Date(Date.now() + 7 * 86400000).toISOString().split("T")[0];
 
     let dbInvoice: Invoice | null = null;
     try {
-      const { createClient } = await import("@/lib/supabase/client");
-      const supabase = createClient();
-      const isUuid = (str?: string | null) =>
-        Boolean(str && /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(str));
+      const supabase = await getSupabase();
       const targetCustomerId = isUuid(payload.customerId) ? payload.customerId : "b0ef9604-54c8-4ad1-9a7a-c353cfd339ef";
       const targetFederationId = isUuid(payload.federationId) ? payload.federationId : "b765df3b-c418-4a15-b79f-3cbc09e475dc";
 
@@ -135,10 +203,10 @@ export class InvoiceService implements IInvoiceService {
           bookingId: data.booking_id || payload.bookingId,
           customerId: data.customer_id,
           federationId: data.federation_id,
-          subtotal: data.subtotal,
-          platformFee: data.platform_fee,
-          taxAmount: data.tax_amount,
-          totalAmount: data.total_amount,
+          subtotal: Number(data.subtotal),
+          platformFee: Number(data.platform_fee),
+          taxAmount: Number(data.tax_amount),
+          totalAmount: Number(data.total_amount),
           status: data.status,
           issueDate: data.issue_date,
           dueDate: data.due_date,
@@ -182,13 +250,13 @@ export class InvoiceService implements IInvoiceService {
     };
 
     this.mockInvoices.set(invoice.id, invoice);
+    this.mockInvoices.set(invoice.bookingId, invoice);
     return invoice;
   }
 
   async getInvoice(invoiceId: string): Promise<Invoice | null> {
     try {
-      const { createClient } = await import("@/lib/supabase/client");
-      const supabase = createClient();
+      const supabase = await getSupabase();
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const { data, error } = await (supabase.from("invoices") as any)
         .select("*, invoice_items(*)")
@@ -196,35 +264,7 @@ export class InvoiceService implements IInvoiceService {
         .maybeSingle();
 
       if (!error && data) {
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        const items: InvoiceItem[] = (data.invoice_items || []).map((it: any) => ({
-          id: it.id,
-          invoiceId: it.invoice_id,
-          description: it.description,
-          quantity: it.quantity,
-          unitPrice: it.unit_price,
-          amount: it.amount,
-          createdAt: it.created_at,
-        }));
-
-        const mapped: Invoice = {
-          id: data.id,
-          invoiceNumber: data.invoice_number,
-          bookingId: data.booking_id,
-          customerId: data.customer_id,
-          federationId: data.federation_id,
-          subtotal: data.subtotal,
-          platformFee: data.platform_fee,
-          taxAmount: data.tax_amount,
-          totalAmount: data.total_amount,
-          status: data.status,
-          issueDate: data.issue_date,
-          dueDate: data.due_date,
-          paidAt: data.paid_at,
-          items,
-          createdAt: data.created_at,
-          updatedAt: data.updated_at,
-        };
+        const mapped = mapDbInvoice(data);
         this.mockInvoices.set(invoiceId, mapped);
         return mapped;
       }
@@ -235,7 +275,7 @@ export class InvoiceService implements IInvoiceService {
   }
 
   async getBookingInvoice(bookingId: string): Promise<Invoice | null> {
-    // 1. Try server-side API endpoint (with admin client and auto-generation)
+    // 1. Try server-side API endpoint (with admin client and auto-generation in browser)
     try {
       if (typeof window !== "undefined") {
         const res = await fetch(`/api/invoices?bookingId=${encodeURIComponent(bookingId)}`);
@@ -254,8 +294,7 @@ export class InvoiceService implements IInvoiceService {
 
     // 2. Try direct Supabase query
     try {
-      const { createClient } = await import("@/lib/supabase/client");
-      const supabase = createClient();
+      const supabase = await getSupabase();
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const { data, error } = await (supabase.from("invoices") as any)
         .select("*, invoice_items(*)")
@@ -263,35 +302,7 @@ export class InvoiceService implements IInvoiceService {
         .maybeSingle();
 
       if (!error && data) {
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        const items: InvoiceItem[] = (data.invoice_items || []).map((it: any) => ({
-          id: it.id,
-          invoiceId: it.invoice_id,
-          description: it.description,
-          quantity: it.quantity,
-          unitPrice: it.unit_price,
-          amount: it.amount,
-          createdAt: it.created_at,
-        }));
-
-        const mapped: Invoice = {
-          id: data.id,
-          invoiceNumber: data.invoice_number,
-          bookingId: data.booking_id,
-          customerId: data.customer_id,
-          federationId: data.federation_id,
-          subtotal: data.subtotal,
-          platformFee: data.platform_fee,
-          taxAmount: data.tax_amount,
-          totalAmount: data.total_amount,
-          status: data.status,
-          issueDate: data.issue_date,
-          dueDate: data.due_date,
-          paidAt: data.paid_at,
-          items,
-          createdAt: data.created_at,
-          updatedAt: data.updated_at,
-        };
+        const mapped = mapDbInvoice(data);
         this.mockInvoices.set(mapped.id, mapped);
         this.mockInvoices.set(bookingId, mapped);
         return mapped;
@@ -302,51 +313,6 @@ export class InvoiceService implements IInvoiceService {
 
     const local = Array.from(this.mockInvoices.values()).find((inv) => inv.bookingId === bookingId);
     if (local) return local;
-
-    // 3. Resilient fallback: auto-synthesize from booking so customer is NEVER blocked
-    try {
-      const { bookingService } = await import("@/features/bookings/services/booking-service");
-      const b = await bookingService.getBooking(bookingId);
-      if (b && ["SERVICE_COMPLETED", "BILL_GENERATED", "PAYMENT_PENDING", "PAYMENT_RECEIVED", "BOOKING_COMPLETED"].includes(b.status)) {
-        const subtotal = Number(b.totalAmount) || 500;
-        const platformFee = Math.round(subtotal * 0.05 * 100) / 100;
-        const taxAmount = Math.round(subtotal * 0.18 * 100) / 100;
-        const totalAmount = Math.round((subtotal + platformFee + taxAmount) * 100) / 100;
-        const synthesized: Invoice = {
-          id: `inv-auto-${b.id.slice(-6)}`,
-          invoiceNumber: `INV-${Date.now().toString().slice(-6)}`,
-          bookingId: b.id,
-          customerId: b.customerId,
-          federationId: b.federationId,
-          subtotal,
-          platformFee,
-          taxAmount,
-          totalAmount,
-          status: b.status === "BOOKING_COMPLETED" || b.status === "PAYMENT_RECEIVED" ? "paid" : "issued",
-          issueDate: new Date().toISOString().split("T")[0],
-          dueDate: new Date(Date.now() + 7 * 86400000).toISOString().split("T")[0],
-          paidAt: b.status === "BOOKING_COMPLETED" ? new Date().toISOString() : null,
-          items: [
-            {
-              id: `item-auto-1`,
-              invoiceId: `inv-auto-${b.id.slice(-6)}`,
-              description: `Labor & Service Execution: ${b.serviceTitle || "Cooperative Trade Service"}`,
-              quantity: 1,
-              unitPrice: subtotal,
-              amount: subtotal,
-              createdAt: new Date().toISOString(),
-            },
-          ],
-          createdAt: new Date().toISOString(),
-          updatedAt: new Date().toISOString(),
-        };
-        this.mockInvoices.set(synthesized.id, synthesized);
-        this.mockInvoices.set(b.id, synthesized);
-        return synthesized;
-      }
-    } catch {
-      // Fall through
-    }
 
     return null;
   }
@@ -366,8 +332,7 @@ export class InvoiceService implements IInvoiceService {
     };
 
     try {
-      const { createClient } = await import("@/lib/supabase/client");
-      const supabase = createClient();
+      const supabase = await getSupabase();
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       await (supabase.from("invoices") as any)
         .update({

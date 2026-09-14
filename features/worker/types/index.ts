@@ -16,6 +16,14 @@ export interface WorkerIdentity {
   reviewsCount: number;
   isVerified: boolean;
   avatarUrl?: string;
+  email?: string;
+  phone?: string;
+  address?: string;
+  skills?: string[];
+  certifications?: string[];
+  accountStatus?: string;
+  availabilityStatus?: string;
+  memberId?: string;
 }
 
 export interface WorkerOverviewStats {
@@ -24,6 +32,16 @@ export interface WorkerOverviewStats {
   overallRating: number;
   completedJobs: number;
 }
+
+export type WorkerRequestStatus =
+  | BookingStatus
+  | "PENDING"
+  | "INTERESTED"
+  | "ESTIMATE_SUBMITTED"
+  | "SELECTED"
+  | "NOT_SELECTED"
+  | "DECLINED"
+  | "EXPIRED";
 
 export interface WorkerJobItem {
   id: string;
@@ -43,9 +61,10 @@ export interface WorkerJobItem {
   totalAmount: number; // Platform initial estimate
   estimatedPayout?: number; // Alias for backward compatibility
   workerEarnings: number;
-  status: BookingStatus;
+  status: WorkerRequestStatus;
   urgency: "EMERGENCY" | "STANDARD";
   cooperativeName: string;
+  isMultiWorkerRequest?: boolean;
   timeSlot?: string;
   description?: string;
   cooperativeSociety?: string;
@@ -101,6 +120,10 @@ export interface WorkerEstimateSubmissionPayload {
 export type JobRequestFilterOption =
   | "ALL"
   | "NEW"
+  | "ACTIVE"
+  | "ESTIMATES"
+  | "SELECTED"
+  | "DECLINED"
   | "REVIEWING"
   | "INTERESTED"
   | "TODAY"
@@ -219,9 +242,9 @@ export interface WorkerWelfareDetails {
 }
 
 /**
- * Human-readable mapping for canonical booking states
+ * Human-readable mapping for canonical booking and multi-worker request states
  */
-export const CANONICAL_STATUS_LABELS: Record<BookingStatus, string> = {
+export const CANONICAL_STATUS_LABELS: Record<WorkerRequestStatus, string> = {
   REQUEST_SENT: "Request Sent",
   WORKER_REVIEWING: "Under Review",
   WORKER_INTERESTED: "Interested",
@@ -238,4 +261,12 @@ export const CANONICAL_STATUS_LABELS: Record<BookingStatus, string> = {
   PAYMENT_RECEIVED: "Payment Received",
   BOOKING_COMPLETED: "Completed",
   CANCELLED: "Cancelled",
+  // Phase 3 multi-worker request statuses
+  PENDING: "Request Sent",
+  INTERESTED: "Interest Expressed",
+  ESTIMATE_SUBMITTED: "Estimate Submitted",
+  SELECTED: "Customer Selected",
+  NOT_SELECTED: "Not Selected",
+  DECLINED: "Declined",
+  EXPIRED: "Expired",
 };

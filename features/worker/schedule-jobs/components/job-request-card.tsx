@@ -113,43 +113,45 @@ export function JobRequestCard({ request }: JobRequestCardProps) {
       <CardFooter className="p-4 sm:p-5 border-t bg-muted/20 flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3">
         <div className="flex items-center space-x-2">
           <span className="text-xs text-muted-foreground">Request Status:</span>
-          {request.workerEstimateAmount ? (
+          {request.status === "ESTIMATE_SUBMITTED" || (request.workerEstimateAmount && request.status !== "SELECTED" && request.status !== "NOT_SELECTED" && request.status !== "DECLINED") ? (
             <Badge variant="outline" className="border-emerald-600/50 bg-emerald-50 dark:bg-emerald-950/40 text-emerald-800 dark:text-emerald-300 text-xs font-bold">
-              Estimate: {formatINR(request.workerEstimateAmount)}
+              Estimate: {formatINR(request.workerEstimateAmount || 0)}
+            </Badge>
+          ) : request.status === "SELECTED" || request.status === "BOOKING_CONFIRMED" ? (
+            <Badge variant="success" className="bg-emerald-800 text-white text-xs font-bold">
+              Won • Customer Selected
+            </Badge>
+          ) : request.status === "NOT_SELECTED" ? (
+            <Badge variant="secondary" className="text-xs font-bold text-muted-foreground">
+              Not Selected
+            </Badge>
+          ) : request.status === "DECLINED" ? (
+            <Badge variant="destructive" className="text-xs font-bold">
+              Declined
+            </Badge>
+          ) : request.status === "REQUEST_SENT" || request.status === "PENDING" ? (
+            <Badge variant="outline" className="border-emerald-600/40 text-emerald-800 dark:text-emerald-300 bg-emerald-50 dark:bg-emerald-950/40 text-xs font-bold">
+              New Request
+            </Badge>
+          ) : request.status === "WORKER_REVIEWING" ? (
+            <Badge variant="warning" className="text-xs font-bold">
+              Under Review
+            </Badge>
+          ) : request.status === "WORKER_INTERESTED" || request.status === "INTERESTED" || request.status === "CUSTOMER_CONFIRMATION_PENDING" ? (
+            <Badge variant="success" className="text-xs font-bold">
+              Interest Sent
             </Badge>
           ) : (
-            <>
-              {request.status === "REQUEST_SENT" && (
-                <Badge variant="outline" className="border-emerald-600/40 text-emerald-800 dark:text-emerald-300 bg-emerald-50 dark:bg-emerald-950/40 text-xs font-bold">
-                  New Request
-                </Badge>
-              )}
-              {request.status === "WORKER_REVIEWING" && (
-                <Badge variant="warning" className="text-xs font-bold">
-                  Under Review
-                </Badge>
-              )}
-              {(request.status === "WORKER_INTERESTED" || request.status === "CUSTOMER_CONFIRMATION_PENDING") && (
-                <Badge variant="success" className="text-xs font-bold">
-                  Interest Sent
-                </Badge>
-              )}
-              {request.status !== "REQUEST_SENT" &&
-                request.status !== "WORKER_REVIEWING" &&
-                request.status !== "WORKER_INTERESTED" &&
-                request.status !== "CUSTOMER_CONFIRMATION_PENDING" && (
-                  <Badge variant="secondary" className="text-xs font-bold">
-                    {request.status}
-                  </Badge>
-                )}
-            </>
+            <Badge variant="secondary" className="text-xs font-bold">
+              {request.status}
+            </Badge>
           )}
         </div>
 
         <Link href={`/worker/jobs/requests/${request.id}`} className="w-full sm:w-auto">
           <Button size="sm" className="w-full sm:w-auto bg-emerald-700 hover:bg-emerald-800 text-white font-semibold text-xs px-4">
-            {request.status === "REQUEST_SENT"
-              ? "Review Request"
+            {request.status === "REQUEST_SENT" || request.status === "PENDING"
+              ? "View Request"
               : request.workerEstimateAmount
               ? "View Estimate"
               : "View Request"}

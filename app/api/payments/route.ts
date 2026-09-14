@@ -80,26 +80,58 @@ export async function POST(request: NextRequest) {
         return NextResponse.json({ error: "paymentId is required for process action" }, { status: 400 });
       }
 
+      // Check existing payment status to protect against concurrent duplicates
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const { data: existingPay } = await (supabase.from("payments") as any)
+        .select("*")
+        .eq("id", targetPayId)
+        .maybeSingle();
+
+      if (!existingPay) {
+        return NextResponse.json({ error: "Payment record not found" }, { status: 404 });
+      }
+
+      if (existingPay.status === "PAID") {
+        return NextResponse.json({ payment: mapDbPayment(existingPay), message: "Payment already settled" });
+      }
+
       const paidAt = new Date().toISOString();
       const gatewayPaymentId = `pay_mock_${Date.now()}`;
       const newStatus = isSuccess ? "PAID" : "FAILED";
 
+      // Atomic update
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      const { data: updatedPay, error: updateErr } = await (supabase.from("payments") as any)
+      let query = (supabase.from("payments") as any)
         .update({
           status: newStatus,
-          gateway_payment_id: gatewayPaymentId,
+          gateway_payment_id: isSuccess ? gatewayPaymentId : null,
           paid_at: isSuccess ? paidAt : null,
         })
-        .eq("id", targetPayId)
-        .select()
-        .single();
+        .eq("id", targetPayId);
 
-      if (updateErr || !updatedPay) {
+      if (isSuccess) {
+        query = query.neq("status", "PAID");
+      }
+
+      const { data: updatedPay, error: updateErr } = await query.select().maybeSingle();
+
+      if (updateErr) {
         throw new Error("Failed to update payment: " + (updateErr?.message || "Unknown error"));
       }
 
-      if (isSuccess) {
+      if (!updatedPay && isSuccess) {
+        // Was already processed by another concurrent request
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        const { data: alreadyDone } = await (supabase.from("payments") as any)
+          .select("*")
+          .eq("id", targetPayId)
+          .maybeSingle();
+        if (alreadyDone) {
+          return NextResponse.json({ payment: mapDbPayment(alreadyDone) });
+        }
+      }
+
+      if (isSuccess && updatedPay) {
         // Mark invoice as paid
         if (updatedPay.invoice_id) {
           // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -108,33 +140,53 @@ export async function POST(request: NextRequest) {
             .eq("id", updatedPay.invoice_id);
         }
 
-        // Transition booking to BOOKING_COMPLETED
+        // Transition booking: PAYMENT_RECEIVED -> BOOKING_COMPLETED
         if (updatedPay.booking_id) {
           // eslint-disable-next-line @typescript-eslint/no-explicit-any
-          await (supabase.from("bookings") as any)
-            .update({
-              status: "BOOKING_COMPLETED",
-              updated_at: paidAt,
-            })
-            .eq("id", updatedPay.booking_id);
-
-          // Reset worker availability to AVAILABLE
-          // eslint-disable-next-line @typescript-eslint/no-explicit-any
           const { data: b } = await (supabase.from("bookings") as any)
-            .select("worker_id")
+            .select("status, worker_id")
             .eq("id", updatedPay.booking_id)
             .maybeSingle();
 
-          if (b?.worker_id) {
+          if (b && b.status !== "BOOKING_COMPLETED") {
+            // Log PAYMENT_RECEIVED
             // eslint-disable-next-line @typescript-eslint/no-explicit-any
-            await (supabase.from("workers") as any)
-              .update({ availability_status: "AVAILABLE", updated_at: paidAt })
-              .eq("id", b.worker_id);
+            await (supabase.from("booking_status_history") as any).insert({
+              booking_id: updatedPay.booking_id,
+              previous_status: b.status,
+              new_status: "PAYMENT_RECEIVED",
+              notes: "Payment confirmed via payment gateway",
+            });
+
+            // Log BOOKING_COMPLETED
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            await (supabase.from("booking_status_history") as any).insert({
+              booking_id: updatedPay.booking_id,
+              previous_status: "PAYMENT_RECEIVED",
+              new_status: "BOOKING_COMPLETED",
+              notes: "Service completed and settled",
+            });
+
+            // Update booking to BOOKING_COMPLETED
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            await (supabase.from("bookings") as any)
+              .update({
+                status: "BOOKING_COMPLETED",
+                updated_at: paidAt,
+              })
+              .eq("id", updatedPay.booking_id);
+
+            if (b.worker_id) {
+              // eslint-disable-next-line @typescript-eslint/no-explicit-any
+              await (supabase.from("workers") as any)
+                .update({ availability_status: "AVAILABLE", updated_at: paidAt })
+                .eq("id", b.worker_id);
+            }
           }
         }
       }
 
-      return NextResponse.json({ payment: mapDbPayment(updatedPay) });
+      return NextResponse.json({ payment: mapDbPayment(updatedPay || existingPay) });
     }
 
     return NextResponse.json({ error: "Invalid action" }, { status: 400 });
