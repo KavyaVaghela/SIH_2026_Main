@@ -2,6 +2,8 @@
 
 import * as React from "react";
 import { workforceManagementService } from "../services/workforce-management-service";
+import { createClient } from "@/lib/supabase/client";
+import { useRealtimeSubscription } from "@/hooks/use-realtime-subscription";
 import type {
   ManagedWorkerItem,
   AddWorkerPayload,
@@ -132,6 +134,38 @@ export function useWorkforceManagement() {
   React.useEffect(() => {
     fetchChangeRequests(changeRequestSearch, changeRequestStatusFilter);
   }, [changeRequestSearch, changeRequestStatusFilter, fetchChangeRequests]);
+
+  // Realtime subscription: Postgres changes on table "workers"
+  useRealtimeSubscription({
+    table: "workers",
+    onPayload: (payload) => {
+      fetchWorkers(searchQuery);
+      fetchApplications(applicationSearch, applicationStatusFilter);
+      if (payload?.eventType === "INSERT") {
+        addToast(
+          "New Worker Application Received",
+          "A new worker registration has been submitted and is ready for federation review.",
+          "info"
+        );
+      }
+    },
+  });
+
+  // Realtime subscription: Broadcast channel for instant cross-tab/client federation events
+  React.useEffect(() => {
+    const supabase = createClient();
+    const channel = supabase.channel("federation-workforce-updates");
+    channel
+      .on("broadcast", { event: "*" }, () => {
+        fetchWorkers(searchQuery);
+        fetchApplications(applicationSearch, applicationStatusFilter);
+      })
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [fetchWorkers, fetchApplications, searchQuery, applicationSearch, applicationStatusFilter]);
 
   // Task 4 Operations
   const handleAddWorker = async (payload: AddWorkerPayload): Promise<boolean> => {

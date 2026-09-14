@@ -39,11 +39,11 @@ export function MatchingResultsView() {
       setError(null);
       try {
         const results = await matchingService.findEligibleWorkers({
-          categoryId: d?.category?.id || "cat-plumbing",
+          categoryId: d?.category?.id,
           serviceId: d?.service?.id,
           customerLatitude: 23.0300, // Satellite, Ahmedabad
           customerLongitude: 72.5178,
-          maxRadiusKm: 15,
+          maxRadiusKm: 25,
         });
         setMatches(results);
       } catch (err) {

@@ -142,6 +142,8 @@ export interface WorkerProfileDetails {
   experienceYears: number;
   cooperativeName: string;
   cooperativeId: string;
+  cooperativeRole?: string;
+  joiningDate?: string;
   federationName: string;
   location: string;
   phone: string;
@@ -164,6 +166,10 @@ export interface WorkerProfileDetails {
   address?: string | null;
   accountStatus?: string;
   verificationStatus?: string;
+  isVerified?: boolean;
+  certifications?: string[];
+  documents?: unknown[];
+  idProofNumber?: string;
 }
 
 export interface WorkerEarningsSummary {
