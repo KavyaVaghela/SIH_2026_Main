@@ -1,7 +1,7 @@
 "use client";
 
 import * as React from "react";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import {
   ArrowLeft,
   User,
@@ -49,10 +49,16 @@ export function WorkerEstimateFormView({ requestId }: WorkerEstimateFormViewProp
   const [step, setStep] = React.useState<"FORM" | "PREVIEW" | "SUBMITTED">("FORM");
   const [isSubmitting, setIsSubmitting] = React.useState(false);
   const [validationError, setValidationError] = React.useState<string | null>(null);
-  const [workerDbId, setWorkerDbId] = React.useState<string>("w-1");
+  const searchParams = useSearchParams();
+  const queryWorkerId = searchParams.get("workerId") || "";
+  const [workerDbId, setWorkerDbId] = React.useState<string>(queryWorkerId);
 
-  // Resolve real worker UUID from authenticated session on mount
+  // Resolve real worker UUID from query params or authenticated session on mount
   React.useEffect(() => {
+    if (queryWorkerId) {
+      setWorkerDbId(queryWorkerId);
+      return;
+    }
     import("@/lib/supabase/client").then(({ createClient }) => {
       const supabase = createClient();
       supabase.auth.getUser().then(({ data: { user } }) => {
@@ -68,7 +74,7 @@ export function WorkerEstimateFormView({ requestId }: WorkerEstimateFormViewProp
         }
       });
     });
-  }, []);
+  }, [queryWorkerId]);
 
 
   React.useEffect(() => {
@@ -76,7 +82,7 @@ export function WorkerEstimateFormView({ requestId }: WorkerEstimateFormViewProp
       setLoading(true);
       setError(null);
       try {
-        const data = await workerJobService.getJobDetails(requestId);
+        const data = await workerJobService.getJobDetails(requestId, workerDbId || queryWorkerId || undefined);
         if (data) {
           setJob(data);
           // If existing estimate, initialize fields
@@ -142,10 +148,17 @@ export function WorkerEstimateFormView({ requestId }: WorkerEstimateFormViewProp
     setIsSubmitting(true);
     setValidationError(null);
 
+    const effectiveWorkerId = workerDbId || queryWorkerId;
+    if (!effectiveWorkerId) {
+      setValidationError("Unable to identify active worker profile. Please refresh or navigate from your job request card.");
+      setIsSubmitting(false);
+      return;
+    }
+
     try {
       const updated = await workerJobService.submitWorkerEstimate({
         bookingId: job.id,
-        workerId: workerDbId,
+        workerId: effectiveWorkerId,
         laborAmount: numLabor,
         materialAmount: numMaterials,
         additionalCharges: numAdditional,

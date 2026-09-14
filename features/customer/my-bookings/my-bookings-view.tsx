@@ -24,15 +24,17 @@ import {
   CheckCircle2,
 } from "lucide-react";
 import { bookingService, Booking } from "@/features/bookings/services/booking-service";
+import { multiWorkerService, CustomerServiceRequestItem } from "@/features/customer/services/multi-worker-service";
 import { BookingStatus } from "@/supabase/types/database.types";
 import { useRealtimeSubscription } from "@/hooks/use-realtime-subscription";
 
-type BookingFilterTab = "ALL" | "UPCOMING" | "ACTIVE" | "COMPLETED" | "CANCELLED";
+type BookingFilterTab = "ALL" | "REQUESTS" | "UPCOMING" | "ACTIVE" | "COMPLETED" | "CANCELLED";
 
 export function MyBookingsView() {
   const router = useRouter();
 
   const [bookings, setBookings] = React.useState<Booking[]>([]);
+  const [serviceRequests, setServiceRequests] = React.useState<CustomerServiceRequestItem[]>([]);
   const [loading, setLoading] = React.useState<boolean>(true);
   const [activeTab, setActiveTab] = React.useState<BookingFilterTab>("ALL");
   const [searchQuery, setSearchQuery] = React.useState<string>("");
@@ -48,8 +50,13 @@ export function MyBookingsView() {
       const customerId = (user?.id && user.id !== "70fbdb46-120f-459e-a616-67b4f676f5d0")
         ? user.id
         : "b0ef9604-54c8-4ad1-9a7a-c353cfd339ef";
-      const list = await bookingService.getCustomerBookings(customerId);
+      
+      const [list, reqs] = await Promise.all([
+        bookingService.getCustomerBookings(customerId),
+        multiWorkerService.getCustomerServiceRequests(customerId),
+      ]);
       setBookings(list);
+      setServiceRequests(reqs);
     } catch (err) {
       console.error("Failed to fetch customer bookings", err);
     } finally {
@@ -66,6 +73,22 @@ export function MyBookingsView() {
   // Realtime subscription for customer's bookings
   useRealtimeSubscription({
     table: "bookings",
+    onPayload: () => {
+      fetchCustomerBookings(true);
+    },
+  });
+
+  // Realtime subscription for customer's multi-worker job requests
+  useRealtimeSubscription({
+    table: "job_requests",
+    onPayload: () => {
+      fetchCustomerBookings(true);
+    },
+  });
+
+  // Realtime subscription for worker estimates updates
+  useRealtimeSubscription({
+    table: "worker_estimates",
     onPayload: () => {
       fetchCustomerBookings(true);
     },
@@ -147,14 +170,21 @@ export function MyBookingsView() {
       <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3 bg-white dark:bg-slate-900 p-3 rounded-xl border border-slate-200 dark:border-slate-800 shadow-sm">
         {/* Category Tabs */}
         <div className="flex items-center gap-1 overflow-x-auto pb-1 sm:pb-0 scrollbar-none">
-          {(["ALL", "UPCOMING", "ACTIVE", "COMPLETED", "CANCELLED"] as BookingFilterTab[]).map((tab) => {
-            const count = bookings.filter((b) => {
-              if (tab === "UPCOMING") return isUpcoming(b.status);
-              if (tab === "ACTIVE") return isActive(b.status);
-              if (tab === "COMPLETED") return isCompleted(b.status);
-              if (tab === "CANCELLED") return b.status === "CANCELLED";
-              return true;
-            }).length;
+          {(["ALL", "REQUESTS", "UPCOMING", "ACTIVE", "COMPLETED", "CANCELLED"] as BookingFilterTab[]).map((tab) => {
+            let count = 0;
+            if (tab === "REQUESTS") {
+              count = serviceRequests.length;
+            } else {
+              count = bookings.filter((b) => {
+                if (tab === "UPCOMING") return isUpcoming(b.status);
+                if (tab === "ACTIVE") return isActive(b.status);
+                if (tab === "COMPLETED") return isCompleted(b.status);
+                if (tab === "CANCELLED") return b.status === "CANCELLED";
+                return true;
+              }).length;
+            }
+
+            const label = tab === "REQUESTS" ? "Requests & Bids" : tab.charAt(0) + tab.slice(1).toLowerCase();
 
             return (
               <button
@@ -166,7 +196,7 @@ export function MyBookingsView() {
                     : "text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800"
                 }`}
               >
-                <span>{tab.charAt(0) + tab.slice(1).toLowerCase()}</span>
+                <span>{label}</span>
                 <span
                   className={`text-[10px] px-1.5 py-0.2 rounded-full font-mono ${
                     activeTab === tab ? "bg-emerald-900 text-white" : "bg-slate-200 dark:bg-slate-800 text-slate-600 dark:text-slate-300"
@@ -196,8 +226,153 @@ export function MyBookingsView() {
       {loading ? (
         <Card className="p-8 text-center bg-white dark:bg-slate-900 border border-slate-200 space-y-2">
           <RefreshCw className="w-6 h-6 text-emerald-600 animate-spin mx-auto" />
-          <p className="text-xs text-slate-500 font-medium">Loading your service bookings...</p>
+          <p className="text-xs text-slate-500 font-medium">Loading your service bookings & requests...</p>
         </Card>
+      ) : activeTab === "REQUESTS" ? (
+        /* Requests & Bids View */
+        (() => {
+          const filteredRequests = serviceRequests.filter((r) => {
+            if (!searchQuery.trim()) return true;
+            const q = searchQuery.toLowerCase();
+            return (
+              r.requestNumber.toLowerCase().includes(q) ||
+              r.serviceTitle.toLowerCase().includes(q) ||
+              r.description.toLowerCase().includes(q)
+            );
+          });
+
+          if (filteredRequests.length === 0) {
+            return (
+              <Card className="p-10 text-center bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl space-y-4">
+                <div className="w-12 h-12 rounded-full bg-emerald-50 dark:bg-emerald-950 flex items-center justify-center mx-auto text-emerald-600">
+                  <Calendar className="w-6 h-6 text-emerald-600" />
+                </div>
+                <div className="space-y-1">
+                  <h3 className="text-sm font-bold text-slate-900 dark:text-slate-100">
+                    No multi-worker requests found
+                  </h3>
+                  <p className="text-xs text-slate-500 max-w-sm mx-auto">
+                    {searchQuery
+                      ? `No requests match "${searchQuery}".`
+                      : "When you request estimates from multiple trade workers, your requests and competing quotes will appear here."}
+                  </p>
+                </div>
+                <Button
+                  size="sm"
+                  onClick={() => router.push("/customer/book")}
+                  className="bg-emerald-700 hover:bg-emerald-800 text-white font-bold text-xs px-5 py-2"
+                >
+                  Request Worker Estimates
+                </Button>
+              </Card>
+            );
+          }
+
+          return (
+            <div className="space-y-3.5">
+              {filteredRequests.map((req) => {
+                const isConfirmed = req.status === "CONFIRMED";
+
+                return (
+                  <Card
+                    key={req.id}
+                    className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-sm hover:shadow-md transition-shadow rounded-xl p-4 space-y-3"
+                  >
+                    <div className="flex flex-wrap items-start justify-between gap-3 border-b border-slate-100 dark:border-slate-800 pb-3">
+                      <div className="space-y-0.5">
+                        <span className="text-[10px] text-slate-400 font-mono font-bold block uppercase">
+                          REQ: {req.requestNumber}
+                        </span>
+                        <h3 className="font-bold text-sm text-slate-900 dark:text-slate-100 flex items-center gap-2">
+                          {req.serviceTitle}
+                          <span className="text-[11px] font-normal text-slate-500">
+                            • {req.categoryName}
+                          </span>
+                        </h3>
+                      </div>
+
+                      <div className="flex items-center gap-2">
+                        {isConfirmed ? (
+                          <Badge className="bg-emerald-100 text-emerald-800 border-emerald-300 dark:bg-emerald-950 dark:text-emerald-300 text-[11px] font-bold py-0.5">
+                            Worker Confirmed
+                          </Badge>
+                        ) : req.submittedEstimatesCount > 0 ? (
+                          <Badge className="bg-blue-100 text-blue-800 border-blue-300 dark:bg-blue-950 dark:text-blue-300 text-[11px] font-bold py-0.5">
+                            {req.submittedEstimatesCount} Estimate{req.submittedEstimatesCount > 1 ? "s" : ""} Received
+                          </Badge>
+                        ) : (
+                          <Badge className="bg-amber-100 text-amber-800 border-amber-300 dark:bg-amber-950 dark:text-amber-300 text-[11px] font-bold py-0.5">
+                            Waiting for Worker Bids
+                          </Badge>
+                        )}
+                      </div>
+                    </div>
+
+                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 text-xs">
+                      <div className="space-y-0.5">
+                        <span className="text-[10px] text-slate-400 font-bold uppercase block flex items-center gap-1">
+                          <User className="w-3 h-3 text-emerald-600" /> Invited Workers
+                        </span>
+                        <p className="font-bold text-slate-900 dark:text-slate-100">
+                          {req.requestedWorkersCount} Workers Requested
+                        </p>
+                        <p className="text-[11px] text-slate-500">
+                          {req.submittedEstimatesCount} submitted estimates
+                        </p>
+                      </div>
+
+                      <div className="space-y-0.5">
+                        <span className="text-[10px] text-slate-400 font-bold uppercase block flex items-center gap-1">
+                          <Calendar className="w-3 h-3 text-emerald-600" /> Preferred Date
+                        </span>
+                        <p className="font-bold text-slate-900 dark:text-slate-100">
+                          {req.preferredSchedule.split("T")[0]}
+                        </p>
+                        <p className="text-[11px] text-slate-500 line-clamp-1">
+                          {req.description}
+                        </p>
+                      </div>
+
+                      <div className="space-y-0.5 sm:text-right">
+                        <span className="text-[10px] text-slate-400 font-bold uppercase block">
+                          {isConfirmed ? "Confirmed Worker" : "Best Available Estimate"}
+                        </span>
+                        {isConfirmed && req.selectedWorkerName ? (
+                          <p className="text-sm font-bold text-emerald-800 dark:text-emerald-300">
+                            {req.selectedWorkerName}
+                          </p>
+                        ) : req.bestEstimate !== null ? (
+                          <p className="text-base font-extrabold text-emerald-800 dark:text-emerald-300 font-mono">
+                            ₹{req.bestEstimate}
+                          </p>
+                        ) : (
+                          <p className="text-xs text-slate-400 font-medium">
+                            Awaiting estimates...
+                          </p>
+                        )}
+                      </div>
+                    </div>
+
+                    <div className="flex items-center justify-between pt-2 border-t border-slate-100 dark:border-slate-800">
+                      <span className="text-[11px] text-slate-500 font-mono">
+                        Created: {new Date(req.createdAt).toLocaleDateString("en-IN")}
+                      </span>
+
+                      <Button
+                        size="sm"
+                        onClick={() => router.push(`/customer/requests/${req.id}`)}
+                        className="bg-emerald-700 hover:bg-emerald-800 text-white font-bold text-xs px-4 py-1.5 gap-1.5 shadow-sm"
+                      >
+                        <ChevronRight className="w-3.5 h-3.5" />
+                        {isConfirmed ? "View Request Details" : `Compare Estimates (${req.submittedEstimatesCount})`}
+                      </Button>
+                    </div>
+                  </Card>
+                );
+              })}
+            </div>
+          );
+        })()
       ) : filteredBookings.length === 0 ? (
         /* Empty State */
         <Card className="p-10 text-center bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl space-y-4">
@@ -248,12 +423,28 @@ export function MyBookingsView() {
                   </div>
 
                   <div className="flex items-center gap-2">
-                    <Badge
-                      variant="outline"
-                      className="bg-emerald-50 dark:bg-emerald-950 text-emerald-800 dark:text-emerald-300 border-emerald-300 text-[11px] font-bold py-0.5"
-                    >
-                      {booking.status.replace(/_/g, " ")}
-                    </Badge>
+                    {booking.status === "PAYMENT_PENDING" || booking.status === "BILL_GENERATED" ? (
+                      <Badge
+                        variant="outline"
+                        className="bg-amber-50 dark:bg-amber-950 text-amber-800 dark:text-amber-300 border-amber-300 text-[11px] font-bold py-0.5"
+                      >
+                        Service Completed • Payment: Pending
+                      </Badge>
+                    ) : booking.status === "BOOKING_COMPLETED" || booking.status === "PAYMENT_RECEIVED" ? (
+                      <Badge
+                        variant="outline"
+                        className="bg-emerald-50 dark:bg-emerald-950 text-emerald-800 dark:text-emerald-300 border-emerald-300 text-[11px] font-bold py-0.5"
+                      >
+                        Completed ✓ • Paid ✓
+                      </Badge>
+                    ) : (
+                      <Badge
+                        variant="outline"
+                        className="bg-slate-50 dark:bg-slate-900 text-slate-700 dark:text-slate-300 border-slate-300 text-[11px] font-bold py-0.5"
+                      >
+                        {booking.status.replace(/_/g, " ")}
+                      </Badge>
+                    )}
                   </div>
                 </div>
 
@@ -272,7 +463,7 @@ export function MyBookingsView() {
 
                   <div className="space-y-0.5">
                     <span className="text-[10px] text-slate-400 font-bold uppercase block flex items-center gap-1">
-                      <Calendar className="w-3 h-3 text-emerald-600" /> Date & Location
+                      <Calendar className="w-3 h-3 text-emerald-600" /> Date &amp; Location
                     </span>
                     <p className="font-bold text-slate-900 dark:text-slate-100">
                       {booking.scheduledStartAt.split("T")[0]}
@@ -285,7 +476,11 @@ export function MyBookingsView() {
 
                   <div className="space-y-0.5 sm:text-right">
                     <span className="text-[10px] text-slate-400 font-bold uppercase block">
-                      {isCompleted(booking.status) ? "Final Bill" : "Estimate / Amount"}
+                      {booking.status === "BOOKING_COMPLETED" || booking.status === "PAYMENT_RECEIVED"
+                        ? "Final Bill (Paid ✓)"
+                        : booking.status === "PAYMENT_PENDING" || booking.status === "BILL_GENERATED"
+                        ? "Final Bill (Payment: Pending)"
+                        : "Estimate / Amount"}
                     </span>
                     <p className="text-base font-extrabold text-emerald-800 dark:text-emerald-300 font-mono">
                       ₹{displayAmount}
@@ -298,14 +493,37 @@ export function MyBookingsView() {
                     Created: {new Date(booking.createdAt).toLocaleDateString("en-IN")}
                   </span>
 
-                  <Button
-                    size="sm"
-                    onClick={() => router.push(cta.href)}
-                    className="bg-emerald-700 hover:bg-emerald-800 text-white font-bold text-xs px-4 py-1.5 gap-1.5 shadow-sm"
-                  >
-                    <CtaIcon className="w-3.5 h-3.5" />
-                    {cta.label}
-                  </Button>
+                  <div className="flex items-center gap-2">
+                    {booking.status === "BOOKING_COMPLETED" || booking.status === "PAYMENT_RECEIVED" ? (
+                      <>
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          onClick={() => router.push(`/customer/bookings/${booking.id}/invoice`)}
+                          className="text-xs border-emerald-600/40 text-emerald-800 dark:text-emerald-300 font-bold px-3 py-1.5 gap-1.5"
+                        >
+                          <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600" />
+                          View Receipt
+                        </Button>
+                        <Button
+                          size="sm"
+                          onClick={() => router.push(`/customer/bookings/${booking.id}/invoice#review`)}
+                          className="bg-emerald-700 hover:bg-emerald-800 text-white font-bold text-xs px-3 py-1.5 gap-1.5 shadow-sm"
+                        >
+                          Rate Worker
+                        </Button>
+                      </>
+                    ) : (
+                      <Button
+                        size="sm"
+                        onClick={() => router.push(cta.href)}
+                        className="bg-emerald-700 hover:bg-emerald-800 text-white font-bold text-xs px-4 py-1.5 gap-1.5 shadow-sm"
+                      >
+                        <CtaIcon className="w-3.5 h-3.5" />
+                        {cta.label}
+                      </Button>
+                    )}
+                  </div>
                 </div>
               </Card>
             );

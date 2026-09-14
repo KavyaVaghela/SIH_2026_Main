@@ -71,10 +71,25 @@ export class CustomerService {
    */
   async getServicesByCategory(categoryId: string): Promise<Service[]> {
     try {
+      let catId = categoryId;
+      const isUuid = /^[0-9a-fA-F-]{36}$/.test(categoryId);
+      if (!isUuid) {
+        const cleanName = categoryId.replace(/^cat-/, "").replace(/[-_]/g, " ");
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        const { data: cat } = await (this.supabase.from("service_categories") as any)
+          .select("id")
+          .ilike("name", `%${cleanName}%`)
+          .limit(1)
+          .maybeSingle();
+        if (cat?.id) {
+          catId = cat.id;
+        }
+      }
+
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const { data, error } = await (this.supabase.from("services") as any)
         .select("*")
-        .eq("category_id", categoryId)
+        .eq("category_id", catId)
         .eq("is_active", true);
 
       if (!error && data && data.length > 0) {
@@ -147,87 +162,44 @@ export class CustomerService {
     sortBy: "best_match" | "nearest" | "highest_rated" | "most_experienced" = "best_match"
   ): Promise<MatchedWorker[]> {
     try {
-      // Query workers joined with profiles and federations
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      const { data, error } = await (this.supabase.from("workers") as any)
-        .select("id, profile_id, federation_id, status, availability_status, hourly_rate, experience_years, profiles(full_name, phone), federations(name)");
+      const matchResults = await matchingService.findEligibleWorkers({
+        serviceId,
+        customerLatitude: 23.0300,
+        customerLongitude: 72.5178,
+      });
 
-      if (!error && data && data.length > 0) {
-        const workers: MatchedWorker[] = data.map((w: any, idx: number) => ({
-          id: w.id,
-          profileId: w.profile_id,
-          fullName: w.profiles?.full_name || `Worker #${idx + 1}`,
-          phone: w.profiles?.phone || "+91 98765 43210",
-          federationName: w.federations?.name || "Mumbai Skilled Workers Cooperative Federation",
-          federationId: w.federation_id || "fed-1",
-          experienceYears: w.experience_years || (3 + idx),
-          hourlyRate: w.hourly_rate || 350,
-          rating: 4.5 + (idx % 5) * 0.1,
-          completedJobsCount: 24 + idx * 12,
-          skills: ["Switchboard Repair", "Wiring & Earthing", "Circuit Inspection"],
-          distanceKm: Number((1.2 + idx * 0.8).toFixed(1)),
-          availability: w.availability_status?.toUpperCase() === "AVAILABLE" ? "AVAILABLE" : "AVAILABLE",
-          status: w.status || "verified",
-        }));
+      const workers: MatchedWorker[] = matchResults.map((res) => ({
+        id: res.worker.id,
+        profileId: res.worker.profileId,
+        fullName: res.worker.extendedProfile.fullName,
+        phone: res.worker.extendedProfile.phone || "",
+        federationName: res.worker.extendedProfile.cooperativeName,
+        federationId: res.worker.federationId,
+        experienceYears: res.worker.experienceYears,
+        hourlyRate: res.worker.hourlyRate,
+        rating: res.worker.extendedProfile.rating,
+        completedJobsCount: res.worker.extendedProfile.completedJobsCount,
+        skills: [
+          res.worker.extendedProfile.primarySkill,
+          ...(res.worker.extendedProfile.secondarySkills || []),
+        ],
+        distanceKm: res.tierBreakdown.distanceKm,
+        availability: "AVAILABLE",
+        status: res.worker.extendedProfile.verificationStatus,
+      }));
 
-        // Apply sorting
-        if (sortBy === "nearest") {
-          return workers.sort((a, b) => a.distanceKm - b.distanceKm);
-        } else if (sortBy === "highest_rated") {
-          return workers.sort((a, b) => b.rating - a.rating);
-        } else if (sortBy === "most_experienced") {
-          return workers.sort((a, b) => b.experienceYears - a.experienceYears);
-        }
-        return workers;
+      if (sortBy === "nearest") {
+        return workers.sort((a, b) => a.distanceKm - b.distanceKm);
+      } else if (sortBy === "highest_rated") {
+        return workers.sort((a, b) => b.rating - a.rating);
+      } else if (sortBy === "most_experienced") {
+        return workers.sort((a, b) => b.experienceYears - a.experienceYears);
       }
+      return workers;
     } catch (err) {
-      console.warn("DB matching lookup notice:", err);
+      console.error("CustomerService findMatchingWorkers error:", err);
+      return [];
     }
-
-    // Fallback real mock workers
-    const defaultWorkers: MatchedWorker[] = [
-      {
-        id: "w-101",
-        profileId: "p-101",
-        fullName: "Ramesh Sharma",
-        phone: "+91 98230 11223",
-        federationName: "Mumbai Skilled Workers Cooperative Federation",
-        federationId: "fed-1",
-        experienceYears: 7,
-        hourlyRate: 350,
-        rating: 4.9,
-        completedJobsCount: 142,
-        skills: ["Switchboard Repair", "MCB Installation", "House Rewiring"],
-        distanceKm: 1.4,
-        availability: "AVAILABLE",
-        status: "verified",
-      },
-      {
-        id: "w-102",
-        profileId: "p-102",
-        fullName: "Sunil Verma",
-        phone: "+91 98901 44556",
-        federationName: "Pune Household Workers Service Cooperative",
-        federationId: "fed-2",
-        experienceYears: 5,
-        hourlyRate: 300,
-        rating: 4.7,
-        completedJobsCount: 88,
-        skills: ["Pipe Leakage", "Tap & Mixer Fitting", "Water Tank Cleaning"],
-        distanceKm: 2.1,
-        availability: "AVAILABLE",
-        status: "verified",
-      },
-    ];
-
-    if (sortBy === "nearest") {
-      return defaultWorkers.sort((a, b) => a.distanceKm - b.distanceKm);
-    } else if (sortBy === "highest_rated") {
-      return defaultWorkers.sort((a, b) => b.rating - a.rating);
-    } else if (sortBy === "most_experienced") {
-      return defaultWorkers.sort((a, b) => b.experienceYears - a.experienceYears);
-    }
-    return defaultWorkers;
   }
 
   /**

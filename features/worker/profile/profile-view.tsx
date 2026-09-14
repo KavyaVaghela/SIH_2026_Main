@@ -7,13 +7,35 @@ import { CooperativeAffiliationCard } from "./cooperative-affiliation-card";
 import { SkillsSection } from "./skills-section";
 import { VerificationBadgesCard } from "./verification-badges-card";
 import { ProfileEditDialogs } from "./profile-edit-dialogs";
-import { DEMO_WORKER_PROFILE } from "../services/worker-mock-data";
 import type { WorkerProfileDetails } from "../types";
 
 import { createClient } from "@/lib/supabase/client";
 
+const INITIAL_WORKER_PROFILE: WorkerProfileDetails = {
+  name: "",
+  trade: "",
+  rating: 5.0,
+  reviewsCount: 0,
+  experienceYears: 0,
+  cooperativeName: "",
+  cooperativeId: "",
+  federationName: "",
+  location: "",
+  phone: "",
+  languages: ["Gujarati", "Hindi"],
+  skills: [],
+  verifications: {
+    identity: false,
+    phone: false,
+    worker: false,
+    skill: false,
+  },
+  hourlyRate: 0,
+  bio: "",
+};
+
 export function ProfileView() {
-  const [profile, setProfile] = React.useState<WorkerProfileDetails>(DEMO_WORKER_PROFILE);
+  const [profile, setProfile] = React.useState<WorkerProfileDetails>(INITIAL_WORKER_PROFILE);
   const [isEditProfileOpen, setIsEditProfileOpen] = React.useState(false);
   const [isUpdateSkillsOpen, setIsUpdateSkillsOpen] = React.useState(false);
 
@@ -45,6 +67,8 @@ export function ProfileView() {
             date_of_birth,
             gender,
             registration_type,
+            previous_work_details,
+            govt_id_number,
             federations (id, name, city, state, code)
           `)
           .eq("profile_id", user.id)
@@ -53,7 +77,7 @@ export function ProfileView() {
         // 3. Fetch Residential Address
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         const { data: addr } = await (supabase.from("addresses") as any)
-          .select("address_line1, city, state, postal_code")
+          .select("address_line1, address_line2, city, state, postal_code")
           .eq("profile_id", user.id)
           .order("is_default", { ascending: false })
           .limit(1)
@@ -76,32 +100,47 @@ export function ProfileView() {
         }
 
         const addressText = addr
-          ? `${addr.address_line1}, ${addr.city}, ${addr.state} ${addr.postal_code ? `- ${addr.postal_code}` : ""}`
-          : undefined;
+          ? [addr.address_line1, addr.address_line2, addr.city, addr.state, addr.postal_code].filter(Boolean).join(", ")
+          : "";
 
-        setProfile((prev) => ({
-          ...prev,
-          name: prof?.full_name || prev.name,
-          email: prof?.email || prev.email,
-          phone: prof?.phone || prev.phone,
+        const isVerified = wRec?.verification_status === "verified";
+        const hasId = !!wRec?.govt_id_number || isVerified;
+        const hasPhone = !!prof?.phone;
+        const hasSkill = fetchedSkills.length > 0;
+
+        setProfile({
+          name: prof?.full_name || "Cooperative Member",
+          email: prof?.email || user.email || "",
+          phone: prof?.phone || "",
           avatarUrl: prof?.avatar_url || null,
-          memberId: wRec?.member_id || prev.cooperativeId,
-          cooperativeId: wRec?.member_id || prev.cooperativeId,
-          trade: wRec?.profession || prev.trade,
-          hourlyRate: Number(wRec?.hourly_rate) || prev.hourlyRate,
-          experienceYears: wRec?.experience_years ?? prev.experienceYears,
-          federationName: wRec?.federations?.name || prev.federationName,
+          memberId: wRec?.member_id || "",
+          cooperativeId: wRec?.member_id || "",
+          cooperativeName: wRec?.federations?.name || "Cooperative Federation",
+          trade: wRec?.profession || "Skilled Tradesperson",
+          hourlyRate: Number(wRec?.hourly_rate) || 300,
+          experienceYears: wRec?.experience_years ?? 0,
+          federationName: wRec?.federations?.name || "Cooperative Federation",
           location: wRec?.federations?.city
             ? `${wRec.federations.city}, ${wRec.federations.state}`
-            : prev.location,
+            : (addr?.city ? `${addr.city}, ${addr.state}` : "Gujarat"),
           dateOfBirth: wRec?.date_of_birth || null,
           gender: wRec?.gender || null,
           registrationType: wRec?.registration_type || null,
           accountStatus: wRec?.account_status || "ACTIVE",
-          verificationStatus: wRec?.verification_status || "verified",
-          address: addressText || prev.location,
-          skills: fetchedSkills.length > 0 ? fetchedSkills : prev.skills,
-        }));
+          verificationStatus: wRec?.verification_status || "pending_verification",
+          address: addressText || (addr?.city ? `${addr.city}, ${addr.state}` : "Gujarat"),
+          skills: fetchedSkills,
+          languages: ["Gujarati", "Hindi", "English"],
+          rating: 4.9,
+          reviewsCount: 12,
+          verifications: {
+            identity: hasId,
+            phone: hasPhone,
+            worker: isVerified,
+            skill: hasSkill,
+          },
+          bio: wRec?.previous_work_details || `Registered member of ${wRec?.federations?.name || "the Cooperative Federation"}.`,
+        });
       } catch (err) {
         console.warn("Notice: Worker profile Supabase query:", err);
       }

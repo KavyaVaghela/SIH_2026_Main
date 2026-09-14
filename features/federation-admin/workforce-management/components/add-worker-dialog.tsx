@@ -66,6 +66,7 @@ export function AddWorkerDialog({
       address: "",
       city: "Ahmedabad",
       state: "Gujarat",
+      pincode: "380001",
       profession: "Electrician",
       skills: "",
       experienceYears: 3,
@@ -94,6 +95,7 @@ export function AddWorkerDialog({
         address: "",
         city: "Ahmedabad",
         state: "Gujarat",
+        pincode: "380001",
         profession: "Electrician",
         skills: "",
         experienceYears: 3,
@@ -361,7 +363,7 @@ export function AddWorkerDialog({
               )}
             </div>
 
-            {/* City & State */}
+            {/* City, State & PIN Code */}
             <div className="space-y-1">
               <label className="block font-medium text-foreground">City</label>
               <Input {...register("city")} error={!!errors.city} className="h-8 text-xs" />
@@ -369,6 +371,18 @@ export function AddWorkerDialog({
             <div className="space-y-1">
               <label className="block font-medium text-foreground">State</label>
               <Input {...register("state")} error={!!errors.state} className="h-8 text-xs" />
+            </div>
+            <div className="space-y-1 sm:col-span-2 md:col-span-1">
+              <label className="block font-medium text-foreground">PIN Code</label>
+              <Input
+                placeholder="380001"
+                {...register("pincode")}
+                error={!!errors.pincode}
+                className="h-8 text-xs"
+              />
+              {errors.pincode && (
+                <p className="text-[10px] text-destructive">{errors.pincode.message}</p>
+              )}
             </div>
           </div>
         </div>

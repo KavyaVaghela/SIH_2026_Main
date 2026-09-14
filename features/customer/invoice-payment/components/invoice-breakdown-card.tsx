@@ -47,21 +47,23 @@ export function InvoiceBreakdownCard({ invoice, booking }: InvoiceBreakdownCardP
         {/* 3-Tier Pricing Comparison Banner */}
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 bg-slate-50 dark:bg-slate-950 p-3.5 rounded-xl border border-slate-200/80 dark:border-slate-800 text-xs">
           <div className="space-y-0.5">
-            <span className="text-[10px] text-slate-400 font-semibold uppercase">Initial Platform Estimate</span>
-            <p className="text-sm font-extrabold text-slate-700 dark:text-slate-300">₹{initialEstimate}</p>
-            <p className="text-[10px] text-slate-400">Pre-service Tariff</p>
+            <span className="text-[10px] text-slate-500 font-bold uppercase">SYSTEM ESTIMATE</span>
+            <p className="text-sm font-extrabold text-slate-700 dark:text-slate-300">
+              ₹{Math.round(initialEstimate * 0.85)} – ₹{Math.round(initialEstimate * 1.15)}
+            </p>
+            <p className="text-[10px] text-slate-400">Pre-service Tariff Range</p>
           </div>
 
           <div className="space-y-0.5 border-t sm:border-t-0 sm:border-l border-slate-200 dark:border-slate-800 pt-2 sm:pt-0 sm:pl-3">
-            <span className="text-[10px] text-slate-400 font-semibold uppercase">Worker Estimate</span>
+            <span className="text-[10px] text-slate-500 font-bold uppercase">WORKER ESTIMATE</span>
             <p className="text-sm font-extrabold text-slate-700 dark:text-slate-300">₹{workerEstimate}</p>
-            <p className="text-[10px] text-slate-400">Pre-service Inspection</p>
+            <p className="text-[10px] text-slate-400">Pre-service Inspection Quote</p>
           </div>
 
           <div className="space-y-0.5 border-t sm:border-t-0 sm:border-l border-slate-200 dark:border-slate-800 pt-2 sm:pt-0 sm:pl-3 bg-emerald-50/60 dark:bg-emerald-950/40 p-2 rounded-lg border border-emerald-200">
-            <span className="text-[10px] text-emerald-800 dark:text-emerald-300 font-bold uppercase">FINAL PAYABLE BILL</span>
+            <span className="text-[10px] text-emerald-800 dark:text-emerald-300 font-bold uppercase">FINAL BILL</span>
             <p className="text-base font-extrabold text-emerald-900 dark:text-emerald-100">₹{finalBill}</p>
-            <p className="text-[10px] text-emerald-700 font-medium">Actual Completed Work</p>
+            <p className="text-[10px] text-emerald-700 font-bold">Amount Payable</p>
           </div>
         </div>
 
@@ -69,7 +71,7 @@ export function InvoiceBreakdownCard({ invoice, booking }: InvoiceBreakdownCardP
         <div className="space-y-2">
           <h4 className="text-xs font-bold text-slate-900 dark:text-slate-100 uppercase tracking-wider flex items-center gap-1.5">
             <FileText className="w-3.5 h-3.5 text-emerald-600" />
-            Itemized Completed Work Breakdown
+            Itemized Final Bill Components
           </h4>
 
           <div className="border border-slate-200 dark:border-slate-800 rounded-xl overflow-hidden text-xs">
@@ -95,20 +97,16 @@ export function InvoiceBreakdownCard({ invoice, booking }: InvoiceBreakdownCardP
             {/* Financial Summary */}
             <div className="bg-slate-50/80 dark:bg-slate-950/80 p-3 space-y-1.5 text-xs text-slate-600 dark:text-slate-400">
               <div className="flex justify-between">
-                <span>Labor & Parts Subtotal:</span>
+                <span>Labor &amp; Materials Subtotal:</span>
                 <span className="font-semibold text-slate-900 dark:text-slate-100 font-mono">₹{invoice.subtotal}</span>
               </div>
-              <div className="flex justify-between">
-                <span>Platform Facilitation Charge (5%):</span>
-                <span className="font-semibold text-slate-900 dark:text-slate-100 font-mono">₹{invoice.platformFee}</span>
-              </div>
-              <div className="flex justify-between">
-                <span>GST Tax (18%):</span>
-                <span className="font-semibold text-slate-900 dark:text-slate-100 font-mono">₹{invoice.taxAmount}</span>
+              <div className="flex justify-between text-[11px] text-muted-foreground">
+                <span>Cooperative Facilitation Fee (5% included):</span>
+                <span className="font-mono">₹{invoice.platformFee}</span>
               </div>
 
               <div className="flex justify-between pt-2 border-t border-slate-200 dark:border-slate-700 font-extrabold text-sm text-emerald-800 dark:text-emerald-300">
-                <span>Total Amount Payable:</span>
+                <span>Amount Payable (Final Bill):</span>
                 <span className="text-base font-mono">₹{finalBill}</span>
               </div>
             </div>
