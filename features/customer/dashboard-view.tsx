@@ -17,8 +17,8 @@ import { createClient } from "@/lib/supabase/client";
 export function CustomerDashboardView() {
   const router = useRouter();
   const [searchQuery, setSearchQuery] = React.useState("");
-  const [customerDisplayName, setCustomerDisplayName] = React.useState("Prince");
-  const [customerLocationArea, setCustomerLocationArea] = React.useState("Satellite, Ahmedabad");
+  const [customerDisplayName, setCustomerDisplayName] = React.useState("Customer");
+  const [customerLocationArea, setCustomerLocationArea] = React.useState("Ahmedabad, Gujarat");
   const [activeBooking, setActiveBooking] = React.useState<CurrentBookingData | null>(null);
   const [upcomingBookings, setUpcomingBookings] = React.useState<UpcomingBookingData[]>([]);
 
@@ -32,71 +32,64 @@ export function CustomerDashboardView() {
           .eq("id", user.id)
           .maybeSingle()
           .then(({ data }: { data: { full_name?: string; role?: string } | null }) => {
-            if (data?.role === "CUSTOMER" && data?.full_name) {
+            if (data?.full_name) {
               const name = data.full_name.trim();
-              if (name.toLowerCase().includes("system") || name.toLowerCase().includes("admin")) {
-                setCustomerDisplayName("Prince");
-              } else {
-                setCustomerDisplayName(name.split(" ")[0]);
-              }
-            } else {
-              // Never render worker or admin identity on customer dashboard
-              setCustomerDisplayName("Prince");
+              setCustomerDisplayName(name.split(" ")[0]);
             }
           });
 
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         (supabase.from("addresses") as any)
-          .select("address_line2, city")
+          .select("address_line1, address_line2, city")
           .eq("profile_id", user.id)
-          .eq("is_default", true)
+          .order("is_default", { ascending: false })
+          .limit(1)
           .maybeSingle()
           .then(({ data }: { data: any }) => {
             if (data) {
-              setCustomerLocationArea(`${data.address_line2 || "Satellite"}, ${data.city || "Ahmedabad"}`);
+              const area = data.address_line2 || data.address_line1 || "Ahmedabad";
+              setCustomerLocationArea(`${area}, ${data.city || "Gujarat"}`);
             }
           });
+
+        // Fetch bookings strictly for authenticated customer
+        bookingService.getCustomerBookings(user.id).then((list) => {
+          if (list && list.length > 0) {
+            // Find latest active non-cancelled booking
+            const latest = list.find((b) => b.status !== "CANCELLED" && b.status !== "BOOKING_COMPLETED") || list[0];
+            
+            setActiveBooking({
+              id: latest.id,
+              bookingNumber: latest.bookingNumber,
+              serviceTitle: (latest as any).serviceTitle || "Household Service",
+              categoryName: (latest as any).categoryName || "Service Category",
+              workerName: (latest as any).workerName || "Assigned Worker",
+              workerPhone: (latest as any).workerPhone || "+91 98250 11021",
+              cooperativeName: (latest as any).cooperativeName || "Worker Cooperative Society",
+              statusDisplay: latest.status.replace(/_/g, " "),
+              statusCode: latest.status,
+              scheduledTime: `${latest.scheduledStartAt.split("T")[0]}, Morning Slot`,
+              addressText: (latest as any).addressText || "Ahmedabad, Gujarat",
+              otpCode: (latest as any).otpCode || "940218",
+              totalAmount: (latest as any).workerEstimateAmount || latest.totalAmount,
+            });
+
+            // Filter upcoming confirmed bookings
+            const confirmed = list.filter((b) => b.status === "BOOKING_CONFIRMED");
+            setUpcomingBookings(
+              confirmed.map((c) => ({
+                id: c.id,
+                bookingNumber: c.bookingNumber,
+                serviceTitle: (c as any).serviceTitle || "Service",
+                scheduledDate: c.scheduledStartAt.split("T")[0],
+                scheduledTime: "Morning Slot",
+                addressText: (c as any).addressText || "Ahmedabad, Gujarat",
+                estimatedAmount: (c as any).workerEstimateAmount || c.totalAmount,
+              }))
+            );
+          }
+        });
       }
-
-      // Strictly isolate customer ID: never fetch bookings using a worker profile ID
-      const isWorkerSession = user?.id === "70fbdb46-120f-459e-a616-67b4f676f5d0";
-      const customerId = (user?.id && !isWorkerSession) ? user.id : "b0ef9604-54c8-4ad1-9a7a-c353cfd339ef";
-      bookingService.getCustomerBookings(customerId).then((list) => {
-        if (list.length > 0) {
-          // Find latest active non-cancelled booking
-          const latest = list.find((b) => b.status !== "CANCELLED" && b.status !== "BOOKING_COMPLETED") || list[0];
-          
-          setActiveBooking({
-            id: latest.id,
-            bookingNumber: latest.bookingNumber,
-            serviceTitle: (latest as any).serviceTitle || "Household Service",
-            categoryName: (latest as any).categoryName || "Service Category",
-            workerName: (latest as any).workerName || "Assigned Worker",
-            workerPhone: (latest as any).workerPhone || "+91 98250 11021",
-            cooperativeName: (latest as any).cooperativeName || "Worker Cooperative Society",
-            statusDisplay: latest.status.replace(/_/g, " "),
-            statusCode: latest.status,
-            scheduledTime: `${latest.scheduledStartAt.split("T")[0]}, Morning Slot`,
-            addressText: (latest as any).addressText || "Satellite, Ahmedabad",
-            otpCode: (latest as any).otpCode || "940218",
-            totalAmount: (latest as any).workerEstimateAmount || latest.totalAmount,
-          });
-
-          // Filter upcoming confirmed bookings
-          const confirmed = list.filter((b) => b.status === "BOOKING_CONFIRMED");
-          setUpcomingBookings(
-            confirmed.map((c) => ({
-              id: c.id,
-              bookingNumber: c.bookingNumber,
-              serviceTitle: (c as any).serviceTitle || "Service",
-              scheduledDate: c.scheduledStartAt.split("T")[0],
-              scheduledTime: "Morning Slot",
-              addressText: (c as any).addressText || "Satellite, Ahmedabad",
-              estimatedAmount: (c as any).workerEstimateAmount || c.totalAmount,
-            }))
-          );
-        }
-      });
     });
   }, []);
 

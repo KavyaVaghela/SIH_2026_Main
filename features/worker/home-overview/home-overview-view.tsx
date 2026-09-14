@@ -22,10 +22,25 @@ import type { WorkerIdentity } from "../types";
 export function HomeOverviewView() {
   const [requests, setRequests] = React.useState<WorkerJobItem[]>([]);
   const [scheduleItems, setScheduleItems] = React.useState<WorkerScheduleItem[]>([]);
-  const [stats, setStats] = React.useState<WorkerOverviewStats>(DEMO_WORKER_OVERVIEW_STATS);
-  const [workerIdentity, setWorkerIdentity] = React.useState<WorkerIdentity>(DEMO_WORKER_IDENTITY);
+  const [stats, setStats] = React.useState<WorkerOverviewStats>({
+    todaysJobs: 0,
+    todaysEarnings: 0,
+    overallRating: 0,
+    completedJobs: 0,
+  });
+  const [workerIdentity, setWorkerIdentity] = React.useState<WorkerIdentity>({
+    name: "Worker Member",
+    trade: "Tradesperson",
+    cooperativeName: "Cooperative Society",
+    cooperativeRole: "Member",
+    federationName: "Cooperative Federation",
+    location: "Gujarat, India",
+    rating: 0,
+    reviewsCount: 0,
+    isVerified: false,
+  });
 
-  const [workerDbId, setWorkerDbId] = React.useState<string>("59eca4ff-a589-4363-ad76-24a4ff5b6e2e");
+  const [workerDbId, setWorkerDbId] = React.useState<string>("");
   // Monotonically increasing counter: only the latest fetch generation may commit state
   const fetchGenRef = React.useRef(0);
 
@@ -55,8 +70,8 @@ export function HomeOverviewView() {
               if (wRec.id) setWorkerDbId(wRec.id);
               setWorkerIdentity((prev) => ({
                 ...prev,
-                trade: wRec.profession || "Plumber",
-                federationName: wRec.federations?.name || "Ahmedabad Skilled Workers Federation",
+                trade: wRec.profession || "Skilled Craftsman",
+                federationName: wRec.federations?.name || "Cooperative Workers Federation",
                 location: wRec.federations?.city ? `${wRec.federations.city}, ${wRec.federations.state}` : "Ahmedabad, Gujarat",
                 isVerified: wRec.verification_status === "verified",
               }));
@@ -67,7 +82,8 @@ export function HomeOverviewView() {
   }, []);
 
   const refreshData = React.useCallback(() => {
-    const targetId = workerDbId || "w-1";
+    if (!workerDbId) return;
+    const targetId = workerDbId;
     // Capture this fetch's generation number
     const thisGen = ++fetchGenRef.current;
 
@@ -82,7 +98,7 @@ export function HomeOverviewView() {
 
         setRequests(liveRequests);
 
-        const mapped: WorkerScheduleItem[] = schedule.today.map((j) => ({
+        const mapped: WorkerScheduleItem[] = (schedule?.today || []).map((j) => ({
           id: j.id,
           time: j.scheduledTime,
           serviceTitle: j.serviceTitle,
@@ -95,11 +111,12 @@ export function HomeOverviewView() {
         }));
         setScheduleItems(mapped);
 
+        const jobsDone = Number(earnings?.summary?.completedJobsCount) || 0;
         setStats({
-          todaysJobs: schedule.today.length,
-          todaysEarnings: earnings.summary.todaysEarnings,
-          overallRating: 4.9,
-          completedJobs: earnings.summary.completedJobsCount,
+          todaysJobs: schedule?.today?.length || 0,
+          todaysEarnings: Number(earnings?.summary?.todaysEarnings) || 0,
+          overallRating: jobsDone > 0 ? Number((earnings?.summary as unknown as { rating?: number })?.rating) || 0 : 0,
+          completedJobs: jobsDone,
         });
       })
       .catch((err) => {

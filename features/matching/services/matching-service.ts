@@ -386,12 +386,172 @@ export class MatchingService implements IMatchingService {
         verificationStatus: "verified",
       },
     },
+
+    // MASONRY
+    {
+      id: "w-mason-1",
+      profileId: "p-w11",
+      federationId: "fed-ahmedabad-1",
+      categoryId: "ebda254d-3500-492e-b35c-83f5a00c5239",
+      status: "ACTIVE",
+      availability: "AVAILABLE",
+      hourlyRate: 400,
+      experienceYears: 12,
+      currentLatitude: 23.0335,
+      currentLongitude: 72.5225,
+      workload: 0,
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
+      extendedProfile: {
+        fullName: "Kanti Mistry",
+        phone: "+91 98251 44521",
+        email: "kanti.m@cooplabour.org",
+        avatarUrl: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=150&auto=format&fit=crop&q=80",
+        cooperativeName: "Satellite Artisans Cooperative Society",
+        primarySkill: "Brickwork & Plastering Specialist",
+        secondarySkills: ["Concrete Work", "Wall Repair", "Stone Masonry"],
+        rating: 4.9,
+        completedJobsCount: 164,
+        experienceYears: 12,
+        languages: ["Gujarati", "Hindi"],
+        bio: "Master mason with 12+ years experience in residential brickwork, wall plastering, foundation repairs, and compound wall construction.",
+        verificationStatus: "verified",
+      },
+    },
+
+    // HOUSE HELP / DOMESTIC HELP
+    {
+      id: "w-househelp-1",
+      profileId: "p-w12",
+      federationId: "fed-ahmedabad-1",
+      categoryId: "f106c3b4-bdd2-4c05-9b01-d63ecae29dea",
+      status: "ACTIVE",
+      availability: "AVAILABLE",
+      hourlyRate: 300,
+      experienceYears: 7,
+      currentLatitude: 23.0310,
+      currentLongitude: 72.5180,
+      workload: 0,
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
+      extendedProfile: {
+        fullName: "Geeta Ben Solanki",
+        phone: "+91 98252 55632",
+        email: "geeta.s@cooplabour.org",
+        avatarUrl: "https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?w=150&auto=format&fit=crop&q=80",
+        cooperativeName: "Satellite Artisans Cooperative Society",
+        primarySkill: "Deep Sweeping, Mopping & House Sanitization",
+        secondarySkills: ["Utensil Cleaning", "Dusting & Organizing", "Kitchen Hygiene"],
+        rating: 4.85,
+        completedJobsCount: 98,
+        experienceYears: 7,
+        languages: ["Gujarati", "Hindi"],
+        bio: "Reliable and cooperative-verified domestic assistant dedicated to spotless floor mopping, kitchen cleaning, and household care.",
+        verificationStatus: "verified",
+      },
+    },
+
+    // WELDING
+    {
+      id: "w-welder-1",
+      profileId: "p-w13",
+      federationId: "fed-ahmedabad-1",
+      categoryId: "3bd5ddac-31be-4163-807a-0a0871ed4161",
+      status: "ACTIVE",
+      availability: "AVAILABLE",
+      hourlyRate: 450,
+      experienceYears: 10,
+      currentLatitude: 23.0340,
+      currentLongitude: 72.5240,
+      workload: 0,
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
+      extendedProfile: {
+        fullName: "Pravin Panchal",
+        phone: "+91 98253 66743",
+        email: "pravin.p@cooplabour.org",
+        avatarUrl: "https://images.unsplash.com/photo-1506794778202-cad84cf45f1d?w=150&auto=format&fit=crop&q=80",
+        cooperativeName: "Satellite Artisans Cooperative Society",
+        primarySkill: "Arc Welding & Metal Gate Fabrication",
+        secondarySkills: ["Balcony Railing Repair", "Safety Grill Welding", "Sheet Metal Joining"],
+        rating: 4.9,
+        completedJobsCount: 112,
+        experienceYears: 10,
+        languages: ["Gujarati", "Hindi"],
+        bio: "Certified metal fabrication artisan specializing in safety grills, iron gates, MS railings, and emergency on-site welding repairs.",
+        verificationStatus: "verified",
+      },
+    },
+
+    // CONSTRUCTION LABOUR
+    {
+      id: "w-labour-1",
+      profileId: "p-w14",
+      federationId: "fed-ahmedabad-1",
+      categoryId: "3fa324d5-3904-4d9a-b24a-3603d355834d",
+      status: "ACTIVE",
+      availability: "AVAILABLE",
+      hourlyRate: 350,
+      experienceYears: 8,
+      currentLatitude: 23.0290,
+      currentLongitude: 72.5190,
+      workload: 0,
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
+      extendedProfile: {
+        fullName: "Govind Rathod",
+        phone: "+91 98254 77854",
+        email: "govind.r@cooplabour.org",
+        avatarUrl: "https://images.unsplash.com/photo-1522075469751-3a6694fb2f61?w=150&auto=format&fit=crop&q=80",
+        cooperativeName: "Satellite Artisans Cooperative Society",
+        primarySkill: "Material Shifting & Construction Assistance",
+        secondarySkills: ["Excavation & Trenching", "Debris Removal", "Mortar Mixing"],
+        rating: 4.75,
+        completedJobsCount: 82,
+        experienceYears: 8,
+        languages: ["Gujarati", "Hindi"],
+        bio: "Diligent construction labour assistant offering material shifting, site clearance, excavation, and artisan scaffolding support.",
+        verificationStatus: "verified",
+      },
+    },
+
+    // TILE & FLOOR WORK
+    {
+      id: "w-tile-1",
+      profileId: "p-w15",
+      federationId: "fed-ahmedabad-1",
+      categoryId: "1e73e7ac-f6da-45b9-9d6c-49d44ffa22ef",
+      status: "ACTIVE",
+      availability: "AVAILABLE",
+      hourlyRate: 420,
+      experienceYears: 11,
+      currentLatitude: 23.0315,
+      currentLongitude: 72.5215,
+      workload: 0,
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
+      extendedProfile: {
+        fullName: "Naresh Prajapati",
+        phone: "+91 98255 88965",
+        email: "naresh.p@cooplabour.org",
+        avatarUrl: "https://images.unsplash.com/photo-1544005313-94ddf0286df2?w=150&auto=format&fit=crop&q=80",
+        cooperativeName: "Satellite Artisans Cooperative Society",
+        primarySkill: "Vitrified & Marble Floor Tile Specialist",
+        secondarySkills: ["Wall Tile Grouting", "Granite Edge Polishing", "Waterproofing"],
+        rating: 4.95,
+        completedJobsCount: 178,
+        experienceYears: 11,
+        languages: ["Gujarati", "Hindi"],
+        bio: "Skilled flooring artisan specialized in vitrified tile laying, bathroom wall tiling, diamond marble polishing, and epoxy grouting.",
+        verificationStatus: "verified",
+      },
+    },
   ];
 
   async findEligibleWorkers(filter: MatchingFilter): Promise<WorkerMatchResult[]> {
     const customerLat = filter.customerLatitude || 23.0300; // Satellite, Ahmedabad default
     const customerLon = filter.customerLongitude || 72.5178;
-    const maxRadius = filter.maxRadiusKm || 15;
+    const maxRadius = filter.maxRadiusKm || 25;
 
     let dbResults: WorkerMatchResult[] = [];
     try {
@@ -399,14 +559,14 @@ export class MatchingService implements IMatchingService {
       const supabase = createClient();
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const { data: dbWorkers, error } = await (supabase.from("workers") as any)
-        .select("*, profiles(*), federations(*), worker_skills(skills(name))")
+        .select("*, profiles(*), federations(*), worker_skills(skills(id, name, category_id))")
         .eq("account_status", "ACTIVE")
         .eq("verification_status", "verified")
         .eq("availability_status", "AVAILABLE");
 
       if (!error && dbWorkers && dbWorkers.length > 0) {
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        dbResults = dbWorkers.map((w: any) => {
+        const mapped = dbWorkers.map((w: any) => {
           const p = w.profiles || {};
           const f = w.federations || {};
           const distanceKm = this.calculateDistanceKm(
@@ -416,13 +576,28 @@ export class MatchingService implements IMatchingService {
             w.current_longitude || 72.5205
           );
 
-          // Extract real skill names
-          const realSkills: string[] = Array.isArray(w.worker_skills)
-            ? w.worker_skills
-                // eslint-disable-next-line @typescript-eslint/no-explicit-any
-                .map((ws: any) => ws.skills?.name)
-                .filter(Boolean)
-            : [];
+          // Extract real skill names & category IDs
+          const realSkills: string[] = [];
+          const skillCategoryIds: string[] = [];
+          if (Array.isArray(w.worker_skills)) {
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            w.worker_skills.forEach((ws: any) => {
+              if (ws.skills?.name) realSkills.push(ws.skills.name);
+              if (ws.skills?.category_id) skillCategoryIds.push(ws.skills.category_id);
+            });
+          }
+
+          // Check category match
+          let isCategoryMatch = false;
+          if (filter.categoryId && filter.categoryId !== "all") {
+            const req = filter.categoryId.toLowerCase();
+            isCategoryMatch =
+              skillCategoryIds.some((cid) => cid === filter.categoryId) ||
+              realSkills.some((s) => req.includes(s.toLowerCase()) || s.toLowerCase().includes(req)) ||
+              (w.profession && req.includes(w.profession.toLowerCase()));
+          } else {
+            isCategoryMatch = true;
+          }
 
           const candidateWorker: Worker & { extendedProfile: ExtendedWorkerProfile } = {
             id: w.id,
@@ -454,14 +629,16 @@ export class MatchingService implements IMatchingService {
           };
 
           // 6-Tier Scoring
+          const skillScore = isCategoryMatch ? 40 : 20;
           const distScore = Math.max(0, 15 - distanceKm);
-          const totalScore = Math.round(40 + 20 + distScore + 15 + Math.min(5, (w.experience_years || 5) * 0.5));
+          const totalScore = Math.round(skillScore + 20 + distScore + 15 + Math.min(5, (w.experience_years || 5) * 0.5));
 
           return {
             worker: candidateWorker,
             matchScore: Math.min(100, totalScore),
+            isCategoryMatch,
             tierBreakdown: {
-              skillMatch: true,
+              skillMatch: isCategoryMatch,
               availabilityMatch: true,
               distanceKm,
               rating: 4.9,
@@ -469,7 +646,15 @@ export class MatchingService implements IMatchingService {
               currentWorkloadCount: 0,
             },
           };
-        }).filter((res: WorkerMatchResult) => res.tierBreakdown.distanceKm <= maxRadius);
+        }).filter((res: any) => res.tierBreakdown.distanceKm <= maxRadius);
+
+        // If category filtered, prioritize matching category workers
+        if (filter.categoryId && filter.categoryId !== "all") {
+          const categorySpecific = mapped.filter((m: any) => m.isCategoryMatch);
+          dbResults = categorySpecific.length > 0 ? categorySpecific : mapped;
+        } else {
+          dbResults = mapped;
+        }
 
         if (dbResults.length > 0) {
           return dbResults.sort((a, b) => b.matchScore - a.matchScore);

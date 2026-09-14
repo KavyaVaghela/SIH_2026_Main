@@ -140,104 +140,7 @@ export class WorkforceManagementService {
   /**
    * Deterministic development store for incoming worker membership applications.
    */
-  private fallbackApplications: WorkerApplicationItem[] = [
-    {
-      id: "APP-2026-081",
-      registrationType: "NEW_WORKER",
-      applicantName: "Arvind Solanki",
-      phone: "+91 98251 99112",
-      email: "arvind.solanki@gmail.com",
-      dateOfBirth: "1994-04-12",
-      gender: "Male",
-      address: "14, Shreenath Park Society, Isanpur",
-      city: "Ahmedabad",
-      state: "Gujarat",
-      profession: "Electrician",
-      skills: ["Residential wiring", "Inverter installation", "MCB distribution boards"],
-      experienceYears: 4,
-      hourlyRate: 320,
-      documents: [
-        {
-          name: "Aadhaar_Card_Arvind_Solanki.pdf",
-          category: "IDENTITY",
-          fileType: "PDF",
-          fileSize: "840 KB",
-        },
-        {
-          name: "ITI_Electrician_Certificate.pdf",
-          category: "TRADE_CERTIFICATE",
-          fileType: "PDF",
-          fileSize: "1.4 MB",
-        },
-      ],
-      submittedDate: "2026-03-01",
-      status: "PENDING",
-    },
-    {
-      id: "APP-2026-082",
-      registrationType: "NEW_WORKER",
-      applicantName: "Meena Rathod",
-      phone: "+91 98251 99114",
-      email: "meena.rathod@gmail.com",
-      dateOfBirth: "1996-08-20",
-      gender: "Female",
-      address: "B-204, Gokul Awas, Vatva",
-      city: "Ahmedabad",
-      state: "Gujarat",
-      profession: "Deep Cleaner",
-      skills: ["Deep scrubbing", "Kitchen sanitization", "Glass polishing"],
-      experienceYears: 3,
-      hourlyRate: 260,
-      documents: [
-        {
-          name: "Aadhaar_Card_Meena_Rathod.pdf",
-          category: "IDENTITY",
-          fileType: "PDF",
-          fileSize: "910 KB",
-        },
-        {
-          name: "Skill_India_Sanitation_Card.pdf",
-          category: "SKILL_CERTIFICATE",
-          fileType: "PDF",
-          fileSize: "1.1 MB",
-        },
-      ],
-      submittedDate: "2026-03-02",
-      status: "PENDING",
-    },
-    {
-      id: "APP-2026-083",
-      registrationType: "NEW_WORKER",
-      applicantName: "Vikram Prajapati",
-      phone: "+91 98251 99116",
-      email: "vikram.prajapati@gmail.com",
-      dateOfBirth: "1991-11-05",
-      gender: "Male",
-      address: "8, Gayatri Krupa, Naroda",
-      city: "Ahmedabad",
-      state: "Gujarat",
-      profession: "Plumber",
-      skills: ["CPVC pipeline", "Drain blockage clearance", "Sanitary fixture fitting"],
-      experienceYears: 7,
-      hourlyRate: 340,
-      documents: [
-        {
-          name: "Voter_ID_Vikram_Prajapati.pdf",
-          category: "IDENTITY",
-          fileType: "PDF",
-          fileSize: "750 KB",
-        },
-        {
-          name: "Trade_Apprenticeship_Certificate.pdf",
-          category: "TRADE_CERTIFICATE",
-          fileType: "PDF",
-          fileSize: "1.6 MB",
-        },
-      ],
-      submittedDate: "2026-03-03",
-      status: "PENDING",
-    },
-  ];
+  private fallbackApplications: WorkerApplicationItem[] = [];
 
   /**
    * Deterministic development store for worker-initiated profile change requests.
@@ -324,17 +227,31 @@ export class WorkforceManagementService {
    * Retrieves managed workers list filtered by search query.
    */
   async getManagedWorkers(searchQuery: string = ""): Promise<WorkforceManagementData> {
+    if (typeof window !== "undefined") {
+      try {
+        const res = await fetch(`/api/federation/workers?type=roster&search=${encodeURIComponent(searchQuery)}`);
+        if (res.ok) {
+          const json = await res.json();
+          if (json.success && json.data) {
+            return json.data;
+          }
+        }
+      } catch (apiErr) {
+        console.warn("Notice: Roster API call failed, falling back to direct client:", apiErr);
+      }
+    }
+
     const supabase = createClient();
     let workersList: ManagedWorkerItem[] = [];
-    let isFallback = true;
-    let dataSourceNotice: string | undefined =
-      "Development Demonstration State: Displaying deterministic workforce management roster.";
+    let isFallback = false;
+    let dataSourceNotice: string | undefined = undefined;
 
     try {
       const { data: dbWorkers, error } = await supabase
         .from("workers")
         .select(`
           id,
+          profile_id,
           member_id,
           profession,
           hourly_rate,
@@ -351,35 +268,47 @@ export class WorkforceManagementService {
         `)
         .eq("verification_status", "verified");
 
-      if (!error && dbWorkers && dbWorkers.length > 0) {
+      if (!error && dbWorkers) {
+        const profileIds = dbWorkers.map((w: any) => w.profile_id).filter(Boolean);
+        const addressMap: Record<string, any> = {};
+        if (profileIds.length > 0) {
+          const { data: addresses } = await (supabase.from("addresses") as any)
+            .select("profile_id, address_line1, address_line2, city, state, postal_code")
+            .in("profile_id", profileIds);
+          if (addresses) {
+            for (const addr of addresses) {
+              if (addr.profile_id && !addressMap[addr.profile_id]) {
+                addressMap[addr.profile_id] = addr;
+              }
+            }
+          }
+        }
+
         workersList = (dbWorkers as any[]).map((w) => {
           const profile = w.profiles || {};
+          const addr = addressMap[w.profile_id];
           return {
             id: w.id,
             memberId: w.member_id || undefined,
             fullName: profile.full_name || "Cooperative Member",
             profession: w.profession || "Skilled Craftsman",
-            area: "Ahmedabad Central",
-            city: "Ahmedabad",
-            state: "Gujarat",
+            area: addr?.address_line2 || addr?.address_line1 || "Ahmedabad Central",
+            city: addr?.city || "Ahmedabad",
+            state: addr?.state || "Gujarat",
             accountStatus: (w.account_status || "ACTIVE") as WorkerAccountStatus,
             availabilityStatus: (w.availability_status || "AVAILABLE") as any,
-            hourlyRate: w.hourly_rate || 350,
-            experienceYears: w.experience_years || 5,
+            hourlyRate: Number(w.hourly_rate) || 350,
+            experienceYears: Number(w.experience_years) || 5,
             joiningDate: w.created_at ? w.created_at.split("T")[0] : "2024-01-01",
             phone: profile.phone || "+91 98250 00000",
             email: profile.email || "worker@kaushalya.coop.in",
           };
         });
-        isFallback = false;
-        dataSourceNotice = undefined;
+      } else if (error) {
+        console.warn("Notice: Live workers query encountered error:", error);
       }
     } catch (err) {
-      console.warn("Notice: Live workers query unpopulated, engaging deterministic fallback.", err);
-    }
-
-    if (workersList.length === 0) {
-      workersList = this.fallbackWorkers;
+      console.warn("Notice: Live workers query failed:", err);
     }
 
     let filtered = workersList;
@@ -508,6 +437,21 @@ export class WorkforceManagementService {
     statusFilter: WorkerApplicationStatus | "ALL" = "ALL",
     registrationTypeFilter: "NEW_WORKER" | "EXISTING_WORKER" | "ALL" = "ALL"
   ): Promise<WorkerApplicationItem[]> {
+    if (typeof window !== "undefined") {
+      try {
+        const url = `/api/federation/workers?type=applications&status=${statusFilter}&registrationType=${registrationTypeFilter}&search=${encodeURIComponent(searchQuery)}`;
+        const res = await fetch(url);
+        if (res.ok) {
+          const json = await res.json();
+          if (json.success && Array.isArray(json.applications)) {
+            return json.applications;
+          }
+        }
+      } catch (apiErr) {
+        console.warn("Notice: Applications API call failed, falling back to direct client:", apiErr);
+      }
+    }
+
     const supabase = createClient();
     let applications: WorkerApplicationItem[] = [];
 
@@ -572,7 +516,7 @@ export class WorkforceManagementService {
         const addressMap: Record<string, any> = {};
         if (profileIds.length > 0) {
           const { data: addresses } = await (supabase.from("addresses") as any)
-            .select("profile_id, house_building, street_area, city, district, state, pincode")
+            .select("profile_id, address_line1, address_line2, city, state, postal_code")
             .in("profile_id", profileIds);
           if (addresses) {
             for (const addr of addresses) {
@@ -597,7 +541,7 @@ export class WorkforceManagementService {
             w.registration_type === "EXISTING_WORKER" ? "EXISTING_WORKER" : "NEW_WORKER";
 
           const formattedAddress = addr
-            ? `${addr.house_building ? addr.house_building + ", " : ""}${addr.street_area || ""}`.trim() || "Address on File"
+            ? [addr.address_line1, addr.address_line2, addr.city, addr.state, addr.postal_code].filter(Boolean).join(", ")
             : "Address on File";
 
           return {

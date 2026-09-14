@@ -12,8 +12,41 @@ import type { WorkerProfileDetails } from "../types";
 
 import { createClient } from "@/lib/supabase/client";
 
+const INITIAL_WORKER_PROFILE: WorkerProfileDetails = {
+  name: "Worker Member",
+  email: "",
+  phone: "",
+  trade: "Skilled Tradesperson",
+  cooperativeName: "Cooperative Society",
+  cooperativeRole: "Member",
+  federationName: "Cooperative Federation",
+  location: "Gujarat, India",
+  cooperativeId: "PENDING",
+  rating: 0,
+  reviewsCount: 0,
+  experienceYears: 0,
+  hourlyRate: 300,
+  joiningDate: new Date().toISOString().split("T")[0],
+  verifications: {
+    identity: false,
+    phone: false,
+    worker: false,
+    skill: false,
+  },
+  isVerified: false,
+  verificationStatus: "pending_verification",
+  accountStatus: "ACTIVE",
+  address: "Address not provided",
+  bio: "Cooperative registered trade worker.",
+  skills: [],
+  languages: ["Gujarati", "Hindi"],
+  certifications: [],
+  documents: [],
+  idProofNumber: "•••• •••• ••••",
+};
+
 export function ProfileView() {
-  const [profile, setProfile] = React.useState<WorkerProfileDetails>(DEMO_WORKER_PROFILE);
+  const [profile, setProfile] = React.useState<WorkerProfileDetails>(INITIAL_WORKER_PROFILE);
   const [isEditProfileOpen, setIsEditProfileOpen] = React.useState(false);
   const [isUpdateSkillsOpen, setIsUpdateSkillsOpen] = React.useState(false);
 
@@ -45,6 +78,7 @@ export function ProfileView() {
             date_of_birth,
             gender,
             registration_type,
+            created_at,
             federations (id, name, city, state, code)
           `)
           .eq("profile_id", user.id)
@@ -53,7 +87,7 @@ export function ProfileView() {
         // 3. Fetch Residential Address
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         const { data: addr } = await (supabase.from("addresses") as any)
-          .select("address_line1, city, state, postal_code")
+          .select("address_line1, address_line2, city, state, postal_code")
           .eq("profile_id", user.id)
           .order("is_default", { ascending: false })
           .limit(1)
@@ -76,8 +110,10 @@ export function ProfileView() {
         }
 
         const addressText = addr
-          ? `${addr.address_line1}, ${addr.city}, ${addr.state} ${addr.postal_code ? `- ${addr.postal_code}` : ""}`
-          : undefined;
+          ? [addr.address_line1, addr.address_line2, addr.city, addr.state, addr.postal_code ? `- ${addr.postal_code}` : null]
+              .filter(Boolean)
+              .join(", ")
+          : "Address not provided";
 
         setProfile((prev) => ({
           ...prev,
@@ -85,11 +121,12 @@ export function ProfileView() {
           email: prof?.email || prev.email,
           phone: prof?.phone || prev.phone,
           avatarUrl: prof?.avatar_url || null,
-          memberId: wRec?.member_id || prev.cooperativeId,
-          cooperativeId: wRec?.member_id || prev.cooperativeId,
+          memberId: wRec?.member_id || "PENDING",
+          cooperativeId: wRec?.member_id || "PENDING",
           trade: wRec?.profession || prev.trade,
           hourlyRate: Number(wRec?.hourly_rate) || prev.hourlyRate,
           experienceYears: wRec?.experience_years ?? prev.experienceYears,
+          joiningDate: wRec?.created_at ? wRec.created_at.split("T")[0] : prev.joiningDate,
           federationName: wRec?.federations?.name || prev.federationName,
           location: wRec?.federations?.city
             ? `${wRec.federations.city}, ${wRec.federations.state}`
@@ -98,9 +135,10 @@ export function ProfileView() {
           gender: wRec?.gender || null,
           registrationType: wRec?.registration_type || null,
           accountStatus: wRec?.account_status || "ACTIVE",
-          verificationStatus: wRec?.verification_status || "verified",
-          address: addressText || prev.location,
-          skills: fetchedSkills.length > 0 ? fetchedSkills : prev.skills,
+          verificationStatus: wRec?.verification_status || "pending_verification",
+          isVerified: wRec?.verification_status === "verified",
+          address: addressText,
+          skills: fetchedSkills.length > 0 ? fetchedSkills : (wRec?.profession ? [wRec.profession] : []),
         }));
       } catch (err) {
         console.warn("Notice: Worker profile Supabase query:", err);
