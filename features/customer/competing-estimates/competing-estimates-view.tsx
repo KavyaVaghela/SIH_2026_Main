@@ -28,6 +28,7 @@ import {
   UserCheck,
 } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
+import { ContextualHelpPopover } from "@/features/guidance/components/contextual-help-popover";
 
 export interface CompetingEstimatesViewProps {
   requestId: string;
@@ -327,11 +328,27 @@ export function CompetingEstimatesView({ requestId }: CompetingEstimatesViewProp
       </Card>
 
       {/* Competing Estimates Section Title */}
-      <div className="flex items-center justify-between px-1">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 px-1">
         <div>
-          <h3 className="text-base font-bold text-slate-900 dark:text-slate-100">
-            Worker Quotations &amp; Estimates
-          </h3>
+          <div className="flex items-center gap-2">
+            <h3 className="text-base font-bold text-slate-900 dark:text-slate-100">
+              Worker Quotations &amp; Estimates
+            </h3>
+            <ContextualHelpPopover
+              buttonText="How are workers ranked?"
+              modalTitle="How Are Workers Ranked on KaushalyaSetu?"
+              summary="KaushalyaSetu matches you with verified cooperative craftspeople through fair, objective ranking factors."
+              sections={[
+                { heading: "Skill Relevance & Certifications", details: "Workers certified in your specific subservice (e.g., Inverter Wiring, Concealed Plumbing) rank highest." },
+                { heading: "Live Availability", details: "Craftspeople currently marked 'Available' for your selected appointment slot receive priority matching." },
+                { heading: "Geographic Proximity", details: "Distance from your household to the worker's cooperative hub determines estimated travel time and punctuality." },
+                { heading: "Cooperative Rating & History", details: "Historical job completion rates and authentic customer reviews strengthen worker rank." },
+                { heading: "Fair Cooperative Distribution", details: "Ensures all verified federation members receive balanced opportunities without algorithmic exploitation." },
+              ]}
+              footerTip="Cooperative principle: Transparency and craftsmanship without hidden bidding algorithms."
+              variant="badge"
+            />
+          </div>
           <p className="text-xs text-slate-500 dark:text-slate-400">
             Workers submit itemized rates independently. Realtime updates are active without page refresh.
           </p>
@@ -341,7 +358,7 @@ export function CompetingEstimatesView({ requestId }: CompetingEstimatesViewProp
           variant="outline"
           size="sm"
           onClick={() => loadData(true)}
-          className="text-xs border-slate-300 dark:border-slate-700 h-8 gap-1"
+          className="text-xs border-slate-300 dark:border-slate-700 h-8 gap-1 self-end sm:self-center"
         >
           <RefreshCw className="w-3.5 h-3.5" />
           Refresh

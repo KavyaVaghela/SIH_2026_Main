@@ -7,26 +7,31 @@ import { ToastItem } from "@/components/ui/toast";
 import { useComplaintManagement } from "./hooks/use-complaint-management";
 import { ComplaintManagementHeader } from "./components/complaint-management-header";
 import { ComplaintTable } from "./components/complaint-table";
-import { ComplaintDetailDialog } from "./components/complaint-detail-dialog";
+import { GrievanceDetailWorkspace } from "./components/grievance-detail-workspace";
 import { ResolveComplaintDialog } from "./components/resolve-complaint-dialog";
+import type { GrievanceCase } from "@/types/complaints/v2";
 
 export function ComplaintManagementView() {
   const {
     complaints,
     totalCount,
     pendingCount,
+    underReviewCount,
+    actionRequiredCount,
+    escalatedCount,
     resolvedCount,
+    highOrCriticalCount,
     isDevelopmentFallback,
     dataSourceNotice,
     searchQuery,
     setSearchQuery,
     statusFilter,
     setStatusFilter,
+    priorityFilter,
+    setPriorityFilter,
     isLoading,
     error,
     refresh,
-    selectedComplaintForDetail,
-    setSelectedComplaintForDetail,
     targetComplaintForResolve,
     setTargetComplaintForResolve,
     isSubmittingResolution,
@@ -34,6 +39,74 @@ export function ComplaintManagementView() {
     toasts,
     removeToast,
   } = useComplaintManagement();
+
+  const [activeWorkspaceCase, setActiveWorkspaceCase] = React.useState<GrievanceCase | null>(null);
+
+  const handleOpenWorkspace = async (item: any) => {
+    if (item.grievanceCase) {
+      setActiveWorkspaceCase(item.grievanceCase);
+      return;
+    }
+
+    try {
+      const res = await fetch(`/api/complaints/${item.id}?role=FEDERATION_ADMIN`);
+      const data = await res.json();
+      if (data.success && data.complaint) {
+        setActiveWorkspaceCase(data.complaint);
+      } else {
+        // Build fallback case object from item
+        setActiveWorkspaceCase({
+          id: item.id,
+          complaintNumber: item.complaintNumber,
+          bookingId: item.bookingId || null,
+          raisedBy: "cust-1",
+          raisedByRole: "CUSTOMER",
+          raisedByName: item.customerName,
+          raisedByPhone: item.customerPhone,
+          targetRole: "WORKER",
+          targetName: item.workerName,
+          targetWorkerId: item.workerId,
+          federationId: "b765df3b-c418-4a15-b79f-3cbc09e475dc",
+          category: item.category,
+          subcategory: item.subcategory,
+          subject: item.subject,
+          description: item.description,
+          priority: item.priority || "MEDIUM",
+          suggestedPriority: item.suggestedPriority || "MEDIUM",
+          triageReason: item.triageReason,
+          status: item.lifecycleStatus || "UNDER_REVIEW",
+          evidenceUrls: [],
+          timeline: [
+            {
+              id: "tl-1",
+              type: "PUBLIC_UPDATE",
+              visibility: "PUBLIC",
+              actorId: "cust-1",
+              actorRole: "CUSTOMER",
+              actorName: item.customerName,
+              message: item.description,
+              timestamp: new Date().toISOString(),
+            },
+          ],
+          auditTrail: [
+            {
+              id: "aud-1",
+              complaintId: item.id,
+              actorId: "cust-1",
+              actorRole: "CUSTOMER",
+              actorName: item.customerName,
+              action: "CREATE",
+              timestamp: new Date().toISOString(),
+            },
+          ],
+          createdAt: new Date().toISOString(),
+          updatedAt: new Date().toISOString(),
+        });
+      }
+    } catch {
+      // ignore
+    }
+  };
 
   return (
     <div className="space-y-6 pb-16">
@@ -44,11 +117,15 @@ export function ComplaintManagementView() {
         ))}
       </div>
 
-      {/* Header */}
+      {/* Header with full KPIs */}
       <ComplaintManagementHeader
         totalCount={totalCount}
         pendingCount={pendingCount}
+        underReviewCount={underReviewCount}
+        actionRequiredCount={actionRequiredCount}
+        escalatedCount={escalatedCount}
         resolvedCount={resolvedCount}
+        highOrCriticalCount={highOrCriticalCount}
         onRefresh={refresh}
         isLoading={isLoading}
         isDevelopmentFallback={isDevelopmentFallback}
@@ -82,20 +159,24 @@ export function ComplaintManagementView() {
           onSearchChange={setSearchQuery}
           statusFilter={statusFilter}
           onStatusFilterChange={setStatusFilter}
-          onViewDetails={(c) => setSelectedComplaintForDetail(c)}
+          priorityFilter={priorityFilter}
+          onPriorityFilterChange={setPriorityFilter}
+          onViewDetails={handleOpenWorkspace}
           onResolve={(c) => setTargetComplaintForResolve(c)}
           isLoading={isLoading}
         />
       </section>
 
-      {/* Detail Dialog */}
-      <ComplaintDetailDialog
-        complaint={selectedComplaintForDetail}
-        isOpen={!!selectedComplaintForDetail}
-        onClose={() => setSelectedComplaintForDetail(null)}
-        onResolve={(c) => {
-          setSelectedComplaintForDetail(null);
-          setTargetComplaintForResolve(c);
+      {/* Full SIH Case-Management Workspace */}
+      <GrievanceDetailWorkspace
+        grievance={activeWorkspaceCase}
+        isOpen={!!activeWorkspaceCase}
+        onClose={() => setActiveWorkspaceCase(null)}
+        onRefresh={() => {
+          refresh();
+          if (activeWorkspaceCase) {
+            handleOpenWorkspace(activeWorkspaceCase);
+          }
         }}
       />
 

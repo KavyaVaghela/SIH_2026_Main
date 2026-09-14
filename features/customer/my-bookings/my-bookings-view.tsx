@@ -22,6 +22,7 @@ import {
   KeyRound,
   Play,
   CheckCircle2,
+  ShieldAlert,
 } from "lucide-react";
 import { bookingService, Booking } from "@/features/bookings/services/booking-service";
 import { multiWorkerService, CustomerServiceRequestItem } from "@/features/customer/services/multi-worker-service";
@@ -494,6 +495,15 @@ export function MyBookingsView() {
                   </span>
 
                   <div className="flex items-center gap-2">
+                    <Button
+                      size="sm"
+                      variant="ghost"
+                      onClick={() => router.push(`/customer/complaints/new?bookingId=${booking.id}`)}
+                      className="text-xs text-rose-700 dark:text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-950/40 font-bold px-2.5 py-1.5 gap-1"
+                    >
+                      <ShieldAlert className="w-3.5 h-3.5 text-rose-600" />
+                      Raise Dispute
+                    </Button>
                     {booking.status === "BOOKING_COMPLETED" || booking.status === "PAYMENT_RECEIVED" ? (
                       <>
                         <Button

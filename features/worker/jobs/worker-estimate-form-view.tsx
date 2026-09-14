@@ -28,6 +28,7 @@ import { Input } from "@/components/ui/input";
 import { formatINR } from "@/lib/formatters/currency";
 import { workerJobService } from "../services/worker-job-service";
 import type { WorkerJobItem } from "../types";
+import { ContextualHelpPopover } from "@/features/guidance/components/contextual-help-popover";
 
 export interface WorkerEstimateFormViewProps {
   requestId: string;
@@ -506,9 +507,28 @@ export function WorkerEstimateFormView({ requestId }: WorkerEstimateFormViewProp
             {/* Form Inputs Card */}
             <Card className="border-border shadow-sm">
               <CardHeader className="p-4 sm:p-5 border-b pb-3 bg-muted/10">
-                <CardTitle className="text-base font-bold text-foreground">
-                  Quotation Itemization
-                </CardTitle>
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+                  <CardTitle className="text-base font-bold text-foreground">
+                    Quotation Itemization
+                  </CardTitle>
+                  <ContextualHelpPopover
+                    buttonText="How should I prepare an estimate?"
+                    modalTitle="How Should I Prepare an Itemized Estimate?"
+                    summary="Follow cooperative pricing guidelines to create transparent, competitive quotes that win jobs and build customer trust."
+                    sections={[
+                      { heading: "Labor Charges", details: "Base your labor fee on anticipated job duration, trade skill level, and safety measures required." },
+                      { heading: "Material Costs", details: "Estimate required standard parts (e.g., pipes, switches, valves). If customer supplies parts, leave at 0." },
+                      { heading: "Additional Charges", details: "Include travel allowance, parking, or specialized heavy machinery rentals if applicable." },
+                      { heading: "Total Estimate Formula", details: "Total = Labor + Materials + Additional Charges. Customers compare this total against other quotes." },
+                    ]}
+                    bullets={[
+                      "Quotes cannot be increased on-site unless the customer requests additional scope.",
+                      "Itemized breakdowns give customers confidence in cooperative fairness.",
+                      "A 5% platform fee is deducted from final completed payment to fund worker welfare.",
+                    ]}
+                    footerTip="Cooperative guideline: Keeping labor rates transparent leads to higher customer ratings and re-bookings."
+                  />
+                </div>
               </CardHeader>
               <CardContent className="p-5 sm:p-6 space-y-4">
                 {/* Labour Input */}

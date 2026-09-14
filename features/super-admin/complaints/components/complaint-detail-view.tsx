@@ -108,6 +108,24 @@ export function ComplaintDetailView() {
         }
       />
 
+      {/* Escalation Alert Banner */}
+      {complaint.isEscalated && (
+        <div className="rounded-xl border border-rose-300 bg-rose-50 dark:bg-rose-950/40 p-4 text-rose-900 dark:text-rose-200 space-y-1">
+          <div className="flex items-center space-x-2 font-bold text-sm">
+            <ShieldAlert className="h-5 w-5 text-rose-600" />
+            <span>Escalated to Super Admin Governance Review</span>
+          </div>
+          <p className="text-xs">
+            {complaint.escalationReason ? `Reason: ${complaint.escalationReason}` : "This dispute case has been escalated by the Federation for central supervisory intervention."}
+          </p>
+          {complaint.escalatedAt && (
+            <p className="text-[11px] text-muted-foreground">
+              Escalated at: {new Date(complaint.escalatedAt).toLocaleString("en-IN")}
+            </p>
+          )}
+        </div>
+      )}
+
       {/* Workflow Controls & State Transitions */}
       <ComplaintActionBar
         status={complaint.status}

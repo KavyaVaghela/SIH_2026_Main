@@ -2,7 +2,6 @@ import { createAdminClient } from "../lib/supabase/admin";
 import { createClient } from "@supabase/supabase-js";
 import { multiWorkerService } from "../features/customer/services/multi-worker-service";
 import { workerJobService } from "../features/worker/services/worker-job-service";
-import * as dotenv from "dotenv";
 import * as path from "path";
 import * as fs from "fs";
 

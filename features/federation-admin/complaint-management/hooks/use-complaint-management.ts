@@ -4,14 +4,15 @@ import * as React from "react";
 import { complaintManagementService } from "../services/complaint-management-service";
 import type {
   FederationComplaintItem,
-  ComplaintStatusDisplay,
   ComplaintManagementData,
 } from "../types";
+import type { GrievanceCase } from "@/types/complaints/v2";
 import type { ToastMessage } from "@/components/ui/toast";
 
 export function useComplaintManagement() {
   const [searchQuery, setSearchQuery] = React.useState<string>("");
-  const [statusFilter, setStatusFilter] = React.useState<ComplaintStatusDisplay | "ALL">("ALL");
+  const [statusFilter, setStatusFilter] = React.useState<string>("ALL");
+  const [priorityFilter, setPriorityFilter] = React.useState<string>("ALL");
   const [data, setData] = React.useState<ComplaintManagementData | null>(null);
   const [isLoading, setIsLoading] = React.useState<boolean>(true);
   const [error, setError] = React.useState<string | null>(null);
@@ -19,6 +20,8 @@ export function useComplaintManagement() {
   // Dialog targets
   const [selectedComplaintForDetail, setSelectedComplaintForDetail] =
     React.useState<FederationComplaintItem | null>(null);
+  const [selectedGrievanceCase, setSelectedGrievanceCase] =
+    React.useState<GrievanceCase | null>(null);
   const [targetComplaintForResolve, setTargetComplaintForResolve] =
     React.useState<FederationComplaintItem | null>(null);
   const [isSubmittingResolution, setIsSubmittingResolution] = React.useState<boolean>(false);
@@ -44,11 +47,15 @@ export function useComplaintManagement() {
   }, []);
 
   const fetchComplaints = React.useCallback(
-    async (query: string, filter: ComplaintStatusDisplay | "ALL") => {
+    async (query: string, sFilter: string, pFilter: string) => {
       setIsLoading(true);
       setError(null);
       try {
-        const result = await complaintManagementService.getComplaints(query, filter);
+        const result = await complaintManagementService.getComplaints(
+          query,
+          sFilter,
+          pFilter
+        );
         setData(result);
       } catch (err) {
         console.error("Failed to load complaint management data:", err);
@@ -61,8 +68,8 @@ export function useComplaintManagement() {
   );
 
   React.useEffect(() => {
-    fetchComplaints(searchQuery, statusFilter);
-  }, [searchQuery, statusFilter, fetchComplaints]);
+    fetchComplaints(searchQuery, statusFilter, priorityFilter);
+  }, [searchQuery, statusFilter, priorityFilter, fetchComplaints]);
 
   const handleResolveComplaint = async (
     complaintId: string,
@@ -83,7 +90,8 @@ export function useComplaintManagement() {
       );
       setTargetComplaintForResolve(null);
       setSelectedComplaintForDetail(null);
-      fetchComplaints(searchQuery, statusFilter);
+      setSelectedGrievanceCase(null);
+      fetchComplaints(searchQuery, statusFilter, priorityFilter);
       return true;
     } catch (err) {
       console.error("Failed to resolve complaint:", err);
@@ -98,34 +106,38 @@ export function useComplaintManagement() {
     }
   };
 
+  const refresh = () => fetchComplaints(searchQuery, statusFilter, priorityFilter);
+
   return {
     complaints: data?.complaints || [],
     totalCount: data?.totalCount || 0,
     pendingCount: data?.pendingCount || 0,
+    underReviewCount: data?.underReviewCount || 0,
+    actionRequiredCount: data?.actionRequiredCount || 0,
+    escalatedCount: data?.escalatedCount || 0,
     resolvedCount: data?.resolvedCount || 0,
+    highOrCriticalCount: data?.highOrCriticalCount || 0,
     isDevelopmentFallback: data?.isDevelopmentFallback || false,
     dataSourceNotice: data?.dataSourceNotice,
-
     searchQuery,
     setSearchQuery,
     statusFilter,
     setStatusFilter,
+    priorityFilter,
+    setPriorityFilter,
     isLoading,
     error,
-    refresh: () => fetchComplaints(searchQuery, statusFilter),
-
-    // Dialogs
+    refresh,
     selectedComplaintForDetail,
     setSelectedComplaintForDetail,
+    selectedGrievanceCase,
+    setSelectedGrievanceCase,
     targetComplaintForResolve,
     setTargetComplaintForResolve,
     isSubmittingResolution,
-
-    // Operations
     handleResolveComplaint,
-
-    // Feedback
     toasts,
+    addToast,
     removeToast,
   };
 }

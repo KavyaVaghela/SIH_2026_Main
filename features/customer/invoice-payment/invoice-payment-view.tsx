@@ -12,6 +12,7 @@ import { useRealtimeSubscription } from "@/hooks/use-realtime-subscription";
 import { InvoiceBreakdownCard } from "./components/invoice-breakdown-card";
 import { PaymentSection } from "./components/payment-section";
 import { CustomerReviewCard } from "./components/customer-review-card";
+import { ContextualHelpPopover } from "@/features/guidance/components/contextual-help-popover";
 
 export interface InvoicePaymentViewProps {
   bookingId: string;
@@ -152,6 +153,40 @@ export function InvoicePaymentView({ bookingId }: InvoicePaymentViewProps) {
             <span>Booking Completed & Settled</span>
           </div>
         )}
+      </div>
+
+      {/* Contextual Guidance Bar */}
+      <div className="flex flex-wrap items-center justify-between gap-2.5 p-3 rounded-lg bg-emerald-50/60 dark:bg-emerald-950/20 border border-emerald-500/20 text-xs">
+        <div className="flex items-center gap-2">
+          <span className="font-semibold text-emerald-900 dark:text-emerald-200">Billing Help:</span>
+          <ContextualHelpPopover
+            buttonText="What is the difference between Worker Estimate and Final Bill?"
+            modalTitle="Worker Estimate vs. Final Bill"
+            summary="Understanding how initial quotes translate into final invoices on KaushalyaSetu."
+            sections={[
+              { heading: "Worker Estimate (Pre-Job)", details: "An initial quote provided before work began based on your problem description. It served as a price ceiling for labor." },
+              { heading: "Final Bill (Post-Completion)", details: "Generated after service execution detailing actual hours worked and verified replacement parts utilized on-site." },
+              { heading: "Price Guarantee", details: "Labor cannot exceed the accepted estimate unless you explicitly approved additional scope of work during the service." },
+            ]}
+            bullets={[
+              "All invoices include transparent cooperative breakdowns (labor, parts, platform fee).",
+              "Payment is held safely in escrow until you verify satisfaction.",
+            ]}
+            variant="link"
+          />
+        </div>
+
+        <ContextualHelpPopover
+          buttonText="Why is my payment pending?"
+          modalTitle="Why is My Payment Pending?"
+          summary="Understanding the cooperative payment and escrow settlement lifecycle."
+          sections={[
+            { heading: "Invoice Generated", details: "The service has been completed and the final bill is ready for your settlement." },
+            { heading: "Safe Escrow Protection", details: "When you authorize payment, funds are deposited into cooperative escrow and disbursed directly to the worker." },
+            { heading: "Instant Receipt", details: "Once paid, you receive an itemized GST invoice and can submit a rating for the worker." },
+          ]}
+          variant="badge"
+        />
       </div>
 
       {/* Itemized Invoice Breakdown Card */}
