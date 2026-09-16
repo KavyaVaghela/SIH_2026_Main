@@ -28,6 +28,19 @@ export interface IReviewService {
 
 const LOCAL_STORAGE_REVIEWS_KEY = "kaushalyasetu_reviews_db";
 
+async function getSupabase() {
+  if (typeof window === "undefined") {
+    try {
+      const { createAdminClient } = await import("@/lib/supabase/admin");
+      return createAdminClient();
+    } catch {
+      // ignore
+    }
+  }
+  const { createClient } = await import("@/lib/supabase/client");
+  return createClient();
+}
+
 export class ReviewService implements IReviewService {
   private mockReviews: Map<string, Review> = new Map();
 
@@ -59,8 +72,7 @@ export class ReviewService implements IReviewService {
 
     let dbReview: Review | null = null;
     try {
-      const { createClient } = await import("@/lib/supabase/client");
-      const supabase = createClient();
+      const supabase = await getSupabase();
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const { data, error } = await (supabase.from("reviews") as any)
         .insert({
@@ -104,8 +116,7 @@ export class ReviewService implements IReviewService {
 
   async getBookingReview(bookingId: string): Promise<Review | null> {
     try {
-      const { createClient } = await import("@/lib/supabase/client");
-      const supabase = createClient();
+      const supabase = await getSupabase();
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const { data, error } = await (supabase.from("reviews") as any)
         .select("*")
@@ -133,8 +144,7 @@ export class ReviewService implements IReviewService {
 
   async getWorkerReviews(workerId: string): Promise<Review[]> {
     try {
-      const { createClient } = await import("@/lib/supabase/client");
-      const supabase = createClient();
+      const supabase = await getSupabase();
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const { data, error } = await (supabase.from("reviews") as any)
         .select("*")

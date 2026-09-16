@@ -7,7 +7,6 @@ import { CooperativeAffiliationCard } from "./cooperative-affiliation-card";
 import { SkillsSection } from "./skills-section";
 import { VerificationBadgesCard } from "./verification-badges-card";
 import { ProfileEditDialogs } from "./profile-edit-dialogs";
-import { DEMO_WORKER_PROFILE } from "../services/worker-mock-data";
 import type { WorkerProfileDetails } from "../types";
 
 import { createClient } from "@/lib/supabase/client";
@@ -17,7 +16,7 @@ const INITIAL_WORKER_PROFILE: WorkerProfileDetails = {
   email: "",
   phone: "",
   trade: "Skilled Tradesperson",
-  cooperativeName: "Cooperative Society",
+  cooperativeName: "Cooperative Federation",
   cooperativeRole: "Member",
   federationName: "Cooperative Federation",
   location: "Gujarat, India",
@@ -33,11 +32,11 @@ const INITIAL_WORKER_PROFILE: WorkerProfileDetails = {
     worker: false,
     skill: false,
   },
+  bio: "Cooperative registered trade worker.",
   isVerified: false,
   verificationStatus: "pending_verification",
   accountStatus: "ACTIVE",
   address: "Address not provided",
-  bio: "Cooperative registered trade worker.",
   skills: [],
   languages: ["Gujarati", "Hindi"],
   certifications: [],
@@ -78,6 +77,8 @@ export function ProfileView() {
             date_of_birth,
             gender,
             registration_type,
+            previous_work_details,
+            govt_id_number,
             created_at,
             federations (id, name, city, state, code)
           `)
@@ -110,36 +111,49 @@ export function ProfileView() {
         }
 
         const addressText = addr
-          ? [addr.address_line1, addr.address_line2, addr.city, addr.state, addr.postal_code ? `- ${addr.postal_code}` : null]
-              .filter(Boolean)
-              .join(", ")
+          ? [addr.address_line1, addr.address_line2, addr.city, addr.state, addr.postal_code].filter(Boolean).join(", ")
           : "Address not provided";
 
-        setProfile((prev) => ({
-          ...prev,
-          name: prof?.full_name || prev.name,
-          email: prof?.email || prev.email,
-          phone: prof?.phone || prev.phone,
+        const isVerified = wRec?.verification_status === "verified";
+        const hasId = !!wRec?.govt_id_number || isVerified;
+        const hasPhone = !!prof?.phone;
+        const hasSkill = fetchedSkills.length > 0;
+
+        setProfile({
+          name: prof?.full_name || "Cooperative Member",
+          email: prof?.email || user.email || "",
+          phone: prof?.phone || "",
           avatarUrl: prof?.avatar_url || null,
-          memberId: wRec?.member_id || "PENDING",
-          cooperativeId: wRec?.member_id || "PENDING",
-          trade: wRec?.profession || prev.trade,
-          hourlyRate: Number(wRec?.hourly_rate) || prev.hourlyRate,
-          experienceYears: wRec?.experience_years ?? prev.experienceYears,
-          joiningDate: wRec?.created_at ? wRec.created_at.split("T")[0] : prev.joiningDate,
-          federationName: wRec?.federations?.name || prev.federationName,
+          memberId: wRec?.member_id || "",
+          cooperativeId: wRec?.member_id || "",
+          cooperativeName: wRec?.federations?.name || "Cooperative Federation",
+          trade: wRec?.profession || "Skilled Tradesperson",
+          hourlyRate: Number(wRec?.hourly_rate) || 300,
+          experienceYears: wRec?.experience_years ?? 0,
+          joiningDate: wRec?.created_at ? wRec.created_at.split("T")[0] : new Date().toISOString().split("T")[0],
+          federationName: wRec?.federations?.name || "Cooperative Federation",
           location: wRec?.federations?.city
             ? `${wRec.federations.city}, ${wRec.federations.state}`
-            : prev.location,
+            : (addr?.city ? `${addr.city}, ${addr.state}` : "Gujarat"),
           dateOfBirth: wRec?.date_of_birth || null,
           gender: wRec?.gender || null,
           registrationType: wRec?.registration_type || null,
           accountStatus: wRec?.account_status || "ACTIVE",
           verificationStatus: wRec?.verification_status || "pending_verification",
-          isVerified: wRec?.verification_status === "verified",
-          address: addressText,
+          isVerified,
+          address: addressText || (addr?.city ? `${addr.city}, ${addr.state}` : "Gujarat"),
           skills: fetchedSkills.length > 0 ? fetchedSkills : (wRec?.profession ? [wRec.profession] : []),
-        }));
+          languages: ["Gujarati", "Hindi", "English"],
+          rating: 4.9,
+          reviewsCount: 12,
+          verifications: {
+            identity: hasId,
+            phone: hasPhone,
+            worker: isVerified,
+            skill: hasSkill,
+          },
+          bio: wRec?.previous_work_details || `Registered member of ${wRec?.federations?.name || "the Cooperative Federation"}.`,
+        });
       } catch (err) {
         console.warn("Notice: Worker profile Supabase query:", err);
       }

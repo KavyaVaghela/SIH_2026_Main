@@ -1,7 +1,7 @@
 "use client";
 
 import * as React from "react";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import {
   ArrowLeft,
   User,
@@ -28,6 +28,7 @@ import { Input } from "@/components/ui/input";
 import { formatINR } from "@/lib/formatters/currency";
 import { workerJobService } from "../services/worker-job-service";
 import type { WorkerJobItem } from "../types";
+import { ContextualHelpPopover } from "@/features/guidance/components/contextual-help-popover";
 
 export interface WorkerEstimateFormViewProps {
   requestId: string;
@@ -49,10 +50,16 @@ export function WorkerEstimateFormView({ requestId }: WorkerEstimateFormViewProp
   const [step, setStep] = React.useState<"FORM" | "PREVIEW" | "SUBMITTED">("FORM");
   const [isSubmitting, setIsSubmitting] = React.useState(false);
   const [validationError, setValidationError] = React.useState<string | null>(null);
-  const [workerDbId, setWorkerDbId] = React.useState<string>("w-1");
+  const searchParams = useSearchParams();
+  const queryWorkerId = searchParams.get("workerId") || "";
+  const [workerDbId, setWorkerDbId] = React.useState<string>(queryWorkerId);
 
-  // Resolve real worker UUID from authenticated session on mount
+  // Resolve real worker UUID from query params or authenticated session on mount
   React.useEffect(() => {
+    if (queryWorkerId) {
+      setWorkerDbId(queryWorkerId);
+      return;
+    }
     import("@/lib/supabase/client").then(({ createClient }) => {
       const supabase = createClient();
       supabase.auth.getUser().then(({ data: { user } }) => {
@@ -68,7 +75,7 @@ export function WorkerEstimateFormView({ requestId }: WorkerEstimateFormViewProp
         }
       });
     });
-  }, []);
+  }, [queryWorkerId]);
 
 
   React.useEffect(() => {
@@ -76,7 +83,7 @@ export function WorkerEstimateFormView({ requestId }: WorkerEstimateFormViewProp
       setLoading(true);
       setError(null);
       try {
-        const data = await workerJobService.getJobDetails(requestId);
+        const data = await workerJobService.getJobDetails(requestId, workerDbId || queryWorkerId || undefined);
         if (data) {
           setJob(data);
           // If existing estimate, initialize fields
@@ -142,10 +149,17 @@ export function WorkerEstimateFormView({ requestId }: WorkerEstimateFormViewProp
     setIsSubmitting(true);
     setValidationError(null);
 
+    const effectiveWorkerId = workerDbId || queryWorkerId;
+    if (!effectiveWorkerId) {
+      setValidationError("Unable to identify active worker profile. Please refresh or navigate from your job request card.");
+      setIsSubmitting(false);
+      return;
+    }
+
     try {
       const updated = await workerJobService.submitWorkerEstimate({
         bookingId: job.id,
-        workerId: workerDbId,
+        workerId: effectiveWorkerId,
         laborAmount: numLabor,
         materialAmount: numMaterials,
         additionalCharges: numAdditional,
@@ -493,9 +507,28 @@ export function WorkerEstimateFormView({ requestId }: WorkerEstimateFormViewProp
             {/* Form Inputs Card */}
             <Card className="border-border shadow-sm">
               <CardHeader className="p-4 sm:p-5 border-b pb-3 bg-muted/10">
-                <CardTitle className="text-base font-bold text-foreground">
-                  Quotation Itemization
-                </CardTitle>
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+                  <CardTitle className="text-base font-bold text-foreground">
+                    Quotation Itemization
+                  </CardTitle>
+                  <ContextualHelpPopover
+                    buttonText="How should I prepare an estimate?"
+                    modalTitle="How Should I Prepare an Itemized Estimate?"
+                    summary="Follow cooperative pricing guidelines to create transparent, competitive quotes that win jobs and build customer trust."
+                    sections={[
+                      { heading: "Labor Charges", details: "Base your labor fee on anticipated job duration, trade skill level, and safety measures required." },
+                      { heading: "Material Costs", details: "Estimate required standard parts (e.g., pipes, switches, valves). If customer supplies parts, leave at 0." },
+                      { heading: "Additional Charges", details: "Include travel allowance, parking, or specialized heavy machinery rentals if applicable." },
+                      { heading: "Total Estimate Formula", details: "Total = Labor + Materials + Additional Charges. Customers compare this total against other quotes." },
+                    ]}
+                    bullets={[
+                      "Quotes cannot be increased on-site unless the customer requests additional scope.",
+                      "Itemized breakdowns give customers confidence in cooperative fairness.",
+                      "A 5% platform fee is deducted from final completed payment to fund worker welfare.",
+                    ]}
+                    footerTip="Cooperative guideline: Keeping labor rates transparent leads to higher customer ratings and re-bookings."
+                  />
+                </div>
               </CardHeader>
               <CardContent className="p-5 sm:p-6 space-y-4">
                 {/* Labour Input */}

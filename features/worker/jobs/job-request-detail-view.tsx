@@ -43,7 +43,7 @@ export function JobRequestDetailView({ requestId }: JobRequestDetailViewProps) {
   const [isSubmitting, setIsSubmitting] = React.useState(false);
   const [actionSuccessMessage, setActionSuccessMessage] = React.useState<string | null>(null);
   const [actionError, setActionError] = React.useState<string | null>(null);
-  const [workerDbId, setWorkerDbId] = React.useState<string>("59eca4ff-a589-4363-ad76-24a4ff5b6e2e");
+  const [workerDbId, setWorkerDbId] = React.useState<string>("");
 
   // Resolve real worker UUID from authenticated session on mount
   React.useEffect(() => {
@@ -72,7 +72,7 @@ export function JobRequestDetailView({ requestId }: JobRequestDetailViewProps) {
     }
     try {
       const [data, hist] = await Promise.all([
-        workerJobService.getJobDetails(requestId),
+        workerJobService.getJobDetails(requestId, workerDbId || undefined),
         workerJobService.getStatusHistory(requestId),
       ]);
       if (data) {
@@ -169,6 +169,25 @@ export function JobRequestDetailView({ requestId }: JobRequestDetailViewProps) {
     );
   }
 
+  // Action: Worker Declines Request
+  const handleDecline = async () => {
+    if (!job || isSubmitting) return;
+    setIsSubmitting(true);
+    setActionError(null);
+    setActionSuccessMessage(null);
+    try {
+      const updated = await workerJobService.declineJobRequest(job.id, workerDbId, "Worker declined request");
+      if (updated) setJob(updated);
+      setActionSuccessMessage("You have declined this service request.");
+      router.push("/worker/schedule?tab=requests");
+    } catch (err: any) {
+      console.error("Failed to decline request", err);
+      setActionError(err?.message || "Failed to decline request. Please try again.");
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
   if (actionError && !job) {
     return (
       <div className="space-y-6 pb-12">
@@ -197,16 +216,23 @@ export function JobRequestDetailView({ requestId }: JobRequestDetailViewProps) {
 
   if (!job) return null;
 
-  const isRequestSent = job.status === "REQUEST_SENT";
+  const isRequestSent = job.status === "REQUEST_SENT" || job.status === "PENDING";
   const isReviewing = job.status === "WORKER_REVIEWING";
-  const isInterestSent = job.status === "WORKER_INTERESTED" || job.status === "CUSTOMER_CONFIRMATION_PENDING";
+  const isInterestSent =
+    job.status === "WORKER_INTERESTED" ||
+    job.status === "INTERESTED" ||
+    job.status === "CUSTOMER_CONFIRMATION_PENDING" ||
+    job.status === "ESTIMATE_SUBMITTED";
+  const isDeclined = job.status === "DECLINED";
   const isConfirmedOrBeyond =
     job.status === "BOOKING_CONFIRMED" ||
+    job.status === "SELECTED" ||
     job.status === "WORKER_ACCEPTED" ||
     job.status === "SERVICE_STARTED" ||
     job.status === "BOOKING_COMPLETED";
 
   const getStatusBadgeVariant = () => {
+    if (isDeclined) return "destructive";
     if (isRequestSent) return "outline";
     if (isReviewing) return "warning";
     if (isInterestSent) return "secondary";
@@ -215,9 +241,12 @@ export function JobRequestDetailView({ requestId }: JobRequestDetailViewProps) {
   };
 
   const statusDisplayLabel =
+    isDeclined ? "Declined" :
     isRequestSent ? "New Request" :
     isReviewing ? "Under Review" :
+    job.status === "ESTIMATE_SUBMITTED" ? "Estimate Submitted" :
     isInterestSent ? "Interest Sent — Waiting for Customer" :
+    job.status === "SELECTED" ? "Customer Selected You!" :
     (CANONICAL_STATUS_LABELS[job.status] || job.status);
 
   return (
@@ -445,44 +474,33 @@ export function JobRequestDetailView({ requestId }: JobRequestDetailViewProps) {
 
             {/* Task 3 & Task 4 Interactive Actions */}
             <CardFooter className="p-4 sm:p-5 border-t bg-muted/20 flex flex-col gap-3">
-              {/* State 1: REQUEST_SENT -> Worker Reviews Request */}
-              {isRequestSent && (
+              {/* State 1: PENDING / REQUEST_SENT / REVIEWING -> Worker chooses Interested or Decline */}
+              {(isRequestSent || isReviewing) && (
                 <div className="space-y-2.5 w-full">
-                  <Button
-                    onClick={handleReview}
-                    disabled={isSubmitting}
-                    className="w-full text-xs font-semibold py-2.5 bg-blue-600 hover:bg-blue-700 text-white shadow-sm"
-                  >
-                    {isSubmitting ? (
-                      <RefreshCw className="h-3.5 w-3.5 mr-1.5 animate-spin" />
-                    ) : (
-                      <Eye className="h-3.5 w-3.5 mr-1.5" />
-                    )}
-                    Review Request
-                  </Button>
+                  <div className="flex gap-2">
+                    <Button
+                      onClick={handleExpressInterest}
+                      disabled={isSubmitting}
+                      className="flex-1 text-xs font-semibold py-2.5 bg-emerald-700 hover:bg-emerald-800 text-white shadow-sm"
+                    >
+                      {isSubmitting ? (
+                        <RefreshCw className="h-3.5 w-3.5 mr-1.5 animate-spin" />
+                      ) : (
+                        <ThumbsUp className="h-3.5 w-3.5 mr-1.5" />
+                      )}
+                      Interested
+                    </Button>
+                    <Button
+                      variant="outline"
+                      onClick={handleDecline}
+                      disabled={isSubmitting}
+                      className="flex-1 text-xs font-semibold py-2.5 border-rose-300 text-rose-700 hover:bg-rose-50 dark:border-rose-800 dark:text-rose-400"
+                    >
+                      Decline
+                    </Button>
+                  </div>
                   <p className="text-[11px] text-muted-foreground text-center leading-relaxed">
-                    Clicking &ldquo;Review Request&rdquo; acknowledges receipt and changes status to Under Review.
-                  </p>
-                </div>
-              )}
-
-              {/* State 2: WORKER_REVIEWING -> Worker Expresses Interest */}
-              {isReviewing && (
-                <div className="space-y-2.5 w-full">
-                  <Button
-                    onClick={handleExpressInterest}
-                    disabled={isSubmitting}
-                    className="w-full text-xs font-semibold py-2.5 bg-emerald-700 hover:bg-emerald-800 text-white shadow-sm"
-                  >
-                    {isSubmitting ? (
-                      <RefreshCw className="h-3.5 w-3.5 mr-1.5 animate-spin" />
-                    ) : (
-                      <ThumbsUp className="h-3.5 w-3.5 mr-1.5" />
-                    )}
-                    Interested in This Job
-                  </Button>
-                  <p className="text-[11px] text-muted-foreground text-center leading-relaxed">
-                    Express interest to notify the customer that you are available and ready to take this assignment.
+                    Choose &ldquo;Interested&rdquo; to notify the customer and submit an estimate, or &ldquo;Decline&rdquo; if unavailable.
                   </p>
                 </div>
               )}
@@ -513,7 +531,7 @@ export function JobRequestDetailView({ requestId }: JobRequestDetailViewProps) {
                       <Button
                         variant="outline"
                         size="sm"
-                        onClick={() => router.push(`/worker/jobs/requests/${job.id}/estimate`)}
+                        onClick={() => router.push(`/worker/jobs/requests/${job.id}/estimate${workerDbId ? `?workerId=${workerDbId}` : ""}`)}
                         className="w-full text-xs mt-1 border-emerald-600/40 text-emerald-800 dark:text-emerald-300 hover:bg-emerald-100/50"
                       >
                         <Edit3 className="h-3.5 w-3.5 mr-1" />
@@ -533,7 +551,7 @@ export function JobRequestDetailView({ requestId }: JobRequestDetailViewProps) {
                       </div>
 
                       <Button
-                        onClick={() => router.push(`/worker/jobs/requests/${job.id}/estimate`)}
+                        onClick={() => router.push(`/worker/jobs/requests/${job.id}/estimate${workerDbId ? `?workerId=${workerDbId}` : ""}`)}
                         className="w-full text-xs font-semibold py-2.5 bg-emerald-700 hover:bg-emerald-800 text-white shadow-sm"
                       >
                         <Calculator className="h-3.5 w-3.5 mr-1.5" />

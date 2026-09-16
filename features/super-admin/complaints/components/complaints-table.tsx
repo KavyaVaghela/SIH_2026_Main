@@ -160,12 +160,19 @@ export function ComplaintsTable({
               >
                 {/* Complaint ID */}
                 <TableCell>
-                  <Link
-                    href={`/super-admin/complaints/${complaint.id}`}
-                    className="font-mono font-bold text-xs text-foreground hover:text-emerald-700 hover:underline"
-                  >
-                    {complaint.complaintNumber}
-                  </Link>
+                  <div className="flex flex-col space-y-1">
+                    <Link
+                      href={`/super-admin/complaints/${complaint.id}`}
+                      className="font-mono font-bold text-xs text-foreground hover:text-emerald-700 hover:underline"
+                    >
+                      {complaint.complaintNumber}
+                    </Link>
+                    {complaint.isEscalated && (
+                      <span className="inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-bold bg-rose-100 text-rose-800 dark:bg-rose-950 dark:text-rose-300 w-fit">
+                        Escalated
+                      </span>
+                    )}
+                  </div>
                 </TableCell>
 
                 {/* Category */}

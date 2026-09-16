@@ -2,7 +2,7 @@
 
 import * as React from "react";
 import { useRouter, usePathname } from "next/navigation";
-import { User, Settings, LogOut, Shield } from "lucide-react";
+import { User, Settings, LogOut, Shield, HelpCircle } from "lucide-react";
 import { Avatar } from "@/components/ui/avatar";
 import { Dropdown, type DropdownItem } from "@/components/ui/dropdown";
 import { createClient } from "@/lib/supabase/client";
@@ -80,6 +80,18 @@ export function UserMenu({
     }
   };
 
+  const handleGuidanceClick = () => {
+    if (isSuperAdmin) {
+      router.push("/super-admin/guidance");
+    } else if (isFederationAdmin) {
+      router.push("/federation-admin/guidance");
+    } else if (isWorker) {
+      router.push("/worker/guidance");
+    } else {
+      router.push("/customer/guidance");
+    }
+  };
+
   const handleSignOutClick = async () => {
     if (onLogout) {
       onLogout();
@@ -109,6 +121,11 @@ export function UserMenu({
       label: "Profile",
       icon: <User className="h-4 w-4 text-emerald-600" />,
       onClick: handleProfileClick,
+    },
+    {
+      label: "Help & Guidance",
+      icon: <HelpCircle className="h-4 w-4 text-emerald-600" />,
+      onClick: handleGuidanceClick,
     },
     {
       label: "Account Settings",

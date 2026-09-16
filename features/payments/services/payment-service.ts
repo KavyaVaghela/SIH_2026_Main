@@ -37,11 +37,41 @@ export interface IPaymentService {
 
 const LOCAL_STORAGE_PAYMENTS_KEY = "kaushalyasetu_payments_db";
 
+async function getSupabase() {
+  if (typeof window === "undefined") {
+    try {
+      const { createAdminClient } = await import("@/lib/supabase/admin");
+      return createAdminClient();
+    } catch {
+      // ignore
+    }
+  }
+  const { createClient } = await import("@/lib/supabase/client");
+  return createClient();
+}
+
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+function mapDbPayment(data: any): PaymentRecord {
+  return {
+    id: data.id,
+    paymentNumber: data.payment_number,
+    invoiceId: data.invoice_id,
+    bookingId: data.booking_id,
+    customerId: data.customer_id,
+    amount: Number(data.amount),
+    gatewayProvider: data.gateway_provider,
+    gatewayOrderId: data.gateway_order_id,
+    gatewayPaymentId: data.gateway_payment_id,
+    status: data.status,
+    paidAt: data.paid_at,
+    createdAt: data.created_at,
+  };
+}
+
 export class PaymentService implements IPaymentService {
   private mockPayments: Map<string, PaymentRecord> = new Map();
 
   constructor() {}
-
 
   async createPaymentRecord(payload: CreatePaymentPayload): Promise<PaymentRecord> {
     const existing = Array.from(this.mockPayments.values()).find((p) => p.bookingId === payload.bookingId);
@@ -49,7 +79,31 @@ export class PaymentService implements IPaymentService {
       return existing;
     }
 
-    // 1. Try server-side API endpoint with full admin privileges & RLS bypass
+    const isUuid = (str?: string | null) =>
+      Boolean(str && /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(str));
+
+    // Check existing in DB to prevent duplicates on double-click
+    try {
+      const supabase = await getSupabase();
+      if (isUuid(payload.bookingId)) {
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        const { data: existingDb } = await (supabase.from("payments") as any)
+          .select("*")
+          .eq("booking_id", payload.bookingId)
+          .maybeSingle();
+
+        if (existingDb) {
+          const mapped = mapDbPayment(existingDb);
+          this.mockPayments.set(mapped.id, mapped);
+          this.mockPayments.set(mapped.bookingId, mapped);
+          return mapped;
+        }
+      }
+    } catch (err) {
+      console.warn("Check existing payment notice:", err);
+    }
+
+    // 1. Try server-side API endpoint with full admin privileges & RLS bypass in browser
     try {
       if (typeof window !== "undefined") {
         const res = await fetch("/api/payments", {
@@ -76,10 +130,7 @@ export class PaymentService implements IPaymentService {
 
     let dbRecord: PaymentRecord | null = null;
     try {
-      const { createClient } = await import("@/lib/supabase/client");
-      const supabase = createClient();
-      const isUuid = (str?: string | null) =>
-        Boolean(str && /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(str));
+      const supabase = await getSupabase();
       const targetCustomerId = isUuid(payload.customerId) ? payload.customerId : "b0ef9604-54c8-4ad1-9a7a-c353cfd339ef";
 
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -98,20 +149,7 @@ export class PaymentService implements IPaymentService {
         .single();
 
       if (!error && data) {
-        dbRecord = {
-          id: data.id,
-          paymentNumber: data.payment_number,
-          invoiceId: data.invoice_id || payload.invoiceId,
-          bookingId: data.booking_id || payload.bookingId,
-          customerId: data.customer_id,
-          amount: data.amount,
-          gatewayProvider: data.gateway_provider,
-          gatewayOrderId: data.gateway_order_id,
-          gatewayPaymentId: data.gateway_payment_id,
-          status: data.status,
-          paidAt: data.paid_at,
-          createdAt: data.created_at,
-        };
+        dbRecord = mapDbPayment(data);
       }
     } catch (err) {
       console.warn("DB createPaymentRecord insert notice:", err);
@@ -131,13 +169,13 @@ export class PaymentService implements IPaymentService {
     };
 
     this.mockPayments.set(record.id, record);
+    this.mockPayments.set(record.bookingId, record);
     return record;
   }
 
   async getPayment(paymentId: string): Promise<PaymentRecord | null> {
     try {
-      const { createClient } = await import("@/lib/supabase/client");
-      const supabase = createClient();
+      const supabase = await getSupabase();
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const { data, error } = await (supabase.from("payments") as any)
         .select("*")
@@ -145,20 +183,7 @@ export class PaymentService implements IPaymentService {
         .maybeSingle();
 
       if (!error && data) {
-        const mapped: PaymentRecord = {
-          id: data.id,
-          paymentNumber: data.payment_number,
-          invoiceId: data.invoice_id,
-          bookingId: data.booking_id,
-          customerId: data.customer_id,
-          amount: data.amount,
-          gatewayProvider: data.gateway_provider,
-          gatewayOrderId: data.gateway_order_id,
-          gatewayPaymentId: data.gateway_payment_id,
-          status: data.status,
-          paidAt: data.paid_at,
-          createdAt: data.created_at,
-        };
+        const mapped = mapDbPayment(data);
         this.mockPayments.set(paymentId, mapped);
         return mapped;
       }
@@ -170,8 +195,7 @@ export class PaymentService implements IPaymentService {
 
   async getBookingPayment(bookingId: string): Promise<PaymentRecord | null> {
     try {
-      const { createClient } = await import("@/lib/supabase/client");
-      const supabase = createClient();
+      const supabase = await getSupabase();
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const { data, error } = await (supabase.from("payments") as any)
         .select("*")
@@ -179,21 +203,9 @@ export class PaymentService implements IPaymentService {
         .maybeSingle();
 
       if (!error && data) {
-        const mapped: PaymentRecord = {
-          id: data.id,
-          paymentNumber: data.payment_number,
-          invoiceId: data.invoice_id,
-          bookingId: data.booking_id,
-          customerId: data.customer_id,
-          amount: data.amount,
-          gatewayProvider: data.gateway_provider,
-          gatewayOrderId: data.gateway_order_id,
-          gatewayPaymentId: data.gateway_payment_id,
-          status: data.status,
-          paidAt: data.paid_at,
-          createdAt: data.created_at,
-        };
+        const mapped = mapDbPayment(data);
         this.mockPayments.set(mapped.id, mapped);
+        this.mockPayments.set(bookingId, mapped);
         return mapped;
       }
     } catch (err) {
@@ -208,7 +220,12 @@ export class PaymentService implements IPaymentService {
       throw new Error(`Payment ${paymentId} not found`);
     }
 
-    // 1. Try server-side API endpoint with admin privileges & RLS bypass
+    // Double payment protection: if already PAID, return immediately
+    if (payment.status === "PAID") {
+      return payment;
+    }
+
+    // 1. Try server-side API endpoint with admin privileges & RLS bypass in browser
     try {
       if (typeof window !== "undefined") {
         const res = await fetch("/api/payments", {
@@ -237,6 +254,8 @@ export class PaymentService implements IPaymentService {
       console.warn("API /api/payments process notice:", err);
     }
 
+    const supabase = await getSupabase();
+
     if (!simulateSuccess) {
       const failedPayment: PaymentRecord = {
         ...payment,
@@ -244,8 +263,6 @@ export class PaymentService implements IPaymentService {
       };
 
       try {
-        const { createClient } = await import("@/lib/supabase/client");
-        const supabase = createClient();
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         await (supabase.from("payments") as any)
           .update({ status: "FAILED" })
@@ -255,6 +272,7 @@ export class PaymentService implements IPaymentService {
       }
 
       this.mockPayments.set(paymentId, failedPayment);
+      if (payment.bookingId) this.mockPayments.set(payment.bookingId, failedPayment);
 
       await notificationService.sendNotification({
         profileId: payment.customerId,
@@ -266,36 +284,63 @@ export class PaymentService implements IPaymentService {
       return failedPayment;
     }
 
-    // SUCCESSFUL PAYMENT WORKFLOW
+    // SUCCESSFUL PAYMENT WORKFLOW with atomic condition to prevent race conditions
     const paidAt = new Date().toISOString();
     const gatewayPaymentId = `pay_mock_${Date.now()}`;
-    const paidPayment: PaymentRecord = {
-      ...payment,
-      status: "PAID",
-      gatewayPaymentId,
-      paidAt,
-    };
 
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    let updatedDb: any = null;
     try {
-      const { createClient } = await import("@/lib/supabase/client");
-      const supabase = createClient();
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      await (supabase.from("payments") as any)
+      const { data, error } = await (supabase.from("payments") as any)
         .update({
           status: "PAID",
           gateway_payment_id: gatewayPaymentId,
           paid_at: paidAt,
         })
-        .eq("id", paymentId);
+        .eq("id", paymentId)
+        .neq("status", "PAID")
+        .select()
+        .maybeSingle();
+
+      if (!error && data) {
+        updatedDb = data;
+      }
     } catch (err) {
       console.warn("DB processMockPayment success update notice:", err);
     }
 
+    // If update returned nothing and row is already paid in DB, avoid duplicate transitions
+    if (!updatedDb) {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const { data: existingDb } = await (supabase.from("payments") as any)
+        .select("*")
+        .eq("id", paymentId)
+        .maybeSingle();
+
+      if (existingDb?.status === "PAID") {
+        const alreadyPaid = mapDbPayment(existingDb);
+        this.mockPayments.set(paymentId, alreadyPaid);
+        if (alreadyPaid.bookingId) this.mockPayments.set(alreadyPaid.bookingId, alreadyPaid);
+        return alreadyPaid;
+      }
+    }
+
+    const paidPayment: PaymentRecord = {
+      ...payment,
+      status: "PAID",
+      gatewayPaymentId: updatedDb?.gateway_payment_id || gatewayPaymentId,
+      paidAt: updatedDb?.paid_at || paidAt,
+    };
+
     this.mockPayments.set(paymentId, paidPayment);
+    if (payment.bookingId) this.mockPayments.set(payment.bookingId, paidPayment);
 
     // 1. Mark invoice as paid
     try {
-      await invoiceService.updateStatus(payment.invoiceId, "paid");
+      if (payment.invoiceId) {
+        await invoiceService.updateStatus(payment.invoiceId, "paid");
+      }
     } catch (err) {
       console.error("Error updating invoice status to paid", err);
     }
@@ -304,7 +349,7 @@ export class PaymentService implements IPaymentService {
     const booking = await bookingService.getBooking(payment.bookingId);
     if (booking) {
       try {
-        if (booking.status === "PAYMENT_PENDING") {
+        if (booking.status === "PAYMENT_PENDING" || booking.status === "BILL_GENERATED" || booking.status === "SERVICE_COMPLETED") {
           await bookingService.transitionStatus(payment.bookingId, "PAYMENT_RECEIVED", "SYSTEM", "SUPER_ADMIN", "Payment confirmed");
         }
         await bookingService.transitionStatus(payment.bookingId, "BOOKING_COMPLETED", "SYSTEM", "SUPER_ADMIN", "Workflow complete");
@@ -317,7 +362,7 @@ export class PaymentService implements IPaymentService {
       }
     }
 
-    // 4. Notify Customer & Worker
+    // 3. Notify Customer & Worker
     await notificationService.sendNotification({
       profileId: payment.customerId,
       title: "Payment Successful",
@@ -340,8 +385,7 @@ export class PaymentService implements IPaymentService {
     };
 
     try {
-      const { createClient } = await import("@/lib/supabase/client");
-      const supabase = createClient();
+      const supabase = await getSupabase();
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       await (supabase.from("payments") as any)
         .update({ status: "REFUNDED" })

@@ -245,10 +245,28 @@ export class WorkforceManagementService {
     let workersList: ManagedWorkerItem[] = [];
     let isFallback = false;
     let dataSourceNotice: string | undefined = undefined;
+    // Resolve caller's federation_id
+    let federationId: string | null = null;
+    try {
+      const { data: rpcFedId } = await supabase.rpc("current_federation_id");
+      if (rpcFedId) {
+        federationId = rpcFedId;
+      } else {
+        const { data: { user } } = await supabase.auth.getUser();
+        if (user?.email) {
+          const { data: fed } = await (supabase.from("federations") as any)
+            .select("id")
+            .eq("contact_email", user.email)
+            .maybeSingle();
+          federationId = (fed as any)?.id || null;
+        }
+      }
+    } catch {
+      // ignore
+    }
 
     try {
-      const { data: dbWorkers, error } = await supabase
-        .from("workers")
+      let query = (supabase.from("workers") as any)
         .select(`
           id,
           profile_id,
@@ -260,6 +278,7 @@ export class WorkforceManagementService {
           availability_status,
           created_at,
           verification_status,
+          federation_id,
           profiles:profile_id (
             full_name,
             email,
@@ -268,12 +287,19 @@ export class WorkforceManagementService {
         `)
         .eq("verification_status", "verified");
 
+      if (federationId) {
+        query = query.eq("federation_id", federationId);
+      }
+
+      const { data: dbWorkers, error } = await query;
+
       if (!error && dbWorkers) {
-        const profileIds = dbWorkers.map((w: any) => w.profile_id).filter(Boolean);
+        // Collect profile ids to fetch addresses
+        const profileIds = (dbWorkers as any[]).map((w) => w.profile_id).filter(Boolean);
         const addressMap: Record<string, any> = {};
         if (profileIds.length > 0) {
           const { data: addresses } = await (supabase.from("addresses") as any)
-            .select("profile_id, address_line1, address_line2, city, state, postal_code")
+            .select("profile_id, title, address_line1, address_line2, city, state, postal_code")
             .in("profile_id", profileIds);
           if (addresses) {
             for (const addr of addresses) {
@@ -292,14 +318,14 @@ export class WorkforceManagementService {
             memberId: w.member_id || undefined,
             fullName: profile.full_name || "Cooperative Member",
             profession: w.profession || "Skilled Craftsman",
-            area: addr?.address_line2 || addr?.address_line1 || "Ahmedabad Central",
+            area: addr?.address_line2 || addr?.address_line1 || "Area on File",
             city: addr?.city || "Ahmedabad",
             state: addr?.state || "Gujarat",
             accountStatus: (w.account_status || "ACTIVE") as WorkerAccountStatus,
             availabilityStatus: (w.availability_status || "AVAILABLE") as any,
             hourlyRate: Number(w.hourly_rate) || 350,
-            experienceYears: Number(w.experience_years) || 5,
-            joiningDate: w.created_at ? w.created_at.split("T")[0] : "2024-01-01",
+            experienceYears: Number(w.experience_years) || 0,
+            joiningDate: w.created_at ? w.created_at.split("T")[0] : new Date().toISOString().split("T")[0],
             phone: profile.phone || "+91 98250 00000",
             email: profile.email || "worker@kaushalya.coop.in",
           };
@@ -455,6 +481,26 @@ export class WorkforceManagementService {
     const supabase = createClient();
     let applications: WorkerApplicationItem[] = [];
 
+    // Resolve caller's federation_id
+    let federationId: string | null = null;
+    try {
+      const { data: rpcFedId } = await supabase.rpc("current_federation_id");
+      if (rpcFedId) {
+        federationId = rpcFedId;
+      } else {
+        const { data: { user } } = await supabase.auth.getUser();
+        if (user?.email) {
+          const { data: fed } = await (supabase.from("federations") as any)
+            .select("id")
+            .eq("contact_email", user.email)
+            .maybeSingle();
+          federationId = (fed as any)?.id || null;
+        }
+      }
+    } catch {
+      // ignore
+    }
+
     try {
       // 1. Fetch workers from Supabase
       let query = (supabase.from("workers") as any)
@@ -496,6 +542,10 @@ export class WorkforceManagementService {
         `)
         .order("created_at", { ascending: false });
 
+      if (federationId) {
+        query = query.eq("federation_id", federationId);
+      }
+
       if (statusFilter === "PENDING") {
         query = query.eq("verification_status", "pending_verification");
       } else if (statusFilter === "ACCEPTED") {
@@ -516,12 +566,29 @@ export class WorkforceManagementService {
         const addressMap: Record<string, any> = {};
         if (profileIds.length > 0) {
           const { data: addresses } = await (supabase.from("addresses") as any)
-            .select("profile_id, address_line1, address_line2, city, state, postal_code")
+            .select("profile_id, title, address_line1, address_line2, city, state, postal_code")
             .in("profile_id", profileIds);
           if (addresses) {
             for (const addr of addresses) {
               if (addr.profile_id && !addressMap[addr.profile_id]) {
                 addressMap[addr.profile_id] = addr;
+              }
+            }
+          }
+        }
+
+        // Fetch real skills from worker_skills
+        const workerIds = dbWorkers.map((w: any) => w.id).filter(Boolean);
+        const skillsMap: Record<string, string[]> = {};
+        if (workerIds.length > 0) {
+          const { data: workerSkills } = await (supabase.from("worker_skills") as any)
+            .select("worker_id, skills:skill_id (name)")
+            .in("worker_id", workerIds);
+          if (workerSkills) {
+            for (const ws of workerSkills as any[]) {
+              if (ws.worker_id && ws.skills?.name) {
+                if (!skillsMap[ws.worker_id]) skillsMap[ws.worker_id] = [];
+                skillsMap[ws.worker_id].push(ws.skills.name);
               }
             }
           }
@@ -544,6 +611,10 @@ export class WorkforceManagementService {
             ? [addr.address_line1, addr.address_line2, addr.city, addr.state, addr.postal_code].filter(Boolean).join(", ")
             : "Address on File";
 
+          const workerSkillList = (skillsMap[w.id] && skillsMap[w.id].length > 0)
+            ? skillsMap[w.id]
+            : [w.profession || "General Trades"];
+
           return {
             id: w.id,
             memberId: w.member_id || null,
@@ -557,7 +628,7 @@ export class WorkforceManagementService {
             city: addr?.city || "Ahmedabad",
             state: addr?.state || "Gujarat",
             profession: w.profession || "Skilled Tradesperson",
-            skills: [w.profession || "General Trades"],
+            skills: workerSkillList,
             experienceYears: w.experience_years || 1,
             hourlyRate: Number(w.hourly_rate) || 300,
             previousWorkDetails: w.previous_work_details || null,

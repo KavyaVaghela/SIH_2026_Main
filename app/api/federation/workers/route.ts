@@ -22,59 +22,94 @@ export async function POST(request: Request) {
     const adminClient = createAdminClient();
 
     // -------------------------------------------------------------
-    // RESOLVE AUTHENTICATED CALLER & FEDERATION CONTEXT
+    // 1. STRICT AUTHENTICATION & ROLE AUTHORIZATION (TASK 5)
     // -------------------------------------------------------------
-    let callerRole: string | null = null;
+    const serverClient = createServerClient();
+    const {
+      data: { user },
+    } = await serverClient.auth.getUser();
+
+    if (!user) {
+      return NextResponse.json(
+        { error: "Unauthorized: Authentication required to access workforce management." },
+        { status: 401 }
+      );
+    }
+
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const { data: callerProfile } = await (adminClient.from("profiles") as any)
+      .select("role, email")
+      .eq("id", user.id)
+      .maybeSingle();
+
+    const callerRole = callerProfile?.role || null;
+
+    if (callerRole !== "FEDERATION_ADMIN" && callerRole !== "SUPER_ADMIN") {
+      return NextResponse.json(
+        { error: "Forbidden: You do not have permission to manage workforce operations." },
+        { status: 403 }
+      );
+    }
+
     let adminFedId: string | null = null;
     let adminFedCode: string = "FED-AMD-01";
 
-    try {
-      const serverClient = createServerClient();
-      const {
-        data: { user },
-      } = await serverClient.auth.getUser();
-      if (user) {
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        const { data: callerProfile } = await (adminClient.from("profiles") as any)
-          .select("role, email")
-          .eq("id", user.id)
-          .maybeSingle();
-
-        callerRole = callerProfile?.role || null;
-
-        // Resolve federation where contact_email matches caller's email
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        const { data: fedByEmail } = await (adminClient.from("federations") as any)
-          .select("id, code")
-          .eq("contact_email", user.email || callerProfile?.email)
-          .maybeSingle();
-
-        if (fedByEmail) {
-          adminFedId = fedByEmail.id;
-          adminFedCode = fedByEmail.code;
-        }
-      }
-    } catch (authErr) {
-      console.warn("Notice: Caller auth resolution in worker API:", authErr);
-    }
-
-    // Fallback: If caller federation is not resolved by contact_email, query first active federation
-    if (!adminFedId) {
+    if (callerRole === "FEDERATION_ADMIN") {
+      // Authoritatively resolve federation where contact_email matches caller's email
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      const { data: defaultFed } = await (adminClient.from("federations") as any)
-        .select("id, code")
-        .eq("is_active", true)
-        .limit(1)
+      const { data: fedByEmail } = await (adminClient.from("federations") as any)
+        .select("id, code, is_active")
+        .eq("contact_email", user.email || callerProfile?.email)
         .maybeSingle();
 
-      if (defaultFed) {
-        adminFedId = defaultFed.id;
-        adminFedCode = defaultFed.code;
+      if (!fedByEmail || !fedByEmail.is_active) {
+        return NextResponse.json(
+          { error: "Forbidden: No active cooperative federation associated with your administrator account." },
+          { status: 403 }
+        );
       }
+
+      adminFedId = fedByEmail.id;
+      adminFedCode = fedByEmail.code;
+    } else if (callerRole === "SUPER_ADMIN") {
+      // Super Admin can optionally target a specific federation or default
+      if (body.federationId) {
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        const { data: fedById } = await (adminClient.from("federations") as any)
+          .select("id, code")
+          .eq("id", body.federationId)
+          .maybeSingle();
+
+        if (fedById) {
+          adminFedId = fedById.id;
+          adminFedCode = fedById.code;
+        }
+      }
+
+      if (!adminFedId) {
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        const { data: defaultFed } = await (adminClient.from("federations") as any)
+          .select("id, code")
+          .eq("is_active", true)
+          .limit(1)
+          .maybeSingle();
+
+        if (defaultFed) {
+          adminFedId = defaultFed.id;
+          adminFedCode = defaultFed.code;
+        }
+      }
+    }
+
+    if (!adminFedId) {
+      return NextResponse.json(
+        { error: "Unable to resolve target cooperative federation." },
+        { status: 400 }
+      );
     }
 
     // -------------------------------------------------------------
-    // ACTION: CREATE (TASK 7 — FEDERATION ADMIN MANUAL ADD WORKER)
+    // ACTION: CREATE (TASK 2 — FEDERATION ADMIN MANUAL ADD WORKER)
     // -------------------------------------------------------------
     if (action === "create") {
       const {
@@ -87,12 +122,16 @@ export async function POST(request: Request) {
         address,
         city,
         state,
+        pincode,
+        postal_code,
         profession,
         skills,
         experienceYears,
         hourlyRate,
         identityDocumentType,
         identityDocumentNumber,
+        professionalCertificate,
+        skillCertificate,
         memberId,
         avatarUrl,
         avatar_url,
@@ -191,6 +230,7 @@ export async function POST(request: Request) {
           role: "WORKER",
           full_name: fullName.trim(),
           phone: phone.trim(),
+          federation_id: adminFedId,
         },
       });
 
@@ -228,7 +268,7 @@ export async function POST(request: Request) {
           experience_years: Number(experienceYears) || 0,
           account_status: "ACTIVE",
           verification_status: "verified",
-          availability_status: "UNAVAILABLE", // Safe initial operational status
+          availability_status: "AVAILABLE",
           registration_type: "EXISTING_WORKER",
           date_of_birth: dateOfBirth,
           gender: gender || "male",
@@ -252,7 +292,8 @@ export async function POST(request: Request) {
         );
       }
 
-      // 8. Insert address if provided
+      // 8. Insert address with correct postal_code column (CRITICAL FIX FOR SCHEMA INTEGRITY)
+      const targetPostalCode = (pincode || postal_code || "380001").toString().trim();
       if (address) {
         try {
           // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -262,6 +303,7 @@ export async function POST(request: Request) {
             address_line1: address.trim(),
             city: (city || "Ahmedabad").trim(),
             state: (state || "Gujarat").trim(),
+            postal_code: targetPostalCode,
             is_default: true,
           });
         } catch (addrErr) {
@@ -269,28 +311,101 @@ export async function POST(request: Request) {
         }
       }
 
-      // 9. Insert skills if provided
+      // 9. Dynamic Skills Persistence (TASK 3 & 4)
       if (skills) {
         try {
           const skillNames = skills.split(",").map((s: string) => s.trim()).filter(Boolean);
           // eslint-disable-next-line @typescript-eslint/no-explicit-any
           const { data: dbSkills } = await (adminClient.from("skills") as any).select("id, name");
-          if (dbSkills && dbSkills.length > 0) {
-            for (const sName of skillNames) {
-              const matched = dbSkills.find((s: { id: string; name: string }) => s.name.toLowerCase() === sName.toLowerCase());
-              if (matched) {
-                // eslint-disable-next-line @typescript-eslint/no-explicit-any
-                await (adminClient.from("worker_skills") as any).insert({
-                  worker_id: newWorker.id,
-                  skill_id: matched.id,
-                  proficiency_level: "intermediate",
-                });
-              }
+          for (const sName of skillNames) {
+            const matched = dbSkills?.find(
+              (s: { id: string; name: string }) => s.name.toLowerCase() === sName.toLowerCase()
+            );
+            let skillId = matched?.id;
+            if (!skillId) {
+              // Dynamically insert new skill into catalog
+              // eslint-disable-next-line @typescript-eslint/no-explicit-any
+              const { data: newSkill } = await (adminClient.from("skills") as any)
+                .insert({ name: sName, description: `${sName} service competency` })
+                .select("id")
+                .single();
+              skillId = newSkill?.id;
+            }
+            if (skillId) {
+              // eslint-disable-next-line @typescript-eslint/no-explicit-any
+              await (adminClient.from("worker_skills") as any).insert({
+                worker_id: newWorker.id,
+                skill_id: skillId,
+                proficiency_level: "intermediate",
+              });
             }
           }
         } catch (skillErr) {
           console.warn("Notice: Worker skill insertion:", skillErr);
         }
+      }
+
+      // 10. Dynamic Certifications Persistence (TASK 3 & 4)
+      const certTitles = [professionalCertificate, skillCertificate]
+        .map((c) => (c ? c.trim() : ""))
+        .filter(Boolean);
+
+      if (certTitles.length > 0) {
+        try {
+          for (const certTitle of certTitles) {
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            const { data: existingCert } = await (adminClient.from("certifications") as any)
+              .select("id")
+              .ilike("title", certTitle)
+              .maybeSingle();
+
+            let certId = existingCert?.id;
+            if (!certId) {
+              // eslint-disable-next-line @typescript-eslint/no-explicit-any
+              const { data: createdCert } = await (adminClient.from("certifications") as any)
+                .insert({
+                  title: certTitle,
+                  issuing_body: "Cooperative Trade Council",
+                  validity_months: 36,
+                })
+                .select("id")
+                .single();
+              certId = createdCert?.id;
+            }
+
+            if (certId) {
+              // eslint-disable-next-line @typescript-eslint/no-explicit-any
+              await (adminClient.from("worker_certifications") as any).insert({
+                worker_id: newWorker.id,
+                certification_id: certId,
+                certificate_number: `CERT-${Date.now().toString().slice(-6)}`,
+                issue_date: new Date().toISOString().split("T")[0],
+                status: "VERIFIED",
+                is_verified: true,
+                verification_date: new Date().toISOString(),
+              });
+            }
+          }
+        } catch (certErr) {
+          console.warn("Notice: Worker certification insertion:", certErr);
+        }
+      }
+
+      // 11. Realtime Broadcast Notification (TASK 1)
+      try {
+        const channel = adminClient.channel("federation-workforce");
+        await channel.send({
+          type: "broadcast",
+          event: "workforce_updated",
+          payload: {
+            action: "create",
+            federationId: adminFedId,
+            workerId: newWorker.id,
+            timestamp: Date.now(),
+          },
+        });
+      } catch (bcErr) {
+        console.warn("Broadcast notice:", bcErr);
       }
 
       return NextResponse.json({
@@ -306,7 +421,7 @@ export async function POST(request: Request) {
           hourlyRate: newWorker.hourly_rate,
           experienceYears: newWorker.experience_years,
           accountStatus: "ACTIVE",
-          availabilityStatus: "UNAVAILABLE",
+          availabilityStatus: "AVAILABLE",
           verificationStatus: "verified",
         },
         message: `Worker ${fullName.trim()} inducted successfully into federation roster with Active account status.`,
@@ -326,9 +441,8 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: "Worker not found in database." }, { status: 404 });
     }
 
-    // Federation Isolation Check:
-    // If caller is FEDERATION_ADMIN and has an identified federation, verify worker belongs to it
-    if (callerRole === "FEDERATION_ADMIN" && adminFedId && currentWorker.federation_id !== adminFedId) {
+    // Federation Isolation Check (TASK 5)
+    if (callerRole === "FEDERATION_ADMIN" && currentWorker.federation_id !== adminFedId) {
       return NextResponse.json(
         { error: "Unauthorized: You do not have permission to manage workers from another federation." },
         { status: 403 }
@@ -416,6 +530,17 @@ export async function POST(request: Request) {
           .eq("id", currentWorker.profile_id);
       }
 
+      // Broadcast update on both channels
+      try {
+        const channel = adminClient.channel("federation-workforce");
+        await channel.send({
+          type: "broadcast",
+          event: "workforce_updated",
+          payload: { action: "accept", federationId: currentWorker.federation_id, workerId: currentWorker.id },
+        });
+      } catch (bcErr) {
+        console.warn("Broadcast notice (federation-workforce):", bcErr);
+      }
       try {
         const broadcastChannel = adminClient.channel("federation-workforce-updates");
         await broadcastChannel.send({
@@ -462,6 +587,17 @@ export async function POST(request: Request) {
           .eq("id", currentWorker.profile_id);
       }
 
+      // Broadcast update on both channels
+      try {
+        const channel = adminClient.channel("federation-workforce");
+        await channel.send({
+          type: "broadcast",
+          event: "workforce_updated",
+          payload: { action: "reject", federationId: currentWorker.federation_id, workerId: currentWorker.id },
+        });
+      } catch (bcErr) {
+        console.warn("Broadcast notice (federation-workforce):", bcErr);
+      }
       try {
         const broadcastChannel = adminClient.channel("federation-workforce-updates");
         await broadcastChannel.send({
@@ -485,7 +621,7 @@ export async function POST(request: Request) {
         );
       }
 
-      // RULE 6.7: Only allow reactivation if workers.verification_status = verified
+      // Only allow reactivation if workers.verification_status = verified
       if (status === "ACTIVE" && currentWorker.verification_status !== "verified") {
         return NextResponse.json(
           {
@@ -496,7 +632,7 @@ export async function POST(request: Request) {
         );
       }
 
-      // Update worker account_status. Note: Do NOT alter availability_status on reactivation!
+      // Update worker account_status.
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const { error: workerErr } = await (adminClient.from("workers") as any)
         .update({
@@ -523,6 +659,17 @@ export async function POST(request: Request) {
           .eq("id", currentWorker.profile_id);
       }
 
+      // Broadcast update on both channels
+      try {
+        const channel = adminClient.channel("federation-workforce");
+        await channel.send({
+          type: "broadcast",
+          event: "workforce_updated",
+          payload: { action: "status", federationId: currentWorker.federation_id, workerId: currentWorker.id, status },
+        });
+      } catch (bcErr) {
+        console.warn("Broadcast notice (federation-workforce):", bcErr);
+      }
       try {
         const broadcastChannel = adminClient.channel("federation-workforce-updates");
         await broadcastChannel.send({
@@ -853,5 +1000,3 @@ export async function GET(request: Request) {
     return NextResponse.json({ error: message }, { status: 500 });
   }
 }
-
-

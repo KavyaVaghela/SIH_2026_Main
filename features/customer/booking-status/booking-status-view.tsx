@@ -28,6 +28,8 @@ import { useRealtimeSubscription } from "@/hooks/use-realtime-subscription";
 import { BookingStatusTimeline } from "./components/booking-status-timeline";
 import { EstimateComparisonCard } from "./components/estimate-comparison-card";
 import { TrackingMapCard } from "./components/tracking-map-card";
+import { WhatHappensNextCard } from "@/features/guidance/components/what-happens-next-card";
+import { StatusExplainerBadge } from "@/features/guidance/components/status-explainer-card";
 
 export interface BookingStatusViewProps {
   bookingId: string;
@@ -181,6 +183,18 @@ export function BookingStatusView({ bookingId }: BookingStatusViewProps) {
       {/* Booking Status Lifecycle Timeline */}
       <BookingStatusTimeline currentStatus={booking.status} />
 
+      {/* Dynamic "What Happens Next?" Guidance Card */}
+      <WhatHappensNextCard
+        context={{
+          role: "CUSTOMER",
+          entityType: "BOOKING",
+          currentStatus: booking.status,
+          entityId: booking.id,
+          counterPartyName: booking.workerName || "Assigned Worker",
+          amount: booking.totalAmount,
+        }}
+      />
+
       {/* Contextual Status Alert Banner */}
       {isExecutionStarted && (
         <div className="bg-emerald-50 dark:bg-emerald-950/60 p-4 rounded-xl border border-emerald-300 dark:border-emerald-800 flex items-center justify-between text-xs">
@@ -195,9 +209,12 @@ export function BookingStatusView({ bookingId }: BookingStatusViewProps) {
               </span>
             </div>
           </div>
-          <Badge className="bg-emerald-700 text-white text-[10px] uppercase font-bold shrink-0">
-            {booking.status}
-          </Badge>
+          <div className="flex items-center gap-2">
+            <StatusExplainerBadge statusCode={booking.status} role="CUSTOMER" />
+            <Badge className="bg-emerald-700 text-white text-[10px] uppercase font-bold shrink-0">
+              {booking.status}
+            </Badge>
+          </div>
         </div>
       )}
 

@@ -18,3 +18,4 @@ export interface Complaint {
   createdAt: string;
   updatedAt: string;
 }
+export * from "./v2";

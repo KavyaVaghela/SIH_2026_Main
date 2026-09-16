@@ -11,6 +11,8 @@ import {
   AlertTriangle,
   ShieldCheck,
   Building,
+  HeartHandshake,
+  HelpCircle,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Badge } from "@/components/ui/badge";
@@ -59,18 +61,28 @@ export function FederationAdminSidebar({
       icon: <Briefcase className="h-4 w-4 shrink-0" />,
     },
     {
+      title: "Welfare & Development",
+      href: "/federation-admin/welfare",
+      icon: <HeartHandshake className="h-4 w-4 shrink-0" />,
+    },
+    {
       title: "Complaint Management",
       href: "/federation-admin/complaint-management",
       icon: <AlertTriangle className="h-4 w-4 shrink-0" />,
       badge: pendingComplaintsCount && pendingComplaintsCount > 0 ? pendingComplaintsCount : undefined,
       badgeVariant: "destructive",
     },
+    {
+      title: "Help & Guidance",
+      href: "/federation-admin/guidance",
+      icon: <HelpCircle className="h-4 w-4 shrink-0" />,
+    },
   ];
 
   return (
     <aside
       className={cn(
-        "flex flex-col w-64 border-r border-border bg-card/95 backdrop-blur supports-[backdrop-filter]:bg-card/75 p-4 space-y-6 min-h-[calc(100vh-4rem)]",
+        "flex flex-col w-64 border-r border-border bg-card/95 backdrop-blur supports-[backdrop-filter]:bg-card/75 p-4 space-y-6 sticky top-16 h-[calc(100vh-4rem)] overflow-y-auto shrink-0",
         className
       )}
     >

@@ -22,6 +22,7 @@ import {
   HeartHandshake,
   AlertTriangle,
   Bell,
+  HelpCircle,
 } from "lucide-react";
 import type { NavItem } from "@/components/navigation/desktop-sidebar";
 import type { MobileNavItem } from "@/components/navigation/mobile-navigation";
@@ -48,6 +49,7 @@ export const ROLE_NAVIGATION_CONFIGS: Record<PlatformRole, RoleNavigationConfig>
       { title: "Analytics", href: "/super-admin/analytics", icon: React.createElement(BarChart3) },
       { title: "Worker Welfare", href: "/super-admin/welfare", icon: React.createElement(HeartHandshake) },
       { title: "Complaints", href: "/super-admin/complaints", icon: React.createElement(AlertTriangle) },
+      { title: "Help & Guidance", href: "/super-admin/guidance", icon: React.createElement(HelpCircle) },
       { title: "Notifications", href: "/super-admin/notifications", icon: React.createElement(Bell) },
       { title: "Settings", href: "/super-admin/settings", icon: React.createElement(Settings) },
       { title: "Profile", href: "/super-admin/profile", icon: React.createElement(User) },
@@ -57,6 +59,7 @@ export const ROLE_NAVIGATION_CONFIGS: Record<PlatformRole, RoleNavigationConfig>
       { title: "Societies", href: "/super-admin/societies", icon: React.createElement(Building2) },
       { title: "Workforce", href: "/super-admin/workforce", icon: React.createElement(Users) },
       { title: "Bookings", href: "/super-admin/bookings", icon: React.createElement(Calendar) },
+      { title: "Guidance", href: "/super-admin/guidance", icon: React.createElement(HelpCircle) },
       { title: "Settings", href: "/super-admin/settings", icon: React.createElement(Settings) },
     ],
   },
@@ -68,14 +71,18 @@ export const ROLE_NAVIGATION_CONFIGS: Record<PlatformRole, RoleNavigationConfig>
       { title: "Federation Information", href: "/federation-admin/federation-information", icon: React.createElement(Building2) },
       { title: "Worker Information", href: "/federation-admin/worker-information", icon: React.createElement(Users) },
       { title: "Workforce Management", href: "/federation-admin/workforce-management", icon: React.createElement(Briefcase) },
+      { title: "Welfare & Development", href: "/federation-admin/welfare", icon: React.createElement(HeartHandshake) },
       { title: "Complaint Management", href: "/federation-admin/complaint-management", icon: React.createElement(AlertTriangle) },
+      { title: "Help & Guidance", href: "/federation-admin/guidance", icon: React.createElement(HelpCircle) },
     ],
     mobileNavItems: [
       { title: "Hub", href: "/federation-admin", icon: React.createElement(Building) },
       { title: "Federation Info", href: "/federation-admin/federation-information", icon: React.createElement(Building2) },
       { title: "Worker Info", href: "/federation-admin/worker-information", icon: React.createElement(Users) },
       { title: "Workforce", href: "/federation-admin/workforce-management", icon: React.createElement(Briefcase) },
+      { title: "Welfare", href: "/federation-admin/welfare", icon: React.createElement(HeartHandshake) },
       { title: "Complaints", href: "/federation-admin/complaint-management", icon: React.createElement(AlertTriangle) },
+      { title: "Guidance", href: "/federation-admin/guidance", icon: React.createElement(HelpCircle) },
     ],
   },
   WORKER: {
@@ -86,7 +93,9 @@ export const ROLE_NAVIGATION_CONFIGS: Record<PlatformRole, RoleNavigationConfig>
       { title: "My Profile", href: "/worker/profile", icon: React.createElement(User) },
       { title: "My Schedule & Jobs", href: "/worker/schedule", icon: React.createElement(Calendar) },
       { title: "Earnings", href: "/worker/earnings", icon: React.createElement(Wallet) },
-      { title: "Welfare & Certification", href: "/worker/welfare", icon: React.createElement(Award) },
+      { title: "Welfare & Development", href: "/worker/welfare", icon: React.createElement(Award) },
+      { title: "My Grievances", href: "/worker/grievances", icon: React.createElement(ShieldAlert) },
+      { title: "Help & Guidance", href: "/worker/guidance", icon: React.createElement(HelpCircle) },
     ],
     mobileNavItems: [
       { title: "Overview", href: "/worker", icon: React.createElement(Home) },
@@ -94,6 +103,8 @@ export const ROLE_NAVIGATION_CONFIGS: Record<PlatformRole, RoleNavigationConfig>
       { title: "Schedule", href: "/worker/schedule", icon: React.createElement(Calendar) },
       { title: "Earnings", href: "/worker/earnings", icon: React.createElement(Wallet) },
       { title: "Welfare", href: "/worker/welfare", icon: React.createElement(Award) },
+      { title: "Grievances", href: "/worker/grievances", icon: React.createElement(ShieldAlert) },
+      { title: "Guidance", href: "/worker/guidance", icon: React.createElement(HelpCircle) },
     ],
   },
   CUSTOMER: {
@@ -104,6 +115,8 @@ export const ROLE_NAVIGATION_CONFIGS: Record<PlatformRole, RoleNavigationConfig>
       { title: "My Bookings", href: "/customer/bookings", icon: React.createElement(Calendar) },
       { title: "Find a Worker", href: "/customer/find-worker", icon: React.createElement(UserCheck) },
       { title: "Payments & Bills", href: "/customer/payments", icon: React.createElement(CreditCard) },
+      { title: "My Complaints", href: "/customer/complaints", icon: React.createElement(ShieldAlert) },
+      { title: "Help & Guidance", href: "/customer/guidance", icon: React.createElement(HelpCircle) },
       { title: "Profile", href: "/customer/profile", icon: React.createElement(User) },
     ],
     mobileNavItems: [
@@ -111,6 +124,8 @@ export const ROLE_NAVIGATION_CONFIGS: Record<PlatformRole, RoleNavigationConfig>
       { title: "Bookings", href: "/customer/bookings", icon: React.createElement(Calendar) },
       { title: "Find Worker", href: "/customer/find-worker", icon: React.createElement(UserCheck) },
       { title: "Payments", href: "/customer/payments", icon: React.createElement(CreditCard) },
+      { title: "Complaints", href: "/customer/complaints", icon: React.createElement(ShieldAlert) },
+      { title: "Guidance", href: "/customer/guidance", icon: React.createElement(HelpCircle) },
       { title: "Profile", href: "/customer/profile", icon: React.createElement(User) },
     ],
   },

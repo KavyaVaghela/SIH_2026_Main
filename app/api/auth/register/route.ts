@@ -355,7 +355,25 @@ export async function POST(request: NextRequest) {
         }
       }
 
-      // Emit realtime broadcast event for active federation dashboards
+      // 6. Realtime Broadcast & Notification (Dual channels supported)
+      try {
+        const channel = supabase.channel("federation-workforce");
+        await channel.send({
+          type: "broadcast",
+          event: "workforce_updated",
+          payload: {
+            action: "worker_registered",
+            registrationType: regType,
+            federationId: targetFedId,
+            workerId: createdWorker?.id,
+            applicantName: fullName || "New Worker Applicant",
+            timestamp: Date.now(),
+          },
+        });
+      } catch (bcErr) {
+        console.warn("Realtime worker registration broadcast notice (federation-workforce):", bcErr);
+      }
+
       try {
         const broadcastChannel = supabase.channel("federation-workforce-updates");
         await broadcastChannel.send({
@@ -370,7 +388,36 @@ export async function POST(request: NextRequest) {
           },
         });
       } catch (broadcastErr) {
-        console.warn("Notice: Realtime broadcast error on worker registration:", broadcastErr);
+        console.warn("Notice: Realtime broadcast error on worker registration (federation-workforce-updates):", broadcastErr);
+      }
+
+      try {
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        const { data: fedRecord } = await (supabase.from("federations") as any)
+          .select("contact_email")
+          .eq("id", targetFedId)
+          .maybeSingle();
+
+        if (fedRecord?.contact_email) {
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          const { data: adminProf } = await (supabase.from("profiles") as any)
+            .select("id")
+            .eq("email", fedRecord.contact_email)
+            .maybeSingle();
+
+          if (adminProf?.id) {
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            await (supabase.from("notifications") as any).insert({
+              profile_id: adminProf.id,
+              title: "New Worker Application Submitted",
+              message: `${fullName || "A new worker"} has submitted an application for ${profession || "Trade Services"} and is awaiting your review.`,
+              type: "WORKER_REGISTRATION",
+              read: false,
+            });
+          }
+        }
+      } catch (notifErr) {
+        console.warn("Notice: Federation admin notification creation:", notifErr);
       }
 
       return NextResponse.json({
