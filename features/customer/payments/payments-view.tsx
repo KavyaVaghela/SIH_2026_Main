@@ -21,6 +21,7 @@ import {
 import { invoiceService, Invoice } from "@/features/invoices/services/invoice-service";
 import { paymentService, PaymentRecord } from "@/features/payments/services/payment-service";
 import { bookingService, Booking } from "@/features/bookings/services/booking-service";
+import { createClient } from "@/lib/supabase/client";
 
 export function PaymentsView() {
   const router = useRouter();
@@ -35,7 +36,13 @@ export function PaymentsView() {
   const fetchData = React.useCallback(async () => {
     try {
       setLoading(true);
-      const customerBookings = await bookingService.getCustomerBookings("cust-1");
+      const supabase = createClient();
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user?.id) {
+        setLoading(false);
+        return;
+      }
+      const customerBookings = await bookingService.getCustomerBookings(user.id);
       const bMap = new Map<string, Booking>();
       customerBookings.forEach((b) => bMap.set(b.id, b));
       setBookingsMap(bMap);

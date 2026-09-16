@@ -1270,10 +1270,11 @@ export function RegisterView() {
                   </div>
                 </div>
 
-                <div className="space-y-1">
+                <div className="space-y-1.5">
                   <label className="text-xs font-medium">IFSC Code (11 characters) *</label>
                   <Input
-                    placeholder="e.g. SBIN0001234"
+                    placeholder="ABCD0001234"
+                    maxLength={11}
                     {...register("bank_ifsc_code")}
                     onChange={(e) => {
                       setValue("bank_ifsc_code", e.target.value.toUpperCase());
@@ -1281,7 +1282,15 @@ export function RegisterView() {
                     aria-invalid={!!errors.bank_ifsc_code}
                   />
                   {errors.bank_ifsc_code && <p className="text-xs text-destructive">{errors.bank_ifsc_code.message}</p>}
-                  <p className="text-[10px] text-muted-foreground">Format: 4 letters, 0, followed by 6 alphanumeric characters</p>
+                  <div className="text-[11px] text-muted-foreground bg-muted/40 p-2.5 rounded-md border border-muted space-y-1">
+                    <p className="font-semibold text-foreground">IFSC must contain 11 characters:</p>
+                    <ul className="list-disc list-inside space-y-0.5 text-[10px]">
+                      <li>First 4 characters: letters (A-Z)</li>
+                      <li>Next 3 characters: 000</li>
+                      <li>Last 4 characters: numbers (0-9)</li>
+                    </ul>
+                    <p className="text-[10px] text-foreground font-mono">Example format: ABCD0001234</p>
+                  </div>
                 </div>
 
                 <Alert variant="info" className="py-2 text-[11px]">
@@ -1795,10 +1804,11 @@ export function RegisterView() {
                   </div>
                 </div>
 
-                <div className="space-y-1">
+                <div className="space-y-1.5">
                   <label className="text-xs font-medium">IFSC Code (11 characters) *</label>
                   <Input
-                    placeholder="e.g. SBIN0001234"
+                    placeholder="ABCD0001234"
+                    maxLength={11}
                     {...register("bank_ifsc_code")}
                     onChange={(e) => {
                       setValue("bank_ifsc_code", e.target.value.toUpperCase());
@@ -1806,7 +1816,15 @@ export function RegisterView() {
                     aria-invalid={!!errors.bank_ifsc_code}
                   />
                   {errors.bank_ifsc_code && <p className="text-xs text-destructive">{errors.bank_ifsc_code.message}</p>}
-                  <p className="text-[10px] text-muted-foreground">Format: 4 letters, 0, followed by 6 alphanumeric characters</p>
+                  <div className="text-[11px] text-muted-foreground bg-muted/40 p-2.5 rounded-md border border-muted space-y-1">
+                    <p className="font-semibold text-foreground">IFSC must contain 11 characters:</p>
+                    <ul className="list-disc list-inside space-y-0.5 text-[10px]">
+                      <li>First 4 characters: letters (A-Z)</li>
+                      <li>Next 3 characters: 000</li>
+                      <li>Last 4 characters: numbers (0-9)</li>
+                    </ul>
+                    <p className="text-[10px] text-foreground font-mono">Example format: ABCD0001234</p>
+                  </div>
                 </div>
 
                 <Button

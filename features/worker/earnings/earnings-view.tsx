@@ -18,9 +18,9 @@ export function EarningsView() {
     thisWeekEarnings: 0,
     thisMonthEarnings: 0,
     completedJobsCount: 0,
-    bankName: "State Bank of India",
-    accountEnding: "4821",
-    ifscPrefix: "SBIN000",
+    bankName: "Bank Account",
+    accountEnding: "----",
+    ifscPrefix: "----",
     nextPayoutTime: "Daily at 8:00 PM IST",
   });
   const [records, setRecords] = React.useState<WorkerEarningsRecord[]>([]);
@@ -34,7 +34,7 @@ export function EarningsView() {
   const loadEarnings = React.useCallback(async () => {
     setLoading(true);
     try {
-      const data = await workerJobService.getWorkerEarnings("w-1");
+      const data = await workerJobService.getWorkerEarnings();
       setSummary(data.summary);
       setRecords(data.records);
       setCategoryBreakdown(data.categoryBreakdown);

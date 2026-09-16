@@ -127,7 +127,11 @@ export const newWorkerSchema = z
       .min(1, "Bank IFSC code is required")
       .trim()
       .toUpperCase()
-      .regex(INDIAN_IFSC_REGEX, "Please enter a valid 11-character Indian IFSC code (e.g. SBIN0001234)"),
+      .regex(
+        INDIAN_IFSC_REGEX,
+        "IFSC must contain 11 characters: 4 letters (A-Z), '000', and 4 numbers (0-9) (e.g. ABCD0001234)"
+      ),
+
   })
   .refine((data) => data.password === data.confirm_password, {
     message: "Passwords do not match",

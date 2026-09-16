@@ -1416,14 +1416,37 @@ export class WorkerJobService implements IWorkerJobService {
       };
     });
 
+    let bankName = "Direct Bank Transfer";
+    let accountEnding = "----";
+    let ifscPrefix = "BANK000";
+
+    try {
+      const supabase = createClient();
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const { data: wBank } = await (supabase.from("workers") as any)
+        .select("bank_name, bank_account_number, bank_ifsc_code")
+        .eq("id", resolvedWorkerId)
+        .maybeSingle();
+
+      if (wBank) {
+        if (wBank.bank_name) bankName = wBank.bank_name;
+        if (wBank.bank_account_number) {
+          accountEnding = wBank.bank_account_number.slice(-4);
+        }
+        if (wBank.bank_ifsc_code) {
+          ifscPrefix = wBank.bank_ifsc_code.slice(0, 7);
+        }
+      }
+    } catch (_) {}
+
     const summary: WorkerEarningsSummary = {
       todaysEarnings,
       thisWeekEarnings,
       thisMonthEarnings,
       completedJobsCount: completedBookings.length,
-      bankName: "State Bank of India",
-      accountEnding: "4821",
-      ifscPrefix: "SBIN000",
+      bankName,
+      accountEnding,
+      ifscPrefix,
       nextPayoutTime: "Daily at 8:00 PM IST",
     };
 

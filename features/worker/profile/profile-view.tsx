@@ -12,26 +12,36 @@ import type { WorkerProfileDetails } from "../types";
 import { createClient } from "@/lib/supabase/client";
 
 const INITIAL_WORKER_PROFILE: WorkerProfileDetails = {
-  name: "",
-  trade: "",
-  rating: 5.0,
+  name: "Worker Member",
+  email: "",
+  phone: "",
+  trade: "Skilled Tradesperson",
+  cooperativeName: "Cooperative Federation",
+  cooperativeRole: "Member",
+  federationName: "Cooperative Federation",
+  location: "Gujarat, India",
+  cooperativeId: "PENDING",
+  rating: 0,
   reviewsCount: 0,
   experienceYears: 0,
-  cooperativeName: "",
-  cooperativeId: "",
-  federationName: "",
-  location: "",
-  phone: "",
-  languages: ["Gujarati", "Hindi"],
-  skills: [],
+  hourlyRate: 300,
+  joiningDate: new Date().toISOString().split("T")[0],
   verifications: {
     identity: false,
     phone: false,
     worker: false,
     skill: false,
   },
-  hourlyRate: 0,
-  bio: "",
+  bio: "Cooperative registered trade worker.",
+  isVerified: false,
+  verificationStatus: "pending_verification",
+  accountStatus: "ACTIVE",
+  address: "Address not provided",
+  skills: [],
+  languages: ["Gujarati", "Hindi"],
+  certifications: [],
+  documents: [],
+  idProofNumber: "•••• •••• ••••",
 };
 
 export function ProfileView() {
@@ -69,6 +79,7 @@ export function ProfileView() {
             registration_type,
             previous_work_details,
             govt_id_number,
+            created_at,
             federations (id, name, city, state, code)
           `)
           .eq("profile_id", user.id)
@@ -101,7 +112,7 @@ export function ProfileView() {
 
         const addressText = addr
           ? [addr.address_line1, addr.address_line2, addr.city, addr.state, addr.postal_code].filter(Boolean).join(", ")
-          : "";
+          : "Address not provided";
 
         const isVerified = wRec?.verification_status === "verified";
         const hasId = !!wRec?.govt_id_number || isVerified;
@@ -119,6 +130,7 @@ export function ProfileView() {
           trade: wRec?.profession || "Skilled Tradesperson",
           hourlyRate: Number(wRec?.hourly_rate) || 300,
           experienceYears: wRec?.experience_years ?? 0,
+          joiningDate: wRec?.created_at ? wRec.created_at.split("T")[0] : new Date().toISOString().split("T")[0],
           federationName: wRec?.federations?.name || "Cooperative Federation",
           location: wRec?.federations?.city
             ? `${wRec.federations.city}, ${wRec.federations.state}`
@@ -128,8 +140,9 @@ export function ProfileView() {
           registrationType: wRec?.registration_type || null,
           accountStatus: wRec?.account_status || "ACTIVE",
           verificationStatus: wRec?.verification_status || "pending_verification",
+          isVerified,
           address: addressText || (addr?.city ? `${addr.city}, ${addr.state}` : "Gujarat"),
-          skills: fetchedSkills,
+          skills: fetchedSkills.length > 0 ? fetchedSkills : (wRec?.profession ? [wRec.profession] : []),
           languages: ["Gujarati", "Hindi", "English"],
           rating: 4.9,
           reviewsCount: 12,

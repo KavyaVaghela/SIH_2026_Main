@@ -72,10 +72,15 @@ export async function POST(request: NextRequest) {
       const targetIfsc = bankIfscCode || bank_ifsc_code;
       if (targetIfsc && !INDIAN_IFSC_REGEX.test(targetIfsc.toUpperCase().trim())) {
         return NextResponse.json(
-          { success: false, error: "Please enter a valid 11-character Indian IFSC code format (e.g. SBIN0001234)." },
+          {
+            success: false,
+            error:
+              "IFSC must contain 11 characters: 4 letters (A-Z), '000', and 4 numbers (0-9) (e.g. ABCD0001234).",
+          },
           { status: 400 }
         );
       }
+
     }
 
     if (!email || !password) {
@@ -350,7 +355,7 @@ export async function POST(request: NextRequest) {
         }
       }
 
-      // 6. Realtime Broadcast & Notification (TASK 1)
+      // 6. Realtime Broadcast & Notification (Dual channels supported)
       try {
         const channel = supabase.channel("federation-workforce");
         await channel.send({
@@ -366,7 +371,24 @@ export async function POST(request: NextRequest) {
           },
         });
       } catch (bcErr) {
-        console.warn("Realtime worker registration broadcast notice:", bcErr);
+        console.warn("Realtime worker registration broadcast notice (federation-workforce):", bcErr);
+      }
+
+      try {
+        const broadcastChannel = supabase.channel("federation-workforce-updates");
+        await broadcastChannel.send({
+          type: "broadcast",
+          event: "NEW_WORKER_APPLICATION",
+          payload: {
+            workerId: createdWorker?.id,
+            applicantName: fullName,
+            profession,
+            registrationType: regType,
+            federationId: targetFedId,
+          },
+        });
+      } catch (broadcastErr) {
+        console.warn("Notice: Realtime broadcast error on worker registration (federation-workforce-updates):", broadcastErr);
       }
 
       try {
