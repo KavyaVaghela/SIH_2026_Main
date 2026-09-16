@@ -530,7 +530,7 @@ export async function POST(request: Request) {
           .eq("id", currentWorker.profile_id);
       }
 
-      // Broadcast update
+      // Broadcast update on both channels
       try {
         const channel = adminClient.channel("federation-workforce");
         await channel.send({
@@ -539,7 +539,17 @@ export async function POST(request: Request) {
           payload: { action: "accept", federationId: currentWorker.federation_id, workerId: currentWorker.id },
         });
       } catch (bcErr) {
-        console.warn("Broadcast notice:", bcErr);
+        console.warn("Broadcast notice (federation-workforce):", bcErr);
+      }
+      try {
+        const broadcastChannel = adminClient.channel("federation-workforce-updates");
+        await broadcastChannel.send({
+          type: "broadcast",
+          event: "WORKER_ACCEPTED",
+          payload: { workerId: currentWorker.id, memberId: finalMemberId },
+        });
+      } catch {
+        // Broadcast failure non-fatal
       }
 
       return NextResponse.json({ success: true, worker, memberId: finalMemberId });
@@ -577,7 +587,7 @@ export async function POST(request: Request) {
           .eq("id", currentWorker.profile_id);
       }
 
-      // Broadcast update
+      // Broadcast update on both channels
       try {
         const channel = adminClient.channel("federation-workforce");
         await channel.send({
@@ -586,7 +596,17 @@ export async function POST(request: Request) {
           payload: { action: "reject", federationId: currentWorker.federation_id, workerId: currentWorker.id },
         });
       } catch (bcErr) {
-        console.warn("Broadcast notice:", bcErr);
+        console.warn("Broadcast notice (federation-workforce):", bcErr);
+      }
+      try {
+        const broadcastChannel = adminClient.channel("federation-workforce-updates");
+        await broadcastChannel.send({
+          type: "broadcast",
+          event: "WORKER_REJECTED",
+          payload: { workerId: currentWorker.id, rejectionReason: reason },
+        });
+      } catch {
+        // Broadcast failure non-fatal
       }
 
       return NextResponse.json({ success: true, applicationId: currentWorker.id, rejectionReason: reason });
@@ -639,7 +659,7 @@ export async function POST(request: Request) {
           .eq("id", currentWorker.profile_id);
       }
 
-      // Broadcast update
+      // Broadcast update on both channels
       try {
         const channel = adminClient.channel("federation-workforce");
         await channel.send({
@@ -648,7 +668,17 @@ export async function POST(request: Request) {
           payload: { action: "status", federationId: currentWorker.federation_id, workerId: currentWorker.id, status },
         });
       } catch (bcErr) {
-        console.warn("Broadcast notice:", bcErr);
+        console.warn("Broadcast notice (federation-workforce):", bcErr);
+      }
+      try {
+        const broadcastChannel = adminClient.channel("federation-workforce-updates");
+        await broadcastChannel.send({
+          type: "broadcast",
+          event: "WORKER_STATUS_CHANGED",
+          payload: { workerId: currentWorker.id, status },
+        });
+      } catch {
+        // Broadcast failure non-fatal
       }
 
       return NextResponse.json({
@@ -661,6 +691,311 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: `Unknown action: ${action}` }, { status: 400 });
   } catch (err: unknown) {
     console.error("Error processing worker federation request:", err);
+    const message = err instanceof Error ? err.message : "Internal server error";
+    return NextResponse.json({ error: message }, { status: 500 });
+  }
+}
+
+export async function GET(request: Request) {
+  try {
+    const { searchParams } = new URL(request.url);
+    const type = searchParams.get("type") || "applications";
+    const statusFilter = searchParams.get("status") || "ALL";
+    const registrationTypeFilter = searchParams.get("registrationType") || "ALL";
+    const searchQuery = (searchParams.get("search") || "").trim().toLowerCase();
+    const adminClient = createAdminClient();
+
+    // -------------------------------------------------------------
+    // RESOLVE AUTHENTICATED CALLER & FEDERATION CONTEXT
+    // -------------------------------------------------------------
+    let callerRole: string | null = null;
+    let adminFedId: string | null = null;
+
+    try {
+      const serverClient = createServerClient();
+      const {
+        data: { user },
+      } = await serverClient.auth.getUser();
+      if (user) {
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        const { data: callerProfile } = await (adminClient.from("profiles") as any)
+          .select("role, email")
+          .eq("id", user.id)
+          .maybeSingle();
+
+        callerRole = callerProfile?.role || null;
+
+        // Resolve federation where contact_email matches caller's email
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        const { data: fedByEmail } = await (adminClient.from("federations") as any)
+          .select("id, code")
+          .eq("contact_email", user.email || callerProfile?.email)
+          .maybeSingle();
+
+        if (fedByEmail) {
+          adminFedId = fedByEmail.id;
+        }
+      }
+    } catch (authErr) {
+      console.warn("Notice: Caller auth resolution in worker API GET:", authErr);
+    }
+
+    if (type === "applications") {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      let query = (adminClient.from("workers") as any)
+        .select(`
+          id,
+          profile_id,
+          federation_id,
+          member_id,
+          registration_type,
+          experience_years,
+          hourly_rate,
+          verification_status,
+          account_status,
+          created_at,
+          date_of_birth,
+          gender,
+          profession,
+          previous_work_details,
+          govt_id_type,
+          govt_id_number,
+          govt_id_document_url,
+          bank_name,
+          bank_account_holder,
+          bank_account_number,
+          bank_ifsc_code,
+          rejection_reason,
+          profiles:profile_id (
+            id,
+            full_name,
+            email,
+            phone,
+            avatar_url
+          ),
+          federations:federation_id (
+            id,
+            name,
+            code
+          )
+        `)
+        .order("created_at", { ascending: false });
+
+      if (adminFedId && callerRole !== "SUPER_ADMIN") {
+        query = query.eq("federation_id", adminFedId);
+      }
+
+      if (statusFilter === "PENDING") {
+        query = query.eq("verification_status", "pending_verification");
+      } else if (statusFilter === "ACCEPTED") {
+        query = query.eq("verification_status", "verified");
+      } else if (statusFilter === "REJECTED") {
+        query = query.eq("verification_status", "suspended");
+      }
+
+      if (registrationTypeFilter !== "ALL") {
+        query = query.eq("registration_type", registrationTypeFilter);
+      }
+
+      const { data: dbWorkers, error } = await query;
+
+      if (error) {
+        console.error("Worker applications query error:", error);
+        return NextResponse.json({ error: error.message }, { status: 500 });
+      }
+
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const profileIds = (dbWorkers || []).map((w: any) => w.profile_id).filter(Boolean);
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const addressMap: Record<string, any> = {};
+      if (profileIds.length > 0) {
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        const { data: addresses } = await (adminClient.from("addresses") as any)
+          .select("profile_id, address_line1, address_line2, city, state, postal_code")
+          .in("profile_id", profileIds);
+        if (addresses) {
+          for (const addr of addresses) {
+            if (addr.profile_id && !addressMap[addr.profile_id]) {
+              addressMap[addr.profile_id] = addr;
+            }
+          }
+        }
+      }
+
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      let applications = (dbWorkers || []).map((w: any) => {
+        const profile = w.profiles || {};
+        const addr = addressMap[w.profile_id];
+        const status =
+          w.verification_status === "pending_verification"
+            ? "PENDING"
+            : w.verification_status === "verified"
+            ? "ACCEPTED"
+            : "REJECTED";
+
+        const regType = w.registration_type === "EXISTING_WORKER" ? "EXISTING_WORKER" : "NEW_WORKER";
+
+        const formattedAddress = addr
+          ? [addr.address_line1, addr.address_line2, addr.city, addr.state, addr.postal_code].filter(Boolean).join(", ")
+          : "Address on File";
+
+        return {
+          id: w.id,
+          memberId: w.member_id || null,
+          registrationType: regType,
+          applicantName: profile.full_name || (regType === "EXISTING_WORKER" ? "Existing Worker Member" : "New Worker Applicant"),
+          phone: profile.phone || "",
+          email: profile.email || "",
+          dateOfBirth: w.date_of_birth || "",
+          gender: w.gender || "male",
+          address: formattedAddress,
+          city: addr?.city || "Ahmedabad",
+          state: addr?.state || "Gujarat",
+          profession: w.profession || "Skilled Tradesperson",
+          skills: [w.profession || "General Trades"],
+          experienceYears: w.experience_years || 1,
+          hourlyRate: Number(w.hourly_rate) || 300,
+          previousWorkDetails: w.previous_work_details || null,
+          govtIdType: w.govt_id_type || "aadhar",
+          govtIdNumber: w.govt_id_number || "",
+          govtIdDocumentUrl: w.govt_id_document_url || null,
+          avatarUrl: profile.avatar_url || null,
+          bankName: w.bank_name || null,
+          bankAccountHolder: w.bank_account_holder || null,
+          bankAccountNumber: w.bank_account_number || null,
+          bankIfscCode: w.bank_ifsc_code || null,
+          documents: w.govt_id_document_url
+            ? [
+                {
+                  name: `${w.govt_id_type?.toUpperCase() || "GOVT"}_Document`,
+                  category: "IDENTITY" as const,
+                  fileType: "Document",
+                  fileSize: "Uploaded",
+                },
+              ]
+            : [],
+          submittedDate: w.created_at ? w.created_at.split("T")[0] : new Date().toISOString().split("T")[0],
+          status,
+          rejectionReason: w.rejection_reason || undefined,
+        };
+      });
+
+      if (searchQuery) {
+        applications = applications.filter(
+          (app: { applicantName: string; id: string; memberId?: string; profession: string }) =>
+            app.applicantName.toLowerCase().includes(searchQuery) ||
+            app.id.toLowerCase().includes(searchQuery) ||
+            (app.memberId && app.memberId.toLowerCase().includes(searchQuery)) ||
+            app.profession.toLowerCase().includes(searchQuery)
+        );
+      }
+
+      return NextResponse.json({ success: true, applications });
+    }
+
+    if (type === "roster") {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      let query = (adminClient.from("workers") as any)
+        .select(`
+          id,
+          profile_id,
+          member_id,
+          profession,
+          hourly_rate,
+          experience_years,
+          account_status,
+          availability_status,
+          created_at,
+          verification_status,
+          federation_id,
+          profiles:profile_id (
+            full_name,
+            email,
+            phone
+          )
+        `)
+        .eq("verification_status", "verified")
+        .order("created_at", { ascending: false });
+
+      if (adminFedId && callerRole !== "SUPER_ADMIN") {
+        query = query.eq("federation_id", adminFedId);
+      }
+
+      const { data: dbWorkers, error } = await query;
+
+      if (error) {
+        console.error("Worker roster query error:", error);
+        return NextResponse.json({ error: error.message }, { status: 500 });
+      }
+
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const profileIds = (dbWorkers || []).map((w: any) => w.profile_id).filter(Boolean);
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const addressMap: Record<string, any> = {};
+      if (profileIds.length > 0) {
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        const { data: addresses } = await (adminClient.from("addresses") as any)
+          .select("profile_id, address_line1, address_line2, city, state, postal_code")
+          .in("profile_id", profileIds);
+        if (addresses) {
+          for (const addr of addresses) {
+            if (addr.profile_id && !addressMap[addr.profile_id]) {
+              addressMap[addr.profile_id] = addr;
+            }
+          }
+        }
+      }
+
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      let workers = (dbWorkers || []).map((w: any) => {
+        const profile = w.profiles || {};
+        const addr = addressMap[w.profile_id];
+        return {
+          id: w.id,
+          memberId: w.member_id || undefined,
+          fullName: profile.full_name || "Cooperative Member",
+          profession: w.profession || "Skilled Craftsman",
+          area: addr?.address_line2 || addr?.address_line1 || "Ahmedabad Central",
+          city: addr?.city || "Ahmedabad",
+          state: addr?.state || "Gujarat",
+          accountStatus: w.account_status || "ACTIVE",
+          availabilityStatus: w.availability_status || "AVAILABLE",
+          hourlyRate: Number(w.hourly_rate) || 350,
+          experienceYears: Number(w.experience_years) || 0,
+          joiningDate: w.created_at ? w.created_at.split("T")[0] : "2024-01-01",
+          phone: profile.phone || "+91 98250 00000",
+          email: profile.email || "worker@kaushalya.coop.in",
+        };
+      });
+
+      if (searchQuery) {
+        workers = workers.filter(
+          (w: { fullName: string; id: string; memberId?: string; accountStatus: string }) =>
+            w.fullName.toLowerCase().includes(searchQuery) ||
+            w.id.toLowerCase().includes(searchQuery) ||
+            (w.memberId && w.memberId.toLowerCase().includes(searchQuery))
+        );
+      }
+
+      const totalCount = workers.length;
+      const activeCount = workers.filter((w: { accountStatus: string }) => w.accountStatus === "ACTIVE").length;
+      const deactivatedCount = workers.filter((w: { accountStatus: string }) => w.accountStatus === "DEACTIVATED").length;
+
+      return NextResponse.json({
+        success: true,
+        data: {
+          workers,
+          totalCount,
+          activeCount,
+          deactivatedCount,
+          isDevelopmentFallback: false,
+        },
+      });
+    }
+
+    return NextResponse.json({ error: `Unknown query type: ${type}` }, { status: 400 });
+  } catch (err: unknown) {
+    console.error("Error in GET /api/federation/workers:", err);
     const message = err instanceof Error ? err.message : "Internal server error";
     return NextResponse.json({ error: message }, { status: 500 });
   }

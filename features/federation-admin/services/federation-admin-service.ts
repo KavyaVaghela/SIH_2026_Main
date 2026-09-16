@@ -84,41 +84,55 @@ export class FederationAdminService {
     const supabase = createClient();
 
     try {
-      // 1. Attempt to fetch federation identity from DB
-      const { data: dbFederation } = await supabase
-        .from("federations")
-        .select("*")
-        .limit(1)
-        .maybeSingle();
+      // 1. Attempt to resolve caller's federation identity from DB
+      let targetFed: any = null;
+      try {
+        const { data: { user } } = await supabase.auth.getUser();
+        if (user?.email) {
+          const { data: fedByEmail } = await supabase
+            .from("federations")
+            .select("*")
+            .eq("contact_email", user.email)
+            .maybeSingle();
+          if (fedByEmail) targetFed = fedByEmail;
+        }
+      } catch (_) {}
 
-      // 2. Attempt to fetch workers belonging to the federation
-      const { data: dbWorkers } = await supabase
-        .from("workers")
-        .select("id, account_status, availability_status, profession, hourly_rate");
+      if (!targetFed) {
+        const { data: defaultFed } = await supabase
+          .from("federations")
+          .select("*")
+          .eq("is_active", true)
+          .limit(1)
+          .maybeSingle();
+        targetFed = defaultFed;
+      }
 
-      // 3. Attempt to fetch bookings
-      const { data: dbBookings } = await supabase
-        .from("bookings")
-        .select("id, status, total_amount, created_at, scheduled_start_at");
+      if (targetFed) {
+        // 2. Fetch workers belonging to this federation
+        const { data: dbWorkers } = await supabase
+          .from("workers")
+          .select("id, account_status, availability_status, profession, hourly_rate")
+          .eq("federation_id", targetFed.id);
 
-      // 4. Attempt to fetch complaints
-      const { data: dbComplaints } = await supabase
-        .from("complaints")
-        .select("id, status, category, created_at");
+        // 3. Fetch bookings belonging to this federation
+        const { data: dbBookings } = await supabase
+          .from("bookings")
+          .select("id, status, total_amount, created_at, scheduled_start_at")
+          .eq("federation_id", targetFed.id);
 
-      // 5. Attempt to fetch reviews
-      const { data: dbReviews } = await supabase
-        .from("reviews")
-        .select("rating");
+        // 4. Fetch complaints belonging to this federation
+        const { data: dbComplaints } = await supabase
+          .from("complaints")
+          .select("id, status, category, created_at");
 
-      const hasSufficientDbData =
-        (dbWorkers && dbWorkers.length > 0) ||
-        (dbBookings && dbBookings.length > 0) ||
-        (dbComplaints && dbComplaints.length > 0);
+        // 5. Fetch reviews
+        const { data: dbReviews } = await supabase
+          .from("reviews")
+          .select("rating");
 
-      if (hasSufficientDbData) {
         return this.transformLiveData(
-          (dbFederation as unknown as DbFederationRow) || null,
+          (targetFed as unknown as DbFederationRow),
           (dbWorkers as unknown as DbWorkerRow[]) || [],
           (dbBookings as unknown as DbBookingRow[]) || [],
           (dbComplaints as unknown as DbComplaintRow[]) || [],
@@ -225,7 +239,7 @@ export class FederationAdminService {
     const jobCompletionRate = totalJobs > 0 ? Number(((completedJobs / totalJobs) * 100).toFixed(1)) : 100;
     const complaintResolutionRate = totalComplaints > 0 ? Number(((resolvedComplaints / totalComplaints) * 100).toFixed(1)) : 100;
 
-    let averageWorkerRating = 4.8;
+    let averageWorkerRating = 0;
     if (reviews.length > 0) {
       const sum = reviews.reduce((acc, r) => acc + (r.rating || 0), 0);
       averageWorkerRating = Number((sum / reviews.length).toFixed(1));
@@ -238,31 +252,31 @@ export class FederationAdminService {
      * - 30% weight on Complaint Resolution Rate
      * - 30% weight on Normalized Worker Rating (rating / 5 * 100)
      */
-    const normalizedRatingScore = (averageWorkerRating / 5) * 100;
-    const overallFederationPerformance = Number(
-      (0.4 * jobCompletionRate + 0.3 * complaintResolutionRate + 0.3 * normalizedRatingScore).toFixed(1)
-    );
+    const normalizedRatingScore = averageWorkerRating > 0 ? (averageWorkerRating / 5) * 100 : 100;
+    const overallFederationPerformance = totalJobs > 0
+      ? Number((0.4 * jobCompletionRate + 0.3 * complaintResolutionRate + 0.3 * normalizedRatingScore).toFixed(1))
+      : 0;
 
     const stats: FederationDashboardStats = {
       workers: {
-        totalWorkers: totalWorkers || 150,
-        activeWorkers: activeWorkers || 135,
-        deactivatedWorkers: deactivatedWorkers || 15,
-        availableWorkers: availableWorkers || 98,
-        busyWorkers: busyWorkers || 27,
-        unavailableWorkers: unavailableWorkers || 10,
+        totalWorkers,
+        activeWorkers,
+        deactivatedWorkers,
+        availableWorkers,
+        busyWorkers,
+        unavailableWorkers,
       },
       jobs: {
-        totalJobs: totalJobs || 540,
-        runningJobs: runningJobs || 48,
-        completedJobs: completedJobs || 442,
-        pendingJobs: pendingJobs || 32,
-        cancelledJobs: cancelledJobs || 18,
+        totalJobs,
+        runningJobs,
+        completedJobs,
+        pendingJobs,
+        cancelledJobs,
       },
       complaints: {
-        totalComplaints: totalComplaints || 24,
-        pendingComplaints: pendingComplaints || 4,
-        resolvedComplaints: resolvedComplaints || 20,
+        totalComplaints,
+        pendingComplaints,
+        resolvedComplaints,
       },
       performance: {
         jobCompletionRate,

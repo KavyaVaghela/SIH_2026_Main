@@ -318,6 +318,21 @@ export class MatchingService implements IMatchingService {
             }
           }
 
+          // Fallback: check worker's stated profession if worker_skills didn't yield a match
+          if (!hasExactSubService && !hasCategoryMatch && w.profession) {
+            const profLower = w.profession.toLowerCase();
+            if (targetSubService && (profLower.includes(targetSubService) || targetSubService.includes(profLower))) {
+              hasExactSubService = true;
+              matchedSkillName = w.profession;
+            } else if (
+              targetCategoryName &&
+              (profLower.includes(targetCategoryName) || targetCategoryName.includes(profLower))
+            ) {
+              hasCategoryMatch = true;
+              matchedSkillName = w.profession;
+            }
+          }
+
           if (hasExactSubService) {
             skillMatchScore = 40; // Max skill compatibility weight
           } else if (hasCategoryMatch) {

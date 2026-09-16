@@ -15,7 +15,7 @@ export function SummaryCardsGrid({ stats }: SummaryCardsGridProps) {
     {
       label: "Today's Jobs",
       value: stats.todaysJobs.toString(),
-      subtext: "1 active • 2 scheduled",
+      subtext: stats.todaysJobs === 0 ? "No jobs scheduled today" : `${stats.todaysJobs} scheduled today`,
       icon: Briefcase,
       iconColor: "text-emerald-600 dark:text-emerald-400",
       iconBg: "bg-emerald-50 dark:bg-emerald-950/50 border-emerald-200 dark:border-emerald-800/40",
@@ -30,8 +30,8 @@ export function SummaryCardsGrid({ stats }: SummaryCardsGridProps) {
     },
     {
       label: "Overall Rating",
-      value: `⭐ ${stats.overallRating.toFixed(1)}`,
-      subtext: "From 342 verified customers",
+      value: stats.overallRating > 0 ? `⭐ ${stats.overallRating.toFixed(1)}` : "No ratings yet",
+      subtext: stats.overallRating > 0 ? "From verified customers" : "New member baseline",
       icon: Star,
       iconColor: "text-yellow-600 dark:text-yellow-400",
       iconBg: "bg-yellow-50 dark:bg-yellow-950/50 border-yellow-200 dark:border-yellow-800/40",
@@ -39,7 +39,7 @@ export function SummaryCardsGrid({ stats }: SummaryCardsGridProps) {
     {
       label: "Completed Jobs",
       value: stats.completedJobs.toLocaleString(),
-      subtext: "Lifetime cooperative record",
+      subtext: stats.completedJobs === 0 ? "No completed jobs yet" : "Lifetime cooperative record",
       icon: CheckCircle2,
       iconColor: "text-teal-600 dark:text-teal-400",
       iconBg: "bg-teal-50 dark:bg-teal-950/50 border-teal-200 dark:border-teal-800/40",

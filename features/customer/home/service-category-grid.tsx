@@ -10,6 +10,11 @@ import {
   Tv,
   TreePine,
   Car,
+  Building2,
+  Home,
+  Flame,
+  HardHat,
+  Layers,
 } from "lucide-react";
 import { Card } from "@/components/ui/card";
 
@@ -22,52 +27,82 @@ export interface ServiceCategoryItem {
 
 export const CUSTOMER_SERVICE_CATEGORIES: ServiceCategoryItem[] = [
   {
-    id: "cat-plumbing",
+    id: "ceb1ccc9-e769-47cb-9540-167158c684f2",
     name: "Plumbing",
     icon: Wrench,
     description: "Tap repair, pipe leaks & drainage",
   },
   {
-    id: "cat-electrical",
+    id: "2985a030-5e9a-4c21-9ecb-43edae490f00",
     name: "Electrical",
     icon: Zap,
     description: "Wiring, switchboards & MCB repair",
   },
   {
-    id: "cat-carpentry",
+    id: "9394b752-b921-45cf-b77d-4f9cdfd3b61f",
     name: "Carpentry",
     icon: Hammer,
     description: "Furniture assembly & door fixes",
   },
   {
-    id: "cat-painting",
+    id: "d710bed5-7724-469f-8930-e9400398fc92",
     name: "Painting",
     icon: Paintbrush,
     description: "House painting & wall touchups",
   },
   {
-    id: "cat-cleaning",
+    id: "eedc33a1-3d03-4bcb-bb44-3375365adea4",
     name: "Cleaning",
     icon: Sparkles,
     description: "Deep house & kitchen sanitization",
   },
   {
-    id: "cat-appliance",
+    id: "cd97b6b4-91eb-4c50-b15f-efba528b31d1",
     name: "Appliance Repair",
     icon: Tv,
     description: "AC, Fridge & Washing Machine",
   },
   {
-    id: "cat-gardening",
+    id: "18c5af04-2db5-41d6-983a-ddd5f02d86d1",
     name: "Gardening",
     icon: TreePine,
     description: "Lawn care & plant maintenance",
   },
   {
-    id: "cat-driver",
+    id: "c4432db8-8be9-4975-941a-901f392fae68",
     name: "Driver Services",
     icon: Car,
     description: "Personal & outstation drivers",
+  },
+  {
+    id: "ebda254d-3500-492e-b35c-83f5a00c5239",
+    name: "Masonry",
+    icon: Building2,
+    description: "Brickwork, plastering & wall construction",
+  },
+  {
+    id: "f106c3b4-bdd2-4c05-9b01-d63ecae29dea",
+    name: "House Help / Domestic Help",
+    icon: Home,
+    description: "Daily cleaning, dishwashing & dusting",
+  },
+  {
+    id: "3bd5ddac-31be-4163-807a-0a0871ed4161",
+    name: "Welding",
+    icon: Flame,
+    description: "Grills, gates, railings & metal fabrication",
+  },
+  {
+    id: "3fa324d5-3904-4d9a-b24a-3603d355834d",
+    name: "Construction Labour",
+    icon: HardHat,
+    description: "Site shifting, material handling & digging",
+  },
+  {
+    id: "1e73e7ac-f6da-45b9-9d6c-49d44ffa22ef",
+    name: "Tile & Floor Work",
+    icon: Layers,
+    description: "Floor tiles, marble fixing & grout restoration",
   },
 ];
 
@@ -96,7 +131,7 @@ export function ServiceCategoryGrid({
           </p>
         </div>
         <span className="text-xs text-slate-500 dark:text-slate-400 font-semibold bg-slate-100 dark:bg-slate-800 px-2.5 py-1 rounded-full">
-          8 Categories
+          {CUSTOMER_SERVICE_CATEGORIES.length} Categories
         </span>
       </div>
 

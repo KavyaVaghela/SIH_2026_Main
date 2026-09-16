@@ -289,7 +289,7 @@ async function runVerification() {
         bank_name: "Bank of Baroda",
         bank_account_holder: "Ramesh Prajapati",
         bank_account_number: "03450100098765",
-        bank_ifsc_code: "BARB0BOPALX",
+        bank_ifsc_code: "BARB0001234",
       })
       .select()
       .single();

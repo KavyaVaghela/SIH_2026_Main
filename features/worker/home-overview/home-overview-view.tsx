@@ -19,17 +19,17 @@ export function HomeOverviewView() {
   const [stats, setStats] = React.useState<WorkerOverviewStats>({
     todaysJobs: 0,
     todaysEarnings: 0,
-    overallRating: 5.0,
+    overallRating: 0,
     completedJobs: 0,
   });
   const [workerIdentity, setWorkerIdentity] = React.useState<WorkerIdentity>({
-    name: "Worker",
-    trade: "Skilled Tradesperson",
+    name: "Worker Member",
+    trade: "Tradesperson",
     cooperativeName: "Cooperative Federation",
     cooperativeRole: "Member",
     federationName: "Cooperative Federation",
-    location: "Gujarat",
-    rating: 5.0,
+    location: "Gujarat, India",
+    rating: 0,
     reviewsCount: 0,
     isVerified: false,
   });
@@ -157,6 +157,7 @@ export function HomeOverviewView() {
   const refreshData = React.useCallback(() => {
     if (!workerDbId) return;
     const targetId = workerDbId;
+    // Capture this fetch's generation number
     const thisGen = ++fetchGenRef.current;
 
     Promise.all([
@@ -169,7 +170,7 @@ export function HomeOverviewView() {
 
         setRequests(liveRequests);
 
-        const mapped: WorkerScheduleItem[] = schedule.today.map((j) => ({
+        const mapped: WorkerScheduleItem[] = (schedule?.today || []).map((j) => ({
           id: j.id,
           time: j.scheduledTime,
           serviceTitle: j.serviceTitle,
@@ -182,11 +183,12 @@ export function HomeOverviewView() {
         }));
         setScheduleItems(mapped);
 
+        const jobsDone = Number(earnings?.summary?.completedJobsCount) || 0;
         setStats({
-          todaysJobs: schedule.today.length,
-          todaysEarnings: earnings.summary.todaysEarnings,
-          overallRating: 4.9,
-          completedJobs: earnings.summary.completedJobsCount,
+          todaysJobs: schedule?.today?.length || 0,
+          todaysEarnings: Number(earnings?.summary?.todaysEarnings) || 0,
+          overallRating: jobsDone > 0 ? Number((earnings?.summary as unknown as { rating?: number })?.rating) || 0 : 0,
+          completedJobs: jobsDone,
         });
       })
       .catch((err) => {

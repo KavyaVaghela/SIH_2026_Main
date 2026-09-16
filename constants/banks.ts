@@ -22,11 +22,12 @@ export const MAJOR_INDIAN_BANKS = [
 export type MajorBankName = (typeof MAJOR_INDIAN_BANKS)[number];
 
 /**
- * Standard Indian Financial System Code (IFSC) regex:
- * 4 letters + 0 + 6 alphanumeric characters.
- * Example: SBIN0001234, HDFC0000128
+ * Indian Financial System Code (IFSC) regex for this prototype:
+ * 11 characters: 4 letters (A-Z) + '000' + 4 digits (0-9).
+ * Example: ABCD0001234, SBIN0001234
  */
-export const INDIAN_IFSC_REGEX = /^[A-Z]{4}0[A-Z0-9]{6}$/;
+export const INDIAN_IFSC_REGEX = /^[A-Z]{4}000[0-9]{4}$/;
+
 
 /**
  * Validates that the provided Date of Birth represents a person at least 18 years old today,
