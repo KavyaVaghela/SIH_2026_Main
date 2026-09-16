@@ -31,6 +31,8 @@ export interface AddWorkerPayload {
   address: string;
   city: string;
   state: string;
+  pincode?: string;
+  federationId?: string;
   // Professional
   profession: string;
   skills: string;

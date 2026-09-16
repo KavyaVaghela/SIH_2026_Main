@@ -1,16 +1,16 @@
-import { createClient } from '@supabase/supabase-js';
-import * as fs from 'fs';
-import * as path from 'path';
+import { createClient } from "@supabase/supabase-js";
+import * as fs from "fs";
+import * as path from "path";
 
 function loadEnv() {
-  const envPath = path.join(process.cwd(), '.env.local');
+  const envPath = path.join(process.cwd(), ".env.local");
   if (fs.existsSync(envPath)) {
-    const content = fs.readFileSync(envPath, 'utf8');
-    for (const line of content.split('\n')) {
+    const content = fs.readFileSync(envPath, "utf8");
+    for (const line of content.split("\n")) {
       const trimmed = line.trim();
-      if (trimmed && !trimmed.startsWith('#') && trimmed.includes('=')) {
-        const [key, ...valParts] = trimmed.split('=');
-        process.env[key.trim()] = valParts.join('=').trim();
+      if (trimmed && !trimmed.startsWith("#") && trimmed.includes("=")) {
+        const [key, ...valParts] = trimmed.split("=");
+        process.env[key.trim()] = valParts.join("=").trim();
       }
     }
   }
@@ -18,44 +18,43 @@ function loadEnv() {
 
 loadEnv();
 
-const url = process.env.NEXT_PUBLIC_SUPABASE_URL || '';
-const key = process.env.SUPABASE_SECRET_KEY || process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY || '';
+const url = process.env.NEXT_PUBLIC_SUPABASE_URL || "";
+const key = process.env.SUPABASE_SECRET_KEY || process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY || "";
 
 const supabase = createClient(url, key, {
-  auth: { persistSession: false }
+  auth: { persistSession: false },
 });
 
-async function run() {
-  const { data: feds, error } = await supabase.from('federations').select('*');
+async function inspect() {
+  console.log("=== FEDERATIONS ===");
+  const { data: feds, error } = await supabase.from("federations").select("*");
   if (error) {
-    console.error('Error fetching federations:', error);
-    return;
-  }
-  console.log('Total federations:', feds.length);
-  for (const f of feds) {
-    console.log(`- ID: ${f.id} | Name: "${f.name}" | Code: ${f.code} | City: ${f.city}`);
-  }
-
-  const badId = '648a2e74-3dee-4111-a427-000c104db73e';
-  const target = feds.find(f => f.id === badId || f.name.toLowerCase().includes('gota') || f.name.toLowerCase().includes('sluts'));
-  if (target) {
-    console.log('\nFound bad federation:', target);
-    // check auth / profiles for contact email
-    const { data: profs } = await supabase.from('profiles').select('*').eq('email', target.contact_email);
-    console.log('Profiles with contact_email:', profs);
-    // check dependent records
-    const tables = ['workers', 'bookings', 'invoices', 'welfare_records', 'project_requests'];
-    for (const t of tables) {
-      const { data, count, error: err } = await supabase.from(t).select('*', { count: 'exact' }).eq('federation_id', target.id);
-      console.log(`Dependent records in ${t}: count = ${count}, data length = ${data?.length}`);
-      if (data && data.length > 0) {
-        console.log(`Sample records in ${t}:`, JSON.stringify(data.slice(0, 3)));
-      }
+    console.error("Error fetching federations:", error);
+  } else if (feds) {
+    console.log(`Total federations: ${feds.length}`);
+    for (const f of feds) {
+      console.log(`- ID: ${f.id} | Name: "${f.name}" | Code: ${f.code} | City: ${f.city} | Status: ${f.status || (f.is_active ? "ACTIVE" : "INACTIVE")}`);
     }
-
-  } else {
-    console.log('\nBad federation not found by ID or name in federations table');
   }
+
+  console.log("\n=== ADMIN PROFILES ===");
+  const { data: profiles } = await supabase
+    .from("profiles")
+    .select("id, role, email, full_name, is_active")
+    .in("role", ["FEDERATION_ADMIN", "SUPER_ADMIN"]);
+  console.log(profiles);
+
+  console.log("\n=== WORKERS SAMPLE ===");
+  const { data: workers } = await supabase
+    .from("workers")
+    .select("id, profile_id, federation_id, member_id, verification_status, account_status, registration_type")
+    .limit(10);
+  console.log(workers);
+
+  console.log("\n=== REALTIME PUBLICATION CHECK ===");
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const { data: pubTables, error: pubErr } = await (supabase.rpc("get_realtime_tables") as any);
+  console.log("Pub check:", pubTables || pubErr);
 }
 
-run().catch(console.error);
+inspect().catch(console.error);

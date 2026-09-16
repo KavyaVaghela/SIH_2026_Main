@@ -194,10 +194,25 @@ export class ServiceCatalogService implements IServiceCatalogService {
     try {
       const { createClient } = await import("@/lib/supabase/client");
       const supabase = createClient();
+      let catId = categoryId;
+      const isUuid = /^[0-9a-fA-F-]{36}$/.test(categoryId);
+      if (!isUuid) {
+        const cleanName = categoryId.replace(/^cat-/, "").replace(/[-_]/g, " ");
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        const { data: cat } = await (supabase.from("service_categories") as any)
+          .select("id")
+          .ilike("name", `%${cleanName}%`)
+          .limit(1)
+          .maybeSingle();
+        if (cat?.id) {
+          catId = cat.id;
+        }
+      }
+
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const { data, error } = await (supabase.from("services") as any)
         .select("*")
-        .eq("category_id", categoryId)
+        .eq("category_id", catId)
         .eq("is_active", true);
 
       if (!error && data && data.length > 0) {

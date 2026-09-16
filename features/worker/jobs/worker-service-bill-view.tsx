@@ -120,9 +120,9 @@ export function WorkerServiceBillView({ bookingId }: WorkerServiceBillViewProps)
     return Math.max(0, (Number(laborAmount) || 0) + materialsTotal);
   }, [laborAmount, materialItems]);
 
-  const platformFee = Math.round(itemsSubtotal * 0.05 * 100) / 100; // 5% Cooperative fee
-  const taxAmount = Math.round(itemsSubtotal * 0.18 * 100) / 100;   // 18% GST
-  const finalTotalAmount = Math.round((itemsSubtotal + platformFee + taxAmount) * 100) / 100;
+  const platformFee = Math.round(itemsSubtotal * 0.05 * 100) / 100; // 5% Cooperative fee deducted from worker earnings
+  const finalTotalAmount = itemsSubtotal; // Final bill equals itemized components sum
+  const workerEarnings = Math.max(0, itemsSubtotal - platformFee);
 
   // Add Item to Materials List
   const handleAddMaterial = () => {
@@ -499,18 +499,18 @@ export function WorkerServiceBillView({ bookingId }: WorkerServiceBillViewProps)
                   <span className="font-mono font-bold">{formatINR(itemsSubtotal)}</span>
                 </div>
 
-                <div className="flex justify-between items-center text-muted-foreground text-[11px]">
-                  <span>Cooperative Platform Fee (5%):</span>
-                  <span className="font-mono">{formatINR(platformFee)}</span>
-                </div>
-                <div className="flex justify-between items-center text-muted-foreground text-[11px]">
-                  <span>GST / Taxes (18%):</span>
-                  <span className="font-mono">{formatINR(taxAmount)}</span>
+                <div className="pt-2 border-t flex justify-between items-center text-sm font-bold text-emerald-800 dark:text-emerald-300">
+                  <span>Final Bill (Payable by Customer):</span>
+                  <span className="font-mono text-base">{formatINR(finalTotalAmount)}</span>
                 </div>
 
-                <div className="pt-3 border-t flex justify-between items-center text-sm font-bold text-emerald-800 dark:text-emerald-300">
-                  <span>Final Bill Total:</span>
-                  <span className="font-mono text-base">{formatINR(finalTotalAmount)}</span>
+                <div className="flex justify-between items-center text-muted-foreground text-[11px] pt-1">
+                  <span>Cooperative Platform Fee (5% deduction):</span>
+                  <span className="font-mono">-{formatINR(platformFee)}</span>
+                </div>
+                <div className="flex justify-between items-center text-muted-foreground text-[11px]">
+                  <span>Worker Net Settlement:</span>
+                  <span className="font-mono font-bold text-foreground">{formatINR(workerEarnings)}</span>
                 </div>
               </div>
 

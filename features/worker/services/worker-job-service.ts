@@ -18,6 +18,7 @@ import { serviceCatalogService } from "@/features/services/services/service-cata
 import { invoiceService, type Invoice } from "@/features/invoices/services/invoice-service";
 import { paymentService, type PaymentRecord } from "@/features/payments/services/payment-service";
 import { welfareService } from "@/features/welfare/services/welfare-service";
+import { multiWorkerService } from "@/features/customer/services/multi-worker-service";
 import { createClient } from "@/lib/supabase/client";
 import { AppError } from "@/lib/errors";
 import type { Coordinates } from "@/lib/maps/types";
@@ -35,6 +36,7 @@ export interface IWorkerJobService {
   getJobRequests(workerId?: string): Promise<WorkerJobItem[]>;
   reviewJobRequest(jobId: string, workerId?: string): Promise<WorkerJobItem>;
   expressInterestInJob(jobId: string, workerId?: string): Promise<WorkerJobItem>;
+  declineJobRequest(jobId: string, workerId?: string, reason?: string): Promise<WorkerJobItem | null>;
   submitWorkerEstimate(payload: WorkerEstimateSubmissionPayload): Promise<WorkerJobItem>;
   getMinimumVisitCharge(serviceId: string): Promise<number>;
   acceptJob(bookingId: string, workerId?: string): Promise<WorkerJobItem>;
@@ -82,7 +84,7 @@ export interface IWorkerJobService {
   getSchedule(workerId?: string): Promise<{ today: WorkerJobItem[]; upcoming: WorkerJobItem[] }>;
   getActiveJobs(workerId?: string): Promise<WorkerJobItem[]>;
   getCompletedJobs(workerId?: string): Promise<WorkerJobItem[]>;
-  getJobDetails(jobId: string): Promise<WorkerJobItem | null>;
+  getJobDetails(jobId: string, workerId?: string): Promise<WorkerJobItem | null>;
   getWorkerAvailability(workerId?: string): Promise<WorkerAvailabilityStatus>;
   ensureSeedData(workerId?: string): Promise<void>;
 }
@@ -196,11 +198,17 @@ export class WorkerJobService implements IWorkerJobService {
     }
 
     try {
-      const supabase = createClient();
+      let supabase: any;
+      if (typeof window === "undefined" && (process.env.SUPABASE_SECRET_KEY || process.env.SUPABASE_SERVICE_ROLE_KEY)) {
+        const { createAdminClient } = await import("@/lib/supabase/admin");
+        supabase = createAdminClient();
+      } else {
+        supabase = createClient();
+      }
       const { data: { user } } = await supabase.auth.getUser();
       if (user?.id) {
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        const { data: wRec } = await (supabase.from("workers") as any)
+        const { data: wRec } = await supabase
+          .from("workers")
           .select("id")
           .eq("profile_id", user.id)
           .maybeSingle();
@@ -212,7 +220,7 @@ export class WorkerJobService implements IWorkerJobService {
       // Fall through
     }
 
-    return "59eca4ff-a589-4363-ad76-24a4ff5b6e2e"; // Ravi Patel real worker UUID
+    return "59eca4ff-a589-4363-ad76-24a4ff5b6e2e"; // Ravi Patel fallback UUID
   }
 
   /**
@@ -236,6 +244,83 @@ export class WorkerJobService implements IWorkerJobService {
       console.warn("API /api/worker/jobs notice, falling back to direct client", apiErr);
     }
 
+    // 1. Fetch multi-worker requests from worker_estimates
+    let mwJobItems: WorkerJobItem[] = [];
+    try {
+      const supabase = createClient();
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const { data: mwData, error: mwErr } = await (supabase.from("worker_estimates") as any)
+        .select(`
+          id,
+          job_request_id,
+          worker_id,
+          estimated_amount,
+          estimated_hours,
+          notes,
+          status,
+          created_at,
+          job_requests (
+            id,
+            customer_id,
+            service_id,
+            description,
+            preferred_schedule,
+            status,
+            profiles:customer_id (full_name, phone, email),
+            services (id, title, base_price, minimum_visit_charge, service_categories (name))
+          )
+        `)
+        .eq("worker_id", targetWorkerId)
+        .order("created_at", { ascending: false });
+
+      if (!mwErr && mwData && mwData.length > 0) {
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        mwJobItems = mwData.map((item: any) => {
+          const jr = item.job_requests;
+          const srv = jr?.services;
+          const cat = srv?.service_categories;
+          const cust = jr?.profiles;
+          const reqNum = `SR-${item.job_request_id.slice(0, 8).toUpperCase()}`;
+
+          return {
+            id: item.job_request_id,
+            bookingNumber: reqNum,
+            serviceTitle: srv?.title || "Service Request",
+            categoryName: cat?.name || "Maintenance",
+            customerName: cust?.full_name || "Verified Customer",
+            customerPhone: cust?.phone || "+91 98250 11021",
+            customerArea: "Satellite, Ahmedabad",
+            distanceKm: 2.1,
+            scheduledDate: jr?.preferred_schedule
+              ? new Date(jr.preferred_schedule).toLocaleDateString("en-IN")
+              : "Today",
+            scheduledTime: jr?.preferred_schedule
+              ? new Date(jr.preferred_schedule).toLocaleTimeString("en-IN", {
+                  hour: "2-digit",
+                  minute: "2-digit",
+                })
+              : "4:00 PM",
+            scheduledStartAt: jr?.preferred_schedule || new Date().toISOString(),
+            problemDescription: jr?.description || "Service request details",
+            totalAmount: srv?.base_price || 350,
+            workerEarnings: Math.round((srv?.base_price || 350) * 0.95),
+            status: (item.status?.toUpperCase() || "PENDING") as any,
+            urgency: "STANDARD",
+            cooperativeName: "Ahmedabad Skilled Workers Federation",
+            workerEstimateAmount: Number(item.estimated_amount) > 0 ? Number(item.estimated_amount) : null,
+            workerEstimateNotes: item.notes,
+            minimumVisitCharge: srv?.minimum_visit_charge || 200,
+            isMultiWorkerRequest: true,
+            createdAt: item.created_at,
+          };
+        });
+      }
+    } catch (mwCatch) {
+      console.warn("Notice: mwJobItems fetch error:", mwCatch);
+    }
+
+    // 2. Fetch canonical bookings
+    let canonicalItems: WorkerJobItem[] = [];
     try {
       const supabase = createClient();
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -253,12 +338,14 @@ export class WorkerJobService implements IWorkerJobService {
 
       if (!error && data && data.length > 0) {
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        return data.map((b: any) => this.mapBookingToWorkerJobItem(b));
+        canonicalItems = data.map((b: any) => this.mapBookingToWorkerJobItem(b));
       }
-
-      console.warn("DB getJobRequests error or empty:", error?.message);
     } catch (err) {
-      console.warn("DB getJobRequests notice:", err);
+      console.warn("DB getJobRequests canonical notice:", err);
+    }
+
+    if (mwJobItems.length > 0 || canonicalItems.length > 0) {
+      return [...mwJobItems, ...canonicalItems];
     }
 
     // DB is unreachable — fall back to in-memory bookings as last resort
@@ -341,6 +428,20 @@ export class WorkerJobService implements IWorkerJobService {
 
     const booking = await bookingService.getBooking(jobId);
     if (!booking) {
+      // Check multi-worker job_requests
+      const supabase = createClient();
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const { data: jr } = await (supabase.from("job_requests") as any)
+        .select("id")
+        .eq("id", jobId)
+        .maybeSingle();
+
+      if (jr) {
+        await multiWorkerService.workerExpressInterest(jobId, resolvedWorkerId);
+        const mapped = await this.getJobDetails(jobId);
+        if (mapped) return mapped;
+      }
+
       throw new AppError(`Job request ${jobId} not found.`, "NOT_FOUND", 404);
     }
 
@@ -404,6 +505,26 @@ export class WorkerJobService implements IWorkerJobService {
   }
 
   /**
+   * Worker declines a job request (status becomes DECLINED)
+   */
+  async declineJobRequest(jobId: string, workerId: string = "w-1", reason?: string): Promise<WorkerJobItem | null> {
+    const resolvedWorkerId = await this.resolveWorkerId(workerId);
+    const supabase = createClient();
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const { data: jr } = await (supabase.from("job_requests") as any)
+      .select("id")
+      .eq("id", jobId)
+      .maybeSingle();
+
+    if (jr) {
+      await multiWorkerService.workerDeclineRequest(jobId, resolvedWorkerId, reason);
+      return await this.getJobDetails(jobId);
+    }
+
+    return null;
+  }
+
+  /**
    * Retrieves the minimum visit charge configured for a service from the service catalogue
    */
   async getMinimumVisitCharge(serviceId: string): Promise<number> {
@@ -429,15 +550,6 @@ export class WorkerJobService implements IWorkerJobService {
       throw new AppError("Worker account is inactive or not found.", "UNAUTHORIZED", 403);
     }
 
-    const booking = await bookingService.getBooking(payload.bookingId);
-    if (!booking) {
-      throw new AppError(`Job request ${payload.bookingId} not found.`, "NOT_FOUND", 404);
-    }
-
-    if (booking.workerId && booking.workerId !== resolvedWorkerId) {
-      throw new AppError("You are not authorized to submit an estimate for this request.", "UNAUTHORIZED", 403);
-    }
-
     const labor = Number(payload.laborAmount);
     const materials = Number(payload.materialAmount || 0);
     const additional = Number(payload.additionalCharges || 0);
@@ -450,6 +562,83 @@ export class WorkerJobService implements IWorkerJobService {
     }
 
     const totalAmount = Math.round((labor + materials + additional) * 100) / 100;
+
+    const booking = await bookingService.getBooking(payload.bookingId);
+    if (!booking) {
+      // Check multi-worker job_requests
+      const supabase = createClient();
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const { data: jr } = await (supabase.from("job_requests") as any)
+        .select("id, service_id")
+        .eq("id", payload.bookingId)
+        .maybeSingle();
+
+      if (jr) {
+        const minCharge = await this.getMinimumVisitCharge(jr.service_id);
+        if (totalAmount < minCharge) {
+          throw new AppError(
+            `Total estimate (₹${totalAmount}) cannot be lower than the minimum service visit charge (₹${minCharge}).`,
+            "VALIDATION_ERROR",
+            400
+          );
+        }
+
+        if (typeof window !== "undefined") {
+          try {
+            const res = await fetch("/api/worker/estimates", {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({
+                requestId: payload.bookingId,
+                workerId: resolvedWorkerId,
+                laborAmount: labor,
+                materialAmount: materials,
+                additionalCharges: additional,
+                totalAmount,
+                notes: payload.notes,
+              }),
+            });
+            if (res.ok) {
+              const mapped = await this.getJobDetails(payload.bookingId, resolvedWorkerId);
+              if (mapped) {
+                mapped.minimumVisitCharge = minCharge;
+                return mapped;
+              }
+            } else {
+              const errJson = await res.json().catch(() => ({}));
+              if (errJson?.error) {
+                throw new AppError(errJson.error, "DATABASE_ERROR", res.status);
+              }
+            }
+          } catch (apiErr: any) {
+            if (apiErr instanceof AppError) throw apiErr;
+            console.warn("API /api/worker/estimates error, falling back to direct service", apiErr);
+          }
+        }
+
+        await multiWorkerService.workerSubmitEstimate(
+          payload.bookingId,
+          resolvedWorkerId,
+          totalAmount,
+          payload.notes,
+          labor,
+          materials,
+          additional
+        );
+
+        const mapped = await this.getJobDetails(payload.bookingId, resolvedWorkerId);
+        if (mapped) {
+          mapped.minimumVisitCharge = minCharge;
+          return mapped;
+        }
+      }
+
+      throw new AppError(`Job request ${payload.bookingId} not found.`, "NOT_FOUND", 404);
+    }
+
+    if (booking.workerId && booking.workerId !== resolvedWorkerId) {
+      throw new AppError("You are not authorized to submit an estimate for this request.", "UNAUTHORIZED", 403);
+    }
     const minCharge = await this.getMinimumVisitCharge(booking.serviceId);
 
     if (totalAmount < minCharge) {
@@ -918,6 +1107,41 @@ export class WorkerJobService implements IWorkerJobService {
       federationId: booking.federationId || "fed-1",
       items,
     });
+
+    // Update booking amounts in memory and database
+    booking.totalAmount = invoice.totalAmount;
+    booking.platformFee = invoice.platformFee;
+    booking.workerEarnings = invoice.totalAmount - invoice.platformFee;
+
+    try {
+      if (typeof window === "undefined") {
+        const { createAdminClient } = await import("@/lib/supabase/admin");
+        const adminSupabase = createAdminClient();
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        await (adminSupabase.from("bookings") as any)
+          .update({
+            total_amount: invoice.totalAmount,
+            platform_fee: invoice.platformFee,
+            worker_earnings: invoice.totalAmount - invoice.platformFee,
+            updated_at: new Date().toISOString(),
+          })
+          .eq("id", bookingId);
+      } else {
+        const { createClient } = await import("@/lib/supabase/client");
+        const clientSupabase = createClient();
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        await (clientSupabase.from("bookings") as any)
+          .update({
+            total_amount: invoice.totalAmount,
+            platform_fee: invoice.platformFee,
+            worker_earnings: invoice.totalAmount - invoice.platformFee,
+            updated_at: new Date().toISOString(),
+          })
+          .eq("id", bookingId);
+      }
+    } catch (dbErr) {
+      console.warn("DB update booking totalAmount notice:", dbErr);
+    }
 
     // 2. Transition Booking: SERVICE_COMPLETED -> BILL_GENERATED
     await bookingService.transitionStatus(
@@ -1484,33 +1708,130 @@ export class WorkerJobService implements IWorkerJobService {
   /**
    * Fetch specific job details by ID
    */
-  async getJobDetails(jobId: string): Promise<WorkerJobItem | null> {
+  async getJobDetails(jobId: string, workerId?: string): Promise<WorkerJobItem | null> {
     await this.ensureSeedData("w-1");
 
     const booking = await bookingService.getBooking(jobId);
-    if (!booking) return null;
-    const mapped = this.mapBookingToWorkerJobItem(booking);
-    mapped.minimumVisitCharge = await this.getMinimumVisitCharge(booking.serviceId);
+    if (booking) {
+      const mapped = this.mapBookingToWorkerJobItem(booking);
+      mapped.minimumVisitCharge = await this.getMinimumVisitCharge(booking.serviceId);
 
-    try {
-      const [inv, pay] = await Promise.all([
-        invoiceService.getBookingInvoice(jobId),
-        paymentService.getBookingPayment(jobId),
-      ]);
-      if (inv) {
-        mapped.invoiceId = inv.id;
-        mapped.invoiceNumber = inv.invoiceNumber;
-        mapped.invoiceTotal = inv.totalAmount;
+      try {
+        const [inv, pay] = await Promise.all([
+          invoiceService.getBookingInvoice(jobId),
+          paymentService.getBookingPayment(jobId),
+        ]);
+        if (inv) {
+          mapped.invoiceId = inv.id;
+          mapped.invoiceNumber = inv.invoiceNumber;
+          mapped.invoiceTotal = inv.totalAmount;
+        }
+        if (pay) {
+          mapped.paymentStatus = pay.status;
+          mapped.paymentId = pay.id;
+        }
+      } catch (attachErr) {
+        console.warn("getJobDetails invoice/payment attachment notice:", attachErr);
       }
-      if (pay) {
-        mapped.paymentStatus = pay.status;
-        mapped.paymentId = pay.id;
-      }
-    } catch (attachErr) {
-      console.warn("getJobDetails invoice/payment attachment notice:", attachErr);
+
+      return mapped;
     }
 
-    return mapped;
+    // Check multi-worker job_requests
+    try {
+      let supabase: any;
+      if (typeof window === "undefined" && (process.env.SUPABASE_SECRET_KEY || process.env.SUPABASE_SERVICE_ROLE_KEY)) {
+        const { createAdminClient } = await import("@/lib/supabase/admin");
+        supabase = createAdminClient();
+      } else {
+        supabase = createClient();
+      }
+      const targetWorkerId = await this.resolveWorkerId(workerId);
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const { data: jr } = await (supabase.from("job_requests") as any)
+        .select(`
+          id,
+          customer_id,
+          service_id,
+          description,
+          preferred_schedule,
+          status,
+          profiles:customer_id (full_name, phone, email),
+          services (id, title, base_price, minimum_visit_charge, service_categories (name))
+        `)
+        .eq("id", jobId)
+        .maybeSingle();
+
+      if (jr) {
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        const { data: mwEst } = await (supabase.from("worker_estimates") as any)
+          .select("*")
+          .eq("job_request_id", jobId)
+          .eq("worker_id", targetWorkerId)
+          .maybeSingle();
+
+        const srv = jr.services;
+        const cat = srv?.service_categories;
+        const cust = jr.profiles;
+        const estAmount = Number(mwEst?.estimated_amount) || 0;
+
+        let laborAmount = 0;
+        let materialAmount = 0;
+        let additionalCharges = 0;
+        let displayNotes = mwEst?.notes || undefined;
+        if (mwEst?.notes) {
+          try {
+            const parsed = JSON.parse(mwEst.notes);
+            if (typeof parsed === "object" && parsed !== null) {
+              laborAmount = Number(parsed.labor) || 0;
+              materialAmount = Number(parsed.materials) || 0;
+              additionalCharges = Number(parsed.additional) || 0;
+              displayNotes = parsed.text || displayNotes;
+            }
+          } catch {
+            // Raw text
+          }
+        }
+
+        return {
+          id: jr.id,
+          bookingNumber: `SR-${jr.id.slice(0, 8).toUpperCase()}`,
+          serviceTitle: srv?.title || "Service Request",
+          categoryName: cat?.name || "Maintenance",
+          customerName: cust?.full_name || "Verified Customer",
+          customerPhone: cust?.phone || "+91 98250 11021",
+          customerArea: "Satellite, Ahmedabad",
+          distanceKm: 2.1,
+          scheduledDate: jr.preferred_schedule
+            ? new Date(jr.preferred_schedule).toLocaleDateString("en-IN")
+            : "Today",
+          scheduledTime: jr.preferred_schedule
+            ? new Date(jr.preferred_schedule).toLocaleTimeString("en-IN", {
+                hour: "2-digit",
+                minute: "2-digit",
+              })
+            : "4:00 PM",
+          scheduledStartAt: jr.preferred_schedule || new Date().toISOString(),
+          problemDescription: jr.description || "Service request details",
+          totalAmount: srv?.base_price || 350,
+          workerEarnings: Math.round((srv?.base_price || 350) * 0.95),
+          status: (mwEst?.status?.toUpperCase() || "PENDING") as any,
+          urgency: "STANDARD",
+          cooperativeName: "Ahmedabad Skilled Workers Federation",
+          workerEstimateAmount: estAmount > 0 ? estAmount : null,
+          workerEstimateLabor: laborAmount > 0 ? laborAmount : (estAmount > 0 ? Math.round(estAmount * 0.7) : undefined),
+          workerEstimateMaterials: (materialAmount + additionalCharges) > 0 ? (materialAmount + additionalCharges) : (estAmount > 0 ? Math.round(estAmount * 0.3) : undefined),
+          workerEstimateNotes: displayNotes,
+          minimumVisitCharge: srv?.minimum_visit_charge || 200,
+          isMultiWorkerRequest: true,
+          createdAt: jr.created_at,
+        };
+      }
+    } catch (jrErr) {
+      console.warn("Notice: getJobDetails multi-worker check:", jrErr);
+    }
+
+    return null;
   }
 
   /**

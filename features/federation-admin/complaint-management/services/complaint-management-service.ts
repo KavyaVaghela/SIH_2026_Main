@@ -5,171 +5,81 @@ import type {
   ComplaintStatusDisplay,
   ComplaintManagementData,
 } from "../types";
+import type { GrievanceCase } from "@/types/complaints/v2";
 
 export class ComplaintManagementService {
   /**
-   * Deterministic development store for complaints against Ahmedabad Labour Cooperative Federation workers.
-   */
-  private fallbackComplaints: FederationComplaintItem[] = [
-    {
-      id: "cmp-2026-0041",
-      complaintNumber: "CMP-0041",
-      bookingId: "BK-2026-8801",
-      customerName: "Aarav Mehta",
-      customerPhone: "+91 98980 12345",
-      workerId: "WRK-AHM-0101",
-      workerName: "Rajesh Solanki",
-      workerProfession: "Electrician",
-      subject: "Inverter Circuit Tripping Post-Installation",
-      category: "Workmanship & Safety",
-      description:
-        "The newly installed MCB trips whenever the double battery backup load exceeds 800W. Requesting technician to re-inspect connection terminal torque and earth leakage resistance.",
-      submittedDate: "2026-03-01",
-      status: "PENDING",
-      rawStatus: "OPEN",
-    },
-    {
-      id: "cmp-2026-0042",
-      complaintNumber: "CMP-0042",
-      bookingId: "BK-2026-8842",
-      customerName: "Pooja Trivedi",
-      customerPhone: "+91 98980 54321",
-      workerId: "WRK-AHM-0102",
-      workerName: "Dinesh Parmar",
-      workerProfession: "Plumber",
-      subject: "Minor Seepage in Overhead Tank Float Valve Fitting",
-      category: "Service Quality",
-      description:
-        "Float valve was replaced yesterday, but small droplets are leaking from the brass joint into the overflow line during high pressure pump filling.",
-      submittedDate: "2026-03-02",
-      status: "PENDING",
-      rawStatus: "IN_REVIEW",
-    },
-    {
-      id: "cmp-2026-0043",
-      complaintNumber: "CMP-0043",
-      bookingId: "BK-2026-8790",
-      customerName: "Kishore Bhatt",
-      customerPhone: "+91 98980 98765",
-      workerId: "WRK-AHM-0103",
-      workerName: "Geeta Vaghela",
-      workerProfession: "Deep Cleaner",
-      subject: "Clarification on Kitchen Deep Cleaning Scope",
-      category: "Billing & Scope",
-      description:
-        "Customer sought clarification whether balcony wet scrubbing was covered under standard cooperative kitchen combo tariff.",
-      submittedDate: "2026-02-24",
-      status: "RESOLVED",
-      rawStatus: "RESOLVED",
-      resolutionNotes:
-        "Conciliated with customer over telephone. Technician provided complimentary balcony floor scrub. Customer acknowledged complete satisfaction.",
-      resolvedAt: "2026-02-25",
-      resolvedBy: "Federation Admin (Ahmedabad Central)",
-    },
-    {
-      id: "cmp-2026-0044",
-      complaintNumber: "CMP-0044",
-      bookingId: "BK-2026-8815",
-      customerName: "Suresh Shah",
-      customerPhone: "+91 98980 11223",
-      workerId: "WRK-AHM-0104",
-      workerName: "Mukesh Rathod",
-      workerProfession: "Carpenter",
-      subject: "Delay in Wardrobe Hinge Hardware Procurement",
-      category: "Timeliness & SLA",
-      description:
-        "Technician arrived on schedule but needed additional transit time to source matching soft-close hydraulic hinges from the wholesale hub.",
-      submittedDate: "2026-02-20",
-      status: "RESOLVED",
-      rawStatus: "RESOLVED",
-      resolutionNotes:
-        "Hardware sourced and installed with 1-year cooperative guarantee. 10% courtesy tariff credit issued to customer account.",
-      resolvedAt: "2026-02-21",
-      resolvedBy: "Federation Admin (Ahmedabad Central)",
-    },
-  ];
-
-  /**
-   * Retrieves complaints associated with workers belonging to authenticated federation.
+   * Retrieves real complaints for the authenticated federation.
    */
   async getComplaints(
     searchQuery: string = "",
-    statusFilter: ComplaintStatusDisplay | "ALL" = "ALL"
+    statusFilter: string = "ALL",
+    priorityFilter: string = "ALL",
+    federationId: string = "b765df3b-c418-4a15-b79f-3cbc09e475dc"
   ): Promise<ComplaintManagementData> {
-    const supabase = createClient();
     let complaintsList: FederationComplaintItem[] = [];
-    let isFallback = true;
-    let dataSourceNotice: string | undefined =
-      "Development Demonstration State: Displaying deterministic dispute conciliation records.";
+    let isFallback = false;
+    let dataSourceNotice: string | undefined = undefined;
 
     try {
-      // Query shared Supabase complaints table if populated
-      const { data: dbComplaints, error } = await supabase
-        .from("complaints")
-        .select(`
-          id,
-          complaint_number,
-          booking_id,
-          category,
-          description,
-          status,
-          resolution_notes,
-          resolved_at,
-          created_at,
-          raised_by_profile:raised_by (
-            full_name,
-            phone
-          ),
-          target_worker:target_profile_id (
-            id,
-            profession,
-            profiles:profile_id (
-              full_name
-            )
-          )
-        `);
+      const { cases } = await complaintService.listGrievances({
+        role: "FEDERATION_ADMIN",
+        federationId,
+        searchQuery: searchQuery || undefined,
+        status: statusFilter !== "ALL" ? statusFilter : undefined,
+        priority: priorityFilter !== "ALL" ? priorityFilter : undefined,
+      });
 
-      if (!error && dbComplaints && dbComplaints.length > 0) {
-        complaintsList = (dbComplaints as any[]).map((c) => {
-          const customer = c.raised_by_profile || {};
-          const worker = c.target_worker || {};
-          const workerProfile = worker.profiles || {};
-          const isResolved = c.status === "RESOLVED";
+      if (cases && cases.length > 0) {
+        complaintsList = cases.map((c: GrievanceCase) => {
+          const isResolved = c.status === "RESOLVED" || c.status === "CLOSED" || c.status === "REJECTED";
+          const displayStatus: ComplaintStatusDisplay = isResolved
+            ? "RESOLVED"
+            : c.status === "ACTION_REQUIRED"
+            ? "ACTION_REQUIRED"
+            : c.status === "ESCALATED"
+            ? "ESCALATED"
+            : c.status === "UNDER_REVIEW"
+            ? "UNDER_REVIEW"
+            : "PENDING";
 
           return {
             id: c.id,
-            complaintNumber: c.complaint_number || `CMP-${c.id.slice(-4)}`,
-            bookingId: c.booking_id || undefined,
-            customerName: customer.full_name || "Customer",
-            customerPhone: customer.phone || "+91 98000 00000",
-            workerId: worker.id || "WRK-AHM-0101",
-            workerName: workerProfile.full_name || "Federation Craftsman",
-            workerProfession: worker.profession || "Skilled Craftsman",
-            subject: c.category || "Service Dispute",
-            description: c.description || "Grievance details recorded.",
-            category: c.category || "General",
-            submittedDate: c.created_at ? c.created_at.split("T")[0] : "2026-03-01",
-            status: isResolved ? "RESOLVED" : "PENDING",
-            rawStatus: c.status,
-            resolutionNotes: c.resolution_notes || undefined,
-            resolvedAt: c.resolved_at ? c.resolved_at.split("T")[0] : undefined,
+            complaintNumber: c.complaintNumber,
+            bookingId: c.bookingId || undefined,
+            customerName: c.raisedByName,
+            customerPhone: c.raisedByPhone || "+91 98000 00000",
+            workerId: c.targetWorkerId || c.targetProfileId || "WRK-AHM-0101",
+            workerName: c.targetName || "Federation Craftsman",
+            workerProfession: c.category.includes("Plumb") ? "Plumber" : "Skilled Craftsman",
+            subject: c.subject,
+            description: c.description,
+            category: c.category,
+            subcategory: c.subcategory,
+            submittedDate: c.createdAt ? c.createdAt.split("T")[0] : new Date().toISOString().split("T")[0],
+            status: displayStatus,
+            rawStatus: isResolved ? "RESOLVED" : "OPEN",
+            lifecycleStatus: c.status,
+            priority: c.priority,
+            suggestedPriority: c.suggestedPriority,
+            triageReason: c.triageReason,
+            resolutionNotes: c.resolution?.actionTaken || undefined,
+            resolvedAt: c.resolution?.resolvedAt ? c.resolution.resolvedAt.split("T")[0] : undefined,
+            resolvedBy: c.resolution?.resolvedByName || undefined,
+            grievanceCase: c,
           };
         });
-
-        isFallback = false;
-        dataSourceNotice = undefined;
       }
     } catch (err) {
-      console.warn("Notice: Live complaints query unpopulated, engaging deterministic fallback.", err);
-    }
-
-    if (complaintsList.length === 0) {
-      complaintsList = this.fallbackComplaints;
+      console.warn("Notice: Live complaints query exception:", err);
     }
 
     let filtered = complaintsList;
     if (statusFilter !== "ALL") {
-      filtered = filtered.filter((c) => c.status === statusFilter);
+      filtered = filtered.filter((c) => c.status === statusFilter || c.lifecycleStatus === statusFilter);
+    }
+    if (priorityFilter !== "ALL") {
+      filtered = filtered.filter((c) => c.priority === priorityFilter);
     }
 
     if (searchQuery.trim()) {
@@ -180,78 +90,69 @@ export class ComplaintManagementService {
           c.customerName.toLowerCase().includes(q) ||
           c.workerName.toLowerCase().includes(q) ||
           c.workerId.toLowerCase().includes(q) ||
-          c.subject.toLowerCase().includes(q)
+          c.subject.toLowerCase().includes(q) ||
+          c.category.toLowerCase().includes(q)
       );
     }
 
     const totalCount = complaintsList.length;
-    const pendingCount = complaintsList.filter((c) => c.status === "PENDING").length;
-    const resolvedCount = complaintsList.filter((c) => c.status === "RESOLVED").length;
+    const pendingCount = complaintsList.filter((c) => c.lifecycleStatus === "OPEN").length;
+    const underReviewCount = complaintsList.filter((c) => c.lifecycleStatus === "UNDER_REVIEW").length;
+    const actionRequiredCount = complaintsList.filter((c) => c.lifecycleStatus === "ACTION_REQUIRED").length;
+    const escalatedCount = complaintsList.filter((c) => c.lifecycleStatus === "ESCALATED").length;
+    const resolvedCount = complaintsList.filter((c) => c.lifecycleStatus === "RESOLVED" || c.status === "RESOLVED").length;
+    const highOrCriticalCount = complaintsList.filter((c) => c.priority === "HIGH" || c.priority === "CRITICAL").length;
 
     return {
       complaints: filtered,
       totalCount,
       pendingCount,
+      underReviewCount,
+      actionRequiredCount,
+      escalatedCount,
       resolvedCount,
+      highOrCriticalCount,
       isDevelopmentFallback: isFallback,
       dataSourceNotice,
     };
   }
 
   /**
-   * Marks a pending complaint as RESOLVED with resolution remarks:
-   * 1. Calls existing shared complaintService.updateStatus
-   * 2. Synchronizes database and deterministic store
-   * 3. Preserves complaint record in history
+   * Resolves a grievance case.
    */
   async resolveComplaint(
     complaintId: string,
     resolutionNotes: string,
-    internalNotes?: string
+    internalNotes?: string,
+    actorId: string = "fed-admin-1",
+    actorName: string = "Federation Grievance Officer"
   ): Promise<{ success: boolean; complaintId: string }> {
-    const supabase = createClient();
-    const today = new Date().toISOString().split("T")[0];
+    await complaintService.resolveGrievance(
+      complaintId,
+      {
+        resolutionType: "CONCILIATION",
+        summary: resolutionNotes,
+        actionTaken: resolutionNotes,
+        followUpRequired: false,
+        resolvedBy: actorId,
+        resolvedByName: actorName,
+        resolvedAt: new Date().toISOString(),
+      },
+      actorId,
+      "FEDERATION_ADMIN",
+      actorName
+    );
 
-    try {
-      // Use shared complaintService
-      await complaintService.updateStatus(
+    if (internalNotes && internalNotes.trim()) {
+      await complaintService.addTimelineUpdate(
         complaintId,
-        "RESOLVED",
+        "INTERNAL_NOTE",
+        internalNotes.trim(),
+        actorId,
         "FEDERATION_ADMIN",
-        resolutionNotes
+        actorName
       );
-    } catch (err) {
-      console.warn("Notice: Shared complaintService update unpopulated in DB, proceeding with adapter update.", err);
     }
-
-    try {
-      // Attempt live database update
-      await (supabase.from("complaints") as any)
-        .update({
-          status: "RESOLVED",
-          resolution_notes: resolutionNotes,
-          resolved_at: new Date().toISOString(),
-        })
-        .eq("id", complaintId);
-    } catch (err) {
-      console.warn("Notice: Live DB complaints update unpopulated.", err);
-    }
-
-    // Update in fallback store
-    this.fallbackComplaints = this.fallbackComplaints.map((c) => {
-      if (c.id === complaintId) {
-        return {
-          ...c,
-          status: "RESOLVED",
-          rawStatus: "RESOLVED",
-          resolutionNotes,
-          internalNotes,
-          resolvedAt: today,
-          resolvedBy: "Federation Admin",
-        };
-      }
-      return c;
-    });
 
     return {
       success: true,

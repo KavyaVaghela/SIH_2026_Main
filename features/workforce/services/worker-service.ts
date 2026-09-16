@@ -45,10 +45,16 @@ export class WorkerService implements IWorkerService {
 
   async getWorkerById(workerId: string): Promise<Worker | null> {
     try {
-      const { createClient } = await import("@/lib/supabase/client");
-      const supabase = createClient();
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      const { data, error } = await (supabase.from("workers") as any)
+      let supabase: any;
+      if (typeof window === "undefined" && (process.env.SUPABASE_SECRET_KEY || process.env.SUPABASE_SERVICE_ROLE_KEY)) {
+        const { createAdminClient } = await import("@/lib/supabase/admin");
+        supabase = createAdminClient();
+      } else {
+        const { createClient } = await import("@/lib/supabase/client");
+        supabase = createClient();
+      }
+      const { data, error } = await supabase
+        .from("workers")
         .select("*")
         .eq("id", workerId)
         .maybeSingle();

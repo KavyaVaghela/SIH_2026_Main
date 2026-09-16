@@ -28,27 +28,59 @@ export function JobRequestsTab({
   const [isCreatingTest, setIsCreatingTest] = React.useState(false);
   const [testSuccessMessage, setTestSuccessMessage] = React.useState<string | null>(null);
 
-  // Stage counts
-  const newCount = requests.filter((r) => r.status === "REQUEST_SENT").length;
-  const reviewingCount = requests.filter((r) => r.status === "WORKER_REVIEWING").length;
-  const interestedCount = requests.filter(
-    (r) => r.status === "WORKER_INTERESTED" || r.status === "CUSTOMER_CONFIRMATION_PENDING"
+  // Stage counts (Phase 3 Worker Dashboard)
+  const newCount = requests.filter(
+    (r) => r.status === "REQUEST_SENT" || r.status === "PENDING"
   ).length;
+  const activeCount = requests.filter(
+    (r) =>
+      r.status === "WORKER_REVIEWING" ||
+      r.status === "WORKER_INTERESTED" ||
+      r.status === "INTERESTED"
+  ).length;
+  const estimatesCount = requests.filter(
+    (r) =>
+      r.status === "ESTIMATE_SUBMITTED" ||
+      r.status === "CUSTOMER_CONFIRMATION_PENDING"
+  ).length;
+  const selectedCount = requests.filter(
+    (r) =>
+      r.status === "SELECTED" ||
+      r.status === "BOOKING_CONFIRMED" ||
+      r.status === "WORKER_ACCEPTED"
+  ).length;
+  const declinedCount = requests.filter((r) => r.status === "DECLINED").length;
 
   const filteredRequests = React.useMemo(() => {
     return requests.filter((req) => {
-      // Stage filters (Part 11)
-      if (filterOption === "NEW" && req.status !== "REQUEST_SENT") {
-        return false;
-      }
-      if (filterOption === "REVIEWING" && req.status !== "WORKER_REVIEWING") {
+      // Stage filters (Part M)
+      if (filterOption === "NEW" && req.status !== "REQUEST_SENT" && req.status !== "PENDING") {
         return false;
       }
       if (
-        filterOption === "INTERESTED" &&
+        filterOption === "ACTIVE" &&
+        req.status !== "WORKER_REVIEWING" &&
         req.status !== "WORKER_INTERESTED" &&
+        req.status !== "INTERESTED"
+      ) {
+        return false;
+      }
+      if (
+        filterOption === "ESTIMATES" &&
+        req.status !== "ESTIMATE_SUBMITTED" &&
         req.status !== "CUSTOMER_CONFIRMATION_PENDING"
       ) {
+        return false;
+      }
+      if (
+        filterOption === "SELECTED" &&
+        req.status !== "SELECTED" &&
+        req.status !== "BOOKING_CONFIRMED" &&
+        req.status !== "WORKER_ACCEPTED"
+      ) {
+        return false;
+      }
+      if (filterOption === "DECLINED" && req.status !== "DECLINED") {
         return false;
       }
 
@@ -166,8 +198,8 @@ export function JobRequestsTab({
         </div>
       )}
 
-      {/* Part 11: Stage Categorization Tabs */}
-      <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+      {/* Part M: Stage Categorization Tabs */}
+      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-2">
         <button
           type="button"
           onClick={() => setFilterOption("ALL")}
@@ -178,10 +210,10 @@ export function JobRequestsTab({
           }`}
         >
           <div className="flex items-center justify-between">
-            <span className="text-xs text-muted-foreground font-medium">All Requests</span>
+            <span className="text-xs text-muted-foreground font-medium">All</span>
             <Badge variant="outline" className="text-[10px]">{requests.length}</Badge>
           </div>
-          <span className="text-base font-bold text-foreground block mt-1">{requests.length} Total</span>
+          <span className="text-sm font-bold text-foreground block mt-1">{requests.length} Total</span>
         </button>
 
         <button
@@ -194,42 +226,74 @@ export function JobRequestsTab({
           }`}
         >
           <div className="flex items-center justify-between">
-            <span className="text-xs text-muted-foreground font-medium">New Requests</span>
+            <span className="text-xs text-muted-foreground font-medium">New</span>
             <Badge variant="outline" className="text-[10px] border-emerald-600/40 text-emerald-700">{newCount}</Badge>
           </div>
-          <span className="text-base font-bold text-foreground block mt-1">{newCount} New</span>
+          <span className="text-sm font-bold text-foreground block mt-1">{newCount} New</span>
         </button>
 
         <button
           type="button"
-          onClick={() => setFilterOption("REVIEWING")}
+          onClick={() => setFilterOption("ACTIVE")}
           className={`p-3 rounded-lg border text-left transition-all ${
-            filterOption === "REVIEWING"
+            filterOption === "ACTIVE"
               ? "border-emerald-600 bg-emerald-50/50 dark:bg-emerald-950/40 shadow-sm"
               : "bg-card hover:bg-muted/30"
           }`}
         >
           <div className="flex items-center justify-between">
-            <span className="text-xs text-muted-foreground font-medium">Under Review</span>
-            <Badge variant="warning" className="text-[10px]">{reviewingCount}</Badge>
+            <span className="text-xs text-muted-foreground font-medium">Active</span>
+            <Badge variant="warning" className="text-[10px]">{activeCount}</Badge>
           </div>
-          <span className="text-base font-bold text-foreground block mt-1">{reviewingCount} Reviewing</span>
+          <span className="text-sm font-bold text-foreground block mt-1">{activeCount} Active</span>
         </button>
 
         <button
           type="button"
-          onClick={() => setFilterOption("INTERESTED")}
+          onClick={() => setFilterOption("ESTIMATES")}
           className={`p-3 rounded-lg border text-left transition-all ${
-            filterOption === "INTERESTED"
+            filterOption === "ESTIMATES"
               ? "border-emerald-600 bg-emerald-50/50 dark:bg-emerald-950/40 shadow-sm"
               : "bg-card hover:bg-muted/30"
           }`}
         >
           <div className="flex items-center justify-between">
-            <span className="text-xs text-muted-foreground font-medium">Interest Sent</span>
-            <Badge variant="success" className="text-[10px]">{interestedCount}</Badge>
+            <span className="text-xs text-muted-foreground font-medium">Estimates</span>
+            <Badge variant="outline" className="text-[10px] border-emerald-600 text-emerald-700">{estimatesCount}</Badge>
           </div>
-          <span className="text-base font-bold text-foreground block mt-1">{interestedCount} Sent</span>
+          <span className="text-sm font-bold text-foreground block mt-1">{estimatesCount} Bids</span>
+        </button>
+
+        <button
+          type="button"
+          onClick={() => setFilterOption("SELECTED")}
+          className={`p-3 rounded-lg border text-left transition-all ${
+            filterOption === "SELECTED"
+              ? "border-emerald-600 bg-emerald-50/50 dark:bg-emerald-950/40 shadow-sm"
+              : "bg-card hover:bg-muted/30"
+          }`}
+        >
+          <div className="flex items-center justify-between">
+            <span className="text-xs text-muted-foreground font-medium">Selected</span>
+            <Badge variant="success" className="text-[10px]">{selectedCount}</Badge>
+          </div>
+          <span className="text-sm font-bold text-foreground block mt-1">{selectedCount} Won</span>
+        </button>
+
+        <button
+          type="button"
+          onClick={() => setFilterOption("DECLINED")}
+          className={`p-3 rounded-lg border text-left transition-all ${
+            filterOption === "DECLINED"
+              ? "border-emerald-600 bg-emerald-50/50 dark:bg-emerald-950/40 shadow-sm"
+              : "bg-card hover:bg-muted/30"
+          }`}
+        >
+          <div className="flex items-center justify-between">
+            <span className="text-xs text-muted-foreground font-medium">Declined</span>
+            <Badge variant="destructive" className="text-[10px]">{declinedCount}</Badge>
+          </div>
+          <span className="text-sm font-bold text-foreground block mt-1">{declinedCount} Closed</span>
         </button>
       </div>
 
@@ -297,15 +361,33 @@ export function JobRequestsTab({
 
       {/* Empty State */}
       {!loading && !error && filteredRequests.length === 0 && (
-        <Card className="p-8 text-center text-muted-foreground space-y-2 border-dashed">
-          <p className="text-sm font-medium text-foreground">
+        <Card className="p-8 text-center text-muted-foreground space-y-3 border-dashed bg-muted/10">
+          <p className="text-sm font-semibold text-foreground">
             {searchQuery.trim() || filterOption !== "ALL"
               ? "No job requests matching your filters."
-              : "No new job requests right now."}
+              : "No requests yet"}
           </p>
-          <p className="text-xs text-muted-foreground max-w-md mx-auto">
-            New requests submitted by households in your cooperative territory will appear here automatically.
+          <p className="text-xs text-muted-foreground max-w-md mx-auto leading-relaxed">
+            Your profile and availability are active. New service requests will appear here when customers select you.
           </p>
+          <div className="pt-2 flex items-center justify-center gap-2">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => (window.location.href = "/worker/profile")}
+              className="text-xs"
+            >
+              Check Availability Status
+            </Button>
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => (window.location.href = "/worker/guidance?q=estimate")}
+              className="text-xs text-emerald-700 dark:text-emerald-400"
+            >
+              How to prepare estimates →
+            </Button>
+          </div>
         </Card>
       )}
 

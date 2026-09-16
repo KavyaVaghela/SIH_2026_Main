@@ -35,8 +35,8 @@ export async function GET(request: NextRequest) {
       if (b && ["SERVICE_COMPLETED", "BILL_GENERATED", "PAYMENT_PENDING", "PAYMENT_RECEIVED", "BOOKING_COMPLETED"].includes(b.status)) {
         const subtotal = Number(b.total_amount) || 500;
         const platformFee = Math.round(subtotal * 0.05 * 100) / 100;
-        const taxAmount = Math.round(subtotal * 0.18 * 100) / 100;
-        const totalAmount = Math.round((subtotal + platformFee + taxAmount) * 100) / 100;
+        const taxAmount = 0;
+        const totalAmount = subtotal;
         const invoiceNumber = `INV-${Date.now().toString().slice(-6)}`;
         const issueDate = new Date().toISOString().split("T")[0];
         const dueDate = new Date(Date.now() + 7 * 86400000).toISOString().split("T")[0];
@@ -143,14 +143,21 @@ export async function POST(request: NextRequest) {
       ? items
       : [{ description: "Standard Trade Service Labor", quantity: 1, unitPrice: 500 }];
 
+    // Validate line items
+    for (const it of lineItems) {
+      if (Number(it.quantity) <= 0 || Number(it.unitPrice) < 0) {
+        return NextResponse.json({ error: "Item quantity must be positive and unit price cannot be negative" }, { status: 400 });
+      }
+    }
+
     const subtotal = lineItems.reduce(
       (sum: number, it: { quantity: number; unitPrice: number }) => sum + Number(it.quantity) * Number(it.unitPrice),
       0
     );
     const platformFee = Math.round(subtotal * 0.05 * 100) / 100;
-    const taxAmount = Math.round(subtotal * 0.18 * 100) / 100;
+    const taxAmount = 0;
     const discount = Number(discountAmount) || 0;
-    const totalAmount = Math.max(0, subtotal + platformFee + taxAmount - discount);
+    const totalAmount = Math.max(0, Math.round((subtotal - discount) * 100) / 100);
 
     const invoiceNumber = `INV-${Date.now().toString().slice(-6)}`;
     const issueDate = new Date().toISOString().split("T")[0];

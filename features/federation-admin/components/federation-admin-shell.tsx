@@ -62,7 +62,7 @@ export function FederationAdminShell({
       )}
 
       {/* Desktop Shell Body */}
-      <div className="flex-1 flex">
+      <div className="flex-1 flex min-w-0">
         {/* Desktop Sidebar (hidden on mobile) */}
         <div className="hidden md:block shrink-0">
           <FederationAdminSidebar />
@@ -71,7 +71,7 @@ export function FederationAdminShell({
         {/* Main Content Area */}
         <main
           className={cn(
-            "flex-1 p-4 md:p-6 lg:p-8 max-w-7xl w-full mx-auto overflow-x-hidden min-w-0",
+            "flex-1 p-4 md:p-6 lg:p-8 max-w-[1500px] w-full mx-auto overflow-x-hidden min-w-0",
             className
           )}
         >

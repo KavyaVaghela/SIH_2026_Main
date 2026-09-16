@@ -113,6 +113,19 @@ export interface IBookingService {
 
 const LOCAL_STORAGE_BOOKINGS_KEY = "kaushalyasetu_bookings_db";
 
+async function getSupabase() {
+  if (typeof window === "undefined") {
+    try {
+      const { createAdminClient } = await import("@/lib/supabase/admin");
+      return createAdminClient();
+    } catch {
+      // ignore
+    }
+  }
+  const { createClient } = await import("@/lib/supabase/client");
+  return createClient();
+}
+
 export class BookingService implements IBookingService {
   private mockBookings: Map<string, Booking> = new Map();
   private mockHistory: Map<string, BookingStatusHistory[]> = new Map();
@@ -177,8 +190,7 @@ export class BookingService implements IBookingService {
 
     let dbBooking: Booking | null = null;
     try {
-      const { createClient } = await import("@/lib/supabase/client");
-      const supabase = createClient();
+      const supabase = await getSupabase();
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const { data, error } = await (supabase.from("bookings") as any)
         .insert({
@@ -336,8 +348,7 @@ export class BookingService implements IBookingService {
       }
 
       try {
-        const { createClient } = await import("@/lib/supabase/client");
-        const supabase = createClient();
+        const supabase = await getSupabase();
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         const { data, error } = await (supabase.from("bookings") as any)
           .select("*")
@@ -424,8 +435,7 @@ export class BookingService implements IBookingService {
     }
 
     try {
-      const { createClient } = await import("@/lib/supabase/client");
-      const supabase = createClient();
+      const supabase = await getSupabase();
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const { data, error } = await (supabase.from("bookings") as any)
         .select(`
@@ -525,8 +535,7 @@ export class BookingService implements IBookingService {
     }
 
     try {
-      const { createClient } = await import("@/lib/supabase/client");
-      const supabase = createClient();
+      const supabase = await getSupabase();
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const { data, error } = await (supabase.from("bookings") as any)
         .select(`
@@ -593,8 +602,7 @@ export class BookingService implements IBookingService {
 
   async getFederationBookings(federationId: string): Promise<Booking[]> {
     try {
-      const { createClient } = await import("@/lib/supabase/client");
-      const supabase = createClient();
+      const supabase = await getSupabase();
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const { data, error } = await (supabase.from("bookings") as any)
         .select("*")
@@ -629,8 +637,7 @@ export class BookingService implements IBookingService {
 
   async getPlatformBookings(): Promise<Booking[]> {
     try {
-      const { createClient } = await import("@/lib/supabase/client");
-      const supabase = createClient();
+      const supabase = await getSupabase();
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const { data, error } = await (supabase.from("bookings") as any)
         .select("*")
@@ -696,8 +703,7 @@ export class BookingService implements IBookingService {
 
     // Persist updated estimate amounts to Supabase bookings table
     try {
-      const { createClient } = await import("@/lib/supabase/client");
-      const supabase = createClient();
+      const supabase = await getSupabase();
       const platformFee = Math.round(payload.totalAmount * 0.05 * 100) / 100;
       const workerEarnings = payload.totalAmount - platformFee;
 
@@ -853,8 +859,7 @@ export class BookingService implements IBookingService {
 
     // Persist status change to Supabase database
     try {
-      const { createClient } = await import("@/lib/supabase/client");
-      const supabase = createClient();
+      const supabase = await getSupabase();
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       await (supabase.from("bookings") as any)
         .update({

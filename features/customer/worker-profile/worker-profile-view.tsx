@@ -227,7 +227,15 @@ export function WorkerProfileView({ workerId }: WorkerProfileViewProps) {
             <span className="text-[10px] text-slate-400 font-semibold uppercase flex items-center gap-1">
               <Star className="w-3.5 h-3.5 text-amber-500 fill-amber-500" /> Rating
             </span>
-            <p className="text-base font-extrabold text-slate-900 dark:text-slate-100">{p.rating} / 5.0</p>
+            {p.isNew || tierBreakdown.isNew || (p.reviewsCount ?? 0) === 0 ? (
+              <p className="text-base font-extrabold text-emerald-600 dark:text-emerald-400">
+                New Worker
+              </p>
+            ) : (
+              <p className="text-base font-extrabold text-slate-900 dark:text-slate-100">
+                {p.rating.toFixed(1)} / 5.0 <span className="text-xs font-normal text-slate-400">({p.reviewsCount})</span>
+              </p>
+            )}
           </div>
 
           <div className="space-y-0.5">
