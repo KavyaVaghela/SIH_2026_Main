@@ -436,18 +436,23 @@ export class ComplaintService implements IComplaintService {
       auditTrail: [auditItem],
     };
 
-    let createdId = `cmp-${Date.now()}`;
+    let createdId = payload.id || `cmp-${Date.now()}`;
     try {
+      const insertRecord: any = {
+        complaint_number: complaintNumber,
+        booking_id: payload.bookingId && !payload.bookingId.startsWith("bk-mock") ? payload.bookingId : null,
+        raised_by: payload.raisedBy,
+        target_profile_id: targetProfileId && !targetProfileId.startsWith("p-") ? targetProfileId : null,
+        category: payload.category,
+        description: JSON.stringify(structuredPayload),
+        status: "OPEN",
+      };
+      if (payload.id) {
+        insertRecord.id = payload.id;
+      }
+
       const { data, error } = await (supabase.from("complaints") as any)
-        .insert({
-          complaint_number: complaintNumber,
-          booking_id: payload.bookingId && !payload.bookingId.startsWith("bk-mock") ? payload.bookingId : null,
-          raised_by: payload.raisedBy,
-          target_profile_id: targetProfileId && !targetProfileId.startsWith("p-") ? targetProfileId : null,
-          category: payload.category,
-          description: JSON.stringify(structuredPayload),
-          status: "OPEN",
-        })
+        .insert(insertRecord)
         .select()
         .single();
 

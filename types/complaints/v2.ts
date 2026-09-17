@@ -138,6 +138,7 @@ export interface GrievanceCase {
 }
 
 export interface CreateGrievancePayload {
+  id?: string;
   raisedBy: string;
   raisedByRole?: GrievancePartyRole;
   raisedByName?: string;
