@@ -105,6 +105,24 @@ export function ScheduleJobsView() {
     },
   });
 
+  // Subscribe to real-time changes on worker_estimates table for incoming requests
+  useRealtimeSubscription({
+    table: "worker_estimates",
+    enabled: !!workerDbId,
+    onPayload: () => {
+      fetchAllData(true);
+    },
+  });
+
+  // Subscribe to real-time changes on job_requests table
+  useRealtimeSubscription({
+    table: "job_requests",
+    enabled: !!workerDbId,
+    onPayload: () => {
+      fetchAllData(true);
+    },
+  });
+
 
   const getInitialTabId = () => {
     if (requestedTab === "requests") return "tab-requests";

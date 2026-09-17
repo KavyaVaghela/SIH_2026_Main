@@ -22,15 +22,66 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const numLabor = Number(laborAmount);
+    const supabase = createAdminClient();
+
+    // Handle worker decline action
+    if (body.action === "decline" || body.status === "DECLINED") {
+      const reason = body.reason || notes || "Declined by worker";
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const { error: decErr } = await (supabase.from("worker_estimates") as any)
+        .update({
+          status: "DECLINED",
+          notes: reason,
+        })
+        .eq("job_request_id", requestId)
+        .eq("worker_id", workerId);
+
+      if (decErr) {
+        console.error("Failed to decline worker estimate:", decErr);
+        return NextResponse.json({ error: decErr.message }, { status: 500 });
+      }
+
+      // Realtime broadcast for worker decline
+      try {
+        const channel = supabase.channel(`request_estimates_${requestId}`);
+        await new Promise<void>((resolve) => {
+          channel.subscribe((status: string) => {
+            if (status === "SUBSCRIBED") {
+              channel
+                .send({
+                  type: "broadcast",
+                  event: "worker_declined",
+                  payload: { requestId, workerId, reason },
+                })
+                .then(() => {
+                  supabase.removeChannel(channel);
+                  resolve();
+                })
+                .catch(() => resolve());
+            } else if (status === "CHANNEL_ERROR" || status === "TIMED_OUT") {
+              resolve();
+            }
+          });
+          setTimeout(resolve, 600);
+        });
+      } catch (rtErr) {
+        console.warn("Realtime broadcast notice:", rtErr);
+      }
+
+      return NextResponse.json({ success: true, status: "DECLINED" });
+    }
+
+    // 1. Validate estimate inputs
+    const estimatedAmt = Number(body.estimatedAmount) || Number(totalAmount);
+    const numLabor = Number(laborAmount) > 0 ? Number(laborAmount) : (estimatedAmt || 0);
     const numMaterials = Number(materialAmount) || 0;
     const numAdditional = Number(additionalCharges) || 0;
     const computedTotal = Math.round((numLabor + numMaterials + numAdditional) * 100) / 100;
-    const finalTotal = Number(totalAmount) || computedTotal;
+    const finalTotal = estimatedAmt > 0 ? estimatedAmt : computedTotal;
 
-    if (isNaN(numLabor) || numLabor <= 0) {
+    if (isNaN(finalTotal) || finalTotal <= 0) {
       return NextResponse.json(
-        { error: "Labour charge must be greater than zero." },
+        { error: "Estimate amount must be greater than zero." },
         { status: 400 }
       );
     }
@@ -42,9 +93,20 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const supabase = createAdminClient();
+    // 2. Fetch job_request and worker availability
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const { data: workerRec } = await (supabase.from("workers") as any)
+      .select("id, availability_status")
+      .eq("id", workerId)
+      .maybeSingle();
 
-    // 1. Fetch job_request
+    if (workerRec?.availability_status === "BUSY") {
+      return NextResponse.json(
+        { error: "Worker is currently allocated to an active booking and cannot submit new estimates." },
+        { status: 400 }
+      );
+    }
+
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const { data: jobReq, error: reqErr } = await (supabase.from("job_requests") as any)
       .select("id, customer_id, service_id, status, services(minimum_visit_charge)")
@@ -61,6 +123,21 @@ export async function POST(request: NextRequest) {
     if (jobReq.status === "CONFIRMED" || jobReq.status === "CANCELLED") {
       return NextResponse.json(
         { error: "Cannot submit estimate: This service request has already been confirmed or closed." },
+        { status: 400 }
+      );
+    }
+
+    // Check if worker estimate was invalidated (e.g. WORKER_UNAVAILABLE or NOT_SELECTED)
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const { data: estRecord } = await (supabase.from("worker_estimates") as any)
+      .select("id, status")
+      .eq("job_request_id", requestId)
+      .eq("worker_id", workerId)
+      .maybeSingle();
+
+    if (estRecord && (estRecord.status === "WORKER_UNAVAILABLE" || estRecord.status === "NOT_SELECTED")) {
+      return NextResponse.json(
+        { error: "This request is no longer open for estimation." },
         { status: 400 }
       );
     }
@@ -83,7 +160,7 @@ export async function POST(request: NextRequest) {
       text: notes?.trim() || "Itemized service quotation submitted by worker.",
     });
 
-    // 2. Upsert / Update worker_estimates row
+    // 3. Upsert / Update worker_estimates row
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const { data: updatedEstimates, error: updateErr } = await (supabase.from("worker_estimates") as any)
       .update({
@@ -124,7 +201,7 @@ export async function POST(request: NextRequest) {
       savedEstimate = insertedEstimates?.[0];
     }
 
-    // 3. Update job_requests status to ESTIMATES_AVAILABLE
+    // 4. Update job_requests status to ESTIMATES_AVAILABLE
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     await (supabase.from("job_requests") as any)
       .update({
@@ -133,25 +210,36 @@ export async function POST(request: NextRequest) {
       })
       .eq("id", requestId);
 
-    // 4. Realtime Broadcast Notification
+    // 5. Realtime Broadcast Notification
     try {
       const channel = supabase.channel(`request_estimates_${requestId}`);
-      channel.subscribe((status: string) => {
-        if (status === "SUBSCRIBED") {
-          channel.send({
-            type: "broadcast",
-            event: "new_estimate",
-            payload: {
-              requestId,
-              workerId,
-              estimatedAmount: finalTotal,
-              laborAmount: numLabor,
-              materialAmount: numMaterials,
-              additionalCharges: numAdditional,
-              notes: notes || "",
-            },
-          });
-        }
+      await new Promise<void>((resolve) => {
+        channel.subscribe((status: string) => {
+          if (status === "SUBSCRIBED") {
+            channel
+              .send({
+                type: "broadcast",
+                event: "new_estimate",
+                payload: {
+                  requestId,
+                  workerId,
+                  estimatedAmount: finalTotal,
+                  laborAmount: numLabor,
+                  materialAmount: numMaterials,
+                  additionalCharges: numAdditional,
+                  notes: notes || "",
+                },
+              })
+              .then(() => {
+                supabase.removeChannel(channel);
+                resolve();
+              })
+              .catch(() => resolve());
+          } else if (status === "CHANNEL_ERROR" || status === "TIMED_OUT") {
+            resolve();
+          }
+        });
+        setTimeout(resolve, 600);
       });
     } catch (realtimeErr) {
       console.warn("Notice: Realtime broadcast error:", realtimeErr);

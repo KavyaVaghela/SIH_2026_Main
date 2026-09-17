@@ -2,6 +2,7 @@ import { createClient } from "@/lib/supabase/client";
 import { reviewService } from "@/features/reviews/services/review-service";
 import { notificationService } from "@/features/notifications/services/notification-service";
 import { AppError } from "@/lib/errors";
+import { formatDescriptionWithEvidence, extractProblemEvidence } from "@/lib/storage/evidence";
 
 export interface CreateMultiWorkerRequestPayload {
   customerId: string;
@@ -11,6 +12,7 @@ export interface CreateMultiWorkerRequestPayload {
   addressId?: string;
   workerIds: string[];
   initialEstimate?: number;
+  photoUrl?: string | null;
 }
 
 export interface CompetingWorkerEstimate {
@@ -27,12 +29,14 @@ export interface CompetingWorkerEstimate {
   reviewsCount: number;
   completedJobsCount: number;
   isNew: boolean;
-  status: "PENDING" | "INTERESTED" | "ESTIMATE_SUBMITTED" | "DECLINED" | "SELECTED" | "NOT_SELECTED" | "EXPIRED";
+  status: "PENDING" | "INTERESTED" | "ESTIMATE_SUBMITTED" | "DECLINED" | "SELECTED" | "NOT_SELECTED" | "WORKER_UNAVAILABLE" | "EXPIRED";
   estimatedAmount: number;
   estimatedHours?: number;
   laborAmount?: number;
   materialAmount?: number;
   additionalCharges?: number;
+  distanceKm?: number;
+  skills?: string[];
   notes?: string;
   createdAt: string;
 }
@@ -43,6 +47,7 @@ export interface CustomerServiceRequestItem {
   serviceTitle: string;
   categoryName: string;
   description: string;
+  photoUrl?: string | null;
   preferredSchedule: string;
   status: string;
   createdAt: string;
@@ -61,6 +66,7 @@ export interface ServiceRequestSummary {
   serviceTitle: string;
   categoryName: string;
   description: string;
+  photoUrl?: string | null;
   preferredSchedule?: string;
   status: "WORKERS_REQUESTED" | "RESPONSES_PENDING" | "ESTIMATES_AVAILABLE" | "WORKER_SELECTED" | "CONFIRMED" | "CANCELLED" | "EXPIRED";
   createdAt: string;
@@ -150,13 +156,15 @@ class MultiWorkerService {
 
       const categoryName = req.services?.service_categories?.name || "Home Services";
       const serviceTitle = req.services?.title || "Trade Service";
+      const { cleanDescription, problemPhotoUrl } = extractProblemEvidence(req.description);
 
       return {
         id: req.id,
         requestNumber: `SR-${req.id.slice(0, 8).toUpperCase()}`,
         serviceTitle,
         categoryName,
-        description: req.description || "",
+        description: cleanDescription || "",
+        photoUrl: problemPhotoUrl || undefined,
         preferredSchedule: req.preferred_schedule || req.created_at,
         status: req.status,
         createdAt: req.created_at,
@@ -198,13 +206,15 @@ class MultiWorkerService {
 
     const targetWorkerIds = eligibleWorkerIds.length > 0 ? eligibleWorkerIds : uniqueWorkerIds;
 
+    const finalDescription = formatDescriptionWithEvidence(payload.description, payload.photoUrl);
+
     // 2. Create the single customer service request
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const { data: jobReq, error: jobErr } = await (supabase.from("job_requests") as any)
       .insert({
         customer_id: payload.customerId,
         service_id: payload.serviceId,
-        description: payload.description,
+        description: finalDescription,
         preferred_schedule: payload.preferredSchedule || new Date(Date.now() + 86400000).toISOString(),
         status: "WORKERS_REQUESTED",
       })
@@ -455,6 +465,8 @@ class MultiWorkerService {
         laborAmount,
         materialAmount,
         additionalCharges,
+        distanceKm: 2.5,
+        skills: [w?.profession || serviceTitle, "Diagnostic Inspection", "Verified Workmanship"].filter(Boolean),
         notes: displayNotes,
         createdAt: item.created_at,
       });
@@ -499,6 +511,8 @@ class MultiWorkerService {
         )
       : list;
 
+    const { cleanDescription, problemPhotoUrl } = extractProblemEvidence(req.description);
+
     return {
       id: req.id,
       requestNumber,
@@ -506,7 +520,8 @@ class MultiWorkerService {
       serviceId: req.service_id,
       serviceTitle,
       categoryName,
-      description: req.description,
+      description: cleanDescription,
+      photoUrl: problemPhotoUrl || undefined,
       preferredSchedule: req.preferred_schedule,
       status: (req.status?.toUpperCase() || "WORKERS_REQUESTED") as ServiceRequestSummary["status"],
       createdAt: req.created_at,
@@ -584,7 +599,27 @@ class MultiWorkerService {
 
     const agreedAmount = Number(chosenEstimate.estimated_amount) || 350;
 
-    // 3. ATOMIC LOCK: Update job_requests status to CONFIRMED conditionally
+    // 3. Concurrency-Safe Database Atomic Allocation: Lock worker to BUSY
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const { data: allocatedWorker, error: allocErr } = await (supabase.from("workers") as any)
+      .update({
+        availability_status: "BUSY",
+        updated_at: new Date().toISOString(),
+      })
+      .eq("id", selectedWorkerId)
+      .eq("availability_status", "AVAILABLE")
+      .select("id, availability_status")
+      .maybeSingle();
+
+    if (allocErr || !allocatedWorker) {
+      throw new AppError(
+        "Worker is no longer available for this booking.",
+        "BUSINESS_RULE_VIOLATION",
+        409
+      );
+    }
+
+    // 4. ATOMIC LOCK: Update job_requests status to CONFIRMED conditionally
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const { data: updatedReq, error: lockErr } = await (supabase.from("job_requests") as any)
       .update({
@@ -597,6 +632,15 @@ class MultiWorkerService {
       .maybeSingle();
 
     if (lockErr || !updatedReq) {
+      // Revert worker availability if job request was already confirmed
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      await (supabase.from("workers") as any)
+        .update({
+          availability_status: "AVAILABLE",
+          updated_at: new Date().toISOString(),
+        })
+        .eq("id", selectedWorkerId);
+
       throw new AppError(
         "Another confirmation was processed concurrently. Only one worker can be selected.",
         "BUSINESS_RULE_VIOLATION",
@@ -604,7 +648,7 @@ class MultiWorkerService {
       );
     }
 
-    // 4. Update worker_estimates statuses:
+    // 5. Update worker_estimates statuses:
     // Chosen worker -> SELECTED
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     await (supabase.from("worker_estimates") as any)
@@ -612,7 +656,7 @@ class MultiWorkerService {
       .eq("job_request_id", requestId)
       .eq("worker_id", selectedWorkerId);
 
-    // Other competing workers -> NOT_SELECTED
+    // Other competing workers on this request -> NOT_SELECTED
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     await (supabase.from("worker_estimates") as any)
       .update({ status: "NOT_SELECTED" })
@@ -620,7 +664,15 @@ class MultiWorkerService {
       .neq("worker_id", selectedWorkerId)
       .neq("status", "DECLINED");
 
-    // 5. Create canonical booking in public.bookings in state BOOKING_CONFIRMED
+    // 6. Invalidate worker's estimates on ALL OTHER pending customer requests
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    await (supabase.from("worker_estimates") as any)
+      .update({ status: "WORKER_UNAVAILABLE" })
+      .eq("worker_id", selectedWorkerId)
+      .neq("job_request_id", requestId)
+      .in("status", ["PENDING", "ESTIMATE_SUBMITTED", "INTERESTED"]);
+
+    // 7. Create canonical booking in public.bookings in state BOOKING_CONFIRMED
     const bookingNumber = `BK-${Math.floor(100000 + Math.random() * 900000)}`;
     const platformFee = Math.round(agreedAmount * 0.05 * 100) / 100;
     const workerEarnings = agreedAmount - platformFee;

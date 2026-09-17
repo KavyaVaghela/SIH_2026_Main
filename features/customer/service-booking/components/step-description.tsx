@@ -6,6 +6,8 @@ import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 
+import { uploadFileToStorage } from "@/lib/storage/upload";
+
 export interface StepDescriptionProps {
   description: string;
   photoUrl?: string | null;
@@ -24,6 +26,7 @@ export function StepDescription({
   onBack,
 }: StepDescriptionProps) {
   const [error, setError] = React.useState<string | null>(null);
+  const [isUploading, setIsUploading] = React.useState(false);
   const fileInputRef = React.useRef<HTMLInputElement>(null);
 
   const handleTextChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
@@ -34,11 +37,22 @@ export function StepDescription({
     }
   };
 
-  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
       const preview = URL.createObjectURL(file);
       onChangePhoto(file, preview);
+      setIsUploading(true);
+      try {
+        const res = await uploadFileToStorage(file, "avatars");
+        if (res.success && res.url) {
+          onChangePhoto(file, res.url);
+        }
+      } catch (uploadErr) {
+        console.warn("Storage upload notice (falling back to preview):", uploadErr);
+      } finally {
+        setIsUploading(false);
+      }
     }
   };
 
@@ -106,6 +120,13 @@ export function StepDescription({
                 alt="Issue preview"
                 className="w-full h-full object-cover"
               />
+              {isUploading && (
+                <div className="absolute inset-0 bg-black/40 flex items-center justify-center">
+                  <span className="text-[11px] font-medium text-white bg-black/60 px-2 py-1 rounded-full animate-pulse">
+                    Uploading to storage...
+                  </span>
+                </div>
+              )}
               <button
                 type="button"
                 onClick={handleRemovePhoto}
@@ -146,9 +167,10 @@ export function StepDescription({
         </Button>
         <Button
           onClick={handleContinue}
+          disabled={isUploading}
           className="bg-emerald-700 hover:bg-emerald-800 text-white font-semibold text-xs px-6 gap-1.5"
         >
-          View Platform Estimate
+          {isUploading ? "Uploading Photo..." : "View Platform Estimate"}
           <ChevronRight className="w-4 h-4" />
         </Button>
       </div>
