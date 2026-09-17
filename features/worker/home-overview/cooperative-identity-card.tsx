@@ -8,9 +8,10 @@ import type { WorkerIdentity } from "../types";
 
 export interface CooperativeIdentityCardProps {
   identity: WorkerIdentity;
+  isNameLoading?: boolean;
 }
 
-export function CooperativeIdentityCard({ identity }: CooperativeIdentityCardProps) {
+export function CooperativeIdentityCard({ identity, isNameLoading }: CooperativeIdentityCardProps) {
   const isAvailable = identity.availabilityStatus === "AVAILABLE";
   const isActive = identity.accountStatus === "ACTIVE";
 
@@ -21,8 +22,14 @@ export function CooperativeIdentityCard({ identity }: CooperativeIdentityCardPro
           {/* Greeting & Identity */}
           <div className="space-y-2">
             <div className="flex flex-wrap items-center gap-2">
-              <h1 className="text-2xl sm:text-3xl font-bold tracking-tight text-white">
-                Good Morning, {identity.name.split(" ")[0]} 👋
+              <h1 className="text-2xl sm:text-3xl font-bold tracking-tight text-white flex items-center gap-2">
+                Good Morning,{" "}
+                {isNameLoading || !identity.name ? (
+                  <span className="inline-block h-8 w-36 sm:w-44 bg-emerald-800/60 animate-pulse rounded-md align-middle" />
+                ) : (
+                  identity.name
+                )}{" "}
+                👋
               </h1>
               {identity.memberId && (
                 <span className="text-xs font-mono bg-emerald-800/60 border border-emerald-600/40 px-2 py-0.5 rounded text-emerald-200">

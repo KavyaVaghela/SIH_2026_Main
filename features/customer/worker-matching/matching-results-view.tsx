@@ -45,10 +45,10 @@ export function MatchingResultsView() {
       });
       setMatches(results);
 
-      // Pre-select top 3 best matching workers by default for convenience if available
+      // Pre-select all eligible matching workers by default for multi-worker request fan-out
       if (results.length > 0) {
-        const topIds = results.slice(0, Math.min(3, results.length)).map((m) => m.worker.id);
-        setSelectedWorkerIds(new Set(topIds));
+        const allIds = results.map((m) => m.worker.id);
+        setSelectedWorkerIds(new Set(allIds));
       }
     } catch (err) {
       console.error("Failed to fetch worker matches", err);
@@ -174,6 +174,7 @@ export function MatchingResultsView() {
         description: draft?.description || "Service requested by customer",
         preferredSchedule: scheduledStartAt,
         workerIds: Array.from(selectedWorkerIds),
+        photoUrl: draft?.photoUrl || undefined,
       });
 
       if (typeof window !== "undefined") {

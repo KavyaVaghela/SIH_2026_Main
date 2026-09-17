@@ -5,6 +5,8 @@ import { TopNavbar } from "@/components/navigation/top-navbar";
 import { FederationAdminSidebar } from "./federation-admin-sidebar";
 import { X } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { createClient } from "@/lib/supabase/client";
+import { getCachedProfileName, setCachedProfileName } from "@/lib/auth/session-user";
 
 interface FederationAdminShellProps {
   children: React.ReactNode;
@@ -20,13 +22,44 @@ export function FederationAdminShell({
   className,
 }: FederationAdminShellProps) {
   const [mobileDrawerOpen, setMobileDrawerOpen] = React.useState(false);
+  const [displayName, setDisplayName] = React.useState<string>(
+    () => getCachedProfileName("FEDERATION_ADMIN") || (userName !== "Federation Administrator" ? userName : "Vikram Shah")
+  );
+
+  React.useEffect(() => {
+    let isMounted = true;
+    async function loadAdminIdentity() {
+      try {
+        const supabase = createClient();
+        const { data: { user } } = await supabase.auth.getUser();
+        if (user?.id) {
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          const { data: profile } = await (supabase.from("profiles") as any)
+            .select("full_name")
+            .eq("id", user.id)
+            .maybeSingle();
+
+          if (isMounted && profile?.full_name) {
+            setCachedProfileName("FEDERATION_ADMIN", profile.full_name);
+            setDisplayName(profile.full_name);
+          }
+        }
+      } catch (err) {
+        console.error("Error loading federation admin identity in shell", err);
+      }
+    }
+    loadAdminIdentity();
+    return () => {
+      isMounted = false;
+    };
+  }, []);
 
   return (
     <div className="min-h-screen flex flex-col bg-background text-foreground">
       {/* Top Administrative Navbar */}
       <TopNavbar
         platformTitle="KaushalyaSetu"
-        userName={userName}
+        userName={displayName}
         userRole={userRole}
         onToggleMobileMenu={() => setMobileDrawerOpen(!mobileDrawerOpen)}
       />
