@@ -23,6 +23,7 @@ import {
   AlertTriangle,
   Bell,
   HelpCircle,
+  GraduationCap,
 } from "lucide-react";
 import type { NavItem } from "@/components/navigation/desktop-sidebar";
 import type { MobileNavItem } from "@/components/navigation/mobile-navigation";
@@ -93,6 +94,7 @@ export const ROLE_NAVIGATION_CONFIGS: Record<PlatformRole, RoleNavigationConfig>
       { title: "My Profile", href: "/worker/profile", icon: React.createElement(User) },
       { title: "My Schedule & Jobs", href: "/worker/schedule", icon: React.createElement(Calendar) },
       { title: "Earnings", href: "/worker/earnings", icon: React.createElement(Wallet) },
+      { title: "KaushalGrow", href: "/worker/grow", icon: React.createElement(GraduationCap) },
       { title: "Welfare & Development", href: "/worker/welfare", icon: React.createElement(Award) },
       { title: "My Grievances", href: "/worker/grievances", icon: React.createElement(ShieldAlert) },
       { title: "Help & Guidance", href: "/worker/guidance", icon: React.createElement(HelpCircle) },
@@ -102,6 +104,7 @@ export const ROLE_NAVIGATION_CONFIGS: Record<PlatformRole, RoleNavigationConfig>
       { title: "Profile", href: "/worker/profile", icon: React.createElement(User) },
       { title: "Schedule", href: "/worker/schedule", icon: React.createElement(Calendar) },
       { title: "Earnings", href: "/worker/earnings", icon: React.createElement(Wallet) },
+      { title: "KaushalGrow", href: "/worker/grow", icon: React.createElement(GraduationCap) },
       { title: "Welfare", href: "/worker/welfare", icon: React.createElement(Award) },
       { title: "Grievances", href: "/worker/grievances", icon: React.createElement(ShieldAlert) },
       { title: "Guidance", href: "/worker/guidance", icon: React.createElement(HelpCircle) },
