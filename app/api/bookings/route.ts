@@ -171,6 +171,21 @@ export async function POST(request: NextRequest) {
         console.warn("Status history note:", histErr);
       }
 
+      // Release worker availability back to AVAILABLE when booking completes or is cancelled
+      if ((status === "BOOKING_COMPLETED" || status === "CANCELLED") && existing.worker_id) {
+        try {
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          await (supabase.from("workers") as any)
+            .update({
+              availability_status: "AVAILABLE",
+              updated_at: now,
+            })
+            .eq("id", existing.worker_id);
+        } catch (releaseErr) {
+          console.warn("Worker release notice:", releaseErr);
+        }
+      }
+
       return NextResponse.json({ booking: mapDbBooking(updated) });
     }
 

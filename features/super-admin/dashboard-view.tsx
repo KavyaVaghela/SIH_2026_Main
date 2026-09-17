@@ -11,14 +11,72 @@ import { BookingActivityChart } from "./components/booking-activity-chart";
 import { DemandSummaryPanel } from "./components/demand-summary-panel";
 import { CriticalAlertsPanel } from "./components/critical-alerts-panel";
 import { SmartInsightsPanel } from "./components/smart-insights-panel";
+import { createClient } from "@/lib/supabase/client";
+import { getCachedProfileName, setCachedProfileName } from "@/lib/auth/session-user";
+
+function getGreeting(): string {
+  const hour = new Date().getHours();
+  if (hour < 12) return "Good Morning";
+  if (hour < 17) return "Good Afternoon";
+  return "Good Evening";
+}
 
 export function SuperAdminDashboardView() {
   const { data, isLoading, timeframe, setTimeframe, refresh } = useSuperAdminOverview();
 
+  const [adminName, setAdminName] = React.useState<string>(
+    () => getCachedProfileName("SUPER_ADMIN") || ""
+  );
+  const [isLoadingAdminName, setIsLoadingAdminName] = React.useState<boolean>(
+    () => !getCachedProfileName("SUPER_ADMIN")
+  );
+
+  React.useEffect(() => {
+    let isMounted = true;
+    async function fetchAdminProfile() {
+      try {
+        const supabase = createClient();
+        const { data: { user } } = await supabase.auth.getUser();
+        if (user?.id) {
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          const { data: profile } = await (supabase.from("profiles") as any)
+            .select("full_name, role")
+            .eq("id", user.id)
+            .maybeSingle();
+
+          if (isMounted && profile?.full_name) {
+            setCachedProfileName("SUPER_ADMIN", profile.full_name);
+            setAdminName(profile.full_name);
+          }
+        }
+      } catch (err) {
+        console.error("Error loading super admin profile", err);
+      } finally {
+        if (isMounted) setIsLoadingAdminName(false);
+      }
+    }
+    fetchAdminProfile();
+    return () => {
+      isMounted = false;
+    };
+  }, []);
+
+  const displayGreetingName = adminName || "System Administrator";
+
   return (
     <div className="space-y-6 pb-12">
       <PageHeader
-        title="Super Admin System Control"
+        title={
+          <span className="flex items-center gap-2">
+            {getGreeting()},{" "}
+            {isLoadingAdminName || !adminName ? (
+              <span className="inline-block h-8 w-44 sm:w-56 bg-slate-200 dark:bg-slate-800 animate-pulse rounded-md align-middle" />
+            ) : (
+              <span className="text-emerald-600 dark:text-emerald-400">{displayGreetingName}</span>
+            )}{" "}
+            👋
+          </span>
+        }
         description="Platform-wide cooperative governance, workforce operations, service volume trends, and intelligence."
         breadcrumbs={[{ label: "Super Admin", href: "/super-admin" }, { label: "Overview" }]}
         actions={

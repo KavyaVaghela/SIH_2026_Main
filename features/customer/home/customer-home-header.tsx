@@ -7,18 +7,20 @@ import { Badge } from "@/components/ui/badge";
 
 export interface CustomerHomeHeaderProps {
   customerName?: string;
+  isLoadingName?: boolean;
   locationArea?: string;
   searchQuery: string;
   onSearchChange: (value: string) => void;
 }
 
 export function CustomerHomeHeader({
-  customerName = "Prince",
+  customerName,
+  isLoadingName,
   locationArea = "Satellite, Ahmedabad",
   searchQuery,
   onSearchChange,
 }: CustomerHomeHeaderProps) {
-  const displayGreetingName = !customerName || customerName.toLowerCase().includes("system") ? "Prince" : customerName;
+  const displayGreetingName = customerName || "Prince Patel";
 
   return (
     <div className="relative bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100 rounded-2xl p-5 md:p-6 shadow-sm border border-slate-200/80 dark:border-slate-800 space-y-4">
@@ -37,8 +39,14 @@ export function CustomerHomeHeader({
 
       {/* Hero Greeting & Headline */}
       <div className="pt-0.5">
-        <h1 className="text-2xl md:text-3xl font-extrabold tracking-tight text-slate-900 dark:text-white">
-          Good Morning, {displayGreetingName} 👋
+        <h1 className="text-2xl md:text-3xl font-extrabold tracking-tight text-slate-900 dark:text-white flex items-center gap-2">
+          Good Morning,{" "}
+          {isLoadingName || !customerName ? (
+            <span className="inline-block h-8 w-36 md:w-44 bg-slate-200 dark:bg-slate-800 animate-pulse rounded-md align-middle" />
+          ) : (
+            displayGreetingName
+          )}{" "}
+          👋
         </h1>
         <p className="text-xs md:text-sm text-slate-500 dark:text-slate-400 font-medium mt-1">
           What service do you need today? Select a category or search verified trade professionals.

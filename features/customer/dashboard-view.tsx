@@ -13,11 +13,14 @@ import { CustomerNotificationsCard } from "./home/customer-notifications-card";
 import { bookingService } from "@/features/bookings/services/booking-service";
 
 import { createClient } from "@/lib/supabase/client";
+import { getCachedProfileName, setCachedProfileName } from "@/lib/auth/session-user";
 
 export function CustomerDashboardView() {
   const router = useRouter();
   const [searchQuery, setSearchQuery] = React.useState("");
-  const [customerDisplayName, setCustomerDisplayName] = React.useState("Customer");
+  const initialCachedName = React.useMemo(() => getCachedProfileName("CUSTOMER"), []);
+  const [customerDisplayName, setCustomerDisplayName] = React.useState<string>(initialCachedName || "");
+  const [isNameLoading, setIsNameLoading] = React.useState<boolean>(!initialCachedName);
   const [customerLocationArea, setCustomerLocationArea] = React.useState("Ahmedabad, Gujarat");
   const [activeBooking, setActiveBooking] = React.useState<CurrentBookingData | null>(null);
   const [upcomingBookings, setUpcomingBookings] = React.useState<UpcomingBookingData[]>([]);
@@ -34,7 +37,9 @@ export function CustomerDashboardView() {
           .then(({ data }: { data: { full_name?: string; role?: string } | null }) => {
             if (data?.full_name) {
               const name = data.full_name.trim();
-              setCustomerDisplayName(name.split(" ")[0]);
+              setCustomerDisplayName(name);
+              setCachedProfileName("CUSTOMER", name);
+              setIsNameLoading(false);
             }
           });
 
@@ -106,6 +111,7 @@ export function CustomerDashboardView() {
       {/* 1. Hero Header & Search Anchor */}
       <CustomerHomeHeader
         customerName={customerDisplayName}
+        isLoadingName={isNameLoading}
         locationArea={customerLocationArea}
         searchQuery={searchQuery}
         onSearchChange={setSearchQuery}

@@ -21,6 +21,7 @@ import { welfareService } from "@/features/welfare/services/welfare-service";
 import { multiWorkerService } from "@/features/customer/services/multi-worker-service";
 import { createClient } from "@/lib/supabase/client";
 import { AppError } from "@/lib/errors";
+import { extractProblemEvidence } from "@/lib/storage/evidence";
 import type { Coordinates } from "@/lib/maps/types";
 import type { BookingStatus, WorkerAvailabilityStatus } from "@/supabase/types/database.types";
 import type {
@@ -104,7 +105,8 @@ export class WorkerJobService implements IWorkerJobService {
    */
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   private mapBookingToWorkerJobItem(b: any): WorkerJobItem {
-    const probDesc = b.problem_description || b.problemDescription || "";
+    const { cleanDescription, problemPhotoUrl } = extractProblemEvidence(b.problem_description || b.problemDescription || "");
+    const probDesc = cleanDescription || "";
     const servTitle = b.services?.title || b.serviceTitle || "Plumbing Repair";
     const isEmergency =
       /emergency|rupture|burst|leakage|spark/i.test(probDesc) ||
@@ -162,7 +164,7 @@ export class WorkerJobService implements IWorkerJobService {
       scheduledStartAt: startAt,
       scheduledEndAt: b.scheduled_end_at || b.scheduledEndAt,
       problemDescription: probDesc || "Bathroom plumbing inspection and repair.",
-      problemPhotoUrl: b.problem_photo_url || b.problemPhotoUrl,
+      problemPhotoUrl: b.problem_photo_url || b.problemPhotoUrl || problemPhotoUrl || null,
       totalAmount: totalAmt,
       workerEarnings: workerEarn,
       status: b.status,
@@ -281,6 +283,7 @@ export class WorkerJobService implements IWorkerJobService {
           const cat = srv?.service_categories;
           const cust = jr?.profiles;
           const reqNum = `SR-${item.job_request_id.slice(0, 8).toUpperCase()}`;
+          const { cleanDescription, problemPhotoUrl } = extractProblemEvidence(jr?.description);
 
           return {
             id: item.job_request_id,
@@ -301,7 +304,8 @@ export class WorkerJobService implements IWorkerJobService {
                 })
               : "4:00 PM",
             scheduledStartAt: jr?.preferred_schedule || new Date().toISOString(),
-            problemDescription: jr?.description || "Service request details",
+            problemDescription: cleanDescription || "Service request details",
+            problemPhotoUrl: problemPhotoUrl || null,
             totalAmount: srv?.base_price || 350,
             workerEarnings: Math.round((srv?.base_price || 350) * 0.95),
             status: (item.status?.toUpperCase() || "PENDING") as any,
@@ -509,6 +513,28 @@ export class WorkerJobService implements IWorkerJobService {
    */
   async declineJobRequest(jobId: string, workerId: string = "w-1", reason?: string): Promise<WorkerJobItem | null> {
     const resolvedWorkerId = await this.resolveWorkerId(workerId);
+
+    // Primary: server API route with admin client
+    if (typeof window !== "undefined") {
+      try {
+        const res = await fetch("/api/worker/estimates", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            requestId: jobId,
+            workerId: resolvedWorkerId,
+            action: "decline",
+            reason,
+          }),
+        });
+        if (res.ok) {
+          return await this.getJobDetails(jobId, resolvedWorkerId);
+        }
+      } catch (err) {
+        console.warn("API decline notice, falling back to direct service", err);
+      }
+    }
+
     const supabase = createClient();
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const { data: jr } = await (supabase.from("job_requests") as any)
@@ -518,7 +544,7 @@ export class WorkerJobService implements IWorkerJobService {
 
     if (jr) {
       await multiWorkerService.workerDeclineRequest(jobId, resolvedWorkerId, reason);
-      return await this.getJobDetails(jobId);
+      return await this.getJobDetails(jobId, resolvedWorkerId);
     }
 
     return null;
@@ -550,18 +576,19 @@ export class WorkerJobService implements IWorkerJobService {
       throw new AppError("Worker account is inactive or not found.", "UNAUTHORIZED", 403);
     }
 
-    const labor = Number(payload.laborAmount);
+    const directEstimate = Number(payload.estimatedAmount) || Number(payload.totalAmount);
+    const labor = Number(payload.laborAmount) > 0 ? Number(payload.laborAmount) : (directEstimate || 0);
     const materials = Number(payload.materialAmount || 0);
     const additional = Number(payload.additionalCharges || 0);
 
     if (isNaN(labor) || labor <= 0) {
-      throw new AppError("Labour charge must be greater than zero.", "VALIDATION_ERROR", 400);
+      throw new AppError("Estimated amount must be greater than zero.", "VALIDATION_ERROR", 400);
     }
     if (materials < 0 || additional < 0) {
       throw new AppError("Material and additional charges cannot be negative.", "VALIDATION_ERROR", 400);
     }
 
-    const totalAmount = Math.round((labor + materials + additional) * 100) / 100;
+    const totalAmount = directEstimate > 0 ? directEstimate : Math.round((labor + materials + additional) * 100) / 100;
 
     const booking = await bookingService.getBooking(payload.bookingId);
     if (!booking) {
@@ -1793,6 +1820,8 @@ export class WorkerJobService implements IWorkerJobService {
           }
         }
 
+        const { cleanDescription, problemPhotoUrl } = extractProblemEvidence(jr.description);
+
         return {
           id: jr.id,
           bookingNumber: `SR-${jr.id.slice(0, 8).toUpperCase()}`,
@@ -1812,7 +1841,8 @@ export class WorkerJobService implements IWorkerJobService {
               })
             : "4:00 PM",
           scheduledStartAt: jr.preferred_schedule || new Date().toISOString(),
-          problemDescription: jr.description || "Service request details",
+          problemDescription: cleanDescription || "Service request details",
+          problemPhotoUrl: problemPhotoUrl || null,
           totalAmount: srv?.base_price || 350,
           workerEarnings: Math.round((srv?.base_price || 350) * 0.95),
           status: (mwEst?.status?.toUpperCase() || "PENDING") as any,
