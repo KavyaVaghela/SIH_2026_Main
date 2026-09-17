@@ -51,3 +51,8 @@ export * from "./welfare-certification/insurance-coverage-card";
 export * from "./welfare-certification/welfare-benefits-card";
 export * from "./welfare-certification/certifications-list-card";
 export * from "./welfare-certification/expiring-cert-alert";
+
+// Section 6: KaushalGrow Learning Module
+export * from "./kaushalgrow/kaushalgrow-view";
+export * from "./kaushalgrow/types";
+
