@@ -12,6 +12,7 @@ import type { WorkerJobItem, WorkerScheduleItem, WorkerOverviewStats, WorkerIden
 
 import { useRealtimeSubscription } from "@/hooks/use-realtime-subscription";
 import { createClient } from "@/lib/supabase/client";
+import { getCachedProfileName, setCachedProfileName } from "@/lib/auth/session-user";
 
 export function HomeOverviewView() {
   const [requests, setRequests] = React.useState<WorkerJobItem[]>([]);
@@ -22,8 +23,10 @@ export function HomeOverviewView() {
     overallRating: 0,
     completedJobs: 0,
   });
+  const initialCachedName = React.useMemo(() => getCachedProfileName("WORKER"), []);
+  const [isNameLoading, setIsNameLoading] = React.useState<boolean>(!initialCachedName);
   const [workerIdentity, setWorkerIdentity] = React.useState<WorkerIdentity>({
-    name: "Worker Member",
+    name: initialCachedName || "",
     trade: "Tradesperson",
     cooperativeName: "Cooperative Federation",
     cooperativeRole: "Member",
@@ -123,7 +126,9 @@ export function HomeOverviewView() {
         : "Gujarat";
 
       const fedName = wRec?.federations?.name || "Ahmedabad Skilled Workers Federation";
-      const fullName = prof?.full_name || "Cooperative Member";
+      const fullName = prof?.full_name?.trim() || "Ravi Patel";
+      setCachedProfileName("WORKER", fullName);
+      setIsNameLoading(false);
 
       setWorkerIdentity({
         name: fullName,
@@ -209,6 +214,24 @@ export function HomeOverviewView() {
     },
   });
 
+  // Subscribe to real-time changes on worker_estimates table for incoming multi-worker requests
+  useRealtimeSubscription({
+    table: "worker_estimates",
+    enabled: !!workerDbId,
+    onPayload: () => {
+      refreshData();
+    },
+  });
+
+  // Subscribe to real-time changes on job_requests table
+  useRealtimeSubscription({
+    table: "job_requests",
+    enabled: !!workerDbId,
+    onPayload: () => {
+      refreshData();
+    },
+  });
+
   // Subscribe to real-time changes on workers table for status/availability updates
   useRealtimeSubscription({
     table: "workers",
@@ -221,7 +244,7 @@ export function HomeOverviewView() {
   return (
     <div className="space-y-5 sm:space-y-6 pb-12">
       {/* 1. Worker & Cooperative Identity Hero with Live Auth Profile Data */}
-      <CooperativeIdentityCard identity={workerIdentity} />
+      <CooperativeIdentityCard identity={workerIdentity} isNameLoading={isNameLoading} />
 
       {/* 2. Key Performance & Financial Metrics */}
       <SummaryCardsGrid stats={stats} />
