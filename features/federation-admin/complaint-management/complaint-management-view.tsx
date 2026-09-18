@@ -13,14 +13,11 @@ import type { GrievanceCase } from "@/types/complaints/v2";
 
 export function ComplaintManagementView() {
   const {
-    complaints,
-    totalCount,
-    pendingCount,
-    underReviewCount,
-    actionRequiredCount,
-    escalatedCount,
-    resolvedCount,
-    highOrCriticalCount,
+    activeComplaints,
+    activeSection,
+    setActiveSection,
+    userMetrics,
+    workerMetrics,
     isDevelopmentFallback,
     dataSourceNotice,
     searchQuery,
@@ -60,7 +57,7 @@ export function ComplaintManagementView() {
           complaintNumber: item.complaintNumber,
           bookingId: item.bookingId || null,
           raisedBy: "cust-1",
-          raisedByRole: "CUSTOMER",
+          raisedByRole: item.complainantRole || "CUSTOMER",
           raisedByName: item.customerName,
           raisedByPhone: item.customerPhone,
           targetRole: "WORKER",
@@ -82,7 +79,7 @@ export function ComplaintManagementView() {
               type: "PUBLIC_UPDATE",
               visibility: "PUBLIC",
               actorId: "cust-1",
-              actorRole: "CUSTOMER",
+              actorRole: item.complainantRole || "CUSTOMER",
               actorName: item.customerName,
               message: item.description,
               timestamp: new Date().toISOString(),
@@ -93,7 +90,7 @@ export function ComplaintManagementView() {
               id: "aud-1",
               complaintId: item.id,
               actorId: "cust-1",
-              actorRole: "CUSTOMER",
+              actorRole: item.complainantRole || "CUSTOMER",
               actorName: item.customerName,
               action: "CREATE",
               timestamp: new Date().toISOString(),
@@ -117,15 +114,12 @@ export function ComplaintManagementView() {
         ))}
       </div>
 
-      {/* Header with full KPIs */}
+      {/* Header with Subsection Switcher and 5-KPI Cards */}
       <ComplaintManagementHeader
-        totalCount={totalCount}
-        pendingCount={pendingCount}
-        underReviewCount={underReviewCount}
-        actionRequiredCount={actionRequiredCount}
-        escalatedCount={escalatedCount}
-        resolvedCount={resolvedCount}
-        highOrCriticalCount={highOrCriticalCount}
+        activeSection={activeSection}
+        onSectionChange={setActiveSection}
+        userMetrics={userMetrics}
+        workerMetrics={workerMetrics}
         onRefresh={refresh}
         isLoading={isLoading}
         isDevelopmentFallback={isDevelopmentFallback}
@@ -151,10 +145,11 @@ export function ComplaintManagementView() {
         </div>
       )}
 
-      {/* Complaints Table */}
-      <section aria-label="Customer Grievances and Disputes">
+      {/* Complaints Table Scoped to Subsection */}
+      <section aria-label={activeSection === "USER_COMPLAINTS" ? "User Complaints" : "Worker Complaints"}>
         <ComplaintTable
-          complaints={complaints}
+          complaints={activeComplaints}
+          activeSection={activeSection}
           searchQuery={searchQuery}
           onSearchChange={setSearchQuery}
           statusFilter={statusFilter}

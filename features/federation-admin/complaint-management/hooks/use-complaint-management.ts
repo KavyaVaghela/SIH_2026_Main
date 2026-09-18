@@ -2,14 +2,17 @@
 
 import * as React from "react";
 import { complaintManagementService } from "../services/complaint-management-service";
+import { createClient } from "@/lib/supabase/client";
 import type {
   FederationComplaintItem,
   ComplaintManagementData,
+  ComplaintSubsection,
 } from "../types";
 import type { GrievanceCase } from "@/types/complaints/v2";
 import type { ToastMessage } from "@/components/ui/toast";
 
 export function useComplaintManagement() {
+  const [activeSection, setActiveSection] = React.useState<ComplaintSubsection>("USER_COMPLAINTS");
   const [searchQuery, setSearchQuery] = React.useState<string>("");
   const [statusFilter, setStatusFilter] = React.useState<string>("ALL");
   const [priorityFilter, setPriorityFilter] = React.useState<string>("ALL");
@@ -71,6 +74,33 @@ export function useComplaintManagement() {
     fetchComplaints(searchQuery, statusFilter, priorityFilter);
   }, [searchQuery, statusFilter, priorityFilter, fetchComplaints]);
 
+  // Supabase Realtime subscription on complaints table
+  React.useEffect(() => {
+    try {
+      const supabase = createClient();
+      const channel = supabase
+        .channel("complaints-realtime-fed-admin")
+        .on(
+          "postgres_changes",
+          {
+            event: "*",
+            schema: "public",
+            table: "complaints",
+          },
+          () => {
+            fetchComplaints(searchQuery, statusFilter, priorityFilter);
+          }
+        )
+        .subscribe();
+
+      return () => {
+        supabase.removeChannel(channel);
+      };
+    } catch (err) {
+      console.warn("Realtime setup notice:", err);
+    }
+  }, [searchQuery, statusFilter, priorityFilter, fetchComplaints]);
+
   const handleResolveComplaint = async (
     complaintId: string,
     resolutionNotes: string,
@@ -93,11 +123,96 @@ export function useComplaintManagement() {
       setSelectedGrievanceCase(null);
       fetchComplaints(searchQuery, statusFilter, priorityFilter);
       return true;
-    } catch (err) {
+    } catch (err: any) {
       console.error("Failed to resolve complaint:", err);
       addToast(
         "Resolution Failed",
-        "Could not update complaint status. Please retry.",
+        err.message || "Could not update complaint status. Please retry.",
+        "destructive"
+      );
+      return false;
+    } finally {
+      setIsSubmittingResolution(false);
+    }
+  };
+
+  const handleRejectComplaint = async (
+    complaintId: string,
+    reason: string
+  ): Promise<boolean> => {
+    setIsSubmittingResolution(true);
+    try {
+      await complaintManagementService.rejectComplaint(complaintId, reason);
+      addToast(
+        "Complaint Formally Rejected",
+        `Dispute record ${complaintId} has been rejected.`,
+        "success"
+      );
+      setSelectedComplaintForDetail(null);
+      setSelectedGrievanceCase(null);
+      fetchComplaints(searchQuery, statusFilter, priorityFilter);
+      return true;
+    } catch (err: any) {
+      console.error("Failed to reject complaint:", err);
+      addToast(
+        "Rejection Failed",
+        err.message || "Could not reject complaint. Ensure worker response is submitted if required.",
+        "destructive"
+      );
+      return false;
+    } finally {
+      setIsSubmittingResolution(false);
+    }
+  };
+
+  const handleCloseComplaint = async (
+    complaintId: string,
+    notes: string
+  ): Promise<boolean> => {
+    setIsSubmittingResolution(true);
+    try {
+      await complaintManagementService.closeComplaint(complaintId, notes);
+      addToast(
+        "Complaint Administratively Closed",
+        `Dispute record ${complaintId} has been closed.`,
+        "success"
+      );
+      setSelectedComplaintForDetail(null);
+      setSelectedGrievanceCase(null);
+      fetchComplaints(searchQuery, statusFilter, priorityFilter);
+      return true;
+    } catch (err: any) {
+      console.error("Failed to close complaint:", err);
+      addToast(
+        "Closure Failed",
+        err.message || "Could not close complaint. Ensure worker response is submitted if required.",
+        "destructive"
+      );
+      return false;
+    } finally {
+      setIsSubmittingResolution(false);
+    }
+  };
+
+  const handleRequestWorkerResponse = async (
+    complaintId: string,
+    message: string
+  ): Promise<boolean> => {
+    setIsSubmittingResolution(true);
+    try {
+      await complaintManagementService.requestWorkerResponse(complaintId, message);
+      addToast(
+        "Response Requested",
+        `Formal statement request sent to worker for ${complaintId}.`,
+        "success"
+      );
+      fetchComplaints(searchQuery, statusFilter, priorityFilter);
+      return true;
+    } catch (err: any) {
+      console.error("Failed to request worker response:", err);
+      addToast(
+        "Request Failed",
+        err.message || "Could not request statement from worker.",
         "destructive"
       );
       return false;
@@ -108,8 +223,34 @@ export function useComplaintManagement() {
 
   const refresh = () => fetchComplaints(searchQuery, statusFilter, priorityFilter);
 
+  const activeComplaints =
+    activeSection === "USER_COMPLAINTS"
+      ? data?.userComplaints || []
+      : data?.workerComplaints || [];
+
   return {
     complaints: data?.complaints || [],
+    userComplaints: data?.userComplaints || [],
+    workerComplaints: data?.workerComplaints || [],
+    activeComplaints,
+    activeSection,
+    setActiveSection,
+    userMetrics: data?.userMetrics || {
+      total: 0,
+      pending: 0,
+      underReview: 0,
+      waitingForResponse: 0,
+      resolved: 0,
+      rejectedOrClosed: 0,
+    },
+    workerMetrics: data?.workerMetrics || {
+      total: 0,
+      pending: 0,
+      underReview: 0,
+      waitingForResponse: 0,
+      resolved: 0,
+      rejectedOrClosed: 0,
+    },
     totalCount: data?.totalCount || 0,
     pendingCount: data?.pendingCount || 0,
     underReviewCount: data?.underReviewCount || 0,
@@ -136,8 +277,12 @@ export function useComplaintManagement() {
     setTargetComplaintForResolve,
     isSubmittingResolution,
     handleResolveComplaint,
+    handleRejectComplaint,
+    handleCloseComplaint,
+    handleRequestWorkerResponse,
     toasts,
     addToast,
     removeToast,
   };
 }
+

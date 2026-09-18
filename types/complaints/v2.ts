@@ -129,10 +129,19 @@ export interface GrievanceCase {
   bookingContext?: GrievanceBookingContext | null;
   responseRequests?: {
     workerRequired?: boolean;
+    workerSubmitted?: boolean;
+    workerSubmittedAt?: string;
     customerRequired?: boolean;
+    customerSubmitted?: boolean;
+    customerSubmittedAt?: string;
     prompt?: string;
     requestedAt?: string;
   } | null;
+  rejectionReason?: string | null;
+  rejectedAt?: string | null;
+  rejectedBy?: string | null;
+  closedAt?: string | null;
+  closedBy?: string | null;
   createdAt: string;
   updatedAt: string;
 }

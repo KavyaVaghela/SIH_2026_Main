@@ -9,7 +9,10 @@ export type ErrorCategory =
   | "PAYMENT_ERROR"
   | "AUTHORIZATION_ERROR"
   | "NOT_FOUND_ERROR"
-  | "BUSINESS_RULE_ERROR";
+  | "BUSINESS_RULE_ERROR"
+  | "WORKER_RESPONSE_REQUIRED"
+  | "TERMINATED_CASE"
+  | "ALREADY_SUBMITTED";
 
 export class AppError extends Error {
   public readonly isOperational = true;

@@ -30,10 +30,14 @@ export interface Complaint {
 
 export interface CreateComplaintPayload {
   raisedBy: string;
+  raisedByRole?: GrievancePartyRole;
   category: string;
   description: string;
   bookingId?: string;
   targetProfileId?: string;
+  targetRole?: GrievancePartyRole;
+  federationId?: string;
+  initialEvidenceUrls?: string[];
 }
 
 export interface IComplaintService {
@@ -52,14 +56,41 @@ export const ALLOWED_STATUS_TRANSITIONS: Record<
   GrievanceLifecycleStatus,
   GrievanceLifecycleStatus[]
 > = {
-  OPEN: ["UNDER_REVIEW", "REJECTED"],
-  UNDER_REVIEW: ["ACTION_REQUIRED", "ESCALATED", "RESOLVED", "REJECTED"],
-  ACTION_REQUIRED: ["UNDER_REVIEW", "ESCALATED", "REJECTED"],
+  OPEN: ["UNDER_REVIEW", "REJECTED", "CLOSED"],
+  UNDER_REVIEW: ["ACTION_REQUIRED", "ESCALATED", "RESOLVED", "REJECTED", "CLOSED"],
+  ACTION_REQUIRED: ["UNDER_REVIEW", "ESCALATED", "REJECTED", "CLOSED"],
   ESCALATED: ["UNDER_REVIEW", "RESOLVED", "REJECTED"],
   RESOLVED: ["CLOSED"],
-  REJECTED: ["CLOSED"],
+  REJECTED: [],
   CLOSED: [],
 };
+
+export function isCustomerVsWorkerComplaint(c: GrievanceCase): boolean {
+  const isCustomerComplainant = c.raisedByRole === "CUSTOMER";
+  const isAgainstWorker = c.targetRole === "WORKER" || !!c.targetProfileId || !!c.targetWorkerId;
+  return isCustomerComplainant && isAgainstWorker;
+}
+
+export function assertWorkerResponseGate(c: GrievanceCase): void {
+  if (isCustomerVsWorkerComplaint(c) && !c.responseRequests?.workerSubmitted) {
+    throw new AppError(
+      "Worker response is required before final action can be taken.",
+      "WORKER_RESPONSE_REQUIRED",
+      400
+    );
+  }
+}
+
+export function assertComplaintNotTerminated(c: GrievanceCase): void {
+  if (c.status === "REJECTED" || c.status === "CLOSED") {
+    throw new AppError(
+      "This complaint has been terminated and cannot be modified.",
+      "TERMINATED_CASE",
+      400
+    );
+  }
+}
+
 
 export function computeSmartTriage(
   category: string,
@@ -253,7 +284,7 @@ export class ComplaintService implements IComplaintService {
       complaintNumber: row.complaint_number || `KS-GRV-${row.id.slice(0, 8)}`,
       bookingId: row.booking_id || null,
       raisedBy: row.raised_by,
-      raisedByRole: envelope.raisedByRole || "CUSTOMER",
+      raisedByRole: (envelope.raisedByRole || (row.raised_by_profile?.role === "WORKER" ? "WORKER" : "CUSTOMER")) as GrievancePartyRole,
       raisedByName: envelope.raisedByName || row.raised_by_profile?.full_name || "Complainant",
       raisedByPhone: envelope.raisedByPhone || row.raised_by_profile?.phone,
       targetProfileId: row.target_profile_id || null,
@@ -291,6 +322,11 @@ export class ComplaintService implements IComplaintService {
       } : null),
       escalation: envelope.escalation || null,
       responseRequests: envelope.responseRequests || null,
+      rejectionReason: envelope.rejectionReason || null,
+      rejectedAt: envelope.rejectedAt || null,
+      rejectedBy: envelope.rejectedBy || null,
+      closedAt: envelope.closedAt || null,
+      closedBy: envelope.closedBy || null,
       bookingContext: envelope.bookingContext || (row.bookings ? {
         bookingId: row.bookings.id,
         bookingNumber: row.bookings.booking_number,
@@ -521,7 +557,8 @@ export class ComplaintService implements IComplaintService {
   async getGrievanceById(
     id: string,
     viewerRole?: GrievancePartyRole,
-    viewerId?: string
+    viewerId?: string,
+    viewerFederationId?: string
   ): Promise<GrievanceCase | null> {
     const cached = this.activeCases.get(id);
 
@@ -541,8 +578,8 @@ export class ComplaintService implements IComplaintService {
           resolved_at,
           created_at,
           updated_at,
-          raised_by_profile:raised_by (full_name, phone),
-          target_profile:target_profile_id (full_name, phone),
+          raised_by_profile:raised_by (full_name, phone, role),
+          target_profile:target_profile_id (full_name, phone, role),
           bookings (
             id,
             booking_number,
@@ -571,12 +608,15 @@ export class ComplaintService implements IComplaintService {
           ) {
             throw new AppError("Access denied: You are not authorized to view this grievance case.", "FORBIDDEN", 403);
           }
+          if (viewerRole === "FEDERATION_ADMIN" && viewerFederationId && mapped.federationId && mapped.federationId !== viewerFederationId) {
+            throw new AppError("Access denied: You are not authorized to view complaints outside your federation.", "FORBIDDEN", 403);
+          }
         }
 
         return this.sanitizeForViewer(mapped, viewerRole);
       }
     } catch (err: any) {
-      if (err.status === 403) throw err;
+      if (err.status === 403 || err.statusCode === 403) throw err;
       console.warn("DB getGrievanceById notice:", err);
     }
 
@@ -589,6 +629,9 @@ export class ComplaintService implements IComplaintService {
           cached.targetProfileId !== viewerId
         ) {
           throw new AppError("Access denied: You are not authorized to view this grievance case.", "FORBIDDEN", 403);
+        }
+        if (viewerRole === "FEDERATION_ADMIN" && viewerFederationId && cached.federationId && cached.federationId !== viewerFederationId) {
+          throw new AppError("Access denied: You are not authorized to view complaints outside your federation.", "FORBIDDEN", 403);
         }
       }
       return this.sanitizeForViewer(cached, viewerRole);
@@ -609,6 +652,7 @@ export class ComplaintService implements IComplaintService {
     priority?: string;
     isEscalated?: boolean;
     searchQuery?: string;
+    complainantRole?: "CUSTOMER" | "WORKER";
     page?: number;
     pageSize?: number;
   }): Promise<{ cases: GrievanceCase[]; totalCount: number }> {
@@ -630,8 +674,8 @@ export class ComplaintService implements IComplaintService {
           resolved_at,
           created_at,
           updated_at,
-          raised_by_profile:raised_by (full_name, phone),
-          target_profile:target_profile_id (full_name, phone),
+          raised_by_profile:raised_by (full_name, phone, role),
+          target_profile:target_profile_id (full_name, phone, role),
           bookings (
             id,
             booking_number,
@@ -668,6 +712,11 @@ export class ComplaintService implements IComplaintService {
       scoped = scoped.filter((c) => c.federationId === options.federationId);
     }
     // SUPER_ADMIN has cross-federation access
+
+    // Complainant subsection filtering (Worker Complaints vs User Complaints)
+    if (options.complainantRole) {
+      scoped = scoped.filter((c) => c.raisedByRole === options.complainantRole);
+    }
 
     // Criteria filtering
     if (options.status && options.status !== "ALL") {
@@ -721,13 +770,20 @@ export class ComplaintService implements IComplaintService {
       throw new AppError(`Grievance case ${id} not found.`, "NOT_FOUND", 404);
     }
 
+    // Role check: Only federation or super admin can change status directly
+    if (actorRole !== "FEDERATION_ADMIN" && actorRole !== "SUPER_ADMIN") {
+      throw new AppError("Only Federation Admin or Super Admin can update case lifecycle status.", "FORBIDDEN", 403);
+    }
+
+    assertComplaintNotTerminated(currentCase);
+
     if (currentCase.status === newStatus) {
       return currentCase;
     }
 
-    // Role check: Only federation or super admin can change status directly
-    if (actorRole !== "FEDERATION_ADMIN" && actorRole !== "SUPER_ADMIN") {
-      throw new AppError("Only Federation Admin or Super Admin can update case lifecycle status.", "FORBIDDEN", 403);
+    // Enforce worker response gate on final actions
+    if (newStatus === "RESOLVED" || newStatus === "REJECTED" || newStatus === "CLOSED") {
+      assertWorkerResponseGate(currentCase);
     }
 
     // Enforce state machine transitions
@@ -770,6 +826,11 @@ export class ComplaintService implements IComplaintService {
     const updatedCase: GrievanceCase = {
       ...currentCase,
       status: newStatus,
+      rejectionReason: newStatus === "REJECTED" ? (reason || "Formally rejected") : currentCase.rejectionReason,
+      rejectedAt: newStatus === "REJECTED" ? now : currentCase.rejectedAt,
+      rejectedBy: newStatus === "REJECTED" ? (actorName || actorId) : currentCase.rejectedBy,
+      closedAt: newStatus === "CLOSED" ? now : currentCase.closedAt,
+      closedBy: newStatus === "CLOSED" ? (actorName || actorId) : currentCase.closedBy,
       timeline: [...currentCase.timeline, timelineItem],
       auditTrail: [...currentCase.auditTrail, auditItem],
       updatedAt: now,
@@ -811,6 +872,8 @@ export class ComplaintService implements IComplaintService {
 
     const currentCase = await this.getGrievanceById(id);
     if (!currentCase) throw new AppError(`Case ${id} not found.`, "NOT_FOUND", 404);
+
+    assertComplaintNotTerminated(currentCase);
 
     const oldPriority = currentCase.priority;
     if (oldPriority === newPriority) return currentCase;
@@ -867,6 +930,8 @@ export class ComplaintService implements IComplaintService {
     const currentCase = await this.getGrievanceById(id);
     if (!currentCase) throw new AppError(`Case ${id} not found.`, "NOT_FOUND", 404);
 
+    assertComplaintNotTerminated(currentCase);
+
     const now = new Date().toISOString();
     const oldOfficer = currentCase.assignedOfficerName || "Unassigned";
 
@@ -922,6 +987,8 @@ export class ComplaintService implements IComplaintService {
   ): Promise<GrievanceCase> {
     const currentCase = await this.getGrievanceById(id);
     if (!currentCase) throw new AppError(`Case ${id} not found.`, "NOT_FOUND", 404);
+
+    assertComplaintNotTerminated(currentCase);
 
     if (type === "INTERNAL_NOTE" && actorRole !== "FEDERATION_ADMIN" && actorRole !== "SUPER_ADMIN") {
       throw new AppError("Only Federation and Super Admin can post internal notes.", "FORBIDDEN", 403);
@@ -980,6 +1047,8 @@ export class ComplaintService implements IComplaintService {
 
     const currentCase = await this.getGrievanceById(id);
     if (!currentCase) throw new AppError(`Case ${id} not found.`, "NOT_FOUND", 404);
+
+    assertComplaintNotTerminated(currentCase);
 
     const now = new Date().toISOString();
     const timelineItem: GrievanceTimelineEvent = {
@@ -1057,10 +1126,6 @@ export class ComplaintService implements IComplaintService {
     const currentCase = await this.getGrievanceById(id);
     if (!currentCase) throw new AppError(`Case ${id} not found.`, "NOT_FOUND", 404);
 
-    if (currentCase.status === "CLOSED") {
-      throw new AppError("Cannot submit response to a closed complaint.", "FORBIDDEN", 403);
-    }
-
     if (
       actorRole !== "FEDERATION_ADMIN" &&
       actorRole !== "SUPER_ADMIN" &&
@@ -1070,7 +1135,21 @@ export class ComplaintService implements IComplaintService {
       throw new AppError("Access denied: You are not authorized to submit a statement for this grievance.", "FORBIDDEN", 403);
     }
 
+    assertComplaintNotTerminated(currentCase);
+
+    // One Worker Response: Workers get ONE opportunity to respond to a complaint.
+    if (actorRole === "WORKER" && currentCase.responseRequests?.workerSubmitted) {
+      throw new AppError(
+        "Worker has already submitted a response for this complaint.",
+        "ALREADY_SUBMITTED",
+        400
+      );
+    }
+
     const now = new Date().toISOString();
+    const isWorker = actorRole === "WORKER" || actorId === currentCase.targetProfileId;
+    const isCustomer = actorRole === "CUSTOMER" || actorId === currentCase.raisedBy;
+
     const timelineItem: GrievanceTimelineEvent = {
       id: `tl-${Date.now()}`,
       type: "RESPONSE_SUBMISSION",
@@ -1099,8 +1178,12 @@ export class ComplaintService implements IComplaintService {
       status: "UNDER_REVIEW", // Moves automatically back to under review
       responseRequests: {
         ...(currentCase.responseRequests || {}),
-        workerRequired: actorRole === "WORKER" ? false : currentCase.responseRequests?.workerRequired,
-        customerRequired: actorRole === "CUSTOMER" ? false : currentCase.responseRequests?.customerRequired,
+        workerRequired: isWorker ? false : currentCase.responseRequests?.workerRequired,
+        workerSubmitted: isWorker ? true : currentCase.responseRequests?.workerSubmitted,
+        workerSubmittedAt: isWorker ? now : currentCase.responseRequests?.workerSubmittedAt,
+        customerRequired: isCustomer ? false : currentCase.responseRequests?.customerRequired,
+        customerSubmitted: isCustomer ? true : currentCase.responseRequests?.customerSubmitted,
+        customerSubmittedAt: isCustomer ? now : currentCase.responseRequests?.customerSubmittedAt,
       },
       timeline: [...currentCase.timeline, timelineItem],
       auditTrail: [...currentCase.auditTrail, auditItem],
@@ -1142,6 +1225,9 @@ export class ComplaintService implements IComplaintService {
 
     const currentCase = await this.getGrievanceById(id);
     if (!currentCase) throw new AppError(`Case ${id} not found.`, "NOT_FOUND", 404);
+
+    assertComplaintNotTerminated(currentCase);
+    assertWorkerResponseGate(currentCase);
 
     const now = new Date().toISOString();
     const timelineItem: GrievanceTimelineEvent = {
@@ -1213,6 +1299,165 @@ export class ComplaintService implements IComplaintService {
   }
 
   /**
+   * Rejects a grievance with reason and sets terminal status.
+   */
+  async rejectGrievance(
+    id: string,
+    reason: string,
+    actorId: string,
+    actorRole: GrievancePartyRole,
+    actorName: string
+  ): Promise<GrievanceCase> {
+    if (actorRole !== "FEDERATION_ADMIN" && actorRole !== "SUPER_ADMIN") {
+      throw new AppError("Only authorized Federation or Super Admin can reject complaints.", "FORBIDDEN", 403);
+    }
+
+    const currentCase = await this.getGrievanceById(id);
+    if (!currentCase) throw new AppError(`Case ${id} not found.`, "NOT_FOUND", 404);
+
+    assertComplaintNotTerminated(currentCase);
+    assertWorkerResponseGate(currentCase);
+
+    if (currentCase.status === "RESOLVED") {
+      throw new AppError("Cannot reject an already resolved complaint.", "INVALID_STATE_TRANSITION", 400);
+    }
+
+    if (!reason || !reason.trim()) {
+      throw new AppError("Rejection reason is required.", "VALIDATION_ERROR", 400);
+    }
+
+    const now = new Date().toISOString();
+    const oldStatus = currentCase.status;
+
+    const timelineItem: GrievanceTimelineEvent = {
+      id: `tl-${Date.now()}`,
+      type: "STATUS_CHANGE",
+      visibility: "PUBLIC",
+      actorId,
+      actorRole,
+      actorName,
+      message: `Complaint formally rejected. Reason: ${reason.trim()}`,
+      timestamp: now,
+    };
+
+    const auditItem: GrievanceAuditEntry = {
+      id: `aud-${Date.now()}`,
+      complaintId: id,
+      actorId,
+      actorRole,
+      actorName,
+      action: "STATUS_CHANGE",
+      oldValue: oldStatus,
+      newValue: "REJECTED",
+      notes: reason.trim(),
+      timestamp: now,
+    };
+
+    const updated: GrievanceCase = {
+      ...currentCase,
+      status: "REJECTED",
+      rejectionReason: reason.trim(),
+      rejectedAt: now,
+      rejectedBy: actorName || actorId,
+      timeline: [...currentCase.timeline, timelineItem],
+      auditTrail: [...currentCase.auditTrail, auditItem],
+      updatedAt: now,
+    };
+
+    this.activeCases.set(id, updated);
+    await this.persistGrievanceToDb(updated);
+
+    try {
+      await notificationService.sendNotification({
+        profileId: updated.raisedBy,
+        title: `Complaint Rejected: ${updated.complaintNumber}`,
+        message: `Your complaint has been rejected. Reason: ${reason.trim()}`,
+        type: "error",
+        metadata: { complaintId: id, status: "REJECTED" },
+      });
+    } catch {
+      // ignore
+    }
+
+    return updated;
+  }
+
+  /**
+   * Administratively closes a grievance and sets terminal status.
+   */
+  async closeGrievance(
+    id: string,
+    notes: string,
+    actorId: string,
+    actorRole: GrievancePartyRole,
+    actorName: string
+  ): Promise<GrievanceCase> {
+    if (actorRole !== "FEDERATION_ADMIN" && actorRole !== "SUPER_ADMIN") {
+      throw new AppError("Only authorized Federation or Super Admin can close complaints.", "FORBIDDEN", 403);
+    }
+
+    const currentCase = await this.getGrievanceById(id);
+    if (!currentCase) throw new AppError(`Case ${id} not found.`, "NOT_FOUND", 404);
+
+    assertComplaintNotTerminated(currentCase);
+    assertWorkerResponseGate(currentCase);
+
+    const now = new Date().toISOString();
+    const oldStatus = currentCase.status;
+
+    const timelineItem: GrievanceTimelineEvent = {
+      id: `tl-${Date.now()}`,
+      type: "STATUS_CHANGE",
+      visibility: "PUBLIC",
+      actorId,
+      actorRole,
+      actorName,
+      message: `Complaint closed administratively.${notes?.trim() ? ` Notes: ${notes.trim()}` : ""}`,
+      timestamp: now,
+    };
+
+    const auditItem: GrievanceAuditEntry = {
+      id: `aud-${Date.now()}`,
+      complaintId: id,
+      actorId,
+      actorRole,
+      actorName,
+      action: "STATUS_CHANGE",
+      oldValue: oldStatus,
+      newValue: "CLOSED",
+      notes: notes?.trim() || "Administrative closure",
+      timestamp: now,
+    };
+
+    const updated: GrievanceCase = {
+      ...currentCase,
+      status: "CLOSED",
+      closedAt: now,
+      closedBy: actorName || actorId,
+      timeline: [...currentCase.timeline, timelineItem],
+      auditTrail: [...currentCase.auditTrail, auditItem],
+      updatedAt: now,
+    };
+
+    this.activeCases.set(id, updated);
+    await this.persistGrievanceToDb(updated);
+
+    try {
+      await notificationService.sendNotification({
+        profileId: updated.raisedBy,
+        title: `Complaint Closed: ${updated.complaintNumber}`,
+        message: `Your complaint has been closed administratively.`,
+        type: "info",
+        metadata: { complaintId: id, status: "CLOSED" },
+      });
+    } catch {
+      // ignore
+    }
+
+    return updated;
+  }
+
+  /**
    * Escalates case to Super Admin, preserving complete federation history.
    */
   async escalateToSuperAdmin(
@@ -1228,6 +1473,8 @@ export class ComplaintService implements IComplaintService {
 
     const currentCase = await this.getGrievanceById(id);
     if (!currentCase) throw new AppError(`Case ${id} not found.`, "NOT_FOUND", 404);
+
+    assertComplaintNotTerminated(currentCase);
 
     const now = new Date().toISOString();
     const oldStatus = currentCase.status;
@@ -1328,6 +1575,12 @@ export class ComplaintService implements IComplaintService {
         resolution: grievance.resolution,
         escalation: grievance.escalation,
         bookingContext: grievance.bookingContext,
+        responseRequests: grievance.responseRequests,
+        rejectionReason: grievance.rejectionReason,
+        rejectedAt: grievance.rejectedAt,
+        rejectedBy: grievance.rejectedBy,
+        closedAt: grievance.closedAt,
+        closedBy: grievance.closedBy,
       };
 
       await (supabase.from("complaints") as any)
@@ -1400,11 +1653,15 @@ export class ComplaintService implements IComplaintService {
   async createComplaint(payload: CreateComplaintPayload): Promise<Complaint> {
     const g = await this.createGrievance({
       raisedBy: payload.raisedBy,
+      raisedByRole: payload.raisedByRole,
       category: payload.category,
       subject: payload.category,
       description: payload.description,
       bookingId: payload.bookingId,
       targetProfileId: payload.targetProfileId,
+      targetRole: payload.targetRole,
+      federationId: payload.federationId,
+      evidenceUrls: payload.initialEvidenceUrls,
     });
 
     return {

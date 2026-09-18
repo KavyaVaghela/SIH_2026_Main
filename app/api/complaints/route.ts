@@ -19,6 +19,7 @@ export async function GET(request: NextRequest) {
     const isEscalatedParam = searchParams.get("isEscalated");
     const isEscalated = isEscalatedParam !== null ? isEscalatedParam === "true" : undefined;
     const searchQuery = searchParams.get("search") || undefined;
+    const complainantRole = (searchParams.get("complainantRole") || undefined) as "CUSTOMER" | "WORKER" | undefined;
     const page = parseInt(searchParams.get("page") || "1", 10);
     const pageSize = parseInt(searchParams.get("pageSize") || "50", 10);
 
@@ -31,6 +32,7 @@ export async function GET(request: NextRequest) {
       priority,
       isEscalated,
       searchQuery,
+      complainantRole,
       page,
       pageSize,
     });
