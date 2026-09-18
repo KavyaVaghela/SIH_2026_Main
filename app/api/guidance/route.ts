@@ -2,6 +2,8 @@ import { NextRequest, NextResponse } from "next/server";
 import { guidanceService } from "@/features/guidance/services/guidance-service";
 import type { PlatformRole } from "@/config/navigation";
 
+export const dynamic = "force-dynamic";
+
 export async function GET(request: NextRequest) {
   try {
     const { searchParams } = new URL(request.url);
