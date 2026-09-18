@@ -19,8 +19,10 @@ export async function GET(request: NextRequest) {
     const isEscalatedParam = searchParams.get("isEscalated");
     const isEscalated = isEscalatedParam !== null ? isEscalatedParam === "true" : undefined;
     const searchQuery = searchParams.get("search") || undefined;
-    const complainantRole = (searchParams.get("complainantRole") || undefined) as "CUSTOMER" | "WORKER" | undefined;
+    const complainantRole = (searchParams.get("complainantRole") || undefined) as "CUSTOMER" | "WORKER" | "FEDERATION_ADMIN" | undefined;
     const filterType = (searchParams.get("filterType") || undefined) as "MY_COMPLAINTS" | "COMPLAINTS_FROM_CUSTOMERS" | undefined;
+    const dateFrom = searchParams.get("dateFrom") || undefined;
+    const dateTo = searchParams.get("dateTo") || undefined;
     const page = parseInt(searchParams.get("page") || "1", 10);
     const pageSize = parseInt(searchParams.get("pageSize") || "50", 10);
 
@@ -35,6 +37,8 @@ export async function GET(request: NextRequest) {
       searchQuery,
       complainantRole,
       filterType,
+      dateFrom,
+      dateTo,
       page,
       pageSize,
     });

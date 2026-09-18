@@ -689,8 +689,10 @@ export class ComplaintService implements IComplaintService {
     priority?: string;
     isEscalated?: boolean;
     searchQuery?: string;
-    complainantRole?: "CUSTOMER" | "WORKER";
+    complainantRole?: "CUSTOMER" | "WORKER" | "FEDERATION_ADMIN";
     filterType?: "MY_COMPLAINTS" | "COMPLAINTS_FROM_CUSTOMERS";
+    dateFrom?: string;
+    dateTo?: string;
     page?: number;
     pageSize?: number;
   }): Promise<{ cases: GrievanceCase[]; totalCount: number }> {
@@ -799,6 +801,17 @@ export class ComplaintService implements IComplaintService {
     }
 
     // Criteria filtering
+    if (options.role === "SUPER_ADMIN" && options.federationId && options.federationId !== "ALL") {
+      scoped = scoped.filter((c) => c.federationId === options.federationId);
+    }
+    if (options.dateFrom) {
+      const fromTime = new Date(options.dateFrom).getTime();
+      scoped = scoped.filter((c) => new Date(c.createdAt).getTime() >= fromTime);
+    }
+    if (options.dateTo) {
+      const toTime = new Date(options.dateTo).getTime();
+      scoped = scoped.filter((c) => new Date(c.createdAt).getTime() <= toTime);
+    }
     if (options.status && options.status !== "ALL") {
       scoped = scoped.filter((c) => c.status === options.status);
     }
@@ -1068,11 +1081,22 @@ export class ComplaintService implements IComplaintService {
     const currentCase = await this.getGrievanceById(id);
     if (!currentCase) throw new AppError(`Case ${id} not found.`, "NOT_FOUND", 404);
 
-    assertComplaintNotTerminated(currentCase);
+    const isAuthorized =
+      actorRole === "SUPER_ADMIN" ||
+      actorRole === "FEDERATION_ADMIN" ||
+      currentCase.raisedBy === actorId ||
+      currentCase.targetProfileId === actorId ||
+      currentCase.targetWorkerId === actorId;
+
+    if (!isAuthorized) {
+      throw new AppError("Access denied: You are not authorized to update this complaint.", "FORBIDDEN", 403);
+    }
 
     if (type === "INTERNAL_NOTE" && actorRole !== "FEDERATION_ADMIN" && actorRole !== "SUPER_ADMIN") {
       throw new AppError("Only Federation and Super Admin can post internal notes.", "FORBIDDEN", 403);
     }
+
+    assertComplaintNotTerminated(currentCase);
 
     const now = new Date().toISOString();
     const timelineItem: GrievanceTimelineEvent = {
@@ -1101,6 +1125,10 @@ export class ComplaintService implements IComplaintService {
     const updated: GrievanceCase = {
       ...currentCase,
       timeline: [...currentCase.timeline, timelineItem],
+      internalNotes:
+        type === "INTERNAL_NOTE"
+          ? [...(currentCase.internalNotes || []), timelineItem]
+          : currentCase.internalNotes,
       auditTrail: [...currentCase.auditTrail, auditItem],
       updatedAt: now,
     };
@@ -1764,6 +1792,248 @@ export class ComplaintService implements IComplaintService {
       averageResolutionHours,
       categoryBreakdown,
       priorityBreakdown,
+    };
+  }
+
+  /**
+   * Calculates comprehensive operational complaint monitoring and analytics across all federations for Super Admin.
+   * Keeps metrics factual, measurable, and free of arbitrary scores or rankings.
+   */
+  async getSuperAdminComplaintOverview(options?: {
+    federationId?: string;
+    status?: string;
+    priority?: string;
+    category?: string;
+    dateFrom?: string;
+    dateTo?: string;
+  }) {
+    // 1. Retrieve all cases across platform for Super Admin
+    const { cases } = await this.listGrievances({
+      role: "SUPER_ADMIN",
+      federationId: options?.federationId,
+      status: options?.status,
+      priority: options?.priority,
+      category: options?.category,
+      dateFrom: options?.dateFrom,
+      dateTo: options?.dateTo,
+      pageSize: 1000,
+    });
+
+    // 2. Map of federations
+    const federationMap = new Map<string, {
+      federationId: string;
+      federationName: string;
+      totalComplaints: number;
+      customerComplaints: number;
+      workerComplaints: number;
+      federationComplaints: number;
+      openComplaints: number;
+      underReviewComplaints: number;
+      waitingForResponseComplaints: number;
+      resolvedComplaints: number;
+      rejectedComplaints: number;
+      closedComplaints: number;
+      escalatedComplaints: number;
+      totalResolutionDurationMs: number;
+      resolvedCount: number;
+    }>();
+
+    // Overall summary counters
+    let overallOpen = 0;
+    let overallUnderReview = 0;
+    let overallWaitingResponse = 0;
+    let overallResolved = 0;
+    let overallRejected = 0;
+    let overallClosed = 0;
+    let overallEscalated = 0;
+    let overallDurationMs = 0;
+    let overallResolvedCount = 0;
+
+    // Distributions
+    const categoryCounts: Record<string, number> = {};
+    const statusCounts: Record<string, number> = {
+      OPEN: 0,
+      UNDER_REVIEW: 0,
+      ACTION_REQUIRED: 0,
+      RESOLVED: 0,
+      REJECTED: 0,
+      CLOSED: 0,
+      ESCALATED: 0,
+    };
+
+    // Trend buckets (by YYYY-MM-DD)
+    const trendMap = new Map<string, { date: string; created: number; resolved: number }>();
+
+    for (const c of cases) {
+      const fedId = c.federationId || "b765df3b-c418-4a15-b79f-3cbc09e475dc";
+      const fedName = c.federationName || (fedId === "b765df3b-c418-4a15-b79f-3cbc09e475dc" ? "Ahmedabad Skilled Workers Federation" : fedId === "df5e2a43-c749-4cca-bd26-fe5826b1d1c3" ? "Gujarat Household Services Federation" : "Regional Cooperative Federation");
+
+      if (!federationMap.has(fedId)) {
+        federationMap.set(fedId, {
+          federationId: fedId,
+          federationName: fedName,
+          totalComplaints: 0,
+          customerComplaints: 0,
+          workerComplaints: 0,
+          federationComplaints: 0,
+          openComplaints: 0,
+          underReviewComplaints: 0,
+          waitingForResponseComplaints: 0,
+          resolvedComplaints: 0,
+          rejectedComplaints: 0,
+          closedComplaints: 0,
+          escalatedComplaints: 0,
+          totalResolutionDurationMs: 0,
+          resolvedCount: 0,
+        });
+      }
+
+      const fed = federationMap.get(fedId)!;
+      fed.totalComplaints++;
+
+      // Role breakdown
+      if (c.raisedByRole === "CUSTOMER") fed.customerComplaints++;
+      else if (c.raisedByRole === "WORKER") fed.workerComplaints++;
+      else if (c.raisedByRole === "FEDERATION_ADMIN") fed.federationComplaints++;
+
+      // Status breakdown
+      if (c.status === "OPEN") {
+        fed.openComplaints++;
+        overallOpen++;
+        statusCounts.OPEN++;
+      } else if (c.status === "UNDER_REVIEW") {
+        fed.underReviewComplaints++;
+        overallUnderReview++;
+        statusCounts.UNDER_REVIEW++;
+      } else if (c.status === "ACTION_REQUIRED") {
+        fed.waitingForResponseComplaints++;
+        overallWaitingResponse++;
+        statusCounts.ACTION_REQUIRED++;
+      } else if (c.status === "RESOLVED") {
+        fed.resolvedComplaints++;
+        overallResolved++;
+        statusCounts.RESOLVED++;
+      } else if (c.status === "REJECTED") {
+        fed.rejectedComplaints++;
+        overallRejected++;
+        statusCounts.REJECTED++;
+      } else if (c.status === "CLOSED") {
+        fed.closedComplaints++;
+        overallClosed++;
+        statusCounts.CLOSED++;
+      } else if (c.status === "ESCALATED") {
+        fed.escalatedComplaints++;
+        overallEscalated++;
+        statusCounts.ESCALATED++;
+      }
+
+      if (c.escalation?.isEscalated && c.status !== "ESCALATED") {
+        fed.escalatedComplaints++;
+        overallEscalated++;
+      }
+
+      // Resolution time
+      const resolvedAtStr = c.resolution?.resolvedAt || c.closedAt;
+      if (resolvedAtStr && c.createdAt) {
+        const dur = new Date(resolvedAtStr).getTime() - new Date(c.createdAt).getTime();
+        if (dur > 0) {
+          fed.totalResolutionDurationMs += dur;
+          fed.resolvedCount++;
+          overallDurationMs += dur;
+          overallResolvedCount++;
+        }
+      }
+
+      // Category breakdown
+      const cat = c.category || "General";
+      categoryCounts[cat] = (categoryCounts[cat] || 0) + 1;
+
+      // Trend bucket
+      if (c.createdAt) {
+        const dayStr = c.createdAt.slice(0, 10);
+        if (!trendMap.has(dayStr)) {
+          trendMap.set(dayStr, { date: dayStr, created: 0, resolved: 0 });
+        }
+        trendMap.get(dayStr)!.created++;
+      }
+      if (resolvedAtStr) {
+        const dayStr = resolvedAtStr.slice(0, 10);
+        if (!trendMap.has(dayStr)) {
+          trendMap.set(dayStr, { date: dayStr, created: 0, resolved: 0 });
+        }
+        trendMap.get(dayStr)!.resolved++;
+      }
+    }
+
+    // Convert federation map to final rows with calculated averages
+    const federationRows = Array.from(federationMap.values()).map((f) => ({
+      federationId: f.federationId,
+      federationName: f.federationName,
+      totalComplaints: f.totalComplaints,
+      customerComplaints: f.customerComplaints,
+      workerComplaints: f.workerComplaints,
+      federationComplaints: f.federationComplaints,
+      openComplaints: f.openComplaints,
+      underReviewComplaints: f.underReviewComplaints,
+      waitingForResponseComplaints: f.waitingForResponseComplaints,
+      resolvedComplaints: f.resolvedComplaints,
+      rejectedComplaints: f.rejectedComplaints,
+      closedComplaints: f.closedComplaints,
+      escalatedComplaints: f.escalatedComplaints,
+      averageResolutionHours: f.resolvedCount > 0 ? Math.round((f.totalResolutionDurationMs / (f.resolvedCount * 3600000)) * 10) / 10 : 0,
+      resolvedWithinPeriodCount: f.resolvedComplaints + f.closedComplaints,
+    }));
+
+    // Status distribution
+    const statusDistribution = [
+      { name: "Open", count: statusCounts.OPEN, color: "#eab308" },
+      { name: "Under Review", count: statusCounts.UNDER_REVIEW, color: "#3b82f6" },
+      { name: "Action Required", count: statusCounts.ACTION_REQUIRED, color: "#f97316" },
+      { name: "Resolved", count: statusCounts.RESOLVED, color: "#10b981" },
+      { name: "Rejected", count: statusCounts.REJECTED, color: "#ef4444" },
+      { name: "Closed", count: statusCounts.CLOSED, color: "#6b7280" },
+      { name: "Escalated", count: statusCounts.ESCALATED, color: "#8b5cf6" },
+    ];
+
+    // Volume by federation chart dataset
+    const volumeByFederation = federationRows.map((f) => ({
+      federationId: f.federationId,
+      federationName: f.federationName,
+      total: f.totalComplaints,
+      customer: f.customerComplaints,
+      worker: f.workerComplaints,
+      federation: f.federationComplaints,
+    }));
+
+    // Volume trend chart dataset (sorted chronologically)
+    const volumeTrend = Array.from(trendMap.values()).sort((a, b) => a.date.localeCompare(b.date));
+
+    // Category distribution chart dataset (sorted descending by volume)
+    const categoryDistribution = Object.entries(categoryCounts)
+      .map(([category, count]) => ({ category, count }))
+      .sort((a, b) => b.count - a.count);
+
+    const overallAverageResolutionHours = overallResolvedCount > 0
+      ? Math.round((overallDurationMs / (overallResolvedCount * 3600000)) * 10) / 10
+      : 0;
+
+    return {
+      federations: federationRows,
+      statusDistribution,
+      volumeByFederation,
+      volumeTrend,
+      categoryDistribution,
+      overallMetrics: {
+        totalComplaints: cases.length,
+        openComplaints: overallOpen,
+        underReviewComplaints: overallUnderReview,
+        waitingForResponseComplaints: overallWaitingResponse,
+        resolvedComplaints: overallResolved,
+        rejectedComplaints: overallRejected,
+        closedComplaints: overallClosed,
+        escalatedComplaints: overallEscalated,
+        averageResolutionHours: overallAverageResolutionHours,
+      },
     };
   }
 
