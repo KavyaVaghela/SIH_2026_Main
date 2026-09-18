@@ -11,7 +11,6 @@ import { LandingHowItWorks } from "./landing-how-it-works";
 import { LandingEcosystem } from "./landing-ecosystem";
 import { LandingWorkerSupport } from "./landing-worker-support";
 import { LandingEmergency } from "./landing-emergency";
-import { LandingFAQ } from "./landing-faq";
 import { LandingCTA } from "./landing-cta";
 import { LandingFooter } from "./landing-footer";
 
@@ -45,14 +44,11 @@ export function LandingPage() {
           {/* 8. Emergency Strip */}
           <LandingEmergency />
 
-          {/* 9. FAQ */}
-          <LandingFAQ />
-
-          {/* 10. Final CTA */}
+          {/* 9. Final CTA */}
           <LandingCTA />
         </main>
 
-        {/* 11. Footer */}
+        {/* 10. Footer */}
         <LandingFooter />
       </div>
     </AuthModalProvider>
