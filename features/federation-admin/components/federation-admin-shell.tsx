@@ -1,6 +1,7 @@
 "use client";
 
 import * as React from "react";
+import { usePathname } from "next/navigation";
 import { TopNavbar } from "@/components/navigation/top-navbar";
 import { FederationAdminSidebar } from "./federation-admin-sidebar";
 import { X } from "lucide-react";
@@ -22,9 +23,38 @@ export function FederationAdminShell({
   className,
 }: FederationAdminShellProps) {
   const [mobileDrawerOpen, setMobileDrawerOpen] = React.useState(false);
+  const pathname = usePathname();
   const [displayName, setDisplayName] = React.useState<string>(
     () => getCachedProfileName("FEDERATION_ADMIN") || (userName !== "Federation Administrator" ? userName : "Vikram Shah")
   );
+
+  // Close mobile drawer on route change
+  React.useEffect(() => {
+    setMobileDrawerOpen(false);
+  }, [pathname]);
+
+  // Handle Escape key to close mobile drawer
+  React.useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === "Escape" && mobileDrawerOpen) {
+        setMobileDrawerOpen(false);
+      }
+    };
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, [mobileDrawerOpen]);
+
+  // Lock body scroll while mobile drawer is active
+  React.useEffect(() => {
+    if (mobileDrawerOpen) {
+      document.body.style.overflow = "hidden";
+    } else {
+      document.body.style.overflow = "";
+    }
+    return () => {
+      document.body.style.overflow = "";
+    };
+  }, [mobileDrawerOpen]);
 
   React.useEffect(() => {
     let isMounted = true;
@@ -88,7 +118,7 @@ export function FederationAdminShell({
             </div>
 
             <div className="flex-1 overflow-y-auto">
-              <FederationAdminSidebar onNavigate={() => setMobileDrawerOpen(false)} />
+              <FederationAdminSidebar onNavigate={() => setMobileDrawerOpen(false)} className="w-full border-r-0 static top-0 h-full p-4 space-y-6" />
             </div>
           </div>
         </div>
