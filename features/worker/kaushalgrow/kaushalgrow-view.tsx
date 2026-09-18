@@ -6,14 +6,8 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 
-import {
-  MOCK_COURSES,
-  RAW_SKILL_CATEGORIES,
-  computeCategoriesWithCounts,
-  computeCourseProgress,
-  computeLearningProgressStats,
-} from "./mock-data";
-import { Course, CourseChapter } from "./types";
+import { SharedLearningStore } from "@/features/shared/learning/learning-store";
+import { LearningResource, SkillCategory } from "@/features/shared/learning/types";
 
 import { KaushalGrowHeroBanner } from "./components/hero-banner";
 import { SearchFilterBar } from "./components/search-filter-bar";
@@ -24,42 +18,46 @@ import { ProgressDashboardCard } from "./components/progress-dashboard-card";
 import { CoursePlayerModal } from "./components/course-player-modal";
 import { ViewAllCategoriesModal } from "./components/view-all-categories-modal";
 
-const LOCAL_STORAGE_KEY = "kaushalgrow_courses_v2";
-
 export function KaushalGrowView() {
-  const [courses, setCourses] = React.useState<Course[]>(MOCK_COURSES);
+  const [courses, setCourses] = React.useState<LearningResource[]>([]);
+  const [categories, setCategories] = React.useState<SkillCategory[]>([]);
+  const [stats, setStats] = React.useState({
+    inProgress: 0,
+    completed: 0,
+    notStarted: 0,
+    overallProgressPercent: 0,
+  });
 
   const [searchQuery, setSearchQuery] = React.useState("");
   const [activeCategoryId, setActiveCategoryId] = React.useState<string | null>(null);
 
-  const [selectedCourse, setSelectedCourse] = React.useState<Course | null>(null);
+  const [selectedCourse, setSelectedCourse] = React.useState<LearningResource | null>(null);
   const [isPlayerOpen, setIsPlayerOpen] = React.useState(false);
   const [isCategoriesModalOpen, setIsCategoriesModalOpen] = React.useState(false);
 
-  // Load persisted course progress on client mount
-  React.useEffect(() => {
-    try {
-      const saved = localStorage.getItem(LOCAL_STORAGE_KEY);
-      if (saved) {
-        const parsed: Course[] = JSON.parse(saved);
-        if (Array.isArray(parsed) && parsed.length > 0) {
-          setCourses(parsed.map(computeCourseProgress));
-        }
-      }
-    } catch (err) {
-      console.warn("Failed to load KaushalGrow progress from localStorage:", err);
-    }
+  // Subscribe to SharedLearningStore (shared with SuperAdmin in real time)
+  const refreshStoreData = React.useCallback(() => {
+    const published = SharedLearningStore.getPublishedResources();
+    const catList = SharedLearningStore.getCategories();
+    const lmsStats = SharedLearningStore.getLMSDashboardStats();
+
+    setCourses(published);
+    setCategories(catList);
+    setStats({
+      inProgress: lmsStats.inProgressCoursesCount,
+      completed: lmsStats.completedCoursesCount,
+      notStarted: lmsStats.notStartedCoursesCount,
+      overallProgressPercent: lmsStats.overallCompletionPercent,
+    });
   }, []);
 
-  // Dynamically compute category course counts based on actual courses array
-  const categories = React.useMemo(() => {
-    return computeCategoriesWithCounts(RAW_SKILL_CATEGORIES, courses);
-  }, [courses]);
-
-  // Dynamically calculate overall progress stats across all courses
-  const stats = React.useMemo(() => {
-    return computeLearningProgressStats(courses);
-  }, [courses]);
+  React.useEffect(() => {
+    refreshStoreData();
+    const unsubscribe = SharedLearningStore.subscribe(() => {
+      refreshStoreData();
+    });
+    return () => unsubscribe();
+  }, [refreshStoreData]);
 
   // Filter courses based on search query and category selection
   const filteredCourses = React.useMemo(() => {
@@ -77,40 +75,21 @@ export function KaushalGrowView() {
     });
   }, [courses, searchQuery, activeCategoryId]);
 
-  const handleOpenCoursePlayer = (course: Course) => {
+  const handleOpenCoursePlayer = (course: LearningResource) => {
     setSelectedCourse(course);
     setIsPlayerOpen(true);
   };
 
-  const handleUpdateCourseProgress = (courseId: string, updatedChapters: CourseChapter[]) => {
-    setCourses((prevCourses) => {
-      const updatedList = prevCourses.map((c) => {
-        if (c.id === courseId) {
-          const updatedCourse: Course = {
-            ...c,
-            chapters: updatedChapters,
-          };
-          return computeCourseProgress(updatedCourse);
-        }
-        return c;
-      });
-
-      // Save updated course state to localStorage for persistence
-      try {
-        localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(updatedList));
-      } catch (err) {
-        console.warn("Failed to save KaushalGrow progress to localStorage:", err);
-      }
-
-      return updatedList;
-    });
-
-    // Update selected course reference for active modal
-    if (selectedCourse && selectedCourse.id === courseId) {
-      setSelectedCourse((prev) => {
-        if (!prev) return null;
-        return computeCourseProgress({ ...prev, chapters: updatedChapters });
-      });
+  const handleToggleLessonCompletion = (
+    courseId: string,
+    lessonId: string,
+    allLessonIds: string[]
+  ) => {
+    SharedLearningStore.toggleWorkerLessonProgress(courseId, lessonId, allLessonIds);
+    // Refresh active course for player modal
+    const updated = SharedLearningStore.getResourceById(courseId);
+    if (updated) {
+      setSelectedCourse(updated);
     }
   };
 
@@ -133,7 +112,7 @@ export function KaushalGrowView() {
         completedCount={stats.completed}
       />
 
-      {/* Skill Categories Grid (Dynamic Course Counts) */}
+      {/* Skill Categories Grid (Synchronized with SuperAdmin) */}
       <SkillCategoriesGrid
         categories={categories}
         activeCategoryId={activeCategoryId}
@@ -180,12 +159,12 @@ export function KaushalGrowView() {
               Continue Learning
             </h2>
             <p className="text-xs text-muted-foreground">
-              Pick up where you left off or start a new skill module
+              Pick up where you left off or start a new published skill module
             </p>
           </div>
 
           <Badge variant="outline" className="text-xs text-emerald-700 font-semibold">
-            {filteredCourses.length} Courses
+            {filteredCourses.length} Published Courses
           </Badge>
         </div>
 
@@ -194,8 +173,8 @@ export function KaushalGrowView() {
             {filteredCourses.map((course) => (
               <CourseCard
                 key={course.id}
-                course={course}
-                onCourseClick={handleOpenCoursePlayer}
+                course={course as any}
+                onCourseClick={handleOpenCoursePlayer as any}
               />
             ))}
           </div>
@@ -205,7 +184,7 @@ export function KaushalGrowView() {
             <BookOpen className="h-10 w-10 text-muted-foreground mx-auto" />
             <h3 className="text-base font-bold text-foreground">No matching courses found</h3>
             <p className="text-xs text-muted-foreground max-w-md mx-auto">
-              We couldn&apos;t find any learning modules matching your query &ldquo;{searchQuery}&rdquo;. Try clearing filters or searching for electrical, solar, carpentry, or painting topics.
+              We couldn&apos;t find any published learning modules matching your query &ldquo;{searchQuery}&rdquo;. Try clearing filters or searching for electrical, solar, carpentry, or painting topics.
             </p>
             <Button
               size="sm"
@@ -226,12 +205,12 @@ export function KaushalGrowView() {
         <ProgressDashboardCard stats={stats} />
       </div>
 
-      {/* Interactive Course Player Modal */}
+      {/* Interactive Course Player Modal (YouTube / PDF / Chapters) */}
       <CoursePlayerModal
-        course={selectedCourse}
+        course={selectedCourse as any}
         isOpen={isPlayerOpen}
         onClose={() => setIsPlayerOpen(false)}
-        onUpdateCourseProgress={handleUpdateCourseProgress}
+        onToggleLessonCompletion={handleToggleLessonCompletion}
       />
 
       {/* View All Categories Modal */}
