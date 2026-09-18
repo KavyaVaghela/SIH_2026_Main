@@ -1,0 +1,131 @@
+@import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap');
+
+/* Isolated Landing Page Token Scope */
+.landing-root {
+  --landing-primary: #135e38;
+  --landing-dark: #004525;
+  --landing-hover: #0c4427;
+  --landing-light: #eaf5ee;
+  --landing-subtle: #f4fbf6;
+  --landing-accent: #8ed5a5;
+  --landing-surface: #f7faf8;
+  --landing-heading: #111827;
+  --landing-body: #374151;
+  --landing-muted: #6b7280;
+  --landing-border: #e2e8f0;
+  --landing-border-light: #e6f0ea;
+
+  font-family: 'Plus Jakarta Sans', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  color: var(--landing-body);
+  background-color: #ffffff;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  line-height: 1.6;
+  -webkit-font-smoothing: antialiased;
+}
+
+.landing-root * {
+  box-sizing: border-box;
+}
+
+/* Background utilities */
+.landing-root .landing-bg-primary { background-color: var(--landing-primary); }
+.landing-root .landing-bg-dark { background-color: var(--landing-dark); }
+.landing-root .landing-bg-light { background-color: var(--landing-light); }
+.landing-root .landing-bg-subtle { background-color: var(--landing-subtle); }
+.landing-root .landing-bg-surface { background-color: var(--landing-surface); }
+.landing-root .landing-bg-accent { background-color: var(--landing-accent); }
+
+/* Text color utilities */
+.landing-root .landing-text-primary { color: var(--landing-primary); }
+.landing-root .landing-text-dark { color: var(--landing-dark); }
+.landing-root .landing-text-heading { color: var(--landing-heading); }
+.landing-root .landing-text-body { color: var(--landing-body); }
+.landing-root .landing-text-muted { color: var(--landing-muted); }
+.landing-root .landing-text-accent { color: var(--landing-dark); }
+
+/* Border utilities */
+.landing-root .landing-border-subtle { border-color: var(--landing-border-light); }
+.landing-root .landing-border-primary { border-color: var(--landing-primary); }
+.landing-root .landing-border-accent { border-color: var(--landing-accent); }
+
+/* Component Cards */
+.landing-root .landing-card {
+  background-color: #ffffff;
+  border: 1px solid var(--landing-border-light);
+  border-radius: 1rem;
+  transition: all 0.25s ease-in-out;
+}
+.landing-root .landing-card:hover {
+  border-color: var(--landing-accent);
+  box-shadow: 0 12px 30px -8px rgba(19, 94, 56, 0.1), 0 6px 12px -4px rgba(19, 94, 56, 0.05);
+  transform: translateY(-2px);
+}
+
+/* Interactive Buttons */
+.landing-root .landing-btn-primary {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 600;
+  border-radius: 0.625rem;
+  background-color: var(--landing-primary);
+  color: #ffffff;
+  transition: all 0.2s ease-in-out;
+  cursor: pointer;
+  box-shadow: 0 2px 4px rgba(19, 94, 56, 0.15);
+}
+.landing-root .landing-btn-primary:hover {
+  background-color: var(--landing-hover);
+  box-shadow: 0 4px 10px rgba(19, 94, 56, 0.25);
+  transform: translateY(-1px);
+}
+
+.landing-root .landing-btn-secondary {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 600;
+  border-radius: 0.625rem;
+  background-color: var(--landing-light);
+  color: var(--landing-dark);
+  border: 1px solid var(--landing-accent);
+  transition: all 0.2s ease-in-out;
+  cursor: pointer;
+}
+.landing-root .landing-btn-secondary:hover {
+  background-color: var(--landing-accent);
+  color: var(--landing-dark);
+  transform: translateY(-1px);
+}
+
+.landing-root .landing-btn-outline {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 600;
+  border-radius: 0.625rem;
+  border: 1.5px solid var(--landing-primary);
+  color: var(--landing-primary);
+  background-color: #ffffff;
+  transition: all 0.2s ease-in-out;
+  cursor: pointer;
+}
+.landing-root .landing-btn-outline:hover {
+  background-color: var(--landing-light);
+  color: var(--landing-dark);
+}
+
+/* Badges */
+.landing-root .landing-badge {
+  display: inline-flex;
+  align-items: center;
+  font-size: 0.75rem;
+  font-weight: 600;
+  padding: 0.25rem 0.75rem;
+  border-radius: 9999px;
+  background-color: var(--landing-light);
+  color: var(--landing-dark);
+  border: 1px solid var(--landing-accent);
+}
