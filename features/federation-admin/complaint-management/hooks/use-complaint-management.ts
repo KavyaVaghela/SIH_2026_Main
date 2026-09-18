@@ -49,15 +49,74 @@ export function useComplaintManagement() {
     setToasts((prev) => prev.filter((t) => t.id !== id));
   }, []);
 
+  const [currentAdminProfile, setCurrentAdminProfile] = React.useState<{
+    id: string;
+    fullName: string;
+    email: string;
+    federationId: string;
+    federationName: string;
+  }>({
+    id: "096b0708-3193-41a6-9f49-03ff8903a0ed",
+    fullName: "Federation Dispute Officer",
+    email: "federation@example.com",
+    federationId: "b765df3b-c418-4a15-b79f-3cbc09e475dc",
+    federationName: "Ahmedabad Skilled Workers Federation",
+  });
+
+  const [isRaiseComplaintOpen, setIsRaiseComplaintOpen] = React.useState<boolean>(false);
+
+  // Dynamically resolve authenticated Federation Admin profile and federation_id
+  React.useEffect(() => {
+    async function resolveFedIdentity() {
+      try {
+        const supabase = createClient();
+        const { data: { user } } = await supabase.auth.getUser();
+        if (user) {
+          const { data: prof } = await (supabase.from("profiles") as any)
+            .select("id, full_name, email, phone, role")
+            .eq("id", user.id)
+            .maybeSingle();
+
+          let fedId = "b765df3b-c418-4a15-b79f-3cbc09e475dc";
+          let fedName = "Ahmedabad Skilled Workers Federation";
+
+          if (user.email) {
+            const { data: fed } = await (supabase.from("federations") as any)
+              .select("id, name")
+              .eq("contact_email", user.email)
+              .maybeSingle();
+            if (fed) {
+              fedId = fed.id;
+              fedName = fed.name;
+            }
+          }
+
+          setCurrentAdminProfile({
+            id: user.id,
+            fullName: prof?.full_name || "Federation Dispute Officer",
+            email: user.email || "",
+            federationId: fedId,
+            federationName: fedName,
+          });
+        }
+      } catch (err) {
+        console.warn("Notice: Could not resolve authenticated federation identity:", err);
+      }
+    }
+    resolveFedIdentity();
+  }, []);
+
   const fetchComplaints = React.useCallback(
-    async (query: string, sFilter: string, pFilter: string) => {
+    async (query: string, sFilter: string, pFilter: string, fedId?: string) => {
       setIsLoading(true);
       setError(null);
       try {
+        const targetFedId = fedId || currentAdminProfile.federationId;
         const result = await complaintManagementService.getComplaints(
           query,
           sFilter,
-          pFilter
+          pFilter,
+          targetFedId
         );
         setData(result);
       } catch (err) {
@@ -67,12 +126,12 @@ export function useComplaintManagement() {
         setIsLoading(false);
       }
     },
-    []
+    [currentAdminProfile.federationId]
   );
 
   React.useEffect(() => {
-    fetchComplaints(searchQuery, statusFilter, priorityFilter);
-  }, [searchQuery, statusFilter, priorityFilter, fetchComplaints]);
+    fetchComplaints(searchQuery, statusFilter, priorityFilter, currentAdminProfile.federationId);
+  }, [searchQuery, statusFilter, priorityFilter, currentAdminProfile.federationId, fetchComplaints]);
 
   // Supabase Realtime subscription on complaints table
   React.useEffect(() => {
@@ -88,7 +147,7 @@ export function useComplaintManagement() {
             table: "complaints",
           },
           () => {
-            fetchComplaints(searchQuery, statusFilter, priorityFilter);
+            fetchComplaints(searchQuery, statusFilter, priorityFilter, currentAdminProfile.federationId);
           }
         )
         .subscribe();
@@ -99,7 +158,7 @@ export function useComplaintManagement() {
     } catch (err) {
       console.warn("Realtime setup notice:", err);
     }
-  }, [searchQuery, statusFilter, priorityFilter, fetchComplaints]);
+  }, [searchQuery, statusFilter, priorityFilter, currentAdminProfile.federationId, fetchComplaints]);
 
   const handleResolveComplaint = async (
     complaintId: string,
@@ -111,7 +170,9 @@ export function useComplaintManagement() {
       await complaintManagementService.resolveComplaint(
         complaintId,
         resolutionNotes,
-        internalNotes
+        internalNotes,
+        currentAdminProfile.id,
+        currentAdminProfile.fullName
       );
       addToast(
         "Complaint Marked as Resolved",
@@ -121,7 +182,7 @@ export function useComplaintManagement() {
       setTargetComplaintForResolve(null);
       setSelectedComplaintForDetail(null);
       setSelectedGrievanceCase(null);
-      fetchComplaints(searchQuery, statusFilter, priorityFilter);
+      fetchComplaints(searchQuery, statusFilter, priorityFilter, currentAdminProfile.federationId);
       return true;
     } catch (err: any) {
       console.error("Failed to resolve complaint:", err);
@@ -142,7 +203,12 @@ export function useComplaintManagement() {
   ): Promise<boolean> => {
     setIsSubmittingResolution(true);
     try {
-      await complaintManagementService.rejectComplaint(complaintId, reason);
+      await complaintManagementService.rejectComplaint(
+        complaintId,
+        reason,
+        currentAdminProfile.id,
+        currentAdminProfile.fullName
+      );
       addToast(
         "Complaint Formally Rejected",
         `Dispute record ${complaintId} has been rejected.`,
@@ -150,7 +216,7 @@ export function useComplaintManagement() {
       );
       setSelectedComplaintForDetail(null);
       setSelectedGrievanceCase(null);
-      fetchComplaints(searchQuery, statusFilter, priorityFilter);
+      fetchComplaints(searchQuery, statusFilter, priorityFilter, currentAdminProfile.federationId);
       return true;
     } catch (err: any) {
       console.error("Failed to reject complaint:", err);
@@ -171,7 +237,12 @@ export function useComplaintManagement() {
   ): Promise<boolean> => {
     setIsSubmittingResolution(true);
     try {
-      await complaintManagementService.closeComplaint(complaintId, notes);
+      await complaintManagementService.closeComplaint(
+        complaintId,
+        notes,
+        currentAdminProfile.id,
+        currentAdminProfile.fullName
+      );
       addToast(
         "Complaint Administratively Closed",
         `Dispute record ${complaintId} has been closed.`,
@@ -179,7 +250,7 @@ export function useComplaintManagement() {
       );
       setSelectedComplaintForDetail(null);
       setSelectedGrievanceCase(null);
-      fetchComplaints(searchQuery, statusFilter, priorityFilter);
+      fetchComplaints(searchQuery, statusFilter, priorityFilter, currentAdminProfile.federationId);
       return true;
     } catch (err: any) {
       console.error("Failed to close complaint:", err);
@@ -206,7 +277,7 @@ export function useComplaintManagement() {
         `Formal statement request sent to worker for ${complaintId}.`,
         "success"
       );
-      fetchComplaints(searchQuery, statusFilter, priorityFilter);
+      fetchComplaints(searchQuery, statusFilter, priorityFilter, currentAdminProfile.federationId);
       return true;
     } catch (err: any) {
       console.error("Failed to request worker response:", err);
@@ -221,17 +292,54 @@ export function useComplaintManagement() {
     }
   };
 
-  const refresh = () => fetchComplaints(searchQuery, statusFilter, priorityFilter);
+  const handleRaiseComplaint = async (formData: FormData): Promise<boolean> => {
+    setIsSubmittingResolution(true);
+    try {
+      formData.set("raisedBy", currentAdminProfile.id);
+      formData.set("raisedByRole", "FEDERATION_ADMIN");
+      formData.set("raisedByName", currentAdminProfile.fullName);
+      formData.set("federationId", currentAdminProfile.federationId);
+
+      const res = await fetch("/api/complaints", {
+        method: "POST",
+        body: formData,
+      });
+      const result = await res.json();
+      if (!result.success) {
+        throw new Error(result.error || "Failed to submit federation complaint.");
+      }
+
+      addToast(
+        "Complaint Submitted",
+        `Complaint #${result.complaint?.complaintNumber || ""} submitted to Super Admin.`,
+        "success"
+      );
+      setIsRaiseComplaintOpen(false);
+      fetchComplaints(searchQuery, statusFilter, priorityFilter, currentAdminProfile.federationId);
+      return true;
+    } catch (err: any) {
+      console.error("Failed to raise complaint:", err);
+      addToast("Submission Failed", err.message || "Failed to submit complaint.", "destructive");
+      return false;
+    } finally {
+      setIsSubmittingResolution(false);
+    }
+  };
+
+  const refresh = () => fetchComplaints(searchQuery, statusFilter, priorityFilter, currentAdminProfile.federationId);
 
   const activeComplaints =
     activeSection === "USER_COMPLAINTS"
       ? data?.userComplaints || []
-      : data?.workerComplaints || [];
+      : activeSection === "WORKER_COMPLAINTS"
+      ? data?.workerComplaints || []
+      : data?.myComplaints || [];
 
   return {
     complaints: data?.complaints || [],
     userComplaints: data?.userComplaints || [],
     workerComplaints: data?.workerComplaints || [],
+    myComplaints: data?.myComplaints || [],
     activeComplaints,
     activeSection,
     setActiveSection,
@@ -244,6 +352,14 @@ export function useComplaintManagement() {
       rejectedOrClosed: 0,
     },
     workerMetrics: data?.workerMetrics || {
+      total: 0,
+      pending: 0,
+      underReview: 0,
+      waitingForResponse: 0,
+      resolved: 0,
+      rejectedOrClosed: 0,
+    },
+    myMetrics: data?.myMetrics || {
       total: 0,
       pending: 0,
       underReview: 0,
@@ -269,6 +385,10 @@ export function useComplaintManagement() {
     isLoading,
     error,
     refresh,
+    currentAdminProfile,
+    isRaiseComplaintOpen,
+    setIsRaiseComplaintOpen,
+    handleRaiseComplaint,
     selectedComplaintForDetail,
     setSelectedComplaintForDetail,
     selectedGrievanceCase,

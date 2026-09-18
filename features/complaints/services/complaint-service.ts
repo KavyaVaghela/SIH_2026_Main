@@ -298,6 +298,7 @@ export class ComplaintService implements IComplaintService {
       subcategory,
       subject,
       description: detailedDesc,
+      additionalInfo: envelope.additionalInfo || undefined,
       priority: envelope.priority || triage.suggestedPriority,
       suggestedPriority: envelope.suggestedPriority || triage.suggestedPriority,
       triageReason: envelope.triageReason || triage.triageReason,
@@ -355,6 +356,15 @@ export class ComplaintService implements IComplaintService {
         auditTrail: grievance.auditTrail.filter((item) => item.action !== "INTERNAL_NOTE"),
       };
     }
+    // Mask Super Admin internal notes from Federation Admins when viewing their own complaints
+    if (viewerRole === "FEDERATION_ADMIN" && grievance.raisedByRole === "FEDERATION_ADMIN") {
+      return {
+        ...grievance,
+        timeline: grievance.timeline.filter((item) => item.visibility !== "INTERNAL"),
+        internalNotes: [],
+        auditTrail: grievance.auditTrail.filter((item) => item.action !== "INTERNAL_NOTE"),
+      };
+    }
     return {
       ...grievance,
       internalNotes: grievance.timeline.filter((item) => item.visibility === "INTERNAL"),
@@ -377,6 +387,48 @@ export class ComplaintService implements IComplaintService {
     let targetProfileId = payload.targetProfileId;
     let targetRole = payload.targetRole || (payload.raisedByRole === "WORKER" ? "CUSTOMER" : "WORKER");
     let targetName = payload.targetName;
+
+    // Handle Federation-originated complaints
+    if (payload.raisedByRole === "FEDERATION_ADMIN") {
+      targetRole = "SUPER_ADMIN";
+      targetName = "Platform Administration";
+      targetProfileId = undefined;
+
+      try {
+        const { data: callerProfile } = await (supabase.from("profiles") as any)
+          .select("id, role, full_name, email, phone")
+          .eq("id", payload.raisedBy)
+          .maybeSingle();
+
+        if (callerProfile) {
+          if (callerProfile.role !== "FEDERATION_ADMIN" && callerProfile.role !== "SUPER_ADMIN") {
+            throw new AppError("Complainant role must match authenticated profile role.", "FORBIDDEN", 403);
+          }
+          if (callerProfile.full_name) {
+            payload.raisedByName = callerProfile.full_name;
+          }
+          if (callerProfile.phone) {
+            payload.raisedByPhone = callerProfile.phone;
+          }
+
+          if (callerProfile.email) {
+            const { data: fed } = await (supabase.from("federations") as any)
+              .select("id, name")
+              .eq("contact_email", callerProfile.email)
+              .maybeSingle();
+
+            if (fed) {
+              if (payload.federationId && payload.federationId !== fed.id) {
+                throw new AppError("Cannot submit complaint for another federation.", "FORBIDDEN", 403);
+              }
+              federationId = fed.id;
+            }
+          }
+        }
+      } catch (err: any) {
+        if (err.statusCode === 403 || err.status === 403) throw err;
+      }
+    }
 
     // If linked to a booking, fetch rich booking details and authorized parties
     if (payload.bookingId) {
@@ -557,6 +609,7 @@ export class ComplaintService implements IComplaintService {
       subcategory: payload.subcategory,
       subject: payload.subject,
       description: payload.description,
+      additionalInfo: payload.additionalInfo,
       priority: finalPriority,
       suggestedPriority: triage.suggestedPriority,
       triageReason: triage.triageReason,
@@ -691,6 +744,7 @@ export class ComplaintService implements IComplaintService {
     searchQuery?: string;
     complainantRole?: "CUSTOMER" | "WORKER" | "FEDERATION_ADMIN";
     filterType?: "MY_COMPLAINTS" | "COMPLAINTS_FROM_CUSTOMERS";
+    includeEscalated?: boolean;
     dateFrom?: string;
     dateTo?: string;
     page?: number;
@@ -795,9 +849,15 @@ export class ComplaintService implements IComplaintService {
     }
     // SUPER_ADMIN has cross-federation access
 
-    // Complainant subsection filtering (Worker Complaints vs User Complaints)
+    // Complainant subsection filtering (Worker Complaints vs User Complaints vs Federation Complaints)
     if (options.complainantRole) {
-      scoped = scoped.filter((c) => c.raisedByRole === options.complainantRole);
+      if (options.includeEscalated && options.role === "SUPER_ADMIN") {
+        scoped = scoped.filter(
+          (c) => c.raisedByRole === options.complainantRole || c.status === "ESCALATED" || !!c.escalation?.isEscalated
+        );
+      } else {
+        scoped = scoped.filter((c) => c.raisedByRole === options.complainantRole);
+      }
     }
 
     // Criteria filtering
@@ -869,9 +929,18 @@ export class ComplaintService implements IComplaintService {
     }
 
     assertComplaintNotTerminated(currentCase);
-
     if (currentCase.status === newStatus) {
       return currentCase;
+    }
+
+    assertComplaintNotTerminated(currentCase);
+
+    if (currentCase.status === "ESCALATED" && actorRole === "FEDERATION_ADMIN") {
+      throw new AppError(
+        "This complaint has been escalated to Super Admin and cannot be modified by Federation Admin.",
+        "FORBIDDEN",
+        403
+      );
     }
 
     // Enforce worker response gate on final actions
@@ -1375,6 +1444,14 @@ export class ComplaintService implements IComplaintService {
     assertComplaintNotTerminated(currentCase);
     assertWorkerResponseGate(currentCase);
 
+    if (currentCase.status === "ESCALATED" && actorRole === "FEDERATION_ADMIN") {
+      throw new AppError(
+        "This complaint has been escalated to Super Admin and cannot be modified by Federation Admin.",
+        "FORBIDDEN",
+        403
+      );
+    }
+
     const now = new Date().toISOString();
     const timelineItem: GrievanceTimelineEvent = {
       id: `tl-${Date.now()}`,
@@ -1464,6 +1541,14 @@ export class ComplaintService implements IComplaintService {
     assertComplaintNotTerminated(currentCase);
     assertWorkerResponseGate(currentCase);
 
+    if (currentCase.status === "ESCALATED" && actorRole === "FEDERATION_ADMIN") {
+      throw new AppError(
+        "This complaint has been escalated to Super Admin and cannot be modified by Federation Admin.",
+        "FORBIDDEN",
+        403
+      );
+    }
+
     if (currentCase.status === "RESOLVED") {
       throw new AppError("Cannot reject an already resolved complaint.", "INVALID_STATE_TRANSITION", 400);
     }
@@ -1548,6 +1633,14 @@ export class ComplaintService implements IComplaintService {
     assertComplaintNotTerminated(currentCase);
     assertWorkerResponseGate(currentCase);
 
+    if (currentCase.status === "ESCALATED" && actorRole === "FEDERATION_ADMIN") {
+      throw new AppError(
+        "This complaint has been escalated to Super Admin and cannot be modified by Federation Admin.",
+        "FORBIDDEN",
+        403
+      );
+    }
+
     const now = new Date().toISOString();
     const oldStatus = currentCase.status;
 
@@ -1621,6 +1714,29 @@ export class ComplaintService implements IComplaintService {
     if (!currentCase) throw new AppError(`Case ${id} not found.`, "NOT_FOUND", 404);
 
     assertComplaintNotTerminated(currentCase);
+
+    if (actorRole === "FEDERATION_ADMIN") {
+      try {
+        const supabase = await this.getSupabaseClient();
+        const { data: callerProfile } = await (supabase.from("profiles") as any)
+          .select("email")
+          .eq("id", actorId)
+          .maybeSingle();
+
+        if (callerProfile?.email) {
+          const { data: fed } = await (supabase.from("federations") as any)
+            .select("id")
+            .eq("contact_email", callerProfile.email)
+            .maybeSingle();
+
+          if (fed && currentCase.federationId && currentCase.federationId !== fed.id) {
+            throw new AppError("Cannot escalate a complaint belonging to another federation.", "FORBIDDEN", 403);
+          }
+        }
+      } catch (err: any) {
+        if (err.statusCode === 403 || err.status === 403) throw err;
+      }
+    }
 
     const now = new Date().toISOString();
     const oldStatus = currentCase.status;
@@ -1699,6 +1815,7 @@ export class ComplaintService implements IComplaintService {
         subcategory: grievance.subcategory,
         subject: grievance.subject,
         description: grievance.description,
+        additionalInfo: grievance.additionalInfo,
         priority: grievance.priority,
         suggestedPriority: grievance.suggestedPriority,
         triageReason: grievance.triageReason,

@@ -57,6 +57,8 @@ export function ComplaintTable({
   isLoading,
 }: ComplaintTableProps) {
   const isUserSection = activeSection === "USER_COMPLAINTS";
+  const isWorkerSection = activeSection === "WORKER_COMPLAINTS";
+  const isMySection = activeSection === "MY_COMPLAINTS";
 
   const getStatusBadge = (status: GrievanceLifecycleStatus | string) => {
     switch (status) {
@@ -163,7 +165,9 @@ export function ComplaintTable({
             placeholder={
               isUserSection
                 ? "Search by Case ID, customer, worker, or subject..."
-                : "Search by Case ID, worker name/ID, or subject..."
+                : isWorkerSection
+                ? "Search by Case ID, worker name/ID, or subject..."
+                : "Search by Case ID, category, or problem subject..."
             }
             value={searchQuery}
             onChange={(e) => onSearchChange(e.target.value)}
@@ -222,10 +226,16 @@ export function ComplaintTable({
         <div className="text-center py-12 px-4 border border-dashed border-border rounded-xl bg-card space-y-2">
           <FolderOpen className="h-7 w-7 mx-auto text-muted-foreground" />
           <h4 className="text-sm font-semibold text-foreground">
-            {isUserSection ? "No User Grievances Found" : "No Worker Grievances Found"}
+            {isUserSection
+              ? "No User Grievances Found"
+              : isWorkerSection
+              ? "No Worker Grievances Found"
+              : "No Federation Complaints Found"}
           </h4>
           <p className="text-xs text-muted-foreground">
-            No grievance records match your current criteria in this section.
+            {isMySection
+              ? "Your federation has not raised any complaints matching current filters."
+              : "No grievance records match your current criteria in this section."}
           </p>
         </div>
       ) : (
@@ -244,11 +254,18 @@ export function ComplaintTable({
                       <TableHead className="font-semibold text-foreground">Subject & Category</TableHead>
                       <TableHead className="font-semibold text-foreground">Worker Response</TableHead>
                     </>
-                  ) : (
+                  ) : isWorkerSection ? (
                     <>
                       <TableHead className="font-semibold text-foreground">Worker (Complainant)</TableHead>
                       <TableHead className="font-semibold text-foreground">Subject & Category</TableHead>
                       <TableHead className="font-semibold text-foreground">Date Filed</TableHead>
+                    </>
+                  ) : (
+                    <>
+                      <TableHead className="font-semibold text-foreground">Category & Subject</TableHead>
+                      <TableHead className="font-semibold text-foreground">Problem Description</TableHead>
+                      <TableHead className="font-semibold text-foreground">Date Filed</TableHead>
+                      <TableHead className="font-semibold text-foreground">Last Updated</TableHead>
                     </>
                   )}
                   <TableHead className="font-semibold text-foreground">Status</TableHead>
@@ -322,7 +339,7 @@ export function ComplaintTable({
                             {getWorkerResponseBadge(c.workerResponseStatus)}
                           </TableCell>
                         </>
-                      ) : (
+                      ) : isWorkerSection ? (
                         <>
                           {/* Worker Complainant */}
                           <TableCell>
@@ -348,6 +365,34 @@ export function ComplaintTable({
                             {c.submittedDate}
                           </TableCell>
                         </>
+                      ) : (
+                        <>
+                          {/* Category & Subject */}
+                          <TableCell className="max-w-[200px]">
+                            <span className="font-bold text-foreground block truncate">{c.subject}</span>
+                            <span className="text-[10px] text-muted-foreground">{c.category}</span>
+                          </TableCell>
+
+                          {/* Description Preview */}
+                          <TableCell className="max-w-[240px]">
+                            <span className="text-xs text-muted-foreground line-clamp-1">{c.description}</span>
+                          </TableCell>
+
+                          {/* Date Filed */}
+                          <TableCell className="text-muted-foreground text-[11px] whitespace-nowrap">
+                            {c.submittedDate}
+                          </TableCell>
+
+                          {/* Last Updated */}
+                          <TableCell className="text-muted-foreground text-[11px] whitespace-nowrap">
+                            {c.grievanceCase?.updatedAt
+                              ? new Date(c.grievanceCase.updatedAt).toLocaleDateString("en-IN", {
+                                  day: "numeric",
+                                  month: "short",
+                                })
+                              : c.submittedDate}
+                          </TableCell>
+                        </>
                       )}
 
                       {/* Status */}
@@ -368,7 +413,7 @@ export function ComplaintTable({
                             Case File
                           </Button>
 
-                          {!isResolved && (
+                          {!isMySection && !isResolved && (
                             <Button
                               size="sm"
                               onClick={() => onResolve(c)}

@@ -241,6 +241,11 @@ export function FederationComplaintsList({
                     <span className="font-mono text-xs font-bold text-foreground bg-muted px-2 py-0.5 rounded">
                       {c.complaintNumber}
                     </span>
+                    {c.raisedByRole === "FEDERATION_ADMIN" && (
+                      <Badge className="bg-indigo-600/15 text-indigo-700 dark:text-indigo-300 border-indigo-500/30 text-[11px] font-bold">
+                        Federation Complaint
+                      </Badge>
+                    )}
                     <Badge variant="outline" className="text-[11px] font-medium flex items-center gap-1">
                       <Building2 className="h-3 w-3 text-indigo-600 dark:text-indigo-400" />
                       {c.federationName || "Regional Federation"}
@@ -250,8 +255,8 @@ export function FederationComplaintsList({
                     </Badge>
                     {getPriorityBadge(c.priority)}
                     {getStatusBadge(c.status)}
-                    {c.escalation?.isEscalated && (
-                      <Badge className="bg-purple-500/10 text-purple-700 dark:text-purple-300 border-purple-500/20 text-[10px]">
+                    {(c.status === "ESCALATED" || c.escalation?.isEscalated) && (
+                      <Badge className="bg-purple-500/10 text-purple-700 dark:text-purple-300 border-purple-500/20 text-[10px] font-semibold">
                         Escalated to Central
                       </Badge>
                     )}
@@ -268,7 +273,7 @@ export function FederationComplaintsList({
                     <div className="flex items-center gap-1">
                       <Shield className="h-3.5 w-3.5 text-indigo-500" />
                       <span>
-                        Complainant: <strong className="text-foreground">{c.raisedByName}</strong> (Federation Admin)
+                        Complainant: <strong className="text-foreground">{c.raisedByName}</strong> ({c.raisedByRole === "FEDERATION_ADMIN" ? "Federation Admin" : c.raisedByRole})
                       </span>
                     </div>
 

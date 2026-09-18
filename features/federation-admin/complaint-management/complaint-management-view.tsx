@@ -9,6 +9,7 @@ import { ComplaintManagementHeader } from "./components/complaint-management-hea
 import { ComplaintTable } from "./components/complaint-table";
 import { GrievanceDetailWorkspace } from "./components/grievance-detail-workspace";
 import { ResolveComplaintDialog } from "./components/resolve-complaint-dialog";
+import { RaiseFederationComplaintDialog } from "./components/raise-federation-complaint-dialog";
 import type { GrievanceCase } from "@/types/complaints/v2";
 
 export function ComplaintManagementView() {
@@ -18,6 +19,7 @@ export function ComplaintManagementView() {
     setActiveSection,
     userMetrics,
     workerMetrics,
+    myMetrics,
     isDevelopmentFallback,
     dataSourceNotice,
     searchQuery,
@@ -29,6 +31,10 @@ export function ComplaintManagementView() {
     isLoading,
     error,
     refresh,
+    currentAdminProfile,
+    isRaiseComplaintOpen,
+    setIsRaiseComplaintOpen,
+    handleRaiseComplaint,
     targetComplaintForResolve,
     setTargetComplaintForResolve,
     isSubmittingResolution,
@@ -120,7 +126,9 @@ export function ComplaintManagementView() {
         onSectionChange={setActiveSection}
         userMetrics={userMetrics}
         workerMetrics={workerMetrics}
+        myMetrics={myMetrics}
         onRefresh={refresh}
+        onRaiseComplaint={() => setIsRaiseComplaintOpen(true)}
         isLoading={isLoading}
         isDevelopmentFallback={isDevelopmentFallback}
         dataSourceNotice={dataSourceNotice}
@@ -146,7 +154,15 @@ export function ComplaintManagementView() {
       )}
 
       {/* Complaints Table Scoped to Subsection */}
-      <section aria-label={activeSection === "USER_COMPLAINTS" ? "User Complaints" : "Worker Complaints"}>
+      <section
+        aria-label={
+          activeSection === "USER_COMPLAINTS"
+            ? "User Complaints"
+            : activeSection === "WORKER_COMPLAINTS"
+            ? "Worker Complaints"
+            : "My Complaints"
+        }
+      >
         <ComplaintTable
           complaints={activeComplaints}
           activeSection={activeSection}
@@ -173,6 +189,8 @@ export function ComplaintManagementView() {
             handleOpenWorkspace(activeWorkspaceCase);
           }
         }}
+        currentUserId={currentAdminProfile.id}
+        currentUserName={currentAdminProfile.fullName}
       />
 
       {/* Resolve Confirmation Dialog */}
@@ -182,6 +200,15 @@ export function ComplaintManagementView() {
         onClose={() => setTargetComplaintForResolve(null)}
         onConfirm={(notes) => handleResolveComplaint(targetComplaintForResolve!.id, notes)}
         isSubmitting={isSubmittingResolution}
+      />
+
+      {/* Raise Federation Complaint Dialog */}
+      <RaiseFederationComplaintDialog
+        isOpen={isRaiseComplaintOpen}
+        onClose={() => setIsRaiseComplaintOpen(false)}
+        onSubmit={handleRaiseComplaint}
+        isSubmitting={isSubmittingResolution}
+        federationName={currentAdminProfile.federationName}
       />
     </div>
   );

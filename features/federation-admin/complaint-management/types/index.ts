@@ -3,7 +3,19 @@ import type { GrievanceCase, GrievanceLifecycleStatus, GrievancePriority } from 
 
 export type ComplaintStatusDisplay = "PENDING" | "RESOLVED" | "UNDER_REVIEW" | "ACTION_REQUIRED" | "ESCALATED" | "REJECTED" | "CLOSED";
 
-export type ComplaintSubsection = "USER_COMPLAINTS" | "WORKER_COMPLAINTS";
+export type ComplaintSubsection = "USER_COMPLAINTS" | "WORKER_COMPLAINTS" | "MY_COMPLAINTS";
+
+export const FEDERATION_COMPLAINT_CATEGORIES = [
+  "Platform issue",
+  "Federation administration issue",
+  "Workforce/platform issue",
+  "Payment/financial issue",
+  "Technical issue",
+  "Policy/operational issue",
+  "Other",
+] as const;
+
+export type FederationComplaintCategory = (typeof FEDERATION_COMPLAINT_CATEGORIES)[number];
 
 export interface SubsectionMetrics {
   total: number;
@@ -18,7 +30,7 @@ export interface FederationComplaintItem {
   id: string;
   complaintNumber: string;
   bookingId?: string;
-  complainantRole: "CUSTOMER" | "WORKER";
+  complainantRole: "CUSTOMER" | "WORKER" | "FEDERATION_ADMIN";
   customerName: string;
   customerPhone: string;
   workerId: string;
@@ -62,8 +74,10 @@ export interface ComplaintManagementData {
   complaints: FederationComplaintItem[];
   userComplaints: FederationComplaintItem[];
   workerComplaints: FederationComplaintItem[];
+  myComplaints: FederationComplaintItem[];
   userMetrics: SubsectionMetrics;
   workerMetrics: SubsectionMetrics;
+  myMetrics: SubsectionMetrics;
   totalCount: number;
   pendingCount: number;
   underReviewCount: number;

@@ -1,7 +1,7 @@
 "use client";
 
 import * as React from "react";
-import { Scale, RefreshCw, AlertCircle, Users, HardHat, Clock, CheckCircle2, XCircle, AlertTriangle } from "lucide-react";
+import { Scale, RefreshCw, AlertCircle, Users, HardHat, ShieldAlert, Plus, Clock, CheckCircle2, XCircle, AlertTriangle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import type { ComplaintSubsection, SubsectionMetrics } from "../types";
@@ -11,7 +11,9 @@ interface ComplaintManagementHeaderProps {
   onSectionChange: (section: ComplaintSubsection) => void;
   userMetrics: SubsectionMetrics;
   workerMetrics: SubsectionMetrics;
+  myMetrics: SubsectionMetrics;
   onRefresh: () => void;
+  onRaiseComplaint?: () => void;
   isLoading?: boolean;
   isDevelopmentFallback?: boolean;
   dataSourceNotice?: string;
@@ -22,12 +24,20 @@ export function ComplaintManagementHeader({
   onSectionChange,
   userMetrics,
   workerMetrics,
+  myMetrics,
   onRefresh,
+  onRaiseComplaint,
   isLoading,
   isDevelopmentFallback,
   dataSourceNotice,
 }: ComplaintManagementHeaderProps) {
-  const currentMetrics = activeSection === "USER_COMPLAINTS" ? userMetrics : workerMetrics;
+  const currentMetrics =
+    activeSection === "USER_COMPLAINTS"
+      ? userMetrics
+      : activeSection === "WORKER_COMPLAINTS"
+      ? workerMetrics
+      : myMetrics;
+
   const isUserSection = activeSection === "USER_COMPLAINTS";
 
   return (
@@ -62,11 +72,22 @@ export function ComplaintManagementHeader({
             Federation Grievance Center
           </h1>
           <p className="text-sm text-muted-foreground max-w-2xl">
-            Arbitrate customer grievances and worker complaints, review official statements, and execute fair conciliation decisions.
+            Arbitrate customer grievances and worker complaints, review official statements, and manage federation dispute escalations with Super Admin.
           </p>
         </div>
 
         <div className="flex items-center space-x-2.5 self-start md:self-auto">
+          {activeSection === "MY_COMPLAINTS" && onRaiseComplaint && (
+            <Button
+              size="sm"
+              onClick={onRaiseComplaint}
+              className="h-9 text-xs font-bold bg-rose-700 hover:bg-rose-800 text-white shadow-xs"
+            >
+              <Plus className="h-3.5 w-3.5 mr-1.5" />
+              Raise Complaint
+            </Button>
+          )}
+
           <Button
             variant="outline"
             size="sm"
@@ -80,13 +101,13 @@ export function ComplaintManagementHeader({
         </div>
       </div>
 
-      {/* Subsection Tabs */}
-      <div className="flex items-center space-x-3 pt-2">
+      {/* 3 Subsection Tabs */}
+      <div className="flex items-center space-x-3 pt-2 flex-wrap gap-y-2">
         <button
           type="button"
           onClick={() => onSectionChange("USER_COMPLAINTS")}
           className={`flex items-center space-x-2 px-4 py-2 rounded-xl text-xs font-bold transition-all border ${
-            isUserSection
+            activeSection === "USER_COMPLAINTS"
               ? "bg-emerald-50 dark:bg-emerald-950/50 border-emerald-500 text-emerald-900 dark:text-emerald-200 shadow-xs"
               : "bg-background border-border/80 text-muted-foreground hover:text-foreground hover:bg-muted/40"
           }`}
@@ -95,7 +116,7 @@ export function ComplaintManagementHeader({
           <span>User Complaints</span>
           <span
             className={`px-2 py-0.5 rounded-full text-[10px] font-extrabold ${
-              isUserSection
+              activeSection === "USER_COMPLAINTS"
                 ? "bg-emerald-600 text-white"
                 : "bg-muted text-muted-foreground"
             }`}
@@ -108,7 +129,7 @@ export function ComplaintManagementHeader({
           type="button"
           onClick={() => onSectionChange("WORKER_COMPLAINTS")}
           className={`flex items-center space-x-2 px-4 py-2 rounded-xl text-xs font-bold transition-all border ${
-            !isUserSection
+            activeSection === "WORKER_COMPLAINTS"
               ? "bg-blue-50 dark:bg-blue-950/50 border-blue-500 text-blue-900 dark:text-blue-200 shadow-xs"
               : "bg-background border-border/80 text-muted-foreground hover:text-foreground hover:bg-muted/40"
           }`}
@@ -117,12 +138,34 @@ export function ComplaintManagementHeader({
           <span>Worker Complaints</span>
           <span
             className={`px-2 py-0.5 rounded-full text-[10px] font-extrabold ${
-              !isUserSection
+              activeSection === "WORKER_COMPLAINTS"
                 ? "bg-blue-600 text-white"
                 : "bg-muted text-muted-foreground"
             }`}
           >
             {workerMetrics.total}
+          </span>
+        </button>
+
+        <button
+          type="button"
+          onClick={() => onSectionChange("MY_COMPLAINTS")}
+          className={`flex items-center space-x-2 px-4 py-2 rounded-xl text-xs font-bold transition-all border ${
+            activeSection === "MY_COMPLAINTS"
+              ? "bg-rose-50 dark:bg-rose-950/50 border-rose-500 text-rose-900 dark:text-rose-200 shadow-xs"
+              : "bg-background border-border/80 text-muted-foreground hover:text-foreground hover:bg-muted/40"
+          }`}
+        >
+          <ShieldAlert className="h-4 w-4 text-rose-600 dark:text-rose-400" />
+          <span>My Complaints</span>
+          <span
+            className={`px-2 py-0.5 rounded-full text-[10px] font-extrabold ${
+              activeSection === "MY_COMPLAINTS"
+                ? "bg-rose-600 text-white"
+                : "bg-muted text-muted-foreground"
+            }`}
+          >
+            {myMetrics.total}
           </span>
         </button>
       </div>

@@ -66,12 +66,12 @@ export class ComplaintManagementService {
             id: c.id,
             complaintNumber: c.complaintNumber,
             bookingId: c.bookingId || undefined,
-            complainantRole: (c.raisedByRole || "CUSTOMER") as "CUSTOMER" | "WORKER",
+            complainantRole: (c.raisedByRole || "CUSTOMER") as "CUSTOMER" | "WORKER" | "FEDERATION_ADMIN",
             customerName: c.raisedByName,
             customerPhone: c.raisedByPhone || "+91 98000 00000",
             workerId: c.targetWorkerId || c.targetProfileId || "WRK-AHM-0101",
-            workerName: c.targetName || "Federation Craftsman",
-            workerProfession: c.category.includes("Plumb") ? "Plumber" : "Skilled Craftsman",
+            workerName: c.targetName || (c.raisedByRole === "FEDERATION_ADMIN" ? "Platform Administration" : "Federation Craftsman"),
+            workerProfession: c.raisedByRole === "FEDERATION_ADMIN" ? "Super Administrator" : c.category.includes("Plumb") ? "Plumber" : "Skilled Craftsman",
             workerResponseStatus,
             workerStatement: workerResponseSubmission?.message,
             workerEvidenceUrls: workerResponseSubmission?.evidenceUrls,
@@ -137,12 +137,15 @@ export class ComplaintManagementService {
 
     const userComplaints = filtered.filter((c) => c.complainantRole === "CUSTOMER");
     const workerComplaints = filtered.filter((c) => c.complainantRole === "WORKER");
+    const myComplaints = filtered.filter((c) => c.complainantRole === "FEDERATION_ADMIN");
 
     const allUserComplaints = complaintsList.filter((c) => c.complainantRole === "CUSTOMER");
     const allWorkerComplaints = complaintsList.filter((c) => c.complainantRole === "WORKER");
+    const allMyComplaints = complaintsList.filter((c) => c.complainantRole === "FEDERATION_ADMIN");
 
     const userMetrics = computeMetrics(allUserComplaints);
     const workerMetrics = computeMetrics(allWorkerComplaints);
+    const myMetrics = computeMetrics(allMyComplaints);
 
     const totalCount = complaintsList.length;
     const pendingCount = complaintsList.filter((c) => c.lifecycleStatus === "OPEN").length;
@@ -156,8 +159,10 @@ export class ComplaintManagementService {
       complaints: filtered,
       userComplaints,
       workerComplaints,
+      myComplaints,
       userMetrics,
       workerMetrics,
+      myMetrics,
       totalCount,
       pendingCount,
       underReviewCount,
@@ -175,10 +180,13 @@ export class ComplaintManagementService {
    */
   getComplaintsForSubsection(
     items: FederationComplaintItem[],
-    section: "WORKER_COMPLAINTS" | "USER_COMPLAINTS"
+    section: "WORKER_COMPLAINTS" | "USER_COMPLAINTS" | "MY_COMPLAINTS"
   ): FederationComplaintItem[] {
     if (section === "WORKER_COMPLAINTS") {
       return items.filter((c) => c.complainantRole === "WORKER");
+    }
+    if (section === "MY_COMPLAINTS") {
+      return items.filter((c) => c.complainantRole === "FEDERATION_ADMIN");
     }
     return items.filter((c) => c.complainantRole === "CUSTOMER");
   }

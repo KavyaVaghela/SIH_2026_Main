@@ -98,6 +98,8 @@ export function GrievanceDetailWorkspace({
     grievance.raisedByRole === "CUSTOMER" &&
     (grievance.targetRole === "WORKER" || !!grievance.targetProfileId || !!grievance.targetWorkerId);
 
+  const isFederationOriginated = grievance.raisedByRole === "FEDERATION_ADMIN";
+  const isEscalated = grievance.status === "ESCALATED";
   const isWorkerResponseSubmitted = !!grievance.responseRequests?.workerSubmitted;
   const isWorkerGateBlocking = isCustomerVsWorker && !isWorkerResponseSubmitted;
   const isTerminal = grievance.status === "REJECTED" || grievance.status === "CLOSED";
@@ -414,8 +416,15 @@ export function GrievanceDetailWorkspace({
               </p>
             </div>
 
-            {/* Quick Action Toolbar (hidden if terminal) */}
-            {!isTerminal ? (
+            {/* Quick Action Toolbar (hidden if terminal or escalated) */}
+            {isEscalated ? (
+              <div className="flex items-center gap-2">
+                <Badge className="bg-red-100 dark:bg-red-950 text-red-800 dark:text-red-300 font-mono text-xs px-3 py-1.5 flex items-center gap-1.5 border border-red-300 dark:border-red-800 animate-pulse">
+                  <AlertTriangle className="w-3.5 h-3.5 text-red-600 dark:text-red-400" />
+                  ESCALATED TO SUPER ADMIN (UNDER CENTRAL REVIEW)
+                </Badge>
+              </div>
+            ) : !isTerminal ? (
               <div className="flex flex-wrap items-center gap-2">
                 <Button
                   size="sm"
@@ -536,16 +545,31 @@ export function GrievanceDetailWorkspace({
 
           {activeTab === "overview" && (
             <div className="space-y-6">
+              {/* Escalated to Super Admin Notice Banner */}
+              {isEscalated && (
+                <div className="p-4 rounded-xl bg-red-50 dark:bg-red-950/40 border border-red-300 dark:border-red-800 flex items-start gap-3 text-xs text-red-900 dark:text-red-200 shadow-sm">
+                  <AlertTriangle className="w-5 h-5 text-red-600 dark:text-red-400 shrink-0 mt-0.5" />
+                  <div className="space-y-1">
+                    <h4 className="font-bold text-sm text-red-900 dark:text-red-100">
+                      Case Escalated to Super Admin — Central Investigation Active
+                    </h4>
+                    <p className="leading-relaxed">
+                      This complaint has been formally escalated to Super Admin and cannot be modified by Federation Admin. Resolution, rejection, status transitions, and priority adjustments can only be performed by the central platform administrator. Full audit history is preserved.
+                    </p>
+                  </div>
+                </div>
+              )}
+
               {/* Section 2 & 3: Parties Grid (Customer Complainant & Worker Subject) */}
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                {/* Section 2: Customer (Complainant) */}
+                {/* Section 2: Complainant */}
                 <div className="p-4 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-900/50 space-y-2">
                   <div className="flex items-center justify-between">
                     <span className="text-[11px] font-bold text-slate-400 uppercase tracking-wider block">
                       2. Complainant
                     </span>
                     <Badge variant="outline" className="text-[10px] font-semibold bg-emerald-50 text-emerald-800 border-emerald-300">
-                      Role: {grievance.raisedByRole}
+                      Role: {grievance.raisedByRole === "FEDERATION_ADMIN" ? "Federation Admin" : grievance.raisedByRole}
                     </Badge>
                   </div>
                   <div className="flex items-center gap-2.5">
@@ -557,35 +581,50 @@ export function GrievanceDetailWorkspace({
                       {grievance.raisedByPhone && (
                         <p className="text-xs text-slate-500 font-mono">{grievance.raisedByPhone}</p>
                       )}
+                      {isFederationOriginated && (
+                        <p className="text-[11px] text-slate-500 font-medium">
+                          Federation: {grievance.federationName || "Current Cooperative Federation"}
+                        </p>
+                      )}
                     </div>
                   </div>
                 </div>
 
-                {/* Section 3: Worker (Subject of Complaint) */}
+                {/* Section 3: Subject / Target */}
                 <div className="p-4 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-900/50 space-y-2">
                   <div className="flex items-center justify-between">
                     <span className="text-[11px] font-bold text-slate-400 uppercase tracking-wider block">
-                      3. Subject of Complaint (Worker)
+                      3. {isFederationOriginated ? "Recipient (Platform Authority)" : "Subject of Complaint (Worker)"}
                     </span>
                     <Badge variant="outline" className="text-[10px] font-semibold bg-blue-50 text-blue-800 border-blue-300">
-                      Role: {grievance.targetRole || "WORKER"}
+                      Role: {isFederationOriginated ? "SUPER_ADMIN" : (grievance.targetRole || "WORKER")}
                     </Badge>
                   </div>
                   <div className="flex items-center gap-2.5">
                     <div className="w-8 h-8 rounded-full bg-blue-100 text-blue-800 flex items-center justify-center font-bold text-xs">
-                      {(grievance.targetName || "W").charAt(0)}
+                      {(isFederationOriginated ? "S" : (grievance.targetName || "W")).charAt(0)}
                     </div>
                     <div>
                       <h4 className="font-bold text-sm text-slate-900 dark:text-slate-100">
-                        {grievance.targetName || "Assigned Worker"}
+                        {isFederationOriginated
+                          ? "Super Admin / Central Platform Authority"
+                          : (grievance.targetName || "Assigned Worker")}
                       </h4>
-                      <p className="text-xs text-slate-500 font-mono">
-                        ID: {grievance.targetWorkerId || grievance.targetProfileId || "N/A"}
-                        {grievance.category && ` • Trade: ${grievance.category}`}
-                      </p>
-                      <p className="text-[11px] text-slate-400 font-medium">
-                        Federation: {grievance.federationName || "State Cooperative Federation"}
-                      </p>
+                      {!isFederationOriginated ? (
+                        <>
+                          <p className="text-xs text-slate-500 font-mono">
+                            ID: {grievance.targetWorkerId || grievance.targetProfileId || "N/A"}
+                            {grievance.category && ` • Trade: ${grievance.category}`}
+                          </p>
+                          <p className="text-[11px] text-slate-400 font-medium">
+                            Federation: {grievance.federationName || "State Cooperative Federation"}
+                          </p>
+                        </>
+                      ) : (
+                        <p className="text-xs text-slate-500 font-medium">
+                          Platform Administration & Compliance Directorate
+                        </p>
+                      )}
                     </div>
                   </div>
                 </div>
@@ -773,6 +812,10 @@ export function GrievanceDetailWorkspace({
                       Request Worker Response
                     </Button>
                   </div>
+                ) : isFederationOriginated ? (
+                  <p className="text-xs text-muted-foreground italic">
+                    Not applicable. This complaint was submitted by Federation Admin directly to Super Admin.
+                  </p>
                 ) : (
                   <p className="text-xs text-muted-foreground italic">
                     This complaint is not against a worker. Worker response gate does not apply.
@@ -786,7 +829,15 @@ export function GrievanceDetailWorkspace({
                   <span className="text-xs font-bold uppercase tracking-wider text-slate-500">
                     7. Federation Decision & Conciliation
                   </span>
-                  {isTerminal ? (
+                  {isEscalated ? (
+                    <Badge variant="outline" className="text-xs font-bold border-red-300 text-red-800 dark:text-red-300 bg-red-50">
+                      Escalated to Super Admin
+                    </Badge>
+                  ) : isFederationOriginated ? (
+                    <Badge variant="outline" className="text-xs font-bold border-indigo-300 text-indigo-800 dark:text-indigo-300 bg-indigo-50">
+                      Awaiting Central Action
+                    </Badge>
+                  ) : isTerminal ? (
                     <Badge variant="outline" className="text-xs font-bold border-rose-400 text-rose-800 dark:text-rose-300 bg-rose-50 dark:bg-rose-950/40">
                       Case Terminated
                     </Badge>
@@ -801,7 +852,31 @@ export function GrievanceDetailWorkspace({
                   )}
                 </div>
 
-                {isTerminal ? (
+                {isEscalated ? (
+                  <div className="p-4 rounded-xl bg-red-50 dark:bg-red-950/40 border border-red-300 dark:border-red-800 space-y-2">
+                    <div className="flex items-center gap-2">
+                      <AlertTriangle className="w-4 h-4 text-red-600 dark:text-red-400" />
+                      <h4 className="font-bold text-sm text-red-900 dark:text-red-100">
+                        Dispute Escalated to Super Admin
+                      </h4>
+                    </div>
+                    <p className="text-xs text-red-800 dark:text-red-300 leading-relaxed">
+                      This complaint has been escalated to Super Admin and cannot be modified by Federation Admin. Resolution, rejection, or closure can only be performed by the central Super Admin authority.
+                    </p>
+                  </div>
+                ) : isFederationOriginated ? (
+                  <div className="p-4 rounded-xl bg-indigo-50 dark:bg-indigo-950/40 border border-indigo-200 dark:border-indigo-800 space-y-2">
+                    <div className="flex items-center gap-2">
+                      <ShieldAlert className="w-4 h-4 text-indigo-600 dark:text-indigo-400" />
+                      <h4 className="font-bold text-sm text-indigo-900 dark:text-indigo-100">
+                        Under Super Admin Determination
+                      </h4>
+                    </div>
+                    <p className="text-xs text-indigo-800 dark:text-indigo-300 leading-relaxed">
+                      This complaint was raised by your federation directly to Super Admin. Final conciliation, policy remedies, and closure will be recorded centrally by Super Admin.
+                    </p>
+                  </div>
+                ) : isTerminal ? (
                   <div className="p-4 rounded-xl bg-slate-100 dark:bg-slate-800/80 border border-slate-300 dark:border-slate-700 space-y-2">
                     <div className="flex items-center gap-2">
                       <Lock className="w-4 h-4 text-slate-600 dark:text-slate-400" />
@@ -888,25 +963,27 @@ export function GrievanceDetailWorkspace({
 
           {activeTab === "timeline" && (
             <div className="space-y-6">
-              {/* Timeline Action Bar (hidden if terminal) */}
-              {!isTerminal && (
+              {/* Timeline Action Bar (hidden if terminal or escalated) */}
+              {!isTerminal && !isEscalated && (
                 <div className="flex flex-wrap items-center justify-between gap-3 p-3 rounded-xl bg-slate-50 dark:bg-slate-800/40 border border-slate-200 dark:border-slate-700">
                   <span className="text-xs font-bold text-slate-600 dark:text-slate-400">
                     Communications & Updates ({grievance.timeline?.length || 0} items)
                   </span>
                   <div className="flex items-center gap-2">
-                    <Button
-                      size="sm"
-                      variant="outline"
-                      onClick={() => {
-                        setNoteType("INTERNAL_NOTE");
-                        setIsNoteOpen(true);
-                      }}
-                      className="text-xs gap-1.5 border-amber-300 text-amber-800 dark:text-amber-300 hover:bg-amber-50"
-                    >
-                      <Lock className="w-3 h-3 text-amber-600" />
-                      Add Internal Note
-                    </Button>
+                    {!isFederationOriginated && (
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        onClick={() => {
+                          setNoteType("INTERNAL_NOTE");
+                          setIsNoteOpen(true);
+                        }}
+                        className="text-xs gap-1.5 border-amber-300 text-amber-800 dark:text-amber-300 hover:bg-amber-50"
+                      >
+                        <Lock className="w-3 h-3 text-amber-600" />
+                        Add Internal Note
+                      </Button>
+                    )}
                     <Button
                       size="sm"
                       variant="outline"
@@ -917,16 +994,18 @@ export function GrievanceDetailWorkspace({
                       className="text-xs gap-1.5"
                     >
                       <Send className="w-3 h-3 text-emerald-600" />
-                      Add Public Update
+                      {isFederationOriginated ? "Add Information Update" : "Add Public Update"}
                     </Button>
-                    <Button
-                      size="sm"
-                      onClick={() => setIsRequestResponseOpen(true)}
-                      className="text-xs gap-1.5 bg-purple-700 hover:bg-purple-800 text-white font-bold"
-                    >
-                      <MessageSquare className="w-3 h-3" />
-                      Request Party Response
-                    </Button>
+                    {!isFederationOriginated && (
+                      <Button
+                        size="sm"
+                        onClick={() => setIsRequestResponseOpen(true)}
+                        className="text-xs gap-1.5 bg-purple-700 hover:bg-purple-800 text-white font-bold"
+                      >
+                        <MessageSquare className="w-3 h-3" />
+                        Request Party Response
+                      </Button>
+                    )}
                   </div>
                 </div>
               )}

@@ -30,7 +30,7 @@ export function ComplaintsDashboard() {
   const fetchFederationComplaints = React.useCallback(async () => {
     setIsLoadingComplaints(true);
     try {
-      const res = await fetch("/api/complaints?role=SUPER_ADMIN&complainantRole=FEDERATION_ADMIN");
+      const res = await fetch("/api/complaints?role=SUPER_ADMIN&complainantRole=FEDERATION_ADMIN&includeEscalated=true");
       if (res.ok) {
         const json = await res.json();
         if (Array.isArray(json.complaints)) {

@@ -18,6 +18,8 @@ export async function GET(request: NextRequest) {
     const priority = searchParams.get("priority") || undefined;
     const isEscalatedParam = searchParams.get("isEscalated");
     const isEscalated = isEscalatedParam !== null ? isEscalatedParam === "true" : undefined;
+    const includeEscalatedParam = searchParams.get("includeEscalated");
+    const includeEscalated = includeEscalatedParam !== null ? includeEscalatedParam === "true" : undefined;
     const searchQuery = searchParams.get("search") || undefined;
     const complainantRole = (searchParams.get("complainantRole") || undefined) as "CUSTOMER" | "WORKER" | "FEDERATION_ADMIN" | undefined;
     const filterType = (searchParams.get("filterType") || undefined) as "MY_COMPLAINTS" | "COMPLAINTS_FROM_CUSTOMERS" | undefined;
@@ -34,6 +36,7 @@ export async function GET(request: NextRequest) {
       category,
       priority,
       isEscalated,
+      includeEscalated,
       searchQuery,
       complainantRole,
       filterType,

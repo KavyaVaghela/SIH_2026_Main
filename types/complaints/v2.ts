@@ -112,6 +112,7 @@ export interface GrievanceCase {
   subcategory?: string;
   subject: string;
   description: string;
+  additionalInfo?: string;
   priority: GrievancePriority;
   suggestedPriority: GrievancePriority;
   triageReason?: string;
@@ -163,6 +164,7 @@ export interface CreateGrievancePayload {
   subject: string;
   description: string;
   desiredOutcome?: string;
+  additionalInfo?: string;
   priority?: GrievancePriority;
   evidenceUrls?: string[];
 }
