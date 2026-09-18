@@ -1,11 +1,55 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import Link from "next/link";
-import { Building2, Menu, X, ArrowRight } from "lucide-react";
+import { Building2, Menu, X, ArrowRight, ChevronDown, HelpCircle } from "lucide-react";
+import { LandingFaqAccordion } from "./landing-faq";
 
 export function LandingNavbar() {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const [isFaqOpen, setIsFaqOpen] = useState(false);
+  const [isMobileFaqOpen, setIsMobileFaqOpen] = useState(false);
+  const faqDropdownRef = useRef<HTMLDivElement>(null);
+
+  // Close desktop FAQ dropdown on click outside or Escape key
+  useEffect(() => {
+    function handleClickOutside(event: MouseEvent) {
+      if (
+        faqDropdownRef.current &&
+        !faqDropdownRef.current.contains(event.target as Node)
+      ) {
+        setIsFaqOpen(false);
+      }
+    }
+
+    function handleKeyDown(event: KeyboardEvent) {
+      if (event.key === "Escape") {
+        setIsFaqOpen(false);
+      }
+    }
+
+    if (isFaqOpen) {
+      document.addEventListener("mousedown", handleClickOutside);
+      document.addEventListener("keydown", handleKeyDown);
+    }
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+      document.removeEventListener("keydown", handleKeyDown);
+    };
+  }, [isFaqOpen]);
+
+  // Support #faq hash to smoothly scroll to top and open the FAQ dropdown
+  useEffect(() => {
+    function checkHash() {
+      if (typeof window !== "undefined" && window.location.hash === "#faq") {
+        setIsFaqOpen(true);
+        window.scrollTo({ top: 0, behavior: "smooth" });
+      }
+    }
+    checkHash();
+    window.addEventListener("hashchange", checkHash);
+    return () => window.removeEventListener("hashchange", checkHash);
+  }, []);
 
   return (
     <header className="sticky top-0 z-50 w-full border-b border-[#e6f0ea] bg-white/95 backdrop-blur-sm">
@@ -33,7 +77,7 @@ export function LandingNavbar() {
 
           {/* Desktop Navigation Links */}
           <nav
-            className="hidden lg:flex items-center space-x-7"
+            className="hidden lg:flex items-center space-x-6 xl:space-x-7"
             aria-label="Primary Landing Navigation"
           >
             <Link
@@ -71,13 +115,58 @@ export function LandingNavbar() {
             >
               Worker Welfare
             </Link>
-            <Link
-              href="/#faq"
-              id="landing-nav-faq"
-              className="text-sm font-semibold text-[#374151] hover:text-[#135e38] transition-colors"
-            >
-              FAQ
-            </Link>
+
+            {/* Desktop FAQ Dropdown Trigger & Panel */}
+            <div className="relative" ref={faqDropdownRef}>
+              <button
+                type="button"
+                id="landing-nav-faq-btn"
+                onClick={() => setIsFaqOpen((prev) => !prev)}
+                aria-expanded={isFaqOpen}
+                aria-haspopup="true"
+                className={`inline-flex items-center gap-1 text-sm font-semibold py-1.5 px-2.5 rounded-lg transition-colors cursor-pointer ${
+                  isFaqOpen
+                    ? "text-[#135e38] bg-[#eaf5ee]"
+                    : "text-[#374151] hover:text-[#135e38]"
+                }`}
+              >
+                <span>FAQ</span>
+                <ChevronDown
+                  className={`w-3.5 h-3.5 transition-transform duration-200 ${
+                    isFaqOpen ? "rotate-180 text-[#135e38]" : ""
+                  }`}
+                />
+              </button>
+
+              {/* FAQ Desktop Dropdown Panel */}
+              {isFaqOpen && (
+                <div
+                  className="absolute top-full right-0 mt-2 w-[520px] max-w-[90vw] bg-white rounded-2xl border border-[#8ed5a5]/70 shadow-2xl p-4 z-50 animate-in fade-in zoom-in-95 duration-150"
+                  role="region"
+                  aria-label="FAQ Dropdown"
+                >
+                  {/* Dropdown Header */}
+                  <div className="flex items-center justify-between pb-2.5 border-b border-[#e6f0ea] mb-2 px-1">
+                    <div className="flex items-center gap-2">
+                      <div className="w-6 h-6 rounded-md bg-[#eaf5ee] text-[#135e38] flex items-center justify-center">
+                        <HelpCircle className="w-3.5 h-3.5 text-[#135e38]" />
+                      </div>
+                      <h3 className="font-bold text-sm text-[#111827]">
+                        Frequently Asked Questions
+                      </h3>
+                    </div>
+                    <span className="text-[11px] font-bold text-[#135e38] bg-[#eaf5ee] px-2 py-0.5 rounded-full border border-[#8ed5a5]/40">
+                      9 Topics
+                    </span>
+                  </div>
+
+                  {/* Dropdown Accordion Content */}
+                  <div className="max-h-[60vh] overflow-y-auto pr-1">
+                    <LandingFaqAccordion compact />
+                  </div>
+                </div>
+              )}
+            </div>
           </nav>
 
           {/* Desktop Actions: Sign In & Get Started (Pill) */}
@@ -115,8 +204,8 @@ export function LandingNavbar() {
 
       {/* Mobile Dropdown Menu */}
       {isMobileMenuOpen && (
-        <div className="lg:hidden border-t border-[#e6f0ea] bg-white px-4 pt-3 pb-6 space-y-3 shadow-lg">
-          <nav className="flex flex-col space-y-2 pb-3 border-b border-[#e6f0ea]">
+        <div className="lg:hidden border-t border-[#e6f0ea] bg-white px-4 pt-3 pb-6 space-y-3 shadow-lg max-h-[85vh] overflow-y-auto">
+          <nav className="flex flex-col space-y-1.5 pb-3 border-b border-[#e6f0ea]">
             <Link
               href="/#home"
               onClick={() => setIsMobileMenuOpen(false)}
@@ -152,14 +241,35 @@ export function LandingNavbar() {
             >
               Worker Welfare
             </Link>
-            <Link
-              href="/#faq"
-              onClick={() => setIsMobileMenuOpen(false)}
-              className="px-3 py-2 rounded-md text-sm font-semibold text-[#374151] hover:bg-[#eaf5ee] hover:text-[#135e38]"
-            >
-              FAQ
-            </Link>
+
+            {/* Mobile FAQ Accordion Group */}
+            <div className="pt-1">
+              <button
+                type="button"
+                id="landing-mobile-faq-toggle"
+                onClick={() => setIsMobileFaqOpen(!isMobileFaqOpen)}
+                aria-expanded={isMobileFaqOpen}
+                className="w-full flex items-center justify-between px-3 py-2 rounded-md text-sm font-semibold text-[#374151] hover:bg-[#eaf5ee] hover:text-[#135e38] transition-colors cursor-pointer"
+              >
+                <span className="flex items-center gap-2">
+                  <HelpCircle className="w-4 h-4 text-[#135e38]" />
+                  <span>Frequently Asked Questions</span>
+                </span>
+                <ChevronDown
+                  className={`w-4 h-4 text-[#135e38] transition-transform duration-200 ${
+                    isMobileFaqOpen ? "rotate-180" : ""
+                  }`}
+                />
+              </button>
+
+              {isMobileFaqOpen && (
+                <div className="mt-1.5 p-2 bg-[#f7faf8] rounded-xl border border-[#e6f0ea] max-h-[50vh] overflow-y-auto">
+                  <LandingFaqAccordion compact onSelectQuestion={() => {}} />
+                </div>
+              )}
+            </div>
           </nav>
+
           <div className="flex flex-col space-y-2 pt-2">
             <Link
               href="/login"
