@@ -41,7 +41,7 @@ export interface EligibleWorker {
   bookingIds: string[];
 }
 
-export default function NewCustomerComplaintPage() {
+function CustomerComplaintForm() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const prefillBookingId = searchParams.get("bookingId");
@@ -744,5 +744,13 @@ export default function NewCustomerComplaintPage() {
         </div>
       </form>
     </div>
+  );
+}
+
+export default function NewCustomerComplaintPage() {
+  return (
+    <React.Suspense fallback={<div className="max-w-3xl mx-auto p-6 text-xs text-slate-400">Loading complaint registration form...</div>}>
+      <CustomerComplaintForm />
+    </React.Suspense>
   );
 }
