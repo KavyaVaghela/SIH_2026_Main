@@ -20,6 +20,7 @@ export async function GET(request: NextRequest) {
     const isEscalated = isEscalatedParam !== null ? isEscalatedParam === "true" : undefined;
     const searchQuery = searchParams.get("search") || undefined;
     const complainantRole = (searchParams.get("complainantRole") || undefined) as "CUSTOMER" | "WORKER" | undefined;
+    const filterType = (searchParams.get("filterType") || undefined) as "MY_COMPLAINTS" | "COMPLAINTS_FROM_CUSTOMERS" | undefined;
     const page = parseInt(searchParams.get("page") || "1", 10);
     const pageSize = parseInt(searchParams.get("pageSize") || "50", 10);
 
@@ -33,6 +34,7 @@ export async function GET(request: NextRequest) {
       isEscalated,
       searchQuery,
       complainantRole,
+      filterType,
       page,
       pageSize,
     });
@@ -45,10 +47,10 @@ export async function GET(request: NextRequest) {
       pageSize,
     });
   } catch (err: unknown) {
-    const errorObj = err as { message?: string; status?: number };
+    const errorObj = err as { message?: string; status?: number; statusCode?: number };
     return NextResponse.json(
       { success: false, error: errorObj.message || "Failed to list complaints" },
-      { status: errorObj.status || 500 }
+      { status: errorObj.statusCode || errorObj.status || 500 }
     );
   }
 }
@@ -190,10 +192,10 @@ export async function POST(request: NextRequest) {
       }
     }
 
-    const errorObj = err as { message?: string; status?: number };
+    const errorObj = err as { message?: string; status?: number; statusCode?: number };
     return NextResponse.json(
       { success: false, error: errorObj.message || "Failed to create complaint" },
-      { status: errorObj.status || 500 }
+      { status: errorObj.statusCode || errorObj.status || 500 }
     );
   }
 }

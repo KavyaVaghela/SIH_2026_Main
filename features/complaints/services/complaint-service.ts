@@ -375,54 +375,91 @@ export class ComplaintService implements IComplaintService {
     let federationId = payload.federationId || "b765df3b-c418-4a15-b79f-3cbc09e475dc";
     let bookingContext: GrievanceBookingContext | null = null;
     let targetProfileId = payload.targetProfileId;
+    let targetRole = payload.targetRole || (payload.raisedByRole === "WORKER" ? "CUSTOMER" : "WORKER");
+    let targetName = payload.targetName;
 
     // If linked to a booking, fetch rich booking details and authorized parties
-    if (payload.bookingId && !payload.bookingId.startsWith("bk-mock")) {
-      try {
-        const { data: bData } = await (supabase.from("bookings") as any)
-          .select(`
-            id,
-            booking_number,
-            status,
-            total_amount,
-            scheduled_start_at,
-            federation_id,
-            worker_id,
-            customer_id,
-            services (title),
-            workers (id, profile_id, profiles:profile_id (full_name, phone)),
-            profiles!bookings_customer_id_fkey (full_name, phone),
-            payments (status)
-          `)
-          .eq("id", payload.bookingId)
-          .maybeSingle();
+    if (payload.bookingId) {
+      if (!payload.bookingId.startsWith("bk-mock")) {
+        try {
+          const { data: bData } = await (supabase.from("bookings") as any)
+            .select(`
+              id,
+              booking_number,
+              status,
+              total_amount,
+              scheduled_start_at,
+              federation_id,
+              worker_id,
+              customer_id,
+              services (title),
+              workers (id, profile_id, profiles:profile_id (full_name, phone)),
+              profiles!bookings_customer_id_fkey (full_name, phone),
+              payments (status)
+            `)
+            .eq("id", payload.bookingId)
+            .maybeSingle();
 
-        if (bData) {
-          federationId = bData.federation_id || federationId;
-          const workerProf = bData.workers?.profiles || {};
-          const custProf = bData.profiles || {};
+          if (payload.raisedByRole === "WORKER") {
+            if (!bData) {
+              throw new AppError("Selected booking does not belong to the authenticated worker.", "FORBIDDEN", 403);
+            }
+            const workerMatches =
+              (bData.worker_id && bData.worker_id === payload.raisedBy) ||
+              (bData.workers?.id && bData.workers.id === payload.raisedBy) ||
+              (bData.workers?.profile_id && bData.workers.profile_id === payload.raisedBy);
 
-          if (!targetProfileId && payload.raisedBy === bData.customer_id) {
-            targetProfileId = bData.workers?.profile_id || undefined;
+            if (!workerMatches) {
+              throw new AppError("Selected booking does not belong to the authenticated worker.", "FORBIDDEN", 403);
+            }
           }
 
-          bookingContext = {
-            bookingId: bData.id,
-            bookingNumber: bData.booking_number,
-            serviceTitle: bData.services?.title,
-            scheduledStartAt: bData.scheduled_start_at,
-            bookingStatus: bData.status,
-            systemEstimate: bData.total_amount ? Number(bData.total_amount) : undefined,
-            workerEstimate: bData.total_amount ? Number(bData.total_amount) : undefined,
-            finalBill: bData.total_amount ? Number(bData.total_amount) : undefined,
-            paymentStatus: bData.payments?.[0]?.status || "PENDING",
-            customerName: custProf.full_name,
-            workerName: workerProf.full_name,
-          };
+          if (bData) {
+            federationId = bData.federation_id || federationId;
+            const workerProf = bData.workers?.profiles || {};
+            const custProf = bData.profiles || {};
+
+            if (payload.raisedByRole === "WORKER") {
+              targetProfileId = bData.customer_id || targetProfileId;
+              targetRole = "CUSTOMER";
+              targetName = custProf.full_name || targetName || "Customer";
+              if (!payload.category || payload.category === "General") {
+                payload.category = bData.services?.title || "Service Job Issue";
+              }
+            } else if (!targetProfileId && payload.raisedBy === bData.customer_id) {
+              targetProfileId = bData.workers?.profile_id || undefined;
+              targetRole = "WORKER";
+              targetName = workerProf.full_name || targetName || "Worker";
+            }
+
+            bookingContext = {
+              bookingId: bData.id,
+              bookingNumber: bData.booking_number,
+              serviceTitle: bData.services?.title,
+              scheduledStartAt: bData.scheduled_start_at,
+              bookingStatus: bData.status,
+              systemEstimate: bData.total_amount ? Number(bData.total_amount) : undefined,
+              workerEstimate: bData.total_amount ? Number(bData.total_amount) : undefined,
+              finalBill: bData.total_amount ? Number(bData.total_amount) : undefined,
+              paymentStatus: bData.payments?.[0]?.status || "PENDING",
+              customerName: custProf.full_name,
+              workerName: workerProf.full_name,
+            };
+          }
+        } catch (err: any) {
+          if (err.statusCode === 403 || err.status === 403) throw err;
+          console.warn("Could not fetch booking context for grievance:", err);
         }
-      } catch (err) {
-        console.warn("Could not fetch booking context for grievance:", err);
+      } else if (payload.raisedByRole === "WORKER") {
+        throw new AppError("Selected booking does not belong to the authenticated worker.", "FORBIDDEN", 403);
       }
+    }
+
+    if (!targetName && bookingContext) {
+      targetName = payload.raisedByRole === "WORKER" ? bookingContext.customerName : bookingContext.workerName;
+    }
+    if (!targetName) {
+      targetName = targetRole === "CUSTOMER" ? "Household Customer" : "Trade Professional";
     }
 
     const timelineItem: GrievanceTimelineEvent = {
@@ -462,8 +499,8 @@ export class ComplaintService implements IComplaintService {
       raisedByRole: payload.raisedByRole || "CUSTOMER",
       raisedByName: payload.raisedByName || "Complainant",
       raisedByPhone: payload.raisedByPhone,
-      targetRole: payload.targetRole || "WORKER",
-      targetName: payload.targetName || "Target Party",
+      targetRole,
+      targetName,
       targetWorkerId: payload.targetWorkerId,
       federationId,
       evidenceUrls: payload.evidenceUrls || [],
@@ -511,8 +548,8 @@ export class ComplaintService implements IComplaintService {
       raisedByName: payload.raisedByName || "Complainant",
       raisedByPhone: payload.raisedByPhone,
       targetProfileId: targetProfileId || null,
-      targetRole: payload.targetRole || "WORKER",
-      targetName: payload.targetName || "Target Party",
+      targetRole,
+      targetName,
       targetPhone: undefined,
       targetWorkerId: payload.targetWorkerId,
       federationId,
@@ -653,6 +690,7 @@ export class ComplaintService implements IComplaintService {
     isEscalated?: boolean;
     searchQuery?: string;
     complainantRole?: "CUSTOMER" | "WORKER";
+    filterType?: "MY_COMPLAINTS" | "COMPLAINTS_FROM_CUSTOMERS";
     page?: number;
     pageSize?: number;
   }): Promise<{ cases: GrievanceCase[]; totalCount: number }> {
@@ -707,7 +745,49 @@ export class ComplaintService implements IComplaintService {
     if (options.role === "CUSTOMER") {
       scoped = scoped.filter((c) => c.raisedBy === options.actorId || c.targetProfileId === options.actorId);
     } else if (options.role === "WORKER") {
-      scoped = scoped.filter((c) => c.raisedBy === options.actorId || c.targetProfileId === options.actorId);
+      let workerRecordId: string | null = null;
+      let workerProfileId = options.actorId;
+      if (options.actorId) {
+        try {
+          const { data: wRow } = await (supabase.from("workers") as any)
+            .select("id, profile_id")
+            .or(`id.eq.${options.actorId},profile_id.eq.${options.actorId}`)
+            .maybeSingle();
+          if (wRow) {
+            workerRecordId = wRow.id;
+            workerProfileId = wRow.profile_id;
+          }
+        } catch {
+          // ignore
+        }
+      }
+
+      const isWorkerRaised = (c: GrievanceCase) => {
+        if (c.raisedByRole !== "WORKER") return false;
+        return (
+          c.raisedBy === options.actorId ||
+          c.raisedBy === workerProfileId ||
+          (workerRecordId !== null && c.raisedBy === workerRecordId)
+        );
+      };
+
+      const isWorkerTarget = (c: GrievanceCase) => {
+        if (c.raisedByRole !== "CUSTOMER") return false;
+        return (
+          c.targetProfileId === options.actorId ||
+          c.targetProfileId === workerProfileId ||
+          c.targetWorkerId === options.actorId ||
+          (workerRecordId !== null && (c.targetProfileId === workerRecordId || c.targetWorkerId === workerRecordId))
+        );
+      };
+
+      if (options.filterType === "MY_COMPLAINTS") {
+        scoped = scoped.filter((c) => isWorkerRaised(c));
+      } else if (options.filterType === "COMPLAINTS_FROM_CUSTOMERS") {
+        scoped = scoped.filter((c) => isWorkerTarget(c));
+      } else {
+        scoped = scoped.filter((c) => isWorkerRaised(c) || isWorkerTarget(c));
+      }
     } else if (options.role === "FEDERATION_ADMIN" && options.federationId) {
       scoped = scoped.filter((c) => c.federationId === options.federationId);
     }
@@ -1126,29 +1206,67 @@ export class ComplaintService implements IComplaintService {
     const currentCase = await this.getGrievanceById(id);
     if (!currentCase) throw new AppError(`Case ${id} not found.`, "NOT_FOUND", 404);
 
-    if (
-      actorRole !== "FEDERATION_ADMIN" &&
-      actorRole !== "SUPER_ADMIN" &&
-      actorId !== currentCase.raisedBy &&
-      actorId !== currentCase.targetProfileId
-    ) {
+    const supabase = await this.getSupabaseClient();
+    let workerRecordId: string | null = null;
+    let workerProfileId = actorId;
+    if (actorRole === "WORKER" && actorId) {
+      try {
+        const { data: wRow } = await (supabase.from("workers") as any)
+          .select("id, profile_id")
+          .or(`id.eq.${actorId},profile_id.eq.${actorId}`)
+          .maybeSingle();
+        if (wRow) {
+          workerRecordId = wRow.id;
+          workerProfileId = wRow.profile_id;
+        }
+      } catch {
+        // ignore
+      }
+    }
+
+    const isWorkerTarget =
+      currentCase.targetProfileId === actorId ||
+      currentCase.targetProfileId === workerProfileId ||
+      currentCase.targetWorkerId === actorId ||
+      (workerRecordId !== null && (currentCase.targetProfileId === workerRecordId || currentCase.targetWorkerId === workerRecordId));
+
+    const isAuthorized =
+      actorRole === "FEDERATION_ADMIN" ||
+      actorRole === "SUPER_ADMIN" ||
+      actorId === currentCase.raisedBy ||
+      (workerRecordId !== null && currentCase.raisedBy === workerRecordId) ||
+      isWorkerTarget;
+
+    if (!isAuthorized) {
       throw new AppError("Access denied: You are not authorized to submit a statement for this grievance.", "FORBIDDEN", 403);
     }
 
     assertComplaintNotTerminated(currentCase);
 
-    // One Worker Response: Workers get ONE opportunity to respond to a complaint.
-    if (actorRole === "WORKER" && currentCase.responseRequests?.workerSubmitted) {
-      throw new AppError(
-        "Worker has already submitted a response for this complaint.",
-        "ALREADY_SUBMITTED",
-        400
-      );
+    const isWorker = actorRole === "WORKER" || isWorkerTarget;
+    const isCustomer = actorRole === "CUSTOMER" || actorId === currentCase.raisedBy;
+
+    // Worker response gate: For customer complaints against workers, worker cannot respond before Federation requests it
+    if (isWorker && isCustomerVsWorkerComplaint(currentCase)) {
+      // One Worker Response: Workers get ONE opportunity to respond to a complaint.
+      if (currentCase.responseRequests?.workerSubmitted) {
+        throw new AppError(
+          "Worker has already submitted a response for this complaint.",
+          "ALREADY_SUBMITTED",
+          400
+        );
+      }
+
+      if (!currentCase.responseRequests?.workerRequired) {
+        throw new AppError(
+          "Worker response has not been requested for this complaint.",
+          "BUSINESS_RULE_VIOLATION",
+          400
+        );
+      }
     }
 
     const now = new Date().toISOString();
-    const isWorker = actorRole === "WORKER" || actorId === currentCase.targetProfileId;
-    const isCustomer = actorRole === "CUSTOMER" || actorId === currentCase.raisedBy;
 
     const timelineItem: GrievanceTimelineEvent = {
       id: `tl-${Date.now()}`,

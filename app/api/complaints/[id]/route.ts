@@ -28,10 +28,10 @@ export async function GET(
       complaint: grievance,
     });
   } catch (err: unknown) {
-    const errorObj = err as { message?: string; status?: number };
+    const errorObj = err as { message?: string; status?: number; statusCode?: number };
     return NextResponse.json(
       { success: false, error: errorObj.message || "Failed to retrieve complaint" },
-      { status: errorObj.status || 500 }
+      { status: errorObj.statusCode || errorObj.status || 500 }
     );
   }
 }
@@ -160,10 +160,10 @@ export async function PATCH(
       complaint: updated,
     });
   } catch (err: unknown) {
-    const errorObj = err as { message?: string; status?: number };
+    const errorObj = err as { message?: string; status?: number; statusCode?: number };
     return NextResponse.json(
       { success: false, error: errorObj.message || "Failed to update complaint" },
-      { status: errorObj.status || 500 }
+      { status: errorObj.statusCode || errorObj.status || 500 }
     );
   }
 }
