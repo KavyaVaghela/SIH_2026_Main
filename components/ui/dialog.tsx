@@ -45,16 +45,21 @@ export function Dialog({
   // Single-component mode (when title, footer, or traditional props are passed)
   if (title || footer || description) {
     return (
-      <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4 backdrop-blur-sm animate-in fade-in-0">
+      <div
+        className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4 backdrop-blur-sm animate-in fade-in-0"
+        onClick={(e) => {
+          if (e.target === e.currentTarget) handleClose();
+        }}
+      >
         <div
           className={cn(
-            "relative w-full max-w-lg rounded-lg border bg-card p-6 text-card-foreground shadow-lg animate-in zoom-in-95",
+            "relative w-full max-w-lg rounded-xl border border-border/80 bg-white dark:bg-slate-900 p-6 text-card-foreground shadow-2xl animate-in zoom-in-95",
             className
           )}
         >
           <button
             onClick={handleClose}
-            className="absolute right-4 top-4 rounded-sm opacity-70 ring-offset-background transition-opacity hover:opacity-100 focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2"
+            className="absolute right-4 top-4 rounded-sm opacity-70 ring-offset-background transition-opacity hover:opacity-100 focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 z-10"
           >
             <X className="h-4 w-4" />
             <span className="sr-only">Close</span>
@@ -77,11 +82,30 @@ export function Dialog({
     );
   }
 
-  // Compound component mode
+  // Standard / Compound component mode
   return (
     <DialogContext.Provider value={{ open: isVisible, onClose: handleClose }}>
-      <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4 backdrop-blur-sm animate-in fade-in-0">
-        {children}
+      <div
+        className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4 backdrop-blur-sm animate-in fade-in-0"
+        onClick={(e) => {
+          if (e.target === e.currentTarget) handleClose();
+        }}
+      >
+        <div
+          className={cn(
+            "relative w-full max-w-lg rounded-xl border border-border/80 bg-white dark:bg-slate-900 p-6 text-card-foreground shadow-2xl animate-in zoom-in-95",
+            className
+          )}
+        >
+          <button
+            onClick={handleClose}
+            className="absolute right-4 top-4 rounded-sm opacity-70 ring-offset-background transition-opacity hover:opacity-100 focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 z-10"
+          >
+            <X className="h-4 w-4" />
+            <span className="sr-only">Close</span>
+          </button>
+          {children}
+        </div>
       </div>
     </DialogContext.Provider>
   );
@@ -98,13 +122,13 @@ export function DialogContent({
   return (
     <div
       className={cn(
-        "relative w-full max-w-lg rounded-lg border bg-card p-6 text-card-foreground shadow-lg animate-in zoom-in-95",
+        "relative w-full max-w-lg rounded-xl border border-border/80 bg-white dark:bg-slate-900 p-6 text-card-foreground shadow-2xl animate-in zoom-in-95",
         className
       )}
     >
       <button
         onClick={() => ctx?.onClose()}
-        className="absolute right-4 top-4 rounded-sm opacity-70 ring-offset-background transition-opacity hover:opacity-100 focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2"
+        className="absolute right-4 top-4 rounded-sm opacity-70 ring-offset-background transition-opacity hover:opacity-100 focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 z-10"
       >
         <X className="h-4 w-4" />
         <span className="sr-only">Close</span>
