@@ -38,12 +38,6 @@ export function DashboardHeader({
   adminName,
   isLoadingAdminName,
 }: DashboardHeaderProps) {
-  const timeframes: { key: DashboardTimeframe; label: string }[] = [
-    { key: "7d", label: "7 Days" },
-    { key: "30d", label: "30 Days" },
-    { key: "90d", label: "90 Days" },
-  ];
-
   return (
     <div className="space-y-4 pb-2 border-b border-border/60">
       {/* Dev fallback alert banner if active */}
@@ -102,24 +96,6 @@ export function DashboardHeader({
 
         {/* Actions & Filters */}
         <div className="flex flex-wrap items-center gap-2.5 self-start md:self-auto">
-          {/* Timeframe selector */}
-          <div className="inline-flex rounded-lg border border-border bg-muted/50 p-0.5 text-muted-foreground">
-            {timeframes.map((tf) => (
-              <button
-                key={tf.key}
-                type="button"
-                onClick={() => onTimeframeChange(tf.key)}
-                className={`px-3 py-1.5 text-xs font-medium rounded-md transition-all ${
-                  timeframe === tf.key
-                    ? "bg-background text-foreground shadow-xs font-semibold"
-                    : "hover:text-foreground text-muted-foreground"
-                }`}
-              >
-                {tf.label}
-              </button>
-            ))}
-          </div>
-
           {/* Sync status & Refresh button */}
           {lastUpdated && (
             <span className="hidden xl:inline-block text-[11px] text-muted-foreground">

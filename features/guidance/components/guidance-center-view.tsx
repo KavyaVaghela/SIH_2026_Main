@@ -29,7 +29,6 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { guidanceService } from "../services/guidance-service";
 import { VisualJourneyMap } from "./visual-journey-map";
-import { OnboardingChecklistCard } from "./onboarding-checklist-card";
 import { TroubleshootingAccordion } from "./troubleshooting-accordion";
 import { StatusExplainerModal } from "./status-explainer-modal";
 import type { PlatformRole } from "@/config/navigation";
@@ -171,26 +170,7 @@ function GuidanceCenterViewContent({ role, userName }: GuidanceCenterViewProps) 
         </div>
       </Card>
 
-      {/* 3. Quick Action Shortcuts */}
-      {role !== "CUSTOMER" && role !== "WORKER" && (
-        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-3 w-full">
-          {quickActions.map((qa) => (
-            <Link
-              key={qa.label}
-              href={qa.href}
-              className="flex items-center gap-2.5 p-3 rounded-xl border bg-card hover:bg-muted/40 hover:border-emerald-500/40 transition-all text-xs font-semibold text-foreground group"
-            >
-              <div className="p-1.5 rounded-md bg-emerald-50 dark:bg-emerald-950/40 group-hover:bg-emerald-100 transition-colors shrink-0">
-                {qa.icon}
-              </div>
-              <span className="truncate">{qa.label}</span>
-            </Link>
-          ))}
-        </div>
-      )}
 
-      {/* 4. Onboarding Checklist (Collapsible) */}
-      {role !== "CUSTOMER" && role !== "WORKER" && <OnboardingChecklistCard role={role} />}
 
       {/* 5. Desktop Category / Filter Tabs Bar */}
       {!searchQuery.trim() && (

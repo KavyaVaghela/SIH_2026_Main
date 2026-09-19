@@ -135,10 +135,6 @@ export function UserMenu({
       onClick: handleSettingsClick,
     },
     {
-      label: "Cooperative Verification",
-      icon: <Shield className="h-4 w-4 text-emerald-600" />,
-    },
-    {
       label: "Sign Out",
       icon: <LogOut className="h-4 w-4" />,
       destructive: true,

@@ -94,18 +94,30 @@ export interface ServiceDemandPoint {
   activeWorkerShare: number;
 }
 
+export interface RecentActivityItem {
+  id: string;
+  type: "JOB_COMPLETED" | "WORKER_ACCEPTED" | "COMPLAINT_ALERT" | "PAYMENT_RECEIVED" | "NEW_WORKER_REGISTERED";
+  title: string;
+  timestamp: string;
+  description: string;
+  badgeVariant?: "default" | "secondary" | "outline" | "destructive";
+  href?: string;
+}
+
 export interface FederationAdminDashboardData {
   federation: FederationIdentity;
   stats: FederationDashboardStats;
   charts: {
     jobsByStatus: JobStatusDistributionPoint[];
-    completedVsRunning: JobsComparativePoint[];
+    completedVsRunning?: JobsComparativePoint[];
     jobsByProfession: ProfessionDistributionPoint[];
     activityTrend: JobActivityTrendPoint[];
     workerPerformance: WorkerPerformanceDistributionPoint[];
     demandDistribution: ServiceDemandPoint[];
   };
+  recentActivities: RecentActivityItem[];
   lastUpdated: string;
   isDevelopmentFallback: boolean;
   dataSourceNotice?: string;
 }
+

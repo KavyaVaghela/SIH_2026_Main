@@ -27,11 +27,10 @@ import { Button } from "@/components/ui/button";
 
 // Visualizations
 import { JobStatusChart } from "./components/charts/job-status-chart";
-import { JobsComparativeChart } from "./components/charts/jobs-comparative-chart";
+import { RecentActivityCard } from "./components/recent-activity-card";
 import { ProfessionDistributionChart } from "./components/charts/profession-distribution-chart";
 import { JobActivityChart } from "./components/charts/job-activity-chart";
 import { WorkerPerformanceChart } from "./components/charts/worker-performance-chart";
-import { DemandDistributionChart } from "./components/charts/demand-distribution-chart";
 import { createClient } from "@/lib/supabase/client";
 import { getCachedProfileName, setCachedProfileName } from "@/lib/auth/session-user";
 
@@ -305,14 +304,14 @@ export function FederationAdminDashboardView() {
           </div>
         </div>
 
-        {/* Visualizations Grid Row 1: Status Distribution & Comparative */}
+        {/* Visualizations Grid Row 1: Status Distribution & Recent Activity */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
           <JobStatusChart
             data={data?.charts.jobsByStatus}
             isLoading={isLoading}
           />
-          <JobsComparativeChart
-            data={data?.charts.completedVsRunning}
+          <RecentActivityCard
+            activities={data?.recentActivities ?? []}
             isLoading={isLoading}
           />
         </div>
@@ -336,12 +335,6 @@ export function FederationAdminDashboardView() {
             isLoading={isLoading}
           />
         </div>
-
-        {/* Visualizations Grid Row 4: Service Demand Distribution */}
-        <DemandDistributionChart
-          data={data?.charts.demandDistribution}
-          isLoading={isLoading}
-        />
       </div>
     </div>
   );
