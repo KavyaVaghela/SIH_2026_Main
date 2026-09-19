@@ -1,10 +1,11 @@
-import { WelfareCertificationView } from "@/features/worker/welfare-certification/welfare-certification-view";
+import { WelfareSupportView } from "@/features/worker/welfare";
 
 export const metadata = {
-  title: "Welfare & Certification - Worker Portal | KaushalyaSetu",
-  description: "Cooperative health insurance coverage, statutory welfare benefits, and verified trade certifications.",
+  title: "Welfare & Support - Worker Portal | KaushalyaSetu",
+  description: "Explore government and cooperative welfare programs, training opportunities, protection schemes and support services.",
 };
 
 export default function WorkerWelfarePage() {
-  return <WelfareCertificationView />;
+  return <WelfareSupportView />;
 }
+
