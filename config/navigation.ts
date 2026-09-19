@@ -24,6 +24,7 @@ import {
   Bell,
   HelpCircle,
   GraduationCap,
+  Sparkles,
 } from "lucide-react";
 import type { NavItem } from "@/components/navigation/desktop-sidebar";
 import type { MobileNavItem } from "@/components/navigation/mobile-navigation";
@@ -122,6 +123,7 @@ export const ROLE_NAVIGATION_CONFIGS: Record<PlatformRole, RoleNavigationConfig>
       { title: "Payments & Bills", href: "/customer/payments", icon: React.createElement(CreditCard) },
       { title: "My Complaints", href: "/customer/complaints", icon: React.createElement(ShieldAlert) },
       { title: "Help & Guidance", href: "/customer/guidance", icon: React.createElement(HelpCircle) },
+      { title: "SmartServe AI", href: "/customer/smartserve", icon: React.createElement(Sparkles) },
       { title: "Profile", href: "/customer/profile", icon: React.createElement(User) },
     ],
     mobileNavItems: [
@@ -131,6 +133,7 @@ export const ROLE_NAVIGATION_CONFIGS: Record<PlatformRole, RoleNavigationConfig>
       { title: "Payments", href: "/customer/payments", icon: React.createElement(CreditCard) },
       { title: "Complaints", href: "/customer/complaints", icon: React.createElement(ShieldAlert) },
       { title: "Guidance", href: "/customer/guidance", icon: React.createElement(HelpCircle) },
+      { title: "SmartServe AI", href: "/customer/smartserve", icon: React.createElement(Sparkles) },
       { title: "Profile", href: "/customer/profile", icon: React.createElement(User) },
     ],
   },
