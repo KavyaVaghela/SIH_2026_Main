@@ -7,6 +7,7 @@ import { LandingNavbar } from "./landing-navbar";
 import { LandingHero } from "./landing-hero";
 import { LandingTrustStrip } from "./landing-trust-strip";
 import { LandingServices } from "./landing-services";
+import { LandingAiPlatform } from "./landing-ai-platform";
 import { LandingHowItWorks } from "./landing-how-it-works";
 import { LandingEcosystem } from "./landing-ecosystem";
 import { LandingWorkerSupport } from "./landing-worker-support";
@@ -26,13 +27,16 @@ export function LandingPage() {
           {/* 2. Hero */}
           <LandingHero />
 
-          {/* 3. Trust Strip */}
+          {/* 3. 4 Feature Cards (Trust Strip) */}
           <LandingTrustStrip />
 
-          {/* 4. Services */}
+          {/* 4. Smarter Connections Powered by AI */}
+          <LandingAiPlatform />
+
+          {/* 5. Services for Everyday Needs */}
           <LandingServices />
 
-          {/* 5. How It Works */}
+          {/* 6. How It Works */}
           <LandingHowItWorks />
 
           {/* 6. Customers / Workers / Cooperatives (Ecosystem) */}
