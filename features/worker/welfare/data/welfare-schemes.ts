@@ -1,0 +1,118 @@
+import type { WelfareScheme } from "../types";
+
+export const WELFARE_SCHEMES_DATA: WelfareScheme[] = [
+  {
+    id: "scheme-1",
+    name: "Worker Accident Protection Support",
+    category: "Worker Protection",
+    description: "Information about accident protection, disability coverage, and immediate assistance available through eligible worker programs.",
+    eligibility: "Based on applicable program criteria, active membership, and valid trade documentation.",
+    requiredDocuments: [
+      "Government Identity Proof (Aadhaar / Voter ID)",
+      "Cooperative Member Trade Verification Certificate",
+      "Nominee Details & Bank Account Passbook",
+    ],
+    howToProceed: [
+      "Explore guidelines and check program-specific criteria.",
+      "Gather required identity and cooperative membership proof.",
+      "Submit informational request via your regional cooperative federation office.",
+    ],
+    informationSource: "Gujarat Worker Welfare Board & Cooperative Federation Framework",
+    isExample: true,
+  },
+  {
+    id: "scheme-2",
+    name: "Health Assistance Program",
+    category: "Health & Welfare",
+    description: "Explore available healthcare assistance, medical reimbursement guidance, and annual health check-up support programs.",
+    eligibility: "Subject to program-specific eligibility guidelines and local federation health fund rules.",
+    requiredDocuments: [
+      "Health Card / Beneficiary ID",
+      "Medical Practitioner Prescription / Hospital Records",
+      "Cooperative Active Service Card",
+    ],
+    howToProceed: [
+      "Review empanelled clinic network and covered medical procedures.",
+      "Submit medical claim dossier to the cooperative welfare desk.",
+      "Receive guidance on statutory health reimbursement procedures.",
+    ],
+    informationSource: "State Cooperative Health Welfare Cell",
+    isExample: true,
+  },
+  {
+    id: "scheme-3",
+    name: "Skill Development Support",
+    category: "Training",
+    description: "Discover skill-development, advanced equipment training, and vocational certification fee subsidy opportunities.",
+    eligibility: "Depends on training program requirements and trade certification level.",
+    requiredDocuments: [
+      "Prior Trade Experience Certificate",
+      "KaushalyaSetu Verified Worker Profile",
+      "Training Course Enrollment Voucher",
+    ],
+    howToProceed: [
+      "Select desired skill upgrade module from KaushalGrow or partner institutes.",
+      "Apply for cooperative skill sponsorship through the Welfare Desk.",
+      "Attend hybrid training sessions and receive verified credential badges.",
+    ],
+    informationSource: "National Skill Development Corporation & Federation Training Wing",
+    isExample: true,
+  },
+  {
+    id: "scheme-4",
+    name: "Worker Housing Assistance",
+    category: "Housing",
+    description: "Explore information about worker-oriented housing assistance, rental subsidies, and site safety accommodation guidance.",
+    eligibility: "Check applicable housing authority guidelines and district income thresholds.",
+    requiredDocuments: [
+      "Domicile Certificate / Proof of Residence",
+      "Annual Earnings Ledger Statement",
+      "Affidavit of Occupation",
+    ],
+    howToProceed: [
+      "Verify district eligibility limits and housing program notifications.",
+      "Obtain certified earnings statement from KaushalyaSetu ledger.",
+      "Submit guidance inquiry to the local municipal welfare desk.",
+    ],
+    informationSource: "State Affordable Housing Mission Information Desk",
+    isExample: true,
+  },
+  {
+    id: "scheme-5",
+    name: "Financial Assistance Program",
+    category: "Financial Support",
+    description: "Explore available financial assistance, micro-credit facilitation, and emergency interest-free tool advance resources.",
+    eligibility: "Subject to applicable credit assessment and cooperative federation rating.",
+    requiredDocuments: [
+      "6-Month KaushalyaSetu Escrow Earnings History",
+      "Bank Account Mandate & Cancelled Cheque",
+      "Cooperative Peer Worker Recommendation",
+    ],
+    howToProceed: [
+      "Review micro-loan terms and monthly repayment schedules.",
+      "Submit financial support request through the Worker Dashboard.",
+      "Receive direct wallet transfer upon cooperative committee sign-off.",
+    ],
+    informationSource: "Cooperative Credit Society Network",
+    isExample: true,
+  },
+  {
+    id: "scheme-6",
+    name: "Social Security & Welfare Support",
+    category: "Social Security",
+    description: "Explore social-security, old-age pension discovery, and family welfare support information relevant to skilled workers.",
+    eligibility: "Check official program requirements and age criteria (typically 18-59 years).",
+    requiredDocuments: [
+      "Aadhaar Card linked with active mobile number",
+      "Savings Bank Account Details with IFSC",
+      "Self-Declaration of Unorganized Sector Worker Category",
+    ],
+    howToProceed: [
+      "Review social security scheme benefits and voluntary contribution charts.",
+      "Visit official government portal or Common Service Center (CSC).",
+      "Keep transaction receipts safely recorded in your personal dossier.",
+    ],
+    informationSource: "Ministry of Labour & Employment Guidance Advisory",
+    isExample: true,
+  },
+];

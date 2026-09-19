@@ -45,7 +45,8 @@ export * from "./earnings/earnings-history-table";
 export * from "./earnings/earnings-chart-card";
 export * from "./earnings/earnings-breakdown-card";
 
-// Section 5: Welfare & Certification
+// Section 5: Welfare & Support
+export * from "./welfare";
 export * from "./welfare-certification/welfare-certification-view";
 export * from "./welfare-certification/insurance-coverage-card";
 export * from "./welfare-certification/welfare-benefits-card";
@@ -55,4 +56,5 @@ export * from "./welfare-certification/expiring-cert-alert";
 // Section 6: KaushalGrow Learning Module
 export * from "./kaushalgrow/kaushalgrow-view";
 export * from "./kaushalgrow/types";
+
 
