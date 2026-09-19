@@ -5,6 +5,7 @@ import { AppShell } from "@/components/layout/app-shell";
 import { ROLE_NAVIGATION_CONFIGS, type PlatformRole } from "@/config/navigation";
 
 import { createClient } from "@/lib/supabase/client";
+import { getCachedProfileName, setCachedProfileName } from "@/lib/auth/session-user";
 
 export interface RoleShellProps {
   role: PlatformRole;
@@ -15,7 +16,9 @@ export interface RoleShellProps {
 
 export function RoleShell({ role, userName, children, className }: RoleShellProps) {
   const config = ROLE_NAVIGATION_CONFIGS[role];
-  const [profileName, setProfileName] = React.useState<string | undefined>(userName);
+  const [profileName, setProfileName] = React.useState<string | undefined>(
+    () => userName || getCachedProfileName(role) || undefined
+  );
 
   React.useEffect(() => {
     const supabase = createClient();
@@ -28,6 +31,7 @@ export function RoleShell({ role, userName, children, className }: RoleShellProp
           .maybeSingle()
           .then(({ data }: { data: { full_name?: string; role?: string } | null }) => {
             if (data?.full_name && data?.role === role) {
+              setCachedProfileName(role, data.full_name);
               if (role === "CUSTOMER" && (data.full_name.includes("Administrator") || data.full_name.includes("System"))) {
                 setProfileName("Prince Patel");
               } else {
@@ -48,6 +52,7 @@ export function RoleShell({ role, userName, children, className }: RoleShellProp
       mobileNavItems={config.mobileNavItems}
       userName={profileName || userName || config.displayName}
       userRole={config.displayName}
+      role={role}
       className={className}
     >
       {children}

@@ -109,7 +109,7 @@ export const ROLE_NAVIGATION_CONFIGS: Record<PlatformRole, RoleNavigationConfig>
       { title: "Earnings", href: "/worker/earnings", icon: React.createElement(Wallet) },
       { title: "KaushalGrow", href: "/worker/grow", icon: React.createElement(GraduationCap) },
       { title: "Welfare & Support", href: "/worker/welfare", icon: React.createElement(HeartHandshake) },
-      { title: "Grievances", href: "/worker/grievances", icon: React.createElement(ShieldAlert) },
+      { title: "My Grievances", href: "/worker/grievances", icon: React.createElement(ShieldAlert) },
       { title: "Guidance", href: "/worker/guidance", icon: React.createElement(HelpCircle) },
     ],
   },

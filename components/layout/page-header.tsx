@@ -2,7 +2,7 @@ import * as React from "react";
 import { cn } from "@/lib/utils";
 
 export interface PageHeaderProps {
-  title: string;
+  title: React.ReactNode;
   description?: string;
   breadcrumbs?: Array<{ label: string; href?: string }>;
   actions?: React.ReactNode;

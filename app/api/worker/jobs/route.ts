@@ -1,5 +1,7 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { NextRequest, NextResponse } from "next/server";
 import { createAdminClient } from "@/lib/supabase/admin";
+import { extractProblemEvidence } from "@/lib/storage/evidence";
 
 export async function GET(request: NextRequest) {
   try {
@@ -59,9 +61,45 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: error.message }, { status: 500 });
     }
 
+    // Also fetch multi-worker requests from worker_estimates if scope is requests or all
+    let mwJobItems: any[] = [];
+    if (scope === "requests" || scope === "all") {
+      try {
+        const { data: mwData, error: mwErr } = await (supabase.from("worker_estimates") as any)
+          .select(`
+            id,
+            job_request_id,
+            worker_id,
+            estimated_amount,
+            estimated_hours,
+            notes,
+            status,
+            created_at,
+            job_requests (
+              id,
+              customer_id,
+              service_id,
+              description,
+              preferred_schedule,
+              status,
+              profiles:customer_id (full_name, phone, email),
+              services (id, title, base_price, minimum_visit_charge, service_categories (name))
+            )
+          `)
+          .eq("worker_id", workerId)
+          .order("created_at", { ascending: false });
+
+        if (!mwErr && mwData && mwData.length > 0) {
+          mwJobItems = mwData.map((item: any) => mapDbWorkerEstimate(item));
+        }
+      } catch (mwCatch) {
+        console.warn("Notice: mwData fetch error in /api/worker/jobs:", mwCatch);
+      }
+    }
+
     const rawBookings = data || [];
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const mapped = rawBookings.map((b: any) => mapDbBooking(b));
+    const mapped = [...mwJobItems, ...rawBookings.map((b: any) => mapDbBooking(b))];
 
     if (scope === "stats") {
       const todayStr = new Date().toISOString().split("T")[0];
@@ -261,7 +299,8 @@ export async function POST(request: NextRequest) {
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 function mapDbBooking(b: any) {
-  const probDesc = b.problem_description || "";
+  const { cleanDescription, problemPhotoUrl } = extractProblemEvidence(b.problem_description);
+  const probDesc = cleanDescription || "";
   const servTitle = b.services?.title || "Plumbing Repair";
   const isEmergency =
     /emergency|rupture|burst|leakage|spark/i.test(probDesc) ||
@@ -307,7 +346,7 @@ function mapDbBooking(b: any) {
     scheduledEndAt: b.scheduled_end_at,
     status: b.status,
     problemDescription: probDesc,
-    problemPhotoUrl: b.problem_photo_url || null,
+    problemPhotoUrl: b.problem_photo_url || problemPhotoUrl || null,
     otpCode: b.otp_code || "940218",
     isEmergency,
     estimatedAmount: Number(b.total_amount) || 500,
@@ -320,5 +359,72 @@ function mapDbBooking(b: any) {
     actualEndAt: b.actual_end_at || null,
     createdAt: b.created_at,
     updatedAt: b.updated_at,
+  };
+}
+
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+function mapDbWorkerEstimate(item: any) {
+  const jr = item.job_requests;
+  const srv = jr?.services;
+  const cat = srv?.service_categories;
+  const cust = jr?.profiles;
+  const reqNum = `SR-${item.job_request_id.slice(0, 8).toUpperCase()}`;
+
+  let scheduledDate = "Today";
+  let scheduledTime = "Morning Slot";
+  if (jr?.preferred_schedule) {
+    try {
+      const d = new Date(jr.preferred_schedule);
+      scheduledDate = d.toISOString().split("T")[0];
+      scheduledTime = d.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
+    } catch {
+      // Keep defaults
+    }
+  }
+
+  const { cleanDescription, problemPhotoUrl } = extractProblemEvidence(jr?.description);
+  const probDesc = cleanDescription || "Service request details";
+  const servTitle = srv?.title || "Service Request";
+  const isEmergency =
+    /emergency|rupture|burst|leakage|spark/i.test(probDesc) ||
+    /emergency/i.test(servTitle);
+
+  const estAmount = Number(item.estimated_amount) || 0;
+
+  return {
+    id: item.job_request_id,
+    bookingNumber: reqNum,
+    customerId: jr?.customer_id,
+    customerName: cust?.full_name || "Verified Customer",
+    customerPhone: cust?.phone || "+91 98250 11021",
+    customerEmail: cust?.email || "customer@example.com",
+    customerArea: "Satellite, Ahmedabad",
+    distanceKm: 2.1,
+    workerId: item.worker_id,
+    serviceId: jr?.service_id,
+    serviceTitle: servTitle,
+    categoryName: cat?.name || "Maintenance",
+    cooperativeName: "Ahmedabad Skilled Workers Federation",
+    scheduledDate,
+    scheduledTime,
+    scheduledStartAt: jr?.preferred_schedule || item.created_at,
+    scheduledEndAt: null,
+    status: item.status?.toUpperCase() || "PENDING",
+    problemDescription: probDesc,
+    problemPhotoUrl: problemPhotoUrl || null,
+    urgency: isEmergency ? "EMERGENCY" : "STANDARD",
+    isEmergency,
+    totalAmount: srv?.base_price || 350,
+    estimatedAmount: estAmount > 0 ? estAmount : (srv?.base_price || 350),
+    workerEstimateAmount: estAmount > 0 ? estAmount : null,
+    workerEstimateLabor: estAmount > 0 ? Math.round(estAmount * 0.7) : null,
+    workerEstimateMaterials: estAmount > 0 ? Math.round(estAmount * 0.3) : null,
+    workerEstimateNotes: item.notes,
+    workerEarnings: Math.round((srv?.base_price || 350) * 0.95),
+    platformFee: Math.round((srv?.base_price || 350) * 0.05),
+    minimumVisitCharge: srv?.minimum_visit_charge || 200,
+    isMultiWorkerRequest: true,
+    createdAt: item.created_at,
+    updatedAt: item.created_at,
   };
 }

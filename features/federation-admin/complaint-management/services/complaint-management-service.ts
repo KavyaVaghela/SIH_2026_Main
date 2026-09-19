@@ -1,9 +1,9 @@
-import { createClient } from "@/lib/supabase/client";
 import { complaintService } from "@/features/complaints/services/complaint-service";
 import type {
   FederationComplaintItem,
   ComplaintStatusDisplay,
   ComplaintManagementData,
+  SubsectionMetrics,
 } from "../types";
 import type { GrievanceCase } from "@/types/complaints/v2";
 
@@ -32,9 +32,19 @@ export class ComplaintManagementService {
 
       if (cases && cases.length > 0) {
         complaintsList = cases.map((c: GrievanceCase) => {
-          const isResolved = c.status === "RESOLVED" || c.status === "CLOSED" || c.status === "REJECTED";
+          const isResolved = c.status === "RESOLVED";
+          const isRejected = c.status === "REJECTED";
+          const isClosed = c.status === "CLOSED";
+          const isCustomerComplainant = c.raisedByRole === "CUSTOMER";
+          const isAgainstWorker = c.targetRole === "WORKER" || !!c.targetProfileId || !!c.targetWorkerId;
+          const isCustVsWorker = isCustomerComplainant && isAgainstWorker;
+
           const displayStatus: ComplaintStatusDisplay = isResolved
             ? "RESOLVED"
+            : isRejected
+            ? "REJECTED"
+            : isClosed
+            ? "CLOSED"
             : c.status === "ACTION_REQUIRED"
             ? "ACTION_REQUIRED"
             : c.status === "ESCALATED"
@@ -43,22 +53,36 @@ export class ComplaintManagementService {
             ? "UNDER_REVIEW"
             : "PENDING";
 
+          const workerResponseSubmission = c.timeline?.find(
+            (t) => t.type === "RESPONSE_SUBMISSION" && (t.actorRole === "WORKER" || t.actorId === c.targetProfileId)
+          );
+
+          let workerResponseStatus: "AWAITING" | "RECEIVED" | "NOT_APPLICABLE" = "NOT_APPLICABLE";
+          if (isCustVsWorker) {
+            workerResponseStatus = c.responseRequests?.workerSubmitted ? "RECEIVED" : "AWAITING";
+          }
+
           return {
             id: c.id,
             complaintNumber: c.complaintNumber,
             bookingId: c.bookingId || undefined,
+            complainantRole: (c.raisedByRole || "CUSTOMER") as "CUSTOMER" | "WORKER" | "FEDERATION_ADMIN",
             customerName: c.raisedByName,
             customerPhone: c.raisedByPhone || "+91 98000 00000",
             workerId: c.targetWorkerId || c.targetProfileId || "WRK-AHM-0101",
-            workerName: c.targetName || "Federation Craftsman",
-            workerProfession: c.category.includes("Plumb") ? "Plumber" : "Skilled Craftsman",
+            workerName: c.targetName || (c.raisedByRole === "FEDERATION_ADMIN" ? "Platform Administration" : "Federation Craftsman"),
+            workerProfession: c.raisedByRole === "FEDERATION_ADMIN" ? "Super Administrator" : c.category.includes("Plumb") ? "Plumber" : "Skilled Craftsman",
+            workerResponseStatus,
+            workerStatement: workerResponseSubmission?.message,
+            workerEvidenceUrls: workerResponseSubmission?.evidenceUrls,
+            workerSubmittedAt: c.responseRequests?.workerSubmittedAt || workerResponseSubmission?.timestamp,
             subject: c.subject,
             description: c.description,
             category: c.category,
             subcategory: c.subcategory,
             submittedDate: c.createdAt ? c.createdAt.split("T")[0] : new Date().toISOString().split("T")[0],
             status: displayStatus,
-            rawStatus: isResolved ? "RESOLVED" : "OPEN",
+            rawStatus: (isResolved || isRejected || isClosed) ? "RESOLVED" : "OPEN",
             lifecycleStatus: c.status,
             priority: c.priority,
             suggestedPriority: c.suggestedPriority,
@@ -66,6 +90,11 @@ export class ComplaintManagementService {
             resolutionNotes: c.resolution?.actionTaken || undefined,
             resolvedAt: c.resolution?.resolvedAt ? c.resolution.resolvedAt.split("T")[0] : undefined,
             resolvedBy: c.resolution?.resolvedByName || undefined,
+            rejectionReason: c.rejectionReason || undefined,
+            rejectedAt: c.rejectedAt ? c.rejectedAt.split("T")[0] : undefined,
+            rejectedBy: c.rejectedBy || undefined,
+            closedAt: c.closedAt ? c.closedAt.split("T")[0] : undefined,
+            closedBy: c.closedBy || undefined,
             grievanceCase: c,
           };
         });
@@ -95,16 +124,45 @@ export class ComplaintManagementService {
       );
     }
 
+    const computeMetrics = (items: FederationComplaintItem[]): SubsectionMetrics => ({
+      total: items.length,
+      pending: items.filter((c) => c.lifecycleStatus === "OPEN").length,
+      underReview: items.filter((c) => c.lifecycleStatus === "UNDER_REVIEW").length,
+      waitingForResponse: items.filter(
+        (c) => c.lifecycleStatus === "ACTION_REQUIRED" || c.workerResponseStatus === "AWAITING"
+      ).length,
+      resolved: items.filter((c) => c.lifecycleStatus === "RESOLVED").length,
+      rejectedOrClosed: items.filter((c) => c.lifecycleStatus === "REJECTED" || c.lifecycleStatus === "CLOSED").length,
+    });
+
+    const userComplaints = filtered.filter((c) => c.complainantRole === "CUSTOMER");
+    const workerComplaints = filtered.filter((c) => c.complainantRole === "WORKER");
+    const myComplaints = filtered.filter((c) => c.complainantRole === "FEDERATION_ADMIN");
+
+    const allUserComplaints = complaintsList.filter((c) => c.complainantRole === "CUSTOMER");
+    const allWorkerComplaints = complaintsList.filter((c) => c.complainantRole === "WORKER");
+    const allMyComplaints = complaintsList.filter((c) => c.complainantRole === "FEDERATION_ADMIN");
+
+    const userMetrics = computeMetrics(allUserComplaints);
+    const workerMetrics = computeMetrics(allWorkerComplaints);
+    const myMetrics = computeMetrics(allMyComplaints);
+
     const totalCount = complaintsList.length;
     const pendingCount = complaintsList.filter((c) => c.lifecycleStatus === "OPEN").length;
     const underReviewCount = complaintsList.filter((c) => c.lifecycleStatus === "UNDER_REVIEW").length;
     const actionRequiredCount = complaintsList.filter((c) => c.lifecycleStatus === "ACTION_REQUIRED").length;
     const escalatedCount = complaintsList.filter((c) => c.lifecycleStatus === "ESCALATED").length;
-    const resolvedCount = complaintsList.filter((c) => c.lifecycleStatus === "RESOLVED" || c.status === "RESOLVED").length;
+    const resolvedCount = complaintsList.filter((c) => c.lifecycleStatus === "RESOLVED").length;
     const highOrCriticalCount = complaintsList.filter((c) => c.priority === "HIGH" || c.priority === "CRITICAL").length;
 
     return {
       complaints: filtered,
+      userComplaints,
+      workerComplaints,
+      myComplaints,
+      userMetrics,
+      workerMetrics,
+      myMetrics,
       totalCount,
       pendingCount,
       underReviewCount,
@@ -118,6 +176,22 @@ export class ComplaintManagementService {
   }
 
   /**
+   * Filters complaint items by subsection.
+   */
+  getComplaintsForSubsection(
+    items: FederationComplaintItem[],
+    section: "WORKER_COMPLAINTS" | "USER_COMPLAINTS" | "MY_COMPLAINTS"
+  ): FederationComplaintItem[] {
+    if (section === "WORKER_COMPLAINTS") {
+      return items.filter((c) => c.complainantRole === "WORKER");
+    }
+    if (section === "MY_COMPLAINTS") {
+      return items.filter((c) => c.complainantRole === "FEDERATION_ADMIN");
+    }
+    return items.filter((c) => c.complainantRole === "CUSTOMER");
+  }
+
+  /**
    * Resolves a grievance case.
    */
   async resolveComplaint(
@@ -126,8 +200,8 @@ export class ComplaintManagementService {
     internalNotes?: string,
     actorId: string = "fed-admin-1",
     actorName: string = "Federation Grievance Officer"
-  ): Promise<{ success: boolean; complaintId: string }> {
-    await complaintService.resolveGrievance(
+  ): Promise<{ success: boolean; complaintId: string; updatedCase: GrievanceCase }> {
+    const updatedCase = await complaintService.resolveGrievance(
       complaintId,
       {
         resolutionType: "CONCILIATION",
@@ -157,6 +231,77 @@ export class ComplaintManagementService {
     return {
       success: true,
       complaintId,
+      updatedCase,
+    };
+  }
+
+  /**
+   * Rejects a grievance case.
+   */
+  async rejectComplaint(
+    complaintId: string,
+    reason: string,
+    actorId: string = "fed-admin-1",
+    actorName: string = "Federation Grievance Officer"
+  ): Promise<{ success: boolean; complaintId: string; updatedCase: GrievanceCase }> {
+    const updatedCase = await complaintService.rejectGrievance(
+      complaintId,
+      reason,
+      actorId,
+      "FEDERATION_ADMIN",
+      actorName
+    );
+    return {
+      success: true,
+      complaintId,
+      updatedCase,
+    };
+  }
+
+  /**
+   * Administratively closes a grievance case.
+   */
+  async closeComplaint(
+    complaintId: string,
+    notes: string,
+    actorId: string = "fed-admin-1",
+    actorName: string = "Federation Grievance Officer"
+  ): Promise<{ success: boolean; complaintId: string; updatedCase: GrievanceCase }> {
+    const updatedCase = await complaintService.closeGrievance(
+      complaintId,
+      notes,
+      actorId,
+      "FEDERATION_ADMIN",
+      actorName
+    );
+    return {
+      success: true,
+      complaintId,
+      updatedCase,
+    };
+  }
+
+  /**
+   * Requests a response statement from the worker.
+   */
+  async requestWorkerResponse(
+    complaintId: string,
+    message: string,
+    actorId: string = "fed-admin-1",
+    actorName: string = "Federation Grievance Officer"
+  ): Promise<{ success: boolean; complaintId: string; updatedCase: GrievanceCase }> {
+    const updatedCase = await complaintService.requestPartyResponse(
+      complaintId,
+      "WORKER",
+      message,
+      actorId,
+      "FEDERATION_ADMIN",
+      actorName
+    );
+    return {
+      success: true,
+      complaintId,
+      updatedCase,
     };
   }
 }

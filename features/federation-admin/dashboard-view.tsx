@@ -32,6 +32,8 @@ import { ProfessionDistributionChart } from "./components/charts/profession-dist
 import { JobActivityChart } from "./components/charts/job-activity-chart";
 import { WorkerPerformanceChart } from "./components/charts/worker-performance-chart";
 import { DemandDistributionChart } from "./components/charts/demand-distribution-chart";
+import { createClient } from "@/lib/supabase/client";
+import { getCachedProfileName, setCachedProfileName } from "@/lib/auth/session-user";
 
 export function FederationAdminDashboardView() {
   const {
@@ -42,6 +44,43 @@ export function FederationAdminDashboardView() {
     setTimeframe,
     refresh,
   } = useFederationDashboard();
+
+  const [adminName, setAdminName] = React.useState<string>(
+    () => getCachedProfileName("FEDERATION_ADMIN") || ""
+  );
+  const [isLoadingAdminName, setIsLoadingAdminName] = React.useState<boolean>(
+    () => !getCachedProfileName("FEDERATION_ADMIN")
+  );
+
+  React.useEffect(() => {
+    let isMounted = true;
+    async function fetchAdminProfile() {
+      try {
+        const supabase = createClient();
+        const { data: { user } } = await supabase.auth.getUser();
+        if (user?.id) {
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          const { data: profile } = await (supabase.from("profiles") as any)
+            .select("full_name, role")
+            .eq("id", user.id)
+            .maybeSingle();
+
+          if (isMounted && profile?.full_name) {
+            setCachedProfileName("FEDERATION_ADMIN", profile.full_name);
+            setAdminName(profile.full_name);
+          }
+        }
+      } catch (err) {
+        console.error("Error loading federation admin profile", err);
+      } finally {
+        if (isMounted) setIsLoadingAdminName(false);
+      }
+    }
+    fetchAdminProfile();
+    return () => {
+      isMounted = false;
+    };
+  }, []);
 
   return (
     <div className="space-y-8 pb-12">
@@ -55,6 +94,8 @@ export function FederationAdminDashboardView() {
         lastUpdated={data?.lastUpdated}
         isDevelopmentFallback={data?.isDevelopmentFallback}
         dataSourceNotice={data?.dataSourceNotice}
+        adminName={adminName || "Vikram Shah"}
+        isLoadingAdminName={isLoadingAdminName}
       />
 
       {/* Error state */}

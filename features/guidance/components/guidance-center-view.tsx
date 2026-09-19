@@ -40,7 +40,7 @@ export interface GuidanceCenterViewProps {
   userName?: string;
 }
 
-export function GuidanceCenterView({ role, userName }: GuidanceCenterViewProps) {
+function GuidanceCenterViewContent({ role, userName }: GuidanceCenterViewProps) {
   const searchParams = useSearchParams();
   const initialQuery = searchParams.get("q") || "";
 
@@ -631,6 +631,14 @@ export function GuidanceCenterView({ role, userName }: GuidanceCenterViewProps) 
         onClose={() => setSelectedStatusCode(null)}
       />
     </div>
+  );
+}
+
+export function GuidanceCenterView(props: GuidanceCenterViewProps) {
+  return (
+    <React.Suspense fallback={<div className="p-6 text-sm text-muted-foreground">Loading guidance center...</div>}>
+      <GuidanceCenterViewContent {...props} />
+    </React.Suspense>
   );
 }
 

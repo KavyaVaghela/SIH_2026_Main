@@ -1,10 +1,13 @@
 "use client";
 
 import * as React from "react";
+import { usePathname } from "next/navigation";
 import { TopNavbar } from "@/components/navigation/top-navbar";
 import { FederationAdminSidebar } from "./federation-admin-sidebar";
 import { X } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { createClient } from "@/lib/supabase/client";
+import { getCachedProfileName, setCachedProfileName } from "@/lib/auth/session-user";
 
 interface FederationAdminShellProps {
   children: React.ReactNode;
@@ -20,14 +23,75 @@ export function FederationAdminShell({
   className,
 }: FederationAdminShellProps) {
   const [mobileDrawerOpen, setMobileDrawerOpen] = React.useState(false);
+  const pathname = usePathname();
+  const [displayName, setDisplayName] = React.useState<string>(
+    () => getCachedProfileName("FEDERATION_ADMIN") || (userName !== "Federation Administrator" ? userName : "Vikram Shah")
+  );
+
+  // Close mobile drawer on route change
+  React.useEffect(() => {
+    setMobileDrawerOpen(false);
+  }, [pathname]);
+
+  // Handle Escape key to close mobile drawer
+  React.useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === "Escape" && mobileDrawerOpen) {
+        setMobileDrawerOpen(false);
+      }
+    };
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, [mobileDrawerOpen]);
+
+  // Lock body scroll while mobile drawer is active
+  React.useEffect(() => {
+    if (mobileDrawerOpen) {
+      document.body.style.overflow = "hidden";
+    } else {
+      document.body.style.overflow = "";
+    }
+    return () => {
+      document.body.style.overflow = "";
+    };
+  }, [mobileDrawerOpen]);
+
+  React.useEffect(() => {
+    let isMounted = true;
+    async function loadAdminIdentity() {
+      try {
+        const supabase = createClient();
+        const { data: { user } } = await supabase.auth.getUser();
+        if (user?.id) {
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          const { data: profile } = await (supabase.from("profiles") as any)
+            .select("full_name")
+            .eq("id", user.id)
+            .maybeSingle();
+
+          if (isMounted && profile?.full_name) {
+            setCachedProfileName("FEDERATION_ADMIN", profile.full_name);
+            setDisplayName(profile.full_name);
+          }
+        }
+      } catch (err) {
+        console.error("Error loading federation admin identity in shell", err);
+      }
+    }
+    loadAdminIdentity();
+    return () => {
+      isMounted = false;
+    };
+  }, []);
 
   return (
     <div className="min-h-screen flex flex-col bg-background text-foreground">
       {/* Top Administrative Navbar */}
       <TopNavbar
         platformTitle="KaushalyaSetu"
-        userName={userName}
+        userName={displayName}
         userRole={userRole}
+        role="FEDERATION_ADMIN"
         onToggleMobileMenu={() => setMobileDrawerOpen(!mobileDrawerOpen)}
       />
 
@@ -55,7 +119,7 @@ export function FederationAdminShell({
             </div>
 
             <div className="flex-1 overflow-y-auto">
-              <FederationAdminSidebar onNavigate={() => setMobileDrawerOpen(false)} />
+              <FederationAdminSidebar onNavigate={() => setMobileDrawerOpen(false)} className="w-full border-r-0 static top-0 h-full p-4 space-y-6" />
             </div>
           </div>
         </div>

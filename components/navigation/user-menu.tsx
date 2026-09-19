@@ -6,6 +6,7 @@ import { User, Settings, LogOut, Shield, HelpCircle } from "lucide-react";
 import { Avatar } from "@/components/ui/avatar";
 import { Dropdown, type DropdownItem } from "@/components/ui/dropdown";
 import { createClient } from "@/lib/supabase/client";
+import { clearCachedProfileNames } from "@/lib/auth/session-user";
 
 export interface UserMenuProps {
   userName?: string;
@@ -93,18 +94,19 @@ export function UserMenu({
   };
 
   const handleSignOutClick = async () => {
+    clearCachedProfileNames();
     if (onLogout) {
-      onLogout();
+      await onLogout();
     } else {
       try {
         const supabase = createClient();
         await supabase.auth.signOut();
       } catch (err) {
         console.error("Sign out error", err);
-      } finally {
-        router.push("/login");
       }
     }
+    router.push("/");
+    router.refresh();
   };
 
   const items: DropdownItem[] = [

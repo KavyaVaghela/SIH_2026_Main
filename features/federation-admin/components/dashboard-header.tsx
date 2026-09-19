@@ -15,6 +15,15 @@ interface DashboardHeaderProps {
   lastUpdated?: string;
   isDevelopmentFallback?: boolean;
   dataSourceNotice?: string;
+  adminName?: string;
+  isLoadingAdminName?: boolean;
+}
+
+function getGreeting(): string {
+  const hour = new Date().getHours();
+  if (hour < 12) return "Good Morning";
+  if (hour < 17) return "Good Afternoon";
+  return "Good Evening";
 }
 
 export function DashboardHeader({
@@ -26,6 +35,8 @@ export function DashboardHeader({
   lastUpdated,
   isDevelopmentFallback,
   dataSourceNotice,
+  adminName,
+  isLoadingAdminName,
 }: DashboardHeaderProps) {
   const timeframes: { key: DashboardTimeframe; label: string }[] = [
     { key: "7d", label: "7 Days" },
@@ -69,8 +80,20 @@ export function DashboardHeader({
             </Badge>
           </div>
 
-          <h1 className="text-2xl font-bold tracking-tight text-foreground">
-            Federation Performance & Operations
+          <h1 className="text-2xl font-bold tracking-tight text-foreground flex items-center gap-2">
+            {adminName !== undefined || isLoadingAdminName !== undefined ? (
+              <>
+                {getGreeting()},{" "}
+                {isLoadingAdminName || !adminName ? (
+                  <span className="inline-block h-8 w-36 sm:w-44 bg-slate-200 dark:bg-slate-800 animate-pulse rounded-md align-middle" />
+                ) : (
+                  <span className="text-emerald-600 dark:text-emerald-400">{adminName}</span>
+                )}{" "}
+                👋
+              </>
+            ) : (
+              "Federation Performance & Operations"
+            )}
           </h1>
           <p className="text-sm text-muted-foreground max-w-2xl">
             Executive oversight of workforce operational capacity, service fulfillment velocity, customer complaints, and aggregate cooperative efficiency.
