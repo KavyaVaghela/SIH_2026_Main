@@ -4,12 +4,14 @@ import * as React from "react";
 import { Building2, Menu } from "lucide-react";
 import { NotificationCenter } from "./notification-center";
 import { UserMenu } from "./user-menu";
+import type { PlatformRole } from "@/config/navigation";
 import { cn } from "@/lib/utils";
 
 export interface TopNavbarProps {
   platformTitle?: string;
   userName?: string;
   userRole?: string;
+  role?: PlatformRole;
   onToggleMobileMenu?: () => void;
   className?: string;
 }
@@ -18,6 +20,7 @@ export function TopNavbar({
   platformTitle = "KaushalyaSetu",
   userName,
   userRole,
+  role,
   onToggleMobileMenu,
   className,
 }: TopNavbarProps) {
@@ -51,7 +54,7 @@ export function TopNavbar({
         {/* Global Search Bar removed per Customer Task 7 guidelines */}
 
         <div className="flex items-center space-x-2 sm:space-x-3">
-          <NotificationCenter />
+          <NotificationCenter role={role} />
           <UserMenu userName={userName} userRole={userRole} />
         </div>
       </div>

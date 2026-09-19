@@ -183,10 +183,18 @@ export function LoginView() {
             </Button>
           </form>
         </CardContent>
-        <CardFooter className="justify-center text-xs text-muted-foreground border-t pt-4">
-          Don&apos;t have an account?{" "}
-          <Link href="/register" className="ml-1 font-semibold text-primary hover:underline">
-            Register Here
+        <CardFooter className="flex flex-col items-center gap-2.5 text-xs text-muted-foreground border-t pt-4">
+          <div>
+            Don&apos;t have an account?{" "}
+            <Link href="/register" className="ml-1 font-semibold text-primary hover:underline">
+              Register Here
+            </Link>
+          </div>
+          <Link
+            href="/"
+            className="font-semibold text-primary hover:underline transition-colors"
+          >
+            ← Back to Landing Page
           </Link>
         </CardFooter>
       </Card>

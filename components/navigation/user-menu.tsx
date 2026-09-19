@@ -96,17 +96,17 @@ export function UserMenu({
   const handleSignOutClick = async () => {
     clearCachedProfileNames();
     if (onLogout) {
-      onLogout();
+      await onLogout();
     } else {
       try {
         const supabase = createClient();
         await supabase.auth.signOut();
       } catch (err) {
         console.error("Sign out error", err);
-      } finally {
-        router.push("/login");
       }
     }
+    router.push("/");
+    router.refresh();
   };
 
   const items: DropdownItem[] = [
