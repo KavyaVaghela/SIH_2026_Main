@@ -112,6 +112,7 @@ export interface GrievanceCase {
   subcategory?: string;
   subject: string;
   description: string;
+  additionalInfo?: string;
   priority: GrievancePriority;
   suggestedPriority: GrievancePriority;
   triageReason?: string;
@@ -129,15 +130,25 @@ export interface GrievanceCase {
   bookingContext?: GrievanceBookingContext | null;
   responseRequests?: {
     workerRequired?: boolean;
+    workerSubmitted?: boolean;
+    workerSubmittedAt?: string;
     customerRequired?: boolean;
+    customerSubmitted?: boolean;
+    customerSubmittedAt?: string;
     prompt?: string;
     requestedAt?: string;
   } | null;
+  rejectionReason?: string | null;
+  rejectedAt?: string | null;
+  rejectedBy?: string | null;
+  closedAt?: string | null;
+  closedBy?: string | null;
   createdAt: string;
   updatedAt: string;
 }
 
 export interface CreateGrievancePayload {
+  id?: string;
   raisedBy: string;
   raisedByRole?: GrievancePartyRole;
   raisedByName?: string;
@@ -153,6 +164,7 @@ export interface CreateGrievancePayload {
   subject: string;
   description: string;
   desiredOutcome?: string;
+  additionalInfo?: string;
   priority?: GrievancePriority;
   evidenceUrls?: string[];
 }

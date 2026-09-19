@@ -7,7 +7,13 @@ import {
   AlertCircle,
   CheckCircle2,
   ArrowLeft,
+  UploadCloud,
+  FileImage,
+  Trash2,
+  RefreshCw,
+  X,
 } from "lucide-react";
+import { validateComplaintEvidenceFile } from "@/lib/storage/complaint-evidence";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -58,8 +64,19 @@ function NewCustomerComplaintContent() {
   const [selectedBookingId, setSelectedBookingId] = React.useState<string>(prefillBookingId || "NONE");
   const [subject, setSubject] = React.useState<string>("");
   const [description, setDescription] = React.useState<string>("");
-  const [evidenceUrlInput, setEvidenceUrlInput] = React.useState<string>("");
-  const [evidenceUrls, setEvidenceUrls] = React.useState<string[]>([]);
+  const [selectedFile, setSelectedFile] = React.useState<File | null>(null);
+  const [filePreviewUrl, setFilePreviewUrl] = React.useState<string | null>(null);
+  const [fileValidationError, setFileValidationError] = React.useState<string | null>(null);
+  const fileInputRef = React.useRef<HTMLInputElement | null>(null);
+
+  // Clean up object URL when component unmounts or preview changes
+  React.useEffect(() => {
+    return () => {
+      if (filePreviewUrl) {
+        URL.revokeObjectURL(filePreviewUrl);
+      }
+    };
+  }, [filePreviewUrl]);
 
   const [isSubmitting, setIsSubmitting] = React.useState(false);
   const [submitError, setSubmitError] = React.useState<string | null>(null);
@@ -231,15 +248,42 @@ function NewCustomerComplaintContent() {
 
   const effectivePriority = triage.suggestedPriority;
 
-  const handleAddEvidence = () => {
-    if (evidenceUrlInput.trim() && !evidenceUrls.includes(evidenceUrlInput.trim())) {
-      setEvidenceUrls((prev) => [...prev, evidenceUrlInput.trim()]);
-      setEvidenceUrlInput("");
+  const handleFileChange = (file: File | null) => {
+    setFileValidationError(null);
+    if (!file) {
+      if (filePreviewUrl) URL.revokeObjectURL(filePreviewUrl);
+      setSelectedFile(null);
+      setFilePreviewUrl(null);
+      return;
     }
+
+    const validation = validateComplaintEvidenceFile({
+      name: file.name,
+      type: file.type,
+      size: file.size,
+    });
+
+    if (!validation.valid) {
+      setFileValidationError(validation.error || "Invalid file selected.");
+      if (fileInputRef.current) fileInputRef.current.value = "";
+      return;
+    }
+
+    if (filePreviewUrl) {
+      URL.revokeObjectURL(filePreviewUrl);
+    }
+
+    setSelectedFile(file);
+    const objectUrl = URL.createObjectURL(file);
+    setFilePreviewUrl(objectUrl);
   };
 
-  const handleRemoveEvidence = (idx: number) => {
-    setEvidenceUrls((prev) => prev.filter((_, i) => i !== idx));
+  const handleRemoveImage = () => {
+    if (filePreviewUrl) URL.revokeObjectURL(filePreviewUrl);
+    setSelectedFile(null);
+    setFilePreviewUrl(null);
+    setFileValidationError(null);
+    if (fileInputRef.current) fileInputRef.current.value = "";
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -278,26 +322,29 @@ function NewCustomerComplaintContent() {
       const matchedBooking = customerBookings.find((b) => b.id === effectiveBookingId);
       const federationId = matchedBooking?.federation_id || "b765df3b-c418-4a15-b79f-3cbc09e475dc";
 
+      const formData = new FormData();
+      formData.append("raisedBy", customerId);
+      formData.append("raisedByRole", "CUSTOMER");
+      formData.append("raisedByName", customerName);
+      if (targetProfileId) formData.append("targetProfileId", targetProfileId);
+      if (targetWorkerId) formData.append("targetWorkerId", targetWorkerId);
+      formData.append("targetRole", targetRole);
+      if (targetName) formData.append("targetName", targetName);
+      if (effectiveBookingId) formData.append("bookingId", effectiveBookingId);
+      formData.append("federationId", federationId);
+      formData.append("category", category);
+      if (subcategory.trim()) formData.append("subcategory", subcategory.trim());
+      formData.append("subject", subject.trim());
+      formData.append("description", description.trim());
+      formData.append("priority", effectivePriority);
+
+      if (selectedFile) {
+        formData.append("file", selectedFile);
+      }
+
       const res = await fetch("/api/complaints", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          raisedBy: customerId,
-          raisedByRole: "CUSTOMER",
-          raisedByName: customerName,
-          targetProfileId,
-          targetWorkerId,
-          targetRole,
-          targetName,
-          bookingId: effectiveBookingId,
-          federationId,
-          category,
-          subcategory: subcategory.trim() || undefined,
-          subject: subject.trim(),
-          description: description.trim(),
-          priority: effectivePriority,
-          evidenceUrls,
-        }),
+        body: formData,
       });
 
       const data = await res.json();
@@ -671,55 +718,138 @@ function NewCustomerComplaintContent() {
             </div>
           </div>
 
-          {/* STEP 5: Evidence Attachments */}
+          {/* STEP 5: Direct Image Upload Evidence */}
           <div className="space-y-3 pt-2">
             <div className="flex items-center justify-between border-b border-slate-100 dark:border-slate-800 pb-2">
               <span className="text-xs font-bold uppercase tracking-wider text-slate-500">
-                Step 5: Supporting Photo / File Evidence
+                Step 5: Photo Evidence (Optional)
+              </span>
+              <span className="text-[11px] text-slate-400 font-medium">
+                JPG, JPEG, PNG • Max 5MB
               </span>
             </div>
 
-            <div className="space-y-2">
-              <div className="flex gap-2">
-                <Input
-                  placeholder="Enter image or document URL (e.g. https://... or /photos/...)"
-                  value={evidenceUrlInput}
-                  onChange={(e) => setEvidenceUrlInput(e.target.value)}
-                  className="text-xs h-9"
-                />
-                <Button
-                  type="button"
-                  variant="outline"
-                  size="sm"
-                  onClick={handleAddEvidence}
-                  className="text-xs font-semibold shrink-0"
-                >
-                  Add File
-                </Button>
-              </div>
+            {/* Hidden native file input */}
+            <input
+              ref={fileInputRef}
+              type="file"
+              accept=".jpg,.jpeg,.png,image/jpeg,image/png"
+              className="hidden"
+              id="complaint-evidence-file"
+              onChange={(e) => {
+                const f = e.target.files?.[0] || null;
+                handleFileChange(f);
+              }}
+            />
 
-              {evidenceUrls.length > 0 && (
-                <div className="space-y-1 pt-1">
-                  {evidenceUrls.map((url, i) => (
-                    <div
-                      key={i}
-                      className="flex items-center justify-between p-2 rounded-lg bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-xs"
-                    >
-                      <span className="truncate max-w-sm font-mono text-[11px] text-slate-700 dark:text-slate-300">
-                        {url}
-                      </span>
-                      <button
-                        type="button"
-                        onClick={() => handleRemoveEvidence(i)}
-                        className="text-rose-600 hover:text-rose-800 text-xs font-bold cursor-pointer"
-                      >
-                        Remove
-                      </button>
-                    </div>
-                  ))}
+            {/* Validation Error Alert */}
+            {fileValidationError && (
+              <div className="p-3 bg-rose-50 dark:bg-rose-950/40 border border-rose-200 dark:border-rose-800 text-rose-800 dark:text-rose-300 text-xs rounded-xl flex items-start gap-2">
+                <AlertCircle className="w-4 h-4 text-rose-600 shrink-0 mt-0.5" />
+                <div className="flex-1">
+                  <span className="font-bold block">Invalid file selection</span>
+                  <span>{fileValidationError}</span>
                 </div>
-              )}
-            </div>
+                <button
+                  type="button"
+                  onClick={() => setFileValidationError(null)}
+                  className="text-rose-500 hover:text-rose-700 p-1"
+                >
+                  <X className="w-3.5 h-3.5" />
+                </button>
+              </div>
+            )}
+
+            {!selectedFile ? (
+              /* Dropzone / Upload Trigger */
+              <div
+                onClick={() => fileInputRef.current?.click()}
+                onDragOver={(e) => {
+                  e.preventDefault();
+                  e.stopPropagation();
+                }}
+                onDrop={(e) => {
+                  e.preventDefault();
+                  e.stopPropagation();
+                  const f = e.dataTransfer.files?.[0] || null;
+                  handleFileChange(f);
+                }}
+                className="border-2 border-dashed border-slate-300 dark:border-slate-700 hover:border-emerald-600 dark:hover:border-emerald-500 rounded-2xl p-6 text-center cursor-pointer transition-colors bg-slate-50/50 dark:bg-slate-800/30 group"
+              >
+                <div className="w-12 h-12 rounded-full bg-emerald-50 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-400 flex items-center justify-center mx-auto mb-3 group-hover:scale-105 transition-transform">
+                  <UploadCloud className="w-6 h-6" />
+                </div>
+                <div className="space-y-1">
+                  <span className="text-xs font-bold text-slate-800 dark:text-slate-200 block">
+                    Click to select or drag & drop photo evidence
+                  </span>
+                  <span className="text-[11px] text-slate-500 dark:text-slate-400 block">
+                    Supported formats: <strong>JPG, JPEG, PNG</strong> (up to 5MB)
+                  </span>
+                </div>
+              </div>
+            ) : (
+              /* Selected File Preview Card */
+              <div className="p-4 rounded-2xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/60 space-y-3">
+                <div className="flex items-start gap-3">
+                  {filePreviewUrl ? (
+                    <div className="w-20 h-20 rounded-xl overflow-hidden bg-slate-900 border border-slate-200 dark:border-slate-700 shrink-0 relative group">
+                      {/* eslint-disable-next-line @next/next/no-img-element */}
+                      <img
+                        src={filePreviewUrl}
+                        alt="Evidence Preview"
+                        className="w-full h-full object-cover"
+                      />
+                    </div>
+                  ) : (
+                    <div className="w-20 h-20 rounded-xl bg-slate-200 dark:bg-slate-700 flex items-center justify-center shrink-0">
+                      <FileImage className="w-8 h-8 text-slate-400" />
+                    </div>
+                  )}
+
+                  <div className="flex-1 min-w-0 space-y-1">
+                    <div className="flex items-center gap-2">
+                      <Badge className="bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300 text-[10px] font-bold">
+                        Image Attached
+                      </Badge>
+                      <span className="text-[11px] text-slate-500 font-mono">
+                        {(selectedFile.size / (1024 * 1024)).toFixed(2)} MB
+                      </span>
+                    </div>
+                    <p className="text-xs font-bold text-slate-900 dark:text-slate-100 truncate">
+                      {selectedFile.name}
+                    </p>
+                    <p className="text-[11px] text-slate-500">
+                      This photo will be encrypted and stored securely for cooperative federation review.
+                    </p>
+                  </div>
+                </div>
+
+                {/* Actions: Replace or Remove */}
+                <div className="flex items-center justify-end gap-2 pt-2 border-t border-slate-200/60 dark:border-slate-700/60">
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    onClick={() => fileInputRef.current?.click()}
+                    className="text-xs h-8 gap-1.5 font-semibold"
+                  >
+                    <RefreshCw className="w-3.5 h-3.5" />
+                    Replace Image
+                  </Button>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    onClick={handleRemoveImage}
+                    className="text-xs h-8 gap-1.5 text-rose-600 hover:text-rose-700 hover:bg-rose-50 dark:hover:bg-rose-950/30 border-rose-200 dark:border-rose-900 font-semibold"
+                  >
+                    <Trash2 className="w-3.5 h-3.5" />
+                    Remove
+                  </Button>
+                </div>
+              </div>
+            )}
           </div>
         </Card>
 

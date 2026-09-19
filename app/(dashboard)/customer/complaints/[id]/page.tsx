@@ -242,18 +242,28 @@ export default function CustomerComplaintDetailPage({
         </div>
 
         {complaint.evidenceUrls && complaint.evidenceUrls.length > 0 && (
-          <div className="pt-2 border-t border-slate-100 dark:border-slate-800 space-y-1">
+          <div className="pt-3 border-t border-slate-100 dark:border-slate-800 space-y-2">
             <span className="text-[10px] text-slate-400 uppercase font-bold block">Attached Evidence</span>
-            <div className="flex flex-wrap gap-2">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
               {complaint.evidenceUrls.map((url, i) => (
                 <a
                   key={i}
                   href={url}
                   target="_blank"
                   rel="noreferrer"
-                  className="text-xs text-emerald-700 dark:text-emerald-400 underline flex items-center gap-1"
+                  className="flex items-center gap-2.5 p-2.5 rounded-xl bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700 hover:border-emerald-500 transition-colors group"
                 >
-                  <FileText className="w-3.5 h-3.5" /> Evidence Document #{i + 1}
+                  <div className="w-9 h-9 rounded-lg bg-emerald-100 dark:bg-emerald-950 flex items-center justify-center text-emerald-700 dark:text-emerald-400 shrink-0">
+                    <FileText className="w-4 h-4" />
+                  </div>
+                  <div className="min-w-0 flex-1">
+                    <span className="text-xs font-semibold text-slate-800 dark:text-slate-200 block truncate group-hover:text-emerald-700 dark:group-hover:text-emerald-400">
+                      Evidence Attachment #{i + 1}
+                    </span>
+                    <span className="text-[10px] text-slate-400 block font-mono truncate">
+                      Click to inspect securely
+                    </span>
+                  </div>
                 </a>
               ))}
             </div>

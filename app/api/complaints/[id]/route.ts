@@ -28,10 +28,10 @@ export async function GET(
       complaint: grievance,
     });
   } catch (err: unknown) {
-    const errorObj = err as { message?: string; status?: number };
+    const errorObj = err as { message?: string; status?: number; statusCode?: number };
     return NextResponse.json(
       { success: false, error: errorObj.message || "Failed to retrieve complaint" },
-      { status: errorObj.status || 500 }
+      { status: errorObj.statusCode || errorObj.status || 500 }
     );
   }
 }
@@ -50,6 +50,16 @@ export async function PATCH(
         { success: false, error: "actorId and actorRole are required for complaint modifications." },
         { status: 400 }
       );
+    }
+
+    if (actorRole === "FEDERATION_ADMIN" && body.federationId) {
+      const existing = await complaintService.getGrievanceById(id);
+      if (existing && existing.federationId && existing.federationId !== body.federationId) {
+        return NextResponse.json(
+          { success: false, error: "Access denied: You cannot modify complaints outside your federation." },
+          { status: 403 }
+        );
+      }
     }
 
     let updated;
@@ -105,6 +115,41 @@ export async function PATCH(
         actorRole as GrievancePartyRole,
         actorName
       );
+    } else if (action === "reject") {
+      const { rejectionReason, reason: bodyReason } = body;
+      const reasonText = rejectionReason || bodyReason || reason;
+      if (!reasonText || !reasonText.trim()) {
+        return NextResponse.json({ success: false, error: "Rejection reason is required" }, { status: 400 });
+      }
+      updated = await complaintService.rejectGrievance(
+        id,
+        reasonText.trim(),
+        actorId,
+        actorRole as GrievancePartyRole,
+        actorName
+      );
+    } else if (action === "close") {
+      const { notes, reason: bodyReason } = body;
+      updated = await complaintService.closeGrievance(
+        id,
+        (notes || bodyReason || reason || "").trim(),
+        actorId,
+        actorRole as GrievancePartyRole,
+        actorName
+      );
+    } else if (action === "request_response") {
+      const { targetParty = "WORKER", message } = body;
+      if (!message || !message.trim()) {
+        return NextResponse.json({ success: false, error: "Response request message is required" }, { status: 400 });
+      }
+      updated = await complaintService.requestPartyResponse(
+        id,
+        targetParty as GrievancePartyRole,
+        message.trim(),
+        actorId,
+        actorRole as GrievancePartyRole,
+        actorName
+      );
     } else {
       return NextResponse.json({ success: false, error: `Unsupported patch action: ${action}` }, { status: 400 });
     }
@@ -115,10 +160,10 @@ export async function PATCH(
       complaint: updated,
     });
   } catch (err: unknown) {
-    const errorObj = err as { message?: string; status?: number };
+    const errorObj = err as { message?: string; status?: number; statusCode?: number };
     return NextResponse.json(
       { success: false, error: errorObj.message || "Failed to update complaint" },
-      { status: errorObj.status || 500 }
+      { status: errorObj.statusCode || errorObj.status || 500 }
     );
   }
 }
