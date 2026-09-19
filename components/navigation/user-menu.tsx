@@ -2,7 +2,7 @@
 
 import * as React from "react";
 import { useRouter, usePathname } from "next/navigation";
-import { User, Settings, LogOut, Shield, HelpCircle } from "lucide-react";
+import { User, Settings, LogOut, HelpCircle } from "lucide-react";
 import { Avatar } from "@/components/ui/avatar";
 import { Dropdown, type DropdownItem } from "@/components/ui/dropdown";
 import { createClient } from "@/lib/supabase/client";
