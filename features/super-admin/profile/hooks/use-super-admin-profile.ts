@@ -125,7 +125,8 @@ export function useSuperAdminProfile() {
 
   const logout = async () => {
     await profileService.signOut();
-    router.push("/login");
+    router.push("/");
+    router.refresh();
   };
 
   return {

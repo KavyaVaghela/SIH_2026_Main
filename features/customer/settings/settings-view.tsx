@@ -136,7 +136,8 @@ export function AccountSettingsView() {
     } catch (err) {
       console.error("Sign out error", err);
     } finally {
-      router.push("/login");
+      router.push("/");
+      router.refresh();
     }
   };
 

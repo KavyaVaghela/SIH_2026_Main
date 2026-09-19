@@ -5,6 +5,7 @@ import { Home, Calendar, Users, FileText, Settings } from "lucide-react";
 import { TopNavbar } from "@/components/navigation/top-navbar";
 import { DesktopSidebar, type NavItem } from "@/components/navigation/desktop-sidebar";
 import { MobileNavigation, type MobileNavItem } from "@/components/navigation/mobile-navigation";
+import type { PlatformRole } from "@/config/navigation";
 import { cn } from "@/lib/utils";
 
 export interface AppShellProps {
@@ -13,6 +14,7 @@ export interface AppShellProps {
   mobileNavItems?: MobileNavItem[];
   userName?: string;
   userRole?: string;
+  role?: PlatformRole;
   className?: string;
 }
 
@@ -37,6 +39,7 @@ export function AppShell({
   mobileNavItems = defaultMobileNavItems,
   userName = "Cooperative Member",
   userRole = "Platform Admin",
+  role,
   className,
 }: AppShellProps) {
   const [mobileSidebarOpen, setMobileSidebarOpen] = React.useState(false);
@@ -46,6 +49,7 @@ export function AppShell({
       <TopNavbar
         userName={userName}
         userRole={userRole}
+        role={role}
         onToggleMobileMenu={() => setMobileSidebarOpen(!mobileSidebarOpen)}
       />
 

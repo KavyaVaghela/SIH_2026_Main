@@ -28,6 +28,7 @@ export function FederationAdminShell({
         platformTitle="KaushalyaSetu"
         userName={userName}
         userRole={userRole}
+        role="FEDERATION_ADMIN"
         onToggleMobileMenu={() => setMobileDrawerOpen(!mobileDrawerOpen)}
       />
 

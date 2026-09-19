@@ -48,6 +48,7 @@ export function RoleShell({ role, userName, children, className }: RoleShellProp
       mobileNavItems={config.mobileNavItems}
       userName={profileName || userName || config.displayName}
       userRole={config.displayName}
+      role={role}
       className={className}
     >
       {children}
