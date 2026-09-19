@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect, useRef } from "react";
 import Link from "next/link";
-import { Building2, Menu, X, ArrowRight, ChevronDown, HelpCircle } from "lucide-react";
+import { Menu, X, ArrowRight, ChevronDown, HelpCircle } from "lucide-react";
 import { Logo } from "@/components/ui/logo";
 import { LandingFaqAccordion } from "./landing-faq";
 

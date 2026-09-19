@@ -2,7 +2,7 @@
 
 import React from "react";
 import Link from "next/link";
-import { Building2, ExternalLink } from "lucide-react";
+import { ExternalLink } from "lucide-react";
 import { Logo } from "@/components/ui/logo";
 import { useAuthModal } from "./landing-auth-modal";
 
