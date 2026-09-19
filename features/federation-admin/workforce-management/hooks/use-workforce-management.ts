@@ -134,7 +134,7 @@ export function useWorkforceManagement() {
     fetchChangeRequests(changeRequestSearch, changeRequestStatusFilter);
   }, [changeRequestSearch, changeRequestStatusFilter, fetchChangeRequests]);
 
-  // Realtime Workforce Subscriptions (Task 1)
+  // Realtime Workforce Subscriptions (Task 1 & Main Integration)
   React.useEffect(() => {
     const supabase = createClient();
     let debounceTimer: NodeJS.Timeout | null = null;
@@ -147,7 +147,7 @@ export function useWorkforceManagement() {
       }, 500);
     };
 
-    // 1. Broadcast channel for instantaneous workforce updates
+    // 1. Broadcast channel for instantaneous workforce updates (channel A)
     const broadcastChannel = supabase
       .channel("federation-workforce")
       .on("broadcast", { event: "workforce_updated" }, (payload) => {
@@ -160,7 +160,23 @@ export function useWorkforceManagement() {
       })
       .subscribe();
 
-    // 2. Database CDC changes on workers & notifications tables
+    // 2. Broadcast channel for federation updates (channel B)
+    const broadcastChannelUpdates = supabase
+      .channel("federation-workforce-updates")
+      .on("broadcast", { event: "*" }, () => {
+        triggerRefresh();
+      })
+      .on("broadcast", { event: "NEW_WORKER_APPLICATION" }, () => {
+        addToast(
+          "New Worker Application Received",
+          "A new worker registration has been submitted and is ready for federation review.",
+          "info"
+        );
+        triggerRefresh();
+      })
+      .subscribe();
+
+    // 3. Database CDC changes on workers & notifications tables
     const dbChannel = supabase
       .channel("workforce-db-changes")
       .on(
@@ -170,8 +186,15 @@ export function useWorkforceManagement() {
           schema: "public",
           table: "workers",
         },
-        () => {
+        (payload) => {
           triggerRefresh();
+          if (payload?.eventType === "INSERT") {
+            addToast(
+              "New Worker Application Received",
+              "A new worker registration has been submitted and is ready for federation review.",
+              "info"
+            );
+          }
         }
       )
       .on(
@@ -190,9 +213,10 @@ export function useWorkforceManagement() {
     return () => {
       if (debounceTimer) clearTimeout(debounceTimer);
       supabase.removeChannel(broadcastChannel);
+      supabase.removeChannel(broadcastChannelUpdates);
       supabase.removeChannel(dbChannel);
     };
-  }, [searchQuery, applicationSearch, applicationStatusFilter, fetchWorkers, fetchApplications]);
+  }, [searchQuery, applicationSearch, applicationStatusFilter, fetchWorkers, fetchApplications, addToast]);
 
   // Task 4 Operations
   const handleAddWorker = async (payload: AddWorkerPayload): Promise<boolean> => {

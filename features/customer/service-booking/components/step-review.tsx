@@ -243,19 +243,24 @@ export function StepReview({
           </div>
         </div>
 
-        <div className="flex items-center justify-between pt-2 border-t border-emerald-800">
-          <Button variant="ghost" size="sm" onClick={onBack} className="text-xs text-slate-200 hover:text-white hover:bg-emerald-800">
-            <ArrowLeft className="w-3.5 h-3.5 mr-1" />
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 pt-3 border-t border-emerald-800">
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={onBack}
+            className="text-xs text-slate-200 hover:text-white hover:bg-emerald-800 self-start sm:self-auto"
+          >
+            <ArrowLeft className="w-3.5 h-3.5 mr-1 shrink-0" />
             Back to Schedule
           </Button>
 
           <Button
             onClick={onProceedToMatching}
-            className="bg-white text-emerald-950 hover:bg-emerald-50 font-bold text-xs px-6 py-2.5 shadow-lg gap-2"
+            className="w-full sm:w-auto max-w-full bg-white text-emerald-950 hover:bg-emerald-50 font-bold text-xs px-4 sm:px-6 py-2.5 shadow-lg gap-2 justify-center"
           >
-            <CheckCircle2 className="w-4 h-4 text-emerald-700" />
-            Continue to Find Workers
-            <ChevronRight className="w-4 h-4 text-emerald-700" />
+            <CheckCircle2 className="w-4 h-4 text-emerald-700 shrink-0" />
+            <span>Continue to Find Workers</span>
+            <ChevronRight className="w-4 h-4 text-emerald-700 shrink-0" />
           </Button>
         </div>
       </Card>

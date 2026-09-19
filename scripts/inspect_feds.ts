@@ -15,17 +15,27 @@ function loadEnv() {
     }
   }
 }
+
 loadEnv();
 
-const supabase = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.SUPABASE_SECRET_KEY!
-);
+const url = process.env.NEXT_PUBLIC_SUPABASE_URL || "";
+const key = process.env.SUPABASE_SECRET_KEY || process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY || "";
+
+const supabase = createClient(url, key, {
+  auth: { persistSession: false },
+});
 
 async function inspect() {
   console.log("=== FEDERATIONS ===");
-  const { data: feds } = await supabase.from("federations").select("id, code, name, contact_email, is_active, status");
-  console.log(feds);
+  const { data: feds, error } = await supabase.from("federations").select("*");
+  if (error) {
+    console.error("Error fetching federations:", error);
+  } else if (feds) {
+    console.log(`Total federations: ${feds.length}`);
+    for (const f of feds) {
+      console.log(`- ID: ${f.id} | Name: "${f.name}" | Code: ${f.code} | City: ${f.city} | Status: ${f.status || (f.is_active ? "ACTIVE" : "INACTIVE")}`);
+    }
+  }
 
   console.log("\n=== ADMIN PROFILES ===");
   const { data: profiles } = await supabase
@@ -42,6 +52,7 @@ async function inspect() {
   console.log(workers);
 
   console.log("\n=== REALTIME PUBLICATION CHECK ===");
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const { data: pubTables, error: pubErr } = await (supabase.rpc("get_realtime_tables") as any);
   console.log("Pub check:", pubTables || pubErr);
 }

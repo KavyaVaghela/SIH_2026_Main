@@ -163,7 +163,7 @@ async function runPhase5Verification() {
     // -------------------------------------------------------------------------
     try {
       const c2 = await complaintService.createGrievance({
-        raisedBy: workerBProfileId,
+        raisedBy: workerAProfileId,
         raisedByRole: "WORKER",
         bookingId: testBookingId,
         targetProfileId: customerProfileId,

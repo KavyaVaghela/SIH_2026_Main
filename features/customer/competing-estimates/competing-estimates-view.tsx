@@ -26,6 +26,8 @@ import {
   DollarSign,
   TrendingDown,
   UserCheck,
+  MapPin,
+  ArrowUpDown,
 } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
 import { ContextualHelpPopover } from "@/features/guidance/components/contextual-help-popover";
@@ -40,6 +42,7 @@ export function CompetingEstimatesView({ requestId }: CompetingEstimatesViewProp
   const [summary, setSummary] = React.useState<ServiceRequestSummary | null>(null);
   const [loading, setLoading] = React.useState(true);
   const [error, setError] = React.useState<string | null>(null);
+  const [sortBy, setSortBy] = React.useState<"price_asc" | "rating_desc" | "distance_asc" | "experience_desc">("price_asc");
 
   // Confirmation Modal State
   const [confirmingWorker, setConfirmingWorker] = React.useState<CompetingWorkerEstimate | null>(null);
@@ -90,6 +93,10 @@ export function CompetingEstimatesView({ requestId }: CompetingEstimatesViewProp
       .on("broadcast", { event: "worker_declined" }, () => {
         loadData(true);
       })
+      .on("broadcast", { event: "worker_unavailable" }, (event) => {
+        console.log("Realtime worker unavailable event:", event.payload);
+        loadData(true);
+      })
       .on("broadcast", { event: "worker_confirmed" }, (event) => {
         console.log("Realtime worker confirmed event:", event.payload);
         loadData(true);
@@ -130,7 +137,40 @@ export function CompetingEstimatesView({ requestId }: CompetingEstimatesViewProp
     return () => clearInterval(interval);
   }, [summary?.status, summary?.allDeclined, loadData]);
 
-  // Handle worker confirmation
+  // Realtime Automatic Sorting
+  const sortedEstimates = React.useMemo(() => {
+    if (!summary?.estimates) return [];
+    return [...summary.estimates].sort((a, b) => {
+      // 1. Prioritize active non-declined, non-unavailable over inactive
+      const aInactive = a.status === "DECLINED" || a.status === "WORKER_UNAVAILABLE" || a.status === "NOT_SELECTED";
+      const bInactive = b.status === "DECLINED" || b.status === "WORKER_UNAVAILABLE" || b.status === "NOT_SELECTED";
+      if (aInactive !== bInactive) return aInactive ? 1 : -1;
+
+      // 2. Prioritize submitted estimates over pending
+      const aHasEst = (a.status === "ESTIMATE_SUBMITTED" || a.status === "SELECTED") && a.estimatedAmount > 0;
+      const bHasEst = (b.status === "ESTIMATE_SUBMITTED" || b.status === "SELECTED") && b.estimatedAmount > 0;
+      if (aHasEst !== bHasEst) return aHasEst ? -1 : 1;
+
+      if (sortBy === "price_asc") {
+        if (aHasEst && bHasEst) {
+          return a.estimatedAmount - b.estimatedAmount;
+        }
+        return 0;
+      }
+      if (sortBy === "rating_desc") {
+        return (b.rating || 0) - (a.rating || 0);
+      }
+      if (sortBy === "distance_asc") {
+        return (a.distanceKm || 2.5) - (b.distanceKm || 2.5);
+      }
+      if (sortBy === "experience_desc") {
+        return (b.experienceYears || 0) - (a.experienceYears || 0);
+      }
+      return 0;
+    });
+  }, [summary?.estimates, sortBy]);
+
+  // Handle explicit worker confirmation by customer
   const handleConfirmWorker = async () => {
     if (!confirmingWorker || !summary || isConfirming) return;
     setIsConfirming(true);
@@ -141,20 +181,36 @@ export function CompetingEstimatesView({ requestId }: CompetingEstimatesViewProp
       const { data: { user } } = await supabase.auth.getUser();
       const customerId = user?.id || summary.customerId;
 
-      const result = await multiWorkerService.confirmSelectedWorker(
-        requestId,
-        confirmingWorker.workerId,
-        customerId
-      );
+      // Primary: Server API route with database-level atomic row lock
+      const res = await fetch(`/api/customer/requests/${requestId}`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          selectedWorkerId: confirmingWorker.workerId,
+          customerId,
+        }),
+      });
+
+      const json = await res.json();
+      if (!res.ok) {
+        throw new Error(json.error || "Worker is no longer available for this booking.");
+      }
+
+      const canonicalBookingId = json.bookingId;
+      if (!canonicalBookingId) {
+        throw new Error("No canonical booking ID returned from server.");
+      }
 
       // Successfully confirmed -> Navigate to canonical booking lifecycle
-      router.push(`/customer/bookings/${result.bookingId}`);
+      router.push(`/customer/bookings/${canonicalBookingId}`);
     } catch (err: any) {
       console.error("Failed to confirm worker:", err);
       setConfirmationError(
-        err?.message || "Failed to confirm worker. Please try again."
+        err?.message || "Worker is no longer available for this booking."
       );
       setIsConfirming(false);
+      // Refresh customer view to immediately reflect unavailable worker
+      loadData(true);
     }
   };
 
@@ -327,8 +383,8 @@ export function CompetingEstimatesView({ requestId }: CompetingEstimatesViewProp
         </div>
       </Card>
 
-      {/* Competing Estimates Section Title */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 px-1">
+      {/* Competing Estimates Section Title & Interactive Sorting */}
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-3 px-1">
         <div>
           <div className="flex items-center gap-2">
             <h3 className="text-base font-bold text-slate-900 dark:text-slate-100">
@@ -350,19 +406,73 @@ export function CompetingEstimatesView({ requestId }: CompetingEstimatesViewProp
             />
           </div>
           <p className="text-xs text-slate-500 dark:text-slate-400">
-            Workers submit itemized rates independently. Realtime updates are active without page refresh.
+            Workers submit itemized rates independently. Realtime updates re-sort automatically without page refresh.
           </p>
         </div>
 
-        <Button
-          variant="outline"
-          size="sm"
-          onClick={() => loadData(true)}
-          className="text-xs border-slate-300 dark:border-slate-700 h-8 gap-1 self-end sm:self-center"
-        >
-          <RefreshCw className="w-3.5 h-3.5" />
-          Refresh
-        </Button>
+        {/* Realtime Interactive Sort Bar */}
+        <div className="flex flex-wrap items-center gap-2">
+          <div className="flex items-center gap-1 bg-slate-100 dark:bg-slate-800/80 p-1 rounded-lg border border-slate-200 dark:border-slate-700">
+            <span className="text-[11px] font-semibold text-slate-500 px-1.5 flex items-center gap-1">
+              <ArrowUpDown className="w-3 h-3 text-emerald-600" />
+              Sort:
+            </span>
+            <button
+              type="button"
+              onClick={() => setSortBy("price_asc")}
+              className={`px-2.5 py-1 rounded text-xs font-semibold transition-all ${
+                sortBy === "price_asc"
+                  ? "bg-white dark:bg-slate-900 text-emerald-700 dark:text-emerald-400 shadow-xs"
+                  : "text-slate-600 dark:text-slate-400 hover:text-slate-900"
+              }`}
+            >
+              Lowest Price (Best)
+            </button>
+            <button
+              type="button"
+              onClick={() => setSortBy("rating_desc")}
+              className={`px-2.5 py-1 rounded text-xs font-semibold transition-all ${
+                sortBy === "rating_desc"
+                  ? "bg-white dark:bg-slate-900 text-emerald-700 dark:text-emerald-400 shadow-xs"
+                  : "text-slate-600 dark:text-slate-400 hover:text-slate-900"
+              }`}
+            >
+              Rating
+            </button>
+            <button
+              type="button"
+              onClick={() => setSortBy("distance_asc")}
+              className={`px-2.5 py-1 rounded text-xs font-semibold transition-all ${
+                sortBy === "distance_asc"
+                  ? "bg-white dark:bg-slate-900 text-emerald-700 dark:text-emerald-400 shadow-xs"
+                  : "text-slate-600 dark:text-slate-400 hover:text-slate-900"
+              }`}
+            >
+              Nearest
+            </button>
+            <button
+              type="button"
+              onClick={() => setSortBy("experience_desc")}
+              className={`px-2.5 py-1 rounded text-xs font-semibold transition-all ${
+                sortBy === "experience_desc"
+                  ? "bg-white dark:bg-slate-900 text-emerald-700 dark:text-emerald-400 shadow-xs"
+                  : "text-slate-600 dark:text-slate-400 hover:text-slate-900"
+              }`}
+            >
+              Experience
+            </button>
+          </div>
+
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => loadData(true)}
+            className="text-xs border-slate-300 dark:border-slate-700 h-8 gap-1"
+          >
+            <RefreshCw className="w-3.5 h-3.5" />
+            Refresh
+          </Button>
+        </div>
       </div>
 
       {/* Case 1: All Workers Declined Empty State */}
@@ -404,9 +514,9 @@ export function CompetingEstimatesView({ requestId }: CompetingEstimatesViewProp
         </Card>
       )}
 
-      {/* Competing Worker Cards List */}
+      {/* Competing Worker Cards List - Sorted in Realtime */}
       <div className="space-y-4">
-        {summary.estimates.map((item) => {
+        {sortedEstimates.map((item) => {
           const isBest = summary.bestEstimate && item.estimatedAmount === summary.bestEstimate && item.estimatedAmount > 0;
           const isChosen = item.status === "SELECTED" || summary.selectedWorkerId === item.workerId;
           const isDeclined = item.status === "DECLINED";
@@ -476,8 +586,8 @@ export function CompetingEstimatesView({ requestId }: CompetingEstimatesViewProp
                     )}
                   </div>
 
-                  {/* Rating, Jobs, Experience Metrics */}
-                  <div className="flex items-center gap-4 text-xs text-slate-600 dark:text-slate-400">
+                  {/* Rating, Jobs, Experience & Distance Metrics */}
+                  <div className="flex flex-wrap items-center gap-3 text-xs text-slate-600 dark:text-slate-400">
                     <div className="flex items-center gap-1">
                       {item.isNew || item.reviewsCount === 0 ? (
                         <span className="text-emerald-700 font-bold bg-emerald-50 dark:bg-emerald-950 px-1.5 py-0.5 rounded text-[11px]">
@@ -499,10 +609,30 @@ export function CompetingEstimatesView({ requestId }: CompetingEstimatesViewProp
                       <span>{item.completedJobsCount} completed jobs</span>
                     </div>
 
-                    <div className="hidden sm:flex items-center gap-1">
+                    <div className="flex items-center gap-1">
                       <Award className="w-3.5 h-3.5 text-slate-400" />
                       <span>{item.experienceYears} yrs exp</span>
                     </div>
+
+                    <div className="flex items-center gap-1">
+                      <MapPin className="w-3.5 h-3.5 text-blue-500" />
+                      <span>{item.distanceKm ?? 2.5} km away</span>
+                    </div>
+                  </div>
+
+                  {/* Skills Badges */}
+                  <div className="flex flex-wrap gap-1 pt-1">
+                    {(item.skills && item.skills.length > 0
+                      ? item.skills
+                      : [item.profession || "Specialist", "Verified Craftsperson"]
+                    ).map((skill, skIdx) => (
+                      <span
+                        key={skIdx}
+                        className="inline-flex items-center text-[10px] bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 px-2 py-0.5 rounded-full font-medium"
+                      >
+                        {skill}
+                      </span>
+                    ))}
                   </div>
 
                   {/* Worker Notes */}
@@ -546,6 +676,14 @@ export function CompetingEstimatesView({ requestId }: CompetingEstimatesViewProp
                   ) : isDeclined ? (
                     <span className="text-xs font-bold text-rose-600 uppercase">
                       Declined
+                    </span>
+                  ) : item.status === "WORKER_UNAVAILABLE" ? (
+                    <span className="text-xs font-bold text-amber-600 dark:text-amber-400 uppercase">
+                      Unavailable • Allocated
+                    </span>
+                  ) : item.status === "NOT_SELECTED" ? (
+                    <span className="text-xs font-bold text-slate-400 uppercase">
+                      Not Selected
                     </span>
                   ) : item.status === "INTERESTED" ? (
                     <span className="text-xs font-bold text-emerald-600 uppercase">

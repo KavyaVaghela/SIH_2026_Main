@@ -41,6 +41,7 @@ export type WorkerRequestStatus =
   | "SELECTED"
   | "NOT_SELECTED"
   | "DECLINED"
+  | "WORKER_UNAVAILABLE"
   | "EXPIRED";
 
 export interface WorkerJobItem {
@@ -111,9 +112,11 @@ export interface GenerateServiceBillPayload {
 export interface WorkerEstimateSubmissionPayload {
   bookingId: string;
   workerId: string;
-  laborAmount: number;
+  laborAmount?: number;
   materialAmount?: number;
   additionalCharges?: number;
+  estimatedAmount?: number;
+  totalAmount?: number;
   notes?: string;
 }
 
@@ -165,6 +168,8 @@ export interface WorkerProfileDetails {
   experienceYears: number;
   cooperativeName: string;
   cooperativeId: string;
+  cooperativeRole?: string;
+  joiningDate?: string;
   federationName: string;
   location: string;
   phone: string;
@@ -187,6 +192,10 @@ export interface WorkerProfileDetails {
   address?: string | null;
   accountStatus?: string;
   verificationStatus?: string;
+  isVerified?: boolean;
+  certifications?: string[];
+  documents?: unknown[];
+  idProofNumber?: string;
 }
 
 export interface WorkerEarningsSummary {
@@ -267,6 +276,7 @@ export const CANONICAL_STATUS_LABELS: Record<WorkerRequestStatus, string> = {
   ESTIMATE_SUBMITTED: "Estimate Submitted",
   SELECTED: "Customer Selected",
   NOT_SELECTED: "Not Selected",
+  WORKER_UNAVAILABLE: "Unavailable / Allocated",
   DECLINED: "Declined",
   EXPIRED: "Expired",
 };

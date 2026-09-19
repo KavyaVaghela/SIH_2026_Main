@@ -51,7 +51,18 @@ export async function GET(request: NextRequest) {
     }
 
     if (workerId) {
-      query = query.eq("worker_id", workerId);
+      // Resolve worker record if profile_id was provided
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const { data: workerRecord } = await (supabase.from("workers") as any)
+        .select("id")
+        .or(`id.eq.${workerId},profile_id.eq.${workerId}`)
+        .maybeSingle();
+
+      if (workerRecord) {
+        query = query.or(`worker_id.eq.${workerRecord.id},worker_id.eq.${workerId}`);
+      } else {
+        query = query.eq("worker_id", workerId);
+      }
     }
 
     const { data, error } = await query;
@@ -169,6 +180,21 @@ export async function POST(request: NextRequest) {
         });
       } catch (histErr) {
         console.warn("Status history note:", histErr);
+      }
+
+      // Release worker availability back to AVAILABLE when booking completes or is cancelled
+      if ((status === "BOOKING_COMPLETED" || status === "CANCELLED") && existing.worker_id) {
+        try {
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          await (supabase.from("workers") as any)
+            .update({
+              availability_status: "AVAILABLE",
+              updated_at: now,
+            })
+            .eq("id", existing.worker_id);
+        } catch (releaseErr) {
+          console.warn("Worker release notice:", releaseErr);
+        }
       }
 
       return NextResponse.json({ booking: mapDbBooking(updated) });

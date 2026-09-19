@@ -23,6 +23,8 @@ import {
   AlertTriangle,
   Bell,
   HelpCircle,
+  GraduationCap,
+  Sparkles,
 } from "lucide-react";
 import type { NavItem } from "@/components/navigation/desktop-sidebar";
 import type { MobileNavItem } from "@/components/navigation/mobile-navigation";
@@ -44,6 +46,7 @@ export const ROLE_NAVIGATION_CONFIGS: Record<PlatformRole, RoleNavigationConfig>
       { title: "Overview", href: "/super-admin", icon: React.createElement(LayoutDashboard) },
       { title: "Cooperative Societies", href: "/super-admin/societies", icon: React.createElement(Building2) },
       { title: "Workforce", href: "/super-admin/workforce", icon: React.createElement(Users) },
+      { title: "KaushalGrow", href: "/super-admin/learning", icon: React.createElement(GraduationCap) },
       { title: "Bookings", href: "/super-admin/bookings", icon: React.createElement(Calendar) },
       { title: "Demand Intelligence", href: "/super-admin/demand", icon: React.createElement(TrendingUp) },
       { title: "Analytics", href: "/super-admin/analytics", icon: React.createElement(BarChart3) },
@@ -58,6 +61,7 @@ export const ROLE_NAVIGATION_CONFIGS: Record<PlatformRole, RoleNavigationConfig>
       { title: "Overview", href: "/super-admin", icon: React.createElement(LayoutDashboard) },
       { title: "Societies", href: "/super-admin/societies", icon: React.createElement(Building2) },
       { title: "Workforce", href: "/super-admin/workforce", icon: React.createElement(Users) },
+      { title: "KaushalGrow", href: "/super-admin/learning", icon: React.createElement(GraduationCap) },
       { title: "Bookings", href: "/super-admin/bookings", icon: React.createElement(Calendar) },
       { title: "Guidance", href: "/super-admin/guidance", icon: React.createElement(HelpCircle) },
       { title: "Settings", href: "/super-admin/settings", icon: React.createElement(Settings) },
@@ -93,8 +97,9 @@ export const ROLE_NAVIGATION_CONFIGS: Record<PlatformRole, RoleNavigationConfig>
       { title: "My Profile", href: "/worker/profile", icon: React.createElement(User) },
       { title: "My Schedule & Jobs", href: "/worker/schedule", icon: React.createElement(Calendar) },
       { title: "Earnings", href: "/worker/earnings", icon: React.createElement(Wallet) },
+      { title: "KaushalGrow", href: "/worker/grow", icon: React.createElement(GraduationCap) },
       { title: "Welfare & Development", href: "/worker/welfare", icon: React.createElement(Award) },
-      { title: "My Grievances", href: "/worker/grievances", icon: React.createElement(ShieldAlert) },
+      { title: "Complaints", href: "/worker/grievances", icon: React.createElement(ShieldAlert) },
       { title: "Help & Guidance", href: "/worker/guidance", icon: React.createElement(HelpCircle) },
     ],
     mobileNavItems: [
@@ -102,8 +107,9 @@ export const ROLE_NAVIGATION_CONFIGS: Record<PlatformRole, RoleNavigationConfig>
       { title: "Profile", href: "/worker/profile", icon: React.createElement(User) },
       { title: "Schedule", href: "/worker/schedule", icon: React.createElement(Calendar) },
       { title: "Earnings", href: "/worker/earnings", icon: React.createElement(Wallet) },
+      { title: "KaushalGrow", href: "/worker/grow", icon: React.createElement(GraduationCap) },
       { title: "Welfare", href: "/worker/welfare", icon: React.createElement(Award) },
-      { title: "Grievances", href: "/worker/grievances", icon: React.createElement(ShieldAlert) },
+      { title: "Complaints", href: "/worker/grievances", icon: React.createElement(ShieldAlert) },
       { title: "Guidance", href: "/worker/guidance", icon: React.createElement(HelpCircle) },
     ],
   },
@@ -117,6 +123,7 @@ export const ROLE_NAVIGATION_CONFIGS: Record<PlatformRole, RoleNavigationConfig>
       { title: "Payments & Bills", href: "/customer/payments", icon: React.createElement(CreditCard) },
       { title: "My Complaints", href: "/customer/complaints", icon: React.createElement(ShieldAlert) },
       { title: "Help & Guidance", href: "/customer/guidance", icon: React.createElement(HelpCircle) },
+      { title: "SmartServe AI", href: "/customer/smartserve", icon: React.createElement(Sparkles) },
       { title: "Profile", href: "/customer/profile", icon: React.createElement(User) },
     ],
     mobileNavItems: [
@@ -126,6 +133,7 @@ export const ROLE_NAVIGATION_CONFIGS: Record<PlatformRole, RoleNavigationConfig>
       { title: "Payments", href: "/customer/payments", icon: React.createElement(CreditCard) },
       { title: "Complaints", href: "/customer/complaints", icon: React.createElement(ShieldAlert) },
       { title: "Guidance", href: "/customer/guidance", icon: React.createElement(HelpCircle) },
+      { title: "SmartServe AI", href: "/customer/smartserve", icon: React.createElement(Sparkles) },
       { title: "Profile", href: "/customer/profile", icon: React.createElement(User) },
     ],
   },

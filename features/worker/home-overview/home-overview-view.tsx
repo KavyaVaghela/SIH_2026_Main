@@ -12,6 +12,7 @@ import type { WorkerJobItem, WorkerScheduleItem, WorkerOverviewStats, WorkerIden
 
 import { useRealtimeSubscription } from "@/hooks/use-realtime-subscription";
 import { createClient } from "@/lib/supabase/client";
+import { getCachedProfileName, setCachedProfileName } from "@/lib/auth/session-user";
 
 export function HomeOverviewView() {
   const [requests, setRequests] = React.useState<WorkerJobItem[]>([]);
@@ -19,17 +20,19 @@ export function HomeOverviewView() {
   const [stats, setStats] = React.useState<WorkerOverviewStats>({
     todaysJobs: 0,
     todaysEarnings: 0,
-    overallRating: 5.0,
+    overallRating: 0,
     completedJobs: 0,
   });
+  const initialCachedName = React.useMemo(() => getCachedProfileName("WORKER"), []);
+  const [isNameLoading, setIsNameLoading] = React.useState<boolean>(!initialCachedName);
   const [workerIdentity, setWorkerIdentity] = React.useState<WorkerIdentity>({
-    name: "Worker",
-    trade: "Skilled Tradesperson",
+    name: initialCachedName || "",
+    trade: "Tradesperson",
     cooperativeName: "Cooperative Federation",
     cooperativeRole: "Member",
     federationName: "Cooperative Federation",
-    location: "Gujarat",
-    rating: 5.0,
+    location: "Gujarat, India",
+    rating: 0,
     reviewsCount: 0,
     isVerified: false,
   });
@@ -123,7 +126,9 @@ export function HomeOverviewView() {
         : "Gujarat";
 
       const fedName = wRec?.federations?.name || "Ahmedabad Skilled Workers Federation";
-      const fullName = prof?.full_name || "Cooperative Member";
+      const fullName = prof?.full_name?.trim() || "Ravi Patel";
+      setCachedProfileName("WORKER", fullName);
+      setIsNameLoading(false);
 
       setWorkerIdentity({
         name: fullName,
@@ -157,6 +162,7 @@ export function HomeOverviewView() {
   const refreshData = React.useCallback(() => {
     if (!workerDbId) return;
     const targetId = workerDbId;
+    // Capture this fetch's generation number
     const thisGen = ++fetchGenRef.current;
 
     Promise.all([
@@ -169,7 +175,7 @@ export function HomeOverviewView() {
 
         setRequests(liveRequests);
 
-        const mapped: WorkerScheduleItem[] = schedule.today.map((j) => ({
+        const mapped: WorkerScheduleItem[] = (schedule?.today || []).map((j) => ({
           id: j.id,
           time: j.scheduledTime,
           serviceTitle: j.serviceTitle,
@@ -182,11 +188,12 @@ export function HomeOverviewView() {
         }));
         setScheduleItems(mapped);
 
+        const jobsDone = Number(earnings?.summary?.completedJobsCount) || 0;
         setStats({
-          todaysJobs: schedule.today.length,
-          todaysEarnings: earnings.summary.todaysEarnings,
-          overallRating: 4.9,
-          completedJobs: earnings.summary.completedJobsCount,
+          todaysJobs: schedule?.today?.length || 0,
+          todaysEarnings: Number(earnings?.summary?.todaysEarnings) || 0,
+          overallRating: jobsDone > 0 ? Number((earnings?.summary as unknown as { rating?: number })?.rating) || 0 : 0,
+          completedJobs: jobsDone,
         });
       })
       .catch((err) => {
@@ -207,6 +214,24 @@ export function HomeOverviewView() {
     },
   });
 
+  // Subscribe to real-time changes on worker_estimates table for incoming multi-worker requests
+  useRealtimeSubscription({
+    table: "worker_estimates",
+    enabled: !!workerDbId,
+    onPayload: () => {
+      refreshData();
+    },
+  });
+
+  // Subscribe to real-time changes on job_requests table
+  useRealtimeSubscription({
+    table: "job_requests",
+    enabled: !!workerDbId,
+    onPayload: () => {
+      refreshData();
+    },
+  });
+
   // Subscribe to real-time changes on workers table for status/availability updates
   useRealtimeSubscription({
     table: "workers",
@@ -219,7 +244,7 @@ export function HomeOverviewView() {
   return (
     <div className="space-y-5 sm:space-y-6 pb-12">
       {/* 1. Worker & Cooperative Identity Hero with Live Auth Profile Data */}
-      <CooperativeIdentityCard identity={workerIdentity} />
+      <CooperativeIdentityCard identity={workerIdentity} isNameLoading={isNameLoading} />
 
       {/* 2. Key Performance & Financial Metrics */}
       <SummaryCardsGrid stats={stats} />

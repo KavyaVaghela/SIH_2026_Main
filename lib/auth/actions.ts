@@ -1,6 +1,7 @@
 import { createClient } from "@/lib/supabase/client";
 import { getRoleHomeRoute } from "./rbac";
 import type { UserRole } from "@/supabase/types/database.types";
+import { clearCachedProfileNames } from "./session-user";
 
 /**
  * Sign in user with email and password.
@@ -433,6 +434,7 @@ export async function verifyOTP(emailOrPhone: string, token: string) {
  * Sign out current user.
  */
 export async function signOut() {
+  clearCachedProfileNames();
   const supabase = createClient();
   const { error } = await supabase.auth.signOut();
   if (error) {
