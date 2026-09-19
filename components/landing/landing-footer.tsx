@@ -3,6 +3,7 @@
 import React from "react";
 import Link from "next/link";
 import { Building2, ExternalLink } from "lucide-react";
+import { Logo } from "@/components/ui/logo";
 import { useAuthModal } from "./landing-auth-modal";
 
 export function LandingFooter() {
@@ -56,17 +57,7 @@ export function LandingFooter() {
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-6 sm:gap-8">
           {/* Column 1 & 2: Brand, Tagline & Mission */}
           <div className="lg:col-span-2 space-y-2.5">
-            <Link href="/" className="flex items-center space-x-2.5 group" id="footer-logo">
-              <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-[#135e38] text-white border border-[#8ed5a5] shadow-sm transition-transform group-hover:scale-105">
-                <Building2 className="h-5 w-5 text-[#8ed5a5]" />
-              </div>
-              <div className="flex flex-col">
-                <span className="font-bold text-lg tracking-tight text-white">KaushalyaSetu</span>
-                <span className="text-[11px] font-medium text-[#8ed5a5]">
-                  Cooperative Gig Services Platform
-                </span>
-              </div>
-            </Link>
+            <Logo href="/" showTagline taglineText="Cooperative Platform" size="md" />
 
             <p className="text-xs sm:text-sm font-semibold text-white">
               Connecting skilled people, customers and cooperatives.
