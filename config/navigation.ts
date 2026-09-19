@@ -98,7 +98,7 @@ export const ROLE_NAVIGATION_CONFIGS: Record<PlatformRole, RoleNavigationConfig>
       { title: "Earnings", href: "/worker/earnings", icon: React.createElement(Wallet) },
       { title: "KaushalGrow", href: "/worker/grow", icon: React.createElement(GraduationCap) },
       { title: "Welfare & Development", href: "/worker/welfare", icon: React.createElement(Award) },
-      { title: "My Grievances", href: "/worker/grievances", icon: React.createElement(ShieldAlert) },
+      { title: "Complaints", href: "/worker/grievances", icon: React.createElement(ShieldAlert) },
       { title: "Help & Guidance", href: "/worker/guidance", icon: React.createElement(HelpCircle) },
     ],
     mobileNavItems: [
@@ -108,7 +108,7 @@ export const ROLE_NAVIGATION_CONFIGS: Record<PlatformRole, RoleNavigationConfig>
       { title: "Earnings", href: "/worker/earnings", icon: React.createElement(Wallet) },
       { title: "KaushalGrow", href: "/worker/grow", icon: React.createElement(GraduationCap) },
       { title: "Welfare", href: "/worker/welfare", icon: React.createElement(Award) },
-      { title: "Grievances", href: "/worker/grievances", icon: React.createElement(ShieldAlert) },
+      { title: "Complaints", href: "/worker/grievances", icon: React.createElement(ShieldAlert) },
       { title: "Guidance", href: "/worker/guidance", icon: React.createElement(HelpCircle) },
     ],
   },

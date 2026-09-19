@@ -75,10 +75,10 @@ export async function POST(
       complaint: updated,
     });
   } catch (err: unknown) {
-    const errorObj = err as { message?: string; status?: number };
+    const errorObj = err as { message?: string; status?: number; statusCode?: number };
     return NextResponse.json(
       { success: false, error: errorObj.message || "Failed to post timeline update" },
-      { status: errorObj.status || 500 }
+      { status: errorObj.statusCode || errorObj.status || 500 }
     );
   }
 }

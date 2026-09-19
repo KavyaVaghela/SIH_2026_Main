@@ -51,7 +51,18 @@ export async function GET(request: NextRequest) {
     }
 
     if (workerId) {
-      query = query.eq("worker_id", workerId);
+      // Resolve worker record if profile_id was provided
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const { data: workerRecord } = await (supabase.from("workers") as any)
+        .select("id")
+        .or(`id.eq.${workerId},profile_id.eq.${workerId}`)
+        .maybeSingle();
+
+      if (workerRecord) {
+        query = query.or(`worker_id.eq.${workerRecord.id},worker_id.eq.${workerId}`);
+      } else {
+        query = query.eq("worker_id", workerId);
+      }
     }
 
     const { data, error } = await query;
