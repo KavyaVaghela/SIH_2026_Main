@@ -25,11 +25,13 @@ import {
 } from "lucide-react";
 import type {
   FederationComplaintItem,
+  ComplaintSubsection,
 } from "../types";
 import type { GrievancePriority, GrievanceLifecycleStatus } from "@/types/complaints/v2";
 
 interface ComplaintTableProps {
   complaints: FederationComplaintItem[];
+  activeSection?: ComplaintSubsection;
   searchQuery: string;
   onSearchChange: (value: string) => void;
   statusFilter: string;
@@ -43,6 +45,7 @@ interface ComplaintTableProps {
 
 export function ComplaintTable({
   complaints,
+  activeSection = "USER_COMPLAINTS",
   searchQuery,
   onSearchChange,
   statusFilter,
@@ -53,6 +56,10 @@ export function ComplaintTable({
   onResolve,
   isLoading,
 }: ComplaintTableProps) {
+  const isUserSection = activeSection === "USER_COMPLAINTS";
+  const isWorkerSection = activeSection === "WORKER_COMPLAINTS";
+  const isMySection = activeSection === "MY_COMPLAINTS";
+
   const getStatusBadge = (status: GrievanceLifecycleStatus | string) => {
     switch (status) {
       case "OPEN":
@@ -90,7 +97,7 @@ export function ComplaintTable({
         );
       case "REJECTED":
         return (
-          <Badge variant="outline" className="text-[10px] font-bold border-rose-300 text-rose-800 dark:text-rose-300 bg-rose-50/60">
+          <Badge variant="outline" className="text-[10px] font-bold border-rose-300 text-rose-800 dark:text-rose-300 bg-rose-50/60 dark:bg-rose-950/40">
             Rejected
           </Badge>
         );
@@ -122,6 +129,31 @@ export function ComplaintTable({
     }
   };
 
+  const getWorkerResponseBadge = (status: "AWAITING" | "RECEIVED" | "NOT_APPLICABLE") => {
+    switch (status) {
+      case "RECEIVED":
+        return (
+          <Badge variant="outline" className="text-[10px] font-bold border-emerald-300 text-emerald-800 dark:text-emerald-300 bg-emerald-50/60 dark:bg-emerald-950/40">
+            <CheckCircle2 className="h-3 w-3 mr-1 text-emerald-600" />
+            Response Received
+          </Badge>
+        );
+      case "AWAITING":
+        return (
+          <Badge variant="outline" className="text-[10px] font-bold border-amber-300 text-amber-800 dark:text-amber-300 bg-amber-50/60 dark:bg-amber-950/40">
+            <Clock className="h-3 w-3 mr-1 text-amber-600" />
+            Awaiting Response
+          </Badge>
+        );
+      default:
+        return (
+          <Badge variant="outline" className="text-[10px] font-medium text-muted-foreground">
+            N/A
+          </Badge>
+        );
+    }
+  };
+
   return (
     <div className="space-y-3">
       {/* Search and Filter Toolbar */}
@@ -130,7 +162,13 @@ export function ComplaintTable({
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground" />
           <Input
             type="text"
-            placeholder="Search by Complaint ID, customer, worker, or subject..."
+            placeholder={
+              isUserSection
+                ? "Search by Case ID, customer, worker, or subject..."
+                : isWorkerSection
+                ? "Search by Case ID, worker name/ID, or subject..."
+                : "Search by Case ID, category, or problem subject..."
+            }
             value={searchQuery}
             onChange={(e) => onSearchChange(e.target.value)}
             className="pl-8 pr-7 h-8 text-xs"
@@ -159,6 +197,8 @@ export function ComplaintTable({
               <option value="ACTION_REQUIRED">Action Required</option>
               <option value="ESCALATED">Escalated</option>
               <option value="RESOLVED">Resolved</option>
+              <option value="REJECTED">Rejected</option>
+              <option value="CLOSED">Closed</option>
             </select>
           </div>
 
@@ -185,9 +225,17 @@ export function ComplaintTable({
       {complaints.length === 0 ? (
         <div className="text-center py-12 px-4 border border-dashed border-border rounded-xl bg-card space-y-2">
           <FolderOpen className="h-7 w-7 mx-auto text-muted-foreground" />
-          <h4 className="text-sm font-semibold text-foreground">No Grievances Found</h4>
+          <h4 className="text-sm font-semibold text-foreground">
+            {isUserSection
+              ? "No User Grievances Found"
+              : isWorkerSection
+              ? "No Worker Grievances Found"
+              : "No Federation Complaints Found"}
+          </h4>
           <p className="text-xs text-muted-foreground">
-            No grievance records match your current criteria.
+            {isMySection
+              ? "Your federation has not raised any complaints matching current filters."
+              : "No grievance records match your current criteria in this section."}
           </p>
         </div>
       ) : (
@@ -196,23 +244,40 @@ export function ComplaintTable({
             <Table>
               <TableHeader>
                 <TableRow className="bg-muted/40 hover:bg-muted/40 text-[11px]">
-                  <TableHead className="font-semibold text-foreground w-[130px]">
-                    Case Ref
-                  </TableHead>
+                  <TableHead className="font-semibold text-foreground w-[120px]">Case Ref</TableHead>
                   <TableHead className="font-semibold text-foreground">Priority</TableHead>
-                  <TableHead className="font-semibold text-foreground">Complainant</TableHead>
-                  <TableHead className="font-semibold text-foreground">Involved Party</TableHead>
-                  <TableHead className="font-semibold text-foreground">Subject & Category</TableHead>
-                  <TableHead className="font-semibold text-foreground">Smart Triage</TableHead>
+                  {isUserSection ? (
+                    <>
+                      <TableHead className="font-semibold text-foreground">Customer (Complainant)</TableHead>
+                      <TableHead className="font-semibold text-foreground">Against Worker</TableHead>
+                      <TableHead className="font-semibold text-foreground">Booking Ref</TableHead>
+                      <TableHead className="font-semibold text-foreground">Subject & Category</TableHead>
+                      <TableHead className="font-semibold text-foreground">Worker Response</TableHead>
+                    </>
+                  ) : isWorkerSection ? (
+                    <>
+                      <TableHead className="font-semibold text-foreground">Worker (Complainant)</TableHead>
+                      <TableHead className="font-semibold text-foreground">Subject & Category</TableHead>
+                      <TableHead className="font-semibold text-foreground">Date Filed</TableHead>
+                    </>
+                  ) : (
+                    <>
+                      <TableHead className="font-semibold text-foreground">Category & Subject</TableHead>
+                      <TableHead className="font-semibold text-foreground">Problem Description</TableHead>
+                      <TableHead className="font-semibold text-foreground">Date Filed</TableHead>
+                      <TableHead className="font-semibold text-foreground">Last Updated</TableHead>
+                    </>
+                  )}
                   <TableHead className="font-semibold text-foreground">Status</TableHead>
-                  <TableHead className="font-semibold text-foreground text-right w-[180px]">
-                    Action
-                  </TableHead>
+                  <TableHead className="font-semibold text-foreground text-right w-[160px]">Action</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
                 {complaints.map((c) => {
-                  const isResolved = c.lifecycleStatus === "RESOLVED" || c.status === "RESOLVED";
+                  const isTerminal = c.lifecycleStatus === "REJECTED" || c.lifecycleStatus === "CLOSED";
+                  const isResolved = c.lifecycleStatus === "RESOLVED" || isTerminal;
+                  const isWorkerGateLocked =
+                    isUserSection && c.workerResponseStatus === "AWAITING";
 
                   return (
                     <TableRow
@@ -222,11 +287,6 @@ export function ComplaintTable({
                       {/* Complaint ID */}
                       <TableCell className="font-mono font-bold text-foreground">
                         {c.complaintNumber}
-                        {c.bookingId && (
-                          <span className="block text-[10px] text-muted-foreground font-normal">
-                            Linked: {c.bookingId.slice(0, 8)}...
-                          </span>
-                        )}
                       </TableCell>
 
                       {/* Priority */}
@@ -234,51 +294,106 @@ export function ComplaintTable({
                         {getPriorityBadge(c.priority)}
                       </TableCell>
 
-                      {/* Complainant */}
-                      <TableCell>
-                        <div className="flex items-center space-x-2">
-                          <div className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-emerald-100 dark:bg-emerald-950/70 text-emerald-800 dark:text-emerald-300 font-bold text-[10px]">
-                            {c.customerName.charAt(0)}
-                          </div>
-                          <div className="flex flex-col min-w-0">
-                            <span className="font-semibold text-foreground truncate">
-                              {c.customerName}
-                            </span>
-                            <span className="text-[10px] text-muted-foreground font-mono">
-                              {c.customerPhone}
-                            </span>
-                          </div>
-                        </div>
-                      </TableCell>
+                      {isUserSection ? (
+                        <>
+                          {/* Complainant Customer */}
+                          <TableCell>
+                            <div className="flex items-center space-x-2">
+                              <div className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-emerald-100 dark:bg-emerald-950/70 text-emerald-800 dark:text-emerald-300 font-bold text-[10px]">
+                                {c.customerName.charAt(0)}
+                              </div>
+                              <div className="flex flex-col min-w-0">
+                                <span className="font-semibold text-foreground truncate">{c.customerName}</span>
+                                <span className="text-[10px] text-muted-foreground font-mono">{c.customerPhone}</span>
+                              </div>
+                            </div>
+                          </TableCell>
 
-                      {/* Worker / Target */}
-                      <TableCell>
-                        <div className="flex flex-col min-w-0">
-                          <span className="font-semibold text-foreground truncate">
-                            {c.workerName}
-                          </span>
-                          <span className="text-[10px] text-muted-foreground">
-                            {c.workerProfession}
-                          </span>
-                        </div>
-                      </TableCell>
+                          {/* Against Worker */}
+                          <TableCell>
+                            <div className="flex flex-col min-w-0">
+                              <span className="font-semibold text-foreground truncate">{c.workerName}</span>
+                              <span className="text-[10px] text-muted-foreground font-mono">{c.workerId}</span>
+                            </div>
+                          </TableCell>
 
-                      {/* Subject & Category */}
-                      <TableCell className="max-w-[200px]">
-                        <span className="font-bold text-foreground block truncate">
-                          {c.subject}
-                        </span>
-                        <span className="text-[10px] text-muted-foreground">
-                          {c.category}
-                        </span>
-                      </TableCell>
+                          {/* Booking Ref */}
+                          <TableCell>
+                            {c.bookingId ? (
+                              <span className="font-mono text-[11px] text-muted-foreground">
+                                {c.bookingId.slice(0, 8)}...
+                              </span>
+                            ) : (
+                              <span className="text-[11px] text-muted-foreground italic">None</span>
+                            )}
+                          </TableCell>
 
-                      {/* Smart Triage Indicator */}
-                      <TableCell className="max-w-[160px]">
-                        <span className="text-[11px] text-blue-700 dark:text-blue-300 font-medium line-clamp-1">
-                          {c.suggestedPriority} • {c.triageReason || "Rule-based analysis"}
-                        </span>
-                      </TableCell>
+                          {/* Subject & Category */}
+                          <TableCell className="max-w-[200px]">
+                            <span className="font-bold text-foreground block truncate">{c.subject}</span>
+                            <span className="text-[10px] text-muted-foreground">{c.category}</span>
+                          </TableCell>
+
+                          {/* Worker Response Status */}
+                          <TableCell>
+                            {getWorkerResponseBadge(c.workerResponseStatus)}
+                          </TableCell>
+                        </>
+                      ) : isWorkerSection ? (
+                        <>
+                          {/* Worker Complainant */}
+                          <TableCell>
+                            <div className="flex items-center space-x-2">
+                              <div className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-blue-100 dark:bg-blue-950/70 text-blue-800 dark:text-blue-300 font-bold text-[10px]">
+                                {c.customerName.charAt(0)}
+                              </div>
+                              <div className="flex flex-col min-w-0">
+                                <span className="font-semibold text-foreground truncate">{c.customerName}</span>
+                                <span className="text-[10px] text-muted-foreground font-mono">{c.workerId}</span>
+                              </div>
+                            </div>
+                          </TableCell>
+
+                          {/* Subject & Category */}
+                          <TableCell className="max-w-[240px]">
+                            <span className="font-bold text-foreground block truncate">{c.subject}</span>
+                            <span className="text-[10px] text-muted-foreground">{c.category}</span>
+                          </TableCell>
+
+                          {/* Date Filed */}
+                          <TableCell className="text-muted-foreground text-[11px]">
+                            {c.submittedDate}
+                          </TableCell>
+                        </>
+                      ) : (
+                        <>
+                          {/* Category & Subject */}
+                          <TableCell className="max-w-[200px]">
+                            <span className="font-bold text-foreground block truncate">{c.subject}</span>
+                            <span className="text-[10px] text-muted-foreground">{c.category}</span>
+                          </TableCell>
+
+                          {/* Description Preview */}
+                          <TableCell className="max-w-[240px]">
+                            <span className="text-xs text-muted-foreground line-clamp-1">{c.description}</span>
+                          </TableCell>
+
+                          {/* Date Filed */}
+                          <TableCell className="text-muted-foreground text-[11px] whitespace-nowrap">
+                            {c.submittedDate}
+                          </TableCell>
+
+                          {/* Last Updated */}
+                          <TableCell className="text-muted-foreground text-[11px] whitespace-nowrap">
+                            {c.grievanceCase?.updatedAt
+                              ? new Date(c.grievanceCase.updatedAt).toLocaleDateString("en-IN", {
+                                  day: "numeric",
+                                  month: "short",
+                                })
+                              : c.submittedDate}
+                          </TableCell>
+                        </>
+                      )}
 
                       {/* Status */}
                       <TableCell>
@@ -297,11 +412,22 @@ export function ComplaintTable({
                             <Eye className="h-3 w-3 mr-1" />
                             Case File
                           </Button>
-                          {!isResolved && (
+
+                          {!isMySection && !isResolved && (
                             <Button
                               size="sm"
                               onClick={() => onResolve(c)}
-                              className="h-7 px-2.5 text-[11px] font-bold bg-emerald-700 hover:bg-emerald-800 text-white"
+                              disabled={isWorkerGateLocked}
+                              title={
+                                isWorkerGateLocked
+                                  ? "Worker response required before resolution"
+                                  : "Resolve Complaint"
+                              }
+                              className={`h-7 px-2.5 text-[11px] font-bold ${
+                                isWorkerGateLocked
+                                  ? "bg-muted text-muted-foreground cursor-not-allowed"
+                                  : "bg-emerald-700 hover:bg-emerald-800 text-white"
+                              }`}
                             >
                               Resolve
                             </Button>
@@ -319,3 +445,4 @@ export function ComplaintTable({
     </div>
   );
 }
+

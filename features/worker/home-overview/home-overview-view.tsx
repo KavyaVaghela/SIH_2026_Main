@@ -7,6 +7,9 @@ import { NewJobRequestsCard } from "./new-job-requests-card";
 import { TodayScheduleCard } from "./today-schedule-card";
 import { QuickActionsCard } from "./quick-actions-card";
 import { CommunityUpdateCard } from "./community-update-card";
+import { EmergencyOpportunitiesCard } from "./emergency-opportunities-card";
+import { EmergencyActiveResponseCard } from "./emergency-active-response-card";
+import { EmergencyTasksCard } from "./emergency-tasks-card";
 import { workerJobService } from "../services/worker-job-service";
 import type { WorkerJobItem, WorkerScheduleItem, WorkerOverviewStats, WorkerIdentity } from "../types";
 
@@ -241,6 +244,33 @@ export function HomeOverviewView() {
     },
   });
 
+  // Subscribe to real-time changes on emergency_dispatch_pool for worker opportunities
+  useRealtimeSubscription({
+    table: "emergency_dispatch_pool",
+    enabled: !!workerDbId,
+    onPayload: () => {
+      refreshData();
+    },
+  });
+
+  // Subscribe to real-time changes on emergency_response_teams for team formation events
+  useRealtimeSubscription({
+    table: "emergency_response_teams",
+    enabled: !!workerDbId,
+    onPayload: () => {
+      refreshData();
+    },
+  });
+
+  // Subscribe to real-time changes on emergency_incident_tasks for live task assignment & status changes
+  useRealtimeSubscription({
+    table: "emergency_incident_tasks",
+    enabled: !!workerDbId,
+    onPayload: () => {
+      refreshData();
+    },
+  });
+
   return (
     <div className="space-y-5 sm:space-y-6 pb-12">
       {/* 1. Worker & Cooperative Identity Hero with Live Auth Profile Data */}
@@ -249,17 +279,27 @@ export function HomeOverviewView() {
       {/* 2. Key Performance & Financial Metrics */}
       <SummaryCardsGrid stats={stats} />
 
-      {/* 3. Core Operational Feeds: Job Requests & Today's Schedule */}
+      {/* 3. Emergency Opportunities (High Priority Cooperative Network Dispatches) */}
+      <EmergencyOpportunitiesCard workerId={workerDbId} onResponseSuccess={refreshData} />
+
+      {/* 3b. Active Emergency Field Operations & Verification */}
+      <EmergencyActiveResponseCard workerId={workerDbId} onRefresh={refreshData} />
+
+      {/* 3c. Active Emergency Incident Tasks & Coordination */}
+      <EmergencyTasksCard workerId={workerDbId} onRefresh={refreshData} />
+
+      {/* 4. Core Operational Feeds: Job Requests & Today's Schedule */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-5 sm:gap-6">
         <NewJobRequestsCard requests={requests} />
         <TodayScheduleCard scheduleItems={scheduleItems} />
       </div>
 
-      {/* 4. Quick Actions for Fast Navigation */}
+      {/* 5. Quick Actions for Fast Navigation */}
       <QuickActionsCard />
 
-      {/* 5. Cooperative Community & Welfare Announcement */}
+      {/* 6. Cooperative Community & Welfare Announcement */}
       <CommunityUpdateCard />
     </div>
   );
 }
+

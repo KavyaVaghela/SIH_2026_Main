@@ -1,17 +1,45 @@
 import type { ComplaintStatus } from "@/supabase/types/database.types";
 import type { GrievanceCase, GrievanceLifecycleStatus, GrievancePriority } from "@/types/complaints/v2";
 
-export type ComplaintStatusDisplay = "PENDING" | "RESOLVED" | "UNDER_REVIEW" | "ACTION_REQUIRED" | "ESCALATED";
+export type ComplaintStatusDisplay = "PENDING" | "RESOLVED" | "UNDER_REVIEW" | "ACTION_REQUIRED" | "ESCALATED" | "REJECTED" | "CLOSED";
+
+export type ComplaintSubsection = "USER_COMPLAINTS" | "WORKER_COMPLAINTS" | "MY_COMPLAINTS";
+
+export const FEDERATION_COMPLAINT_CATEGORIES = [
+  "Platform issue",
+  "Federation administration issue",
+  "Workforce/platform issue",
+  "Payment/financial issue",
+  "Technical issue",
+  "Policy/operational issue",
+  "Other",
+] as const;
+
+export type FederationComplaintCategory = (typeof FEDERATION_COMPLAINT_CATEGORIES)[number];
+
+export interface SubsectionMetrics {
+  total: number;
+  pending: number;
+  underReview: number;
+  waitingForResponse: number;
+  resolved: number;
+  rejectedOrClosed: number;
+}
 
 export interface FederationComplaintItem {
   id: string;
   complaintNumber: string;
   bookingId?: string;
+  complainantRole: "CUSTOMER" | "WORKER" | "FEDERATION_ADMIN";
   customerName: string;
   customerPhone: string;
   workerId: string;
   workerName: string;
   workerProfession: string;
+  workerResponseStatus: "AWAITING" | "RECEIVED" | "NOT_APPLICABLE";
+  workerStatement?: string;
+  workerEvidenceUrls?: string[];
+  workerSubmittedAt?: string;
   subject: string;
   description: string;
   category: string;
@@ -26,6 +54,11 @@ export interface FederationComplaintItem {
   resolutionNotes?: string;
   resolvedAt?: string;
   resolvedBy?: string;
+  rejectionReason?: string;
+  rejectedAt?: string;
+  rejectedBy?: string;
+  closedAt?: string;
+  closedBy?: string;
   internalNotes?: string;
   grievanceCase?: GrievanceCase;
 }
@@ -34,10 +67,17 @@ export interface ComplaintFilterState {
   searchQuery: string;
   statusFilter: string;
   priorityFilter?: string;
+  activeSubsection?: ComplaintSubsection;
 }
 
 export interface ComplaintManagementData {
   complaints: FederationComplaintItem[];
+  userComplaints: FederationComplaintItem[];
+  workerComplaints: FederationComplaintItem[];
+  myComplaints: FederationComplaintItem[];
+  userMetrics: SubsectionMetrics;
+  workerMetrics: SubsectionMetrics;
+  myMetrics: SubsectionMetrics;
   totalCount: number;
   pendingCount: number;
   underReviewCount: number;

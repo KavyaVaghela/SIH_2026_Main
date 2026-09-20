@@ -2,7 +2,7 @@
 
 import * as React from "react";
 import { useRouter, usePathname } from "next/navigation";
-import { User, Settings, LogOut, Shield, HelpCircle } from "lucide-react";
+import { User, Settings, LogOut, HelpCircle } from "lucide-react";
 import { Avatar } from "@/components/ui/avatar";
 import { Dropdown, type DropdownItem } from "@/components/ui/dropdown";
 import { createClient } from "@/lib/supabase/client";
@@ -96,17 +96,17 @@ export function UserMenu({
   const handleSignOutClick = async () => {
     clearCachedProfileNames();
     if (onLogout) {
-      onLogout();
+      await onLogout();
     } else {
       try {
         const supabase = createClient();
         await supabase.auth.signOut();
       } catch (err) {
         console.error("Sign out error", err);
-      } finally {
-        router.push("/login");
       }
     }
+    router.push("/");
+    router.refresh();
   };
 
   const items: DropdownItem[] = [
@@ -133,10 +133,6 @@ export function UserMenu({
       label: "Account Settings",
       icon: <Settings className="h-4 w-4 text-emerald-600" />,
       onClick: handleSettingsClick,
-    },
-    {
-      label: "Cooperative Verification",
-      icon: <Shield className="h-4 w-4 text-emerald-600" />,
     },
     {
       label: "Sign Out",

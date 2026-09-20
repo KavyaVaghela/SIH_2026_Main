@@ -4,9 +4,34 @@ import { complaintService } from "@/features/complaints/services/complaint-servi
 export async function GET(request: NextRequest) {
   try {
     const { searchParams } = new URL(request.url);
-    const federationId = searchParams.get("federationId") || "b765df3b-c418-4a15-b79f-3cbc09e475dc";
+    const scope = searchParams.get("scope");
+    const role = searchParams.get("role");
+    const federationId = searchParams.get("federationId");
 
-    const analytics = await complaintService.getFederationAnalytics(federationId);
+    if (scope === "platform" || role === "SUPER_ADMIN" || (!federationId && searchParams.has("overview"))) {
+      const status = searchParams.get("status") || undefined;
+      const priority = searchParams.get("priority") || undefined;
+      const category = searchParams.get("category") || undefined;
+      const dateFrom = searchParams.get("dateFrom") || undefined;
+      const dateTo = searchParams.get("dateTo") || undefined;
+
+      const overview = await complaintService.getSuperAdminComplaintOverview({
+        federationId: federationId || undefined,
+        status,
+        priority,
+        category,
+        dateFrom,
+        dateTo,
+      });
+
+      return NextResponse.json({
+        success: true,
+        overview,
+      });
+    }
+
+    const fedId = federationId || "b765df3b-c418-4a15-b79f-3cbc09e475dc";
+    const analytics = await complaintService.getFederationAnalytics(fedId);
 
     return NextResponse.json({
       success: true,

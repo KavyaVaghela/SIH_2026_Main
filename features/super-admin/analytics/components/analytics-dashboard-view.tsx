@@ -12,6 +12,7 @@ import { WorkforceUtilizationPanel } from "./workforce-utilization-panel";
 import { TopPerformingSocieties } from "./top-performing-societies";
 import { SocietyPerformanceTable } from "./society-performance-table";
 import { PlatformGrowthChart } from "./platform-growth-chart";
+import { FederationComplaintAnalyticsSection } from "./federation-complaint-analytics-section";
 
 export function AnalyticsDashboardView() {
   const {
@@ -95,6 +96,9 @@ export function AnalyticsDashboardView() {
         data={platformGrowth}
         isLoading={isLoading}
       />
+
+      {/* Federation Complaint & Dispute Operational Monitoring */}
+      <FederationComplaintAnalyticsSection />
     </div>
   );
 }

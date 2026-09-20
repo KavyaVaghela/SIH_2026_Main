@@ -9,18 +9,17 @@ import { ComplaintManagementHeader } from "./components/complaint-management-hea
 import { ComplaintTable } from "./components/complaint-table";
 import { GrievanceDetailWorkspace } from "./components/grievance-detail-workspace";
 import { ResolveComplaintDialog } from "./components/resolve-complaint-dialog";
+import { RaiseFederationComplaintDialog } from "./components/raise-federation-complaint-dialog";
 import type { GrievanceCase } from "@/types/complaints/v2";
 
 export function ComplaintManagementView() {
   const {
-    complaints,
-    totalCount,
-    pendingCount,
-    underReviewCount,
-    actionRequiredCount,
-    escalatedCount,
-    resolvedCount,
-    highOrCriticalCount,
+    activeComplaints,
+    activeSection,
+    setActiveSection,
+    userMetrics,
+    workerMetrics,
+    myMetrics,
     isDevelopmentFallback,
     dataSourceNotice,
     searchQuery,
@@ -32,6 +31,10 @@ export function ComplaintManagementView() {
     isLoading,
     error,
     refresh,
+    currentAdminProfile,
+    isRaiseComplaintOpen,
+    setIsRaiseComplaintOpen,
+    handleRaiseComplaint,
     targetComplaintForResolve,
     setTargetComplaintForResolve,
     isSubmittingResolution,
@@ -60,7 +63,7 @@ export function ComplaintManagementView() {
           complaintNumber: item.complaintNumber,
           bookingId: item.bookingId || null,
           raisedBy: "cust-1",
-          raisedByRole: "CUSTOMER",
+          raisedByRole: item.complainantRole || "CUSTOMER",
           raisedByName: item.customerName,
           raisedByPhone: item.customerPhone,
           targetRole: "WORKER",
@@ -82,7 +85,7 @@ export function ComplaintManagementView() {
               type: "PUBLIC_UPDATE",
               visibility: "PUBLIC",
               actorId: "cust-1",
-              actorRole: "CUSTOMER",
+              actorRole: item.complainantRole || "CUSTOMER",
               actorName: item.customerName,
               message: item.description,
               timestamp: new Date().toISOString(),
@@ -93,7 +96,7 @@ export function ComplaintManagementView() {
               id: "aud-1",
               complaintId: item.id,
               actorId: "cust-1",
-              actorRole: "CUSTOMER",
+              actorRole: item.complainantRole || "CUSTOMER",
               actorName: item.customerName,
               action: "CREATE",
               timestamp: new Date().toISOString(),
@@ -117,16 +120,15 @@ export function ComplaintManagementView() {
         ))}
       </div>
 
-      {/* Header with full KPIs */}
+      {/* Header with Subsection Switcher and 5-KPI Cards */}
       <ComplaintManagementHeader
-        totalCount={totalCount}
-        pendingCount={pendingCount}
-        underReviewCount={underReviewCount}
-        actionRequiredCount={actionRequiredCount}
-        escalatedCount={escalatedCount}
-        resolvedCount={resolvedCount}
-        highOrCriticalCount={highOrCriticalCount}
+        activeSection={activeSection}
+        onSectionChange={setActiveSection}
+        userMetrics={userMetrics}
+        workerMetrics={workerMetrics}
+        myMetrics={myMetrics}
         onRefresh={refresh}
+        onRaiseComplaint={() => setIsRaiseComplaintOpen(true)}
         isLoading={isLoading}
         isDevelopmentFallback={isDevelopmentFallback}
         dataSourceNotice={dataSourceNotice}
@@ -151,10 +153,19 @@ export function ComplaintManagementView() {
         </div>
       )}
 
-      {/* Complaints Table */}
-      <section aria-label="Customer Grievances and Disputes">
+      {/* Complaints Table Scoped to Subsection */}
+      <section
+        aria-label={
+          activeSection === "USER_COMPLAINTS"
+            ? "User Complaints"
+            : activeSection === "WORKER_COMPLAINTS"
+            ? "Worker Complaints"
+            : "My Complaints"
+        }
+      >
         <ComplaintTable
-          complaints={complaints}
+          complaints={activeComplaints}
+          activeSection={activeSection}
           searchQuery={searchQuery}
           onSearchChange={setSearchQuery}
           statusFilter={statusFilter}
@@ -178,6 +189,8 @@ export function ComplaintManagementView() {
             handleOpenWorkspace(activeWorkspaceCase);
           }
         }}
+        currentUserId={currentAdminProfile.id}
+        currentUserName={currentAdminProfile.fullName}
       />
 
       {/* Resolve Confirmation Dialog */}
@@ -187,6 +200,15 @@ export function ComplaintManagementView() {
         onClose={() => setTargetComplaintForResolve(null)}
         onConfirm={(notes) => handleResolveComplaint(targetComplaintForResolve!.id, notes)}
         isSubmitting={isSubmittingResolution}
+      />
+
+      {/* Raise Federation Complaint Dialog */}
+      <RaiseFederationComplaintDialog
+        isOpen={isRaiseComplaintOpen}
+        onClose={() => setIsRaiseComplaintOpen(false)}
+        onSubmit={handleRaiseComplaint}
+        isSubmitting={isSubmittingResolution}
+        federationName={currentAdminProfile.federationName}
       />
     </div>
   );

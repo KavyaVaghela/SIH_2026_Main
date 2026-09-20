@@ -302,7 +302,17 @@ function mapDbBooking(b: any) {
   const { cleanDescription, problemPhotoUrl } = extractProblemEvidence(b.problem_description);
   const probDesc = cleanDescription || "";
   const servTitle = b.services?.title || "Plumbing Repair";
+
+  let priority = b.priority || null;
+  if (!priority && typeof b.problem_description === "string") {
+    const match = b.problem_description.match(/\[PRIORITY:\s*(LOW|MODERATE|HIGH)\]/i);
+    if (match) {
+      priority = match[1].toUpperCase();
+    }
+  }
+
   const isEmergency =
+    Boolean(priority) ||
     /emergency|rupture|burst|leakage|spark/i.test(probDesc) ||
     /emergency/i.test(servTitle);
 
@@ -345,6 +355,8 @@ function mapDbBooking(b: any) {
     scheduledStartAt: b.scheduled_start_at,
     scheduledEndAt: b.scheduled_end_at,
     status: b.status,
+    priority: priority || null,
+    urgency: isEmergency ? "EMERGENCY" : "STANDARD",
     problemDescription: probDesc,
     problemPhotoUrl: b.problem_photo_url || problemPhotoUrl || null,
     otpCode: b.otp_code || "940218",

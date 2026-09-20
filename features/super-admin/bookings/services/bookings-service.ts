@@ -90,6 +90,8 @@ export class BookingsService {
         federation_id,
         address_id,
         status,
+        priority,
+        problem_description,
         scheduled_start_at,
         scheduled_end_at,
         total_amount,
@@ -113,6 +115,12 @@ export class BookingsService {
           const matchedMock = MOCK_BOOKINGS.find((m) => m.id === b.id);
           const rawStatus = (b.status || "REQUEST_SENT") as BookingStatus;
           const rawPayment = b.payments?.[0]?.status || (rawStatus === "BOOKING_COMPLETED" ? "PAID" : "PENDING");
+          const desc = b.problem_description || "";
+          let priority = b.priority || null;
+          if (!priority && desc.includes("[PRIORITY:")) {
+            const match = desc.match(/\[PRIORITY:\s*([A-Z]+)\]/i);
+            if (match) priority = match[1].toUpperCase();
+          }
 
           return {
             id: b.id,
@@ -141,6 +149,7 @@ export class BookingsService {
             status: rawStatus,
             lifecycleStage: mapStatusToLifecycleStage(rawStatus),
             paymentStatus: (rawPayment.toUpperCase() as PaymentStatus) || "PENDING",
+            priority,
           };
         });
 
@@ -279,6 +288,7 @@ export class BookingsService {
           federation_id,
           address_id,
           status,
+          priority,
           problem_description,
           problem_photo_url,
           otp_code,
@@ -309,6 +319,12 @@ export class BookingsService {
         const rawStatus = (b.status || "REQUEST_SENT") as BookingStatus;
         const p = b.payments?.[0];
         const rawPaymentStatus = p?.status || (rawStatus === "BOOKING_COMPLETED" ? "PAID" : "PENDING");
+        const desc = b.problem_description || "";
+        let priority = b.priority || null;
+        if (!priority && desc.includes("[PRIORITY:")) {
+          const match = desc.match(/\[PRIORITY:\s*([A-Z]+)\]/i);
+          if (match) priority = match[1].toUpperCase();
+        }
 
         return {
           id: b.id,
@@ -339,6 +355,7 @@ export class BookingsService {
           status: rawStatus,
           lifecycleStage: mapStatusToLifecycleStage(rawStatus),
           paymentStatus: (rawPaymentStatus.toUpperCase() as PaymentStatus) || "PENDING",
+          priority,
           problemDescription: b.problem_description,
           problemPhotoUrl: b.problem_photo_url,
           otpCode: b.otp_code,
