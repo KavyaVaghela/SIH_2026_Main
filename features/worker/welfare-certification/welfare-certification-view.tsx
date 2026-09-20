@@ -327,76 +327,7 @@ export function WelfareCertificationView({ workerId, initialTab = "overview" }: 
             </Card>
           </div>
 
-          {/* Section: Development Journey Visual Progression */}
-          <Card className="border shadow-xs p-6 space-y-5 w-full">
-            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-border/70 pb-3">
-              <div>
-                <div className="flex items-center gap-2">
-                  <Sparkles className="h-4 w-4 text-emerald-600" />
-                  <CardTitle className="text-base font-bold text-foreground">
-                    Worker Development Journey
-                  </CardTitle>
-                </div>
-                <CardDescription className="text-xs mt-0.5">
-                  Your progression roadmap through the cooperative federation framework.
-                </CardDescription>
-              </div>
 
-              <Link href="/worker/guidance" className="text-xs text-emerald-600 hover:underline font-semibold flex items-center">
-                Explore Full Roadmap in Guidance <ArrowRight className="h-3 w-3 ml-1" />
-              </Link>
-            </div>
-
-            {/* Journey Stages Grid */}
-            <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-8 gap-3 w-full">
-              {data.journeyStages.map((stage) => {
-                return (
-                  <div
-                    key={stage.stepNumber}
-                    className={`p-3 rounded-xl border flex flex-col justify-between text-left space-y-2 transition-all ${
-                      stage.isCompleted
-                        ? "border-emerald-500/40 bg-emerald-50/50 dark:bg-emerald-950/20"
-                        : stage.isCurrent
-                        ? "border-amber-500 bg-amber-50/40 dark:bg-amber-950/20 ring-1 ring-amber-500"
-                        : "border-border/60 bg-muted/20 opacity-70"
-                    }`}
-                  >
-                    <div className="flex items-center justify-between">
-                      <span
-                        className={`flex h-5 w-5 items-center justify-center rounded-full text-[10px] font-bold ${
-                          stage.isCompleted
-                            ? "bg-emerald-600 text-white"
-                            : stage.isCurrent
-                            ? "bg-amber-500 text-white"
-                            : "bg-muted text-muted-foreground"
-                        }`}
-                      >
-                        {stage.isCompleted ? "✓" : stage.stepNumber}
-                      </span>
-                      {stage.isCurrent && (
-                        <Badge variant="warning" className="text-[8px] py-0 px-1">
-                          Current
-                        </Badge>
-                      )}
-                    </div>
-
-                    <div>
-                      <h5 className="text-xs font-bold text-foreground leading-tight">{stage.title}</h5>
-                      <p className="text-[10px] text-muted-foreground mt-1 line-clamp-2 leading-relaxed">
-                        {stage.description}
-                      </p>
-                    </div>
-
-                    {stage.completedDetail && (
-                      <span className="text-[9px] font-semibold text-emerald-700 dark:text-emerald-400 pt-1 border-t border-border/40">
-                        {stage.completedDetail}
-                      </span>
-                    )}
-                  </div>
-                );
-              })}
-            </div>
-          </Card>
 
           {/* Two Block Section: Recommendations + Welfare Preview */}
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 w-full items-start">

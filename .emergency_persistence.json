@@ -1,0 +1,4106 @@
+{
+  "incidents": {
+    "bf7eeccd-b1f3-43a0-82ce-c4f79c037e39": {
+      "id": "bf7eeccd-b1f3-43a0-82ce-c4f79c037e39",
+      "emergency_id": "EMG-2026-60807",
+      "customer_id": "b0ef9604-54c8-4ad1-9a7a-c353cfd339ef",
+      "federation_id": "b765df3b-c418-4a15-b79f-3cbc09e475dc",
+      "category_name": "Electrical Systems",
+      "emergency_type": "Electrical Short Circuit & Sparking",
+      "response_matrix_code": "elec-short-spark",
+      "severity": "HIGH",
+      "status": "TEAM_FORMING",
+      "location": "Tower 4, Main Utility Shaft, Ahmedabad",
+      "address_details": {},
+      "description": "Severe electrical arcing and cable insulation fire",
+      "evidence_photos": [],
+      "approx_people_affected": 25,
+      "immediate_danger": true,
+      "danger_details": null,
+      "metadata": {
+        "createdVia": "CUSTOMER_PORTAL_EMERGENCY_FLOW",
+        "sourceUserAgent": "unknown"
+      },
+      "created_at": "2026-09-20T09:37:41.673Z",
+      "updated_at": "2026-09-20T09:38:08.471Z",
+      "verification_code": "EMG-2B81",
+      "verification_token": "bd09b29e6568e8f16c3a0d274ea8b8539a386ebdadc2f83e2070922c8fe0face"
+    },
+    "EMG-2026-60807": {
+      "id": "bf7eeccd-b1f3-43a0-82ce-c4f79c037e39",
+      "emergency_id": "EMG-2026-60807",
+      "customer_id": "b0ef9604-54c8-4ad1-9a7a-c353cfd339ef",
+      "federation_id": "b765df3b-c418-4a15-b79f-3cbc09e475dc",
+      "category_name": "Electrical Systems",
+      "emergency_type": "Electrical Short Circuit & Sparking",
+      "response_matrix_code": "elec-short-spark",
+      "severity": "HIGH",
+      "status": "TEAM_FORMING",
+      "location": "Tower 4, Main Utility Shaft, Ahmedabad",
+      "address_details": {},
+      "description": "Severe electrical arcing and cable insulation fire",
+      "evidence_photos": [],
+      "approx_people_affected": 25,
+      "immediate_danger": true,
+      "danger_details": null,
+      "metadata": {
+        "createdVia": "CUSTOMER_PORTAL_EMERGENCY_FLOW",
+        "sourceUserAgent": "unknown"
+      },
+      "created_at": "2026-09-20T09:37:41.673Z",
+      "updated_at": "2026-09-20T09:38:08.471Z",
+      "verification_code": "EMG-2B81",
+      "verification_token": "bd09b29e6568e8f16c3a0d274ea8b8539a386ebdadc2f83e2070922c8fe0face"
+    },
+    "924dc158-888d-4ac3-bd85-8edbad8aa2c9": {
+      "id": "924dc158-888d-4ac3-bd85-8edbad8aa2c9",
+      "emergency_id": "EMG-2026-34119",
+      "customer_id": "b0ef9604-54c8-4ad1-9a7a-c353cfd339ef",
+      "federation_id": "b765df3b-c418-4a15-b79f-3cbc09e475dc",
+      "category_name": "Water Infrastructure",
+      "emergency_type": "Society Water Tank Burst",
+      "response_matrix_code": "wat-tank-burst",
+      "severity": "CRITICAL",
+      "status": "STAFFING_SHORTAGE",
+      "location": "Riverfront Complex, Block C-1789897119458, Ahmedabad",
+      "address_details": {},
+      "description": "Rooftop 20,000L water tank ruptured, structural flooding across 8 floors",
+      "evidence_photos": [],
+      "approx_people_affected": 120,
+      "immediate_danger": true,
+      "danger_details": null,
+      "metadata": {
+        "createdVia": "CUSTOMER_PORTAL_EMERGENCY_FLOW",
+        "sourceUserAgent": "unknown"
+      },
+      "created_at": "2026-09-20T09:38:40.468Z",
+      "updated_at": "2026-09-20T09:41:10.373Z",
+      "verification_code": "EMG-FD5F",
+      "verification_token": "afa27f3c6768f50efd3377cba38c4cb4e24a650cca55ffeafd7a33bf1993819d"
+    },
+    "EMG-2026-34119": {
+      "id": "924dc158-888d-4ac3-bd85-8edbad8aa2c9",
+      "emergency_id": "EMG-2026-34119",
+      "customer_id": "b0ef9604-54c8-4ad1-9a7a-c353cfd339ef",
+      "federation_id": "b765df3b-c418-4a15-b79f-3cbc09e475dc",
+      "category_name": "Water Infrastructure",
+      "emergency_type": "Society Water Tank Burst",
+      "response_matrix_code": "wat-tank-burst",
+      "severity": "CRITICAL",
+      "status": "STAFFING_SHORTAGE",
+      "location": "Riverfront Complex, Block C-1789897119458, Ahmedabad",
+      "address_details": {},
+      "description": "Rooftop 20,000L water tank ruptured, structural flooding across 8 floors",
+      "evidence_photos": [],
+      "approx_people_affected": 120,
+      "immediate_danger": true,
+      "danger_details": null,
+      "metadata": {
+        "createdVia": "CUSTOMER_PORTAL_EMERGENCY_FLOW",
+        "sourceUserAgent": "unknown"
+      },
+      "created_at": "2026-09-20T09:38:40.468Z",
+      "updated_at": "2026-09-20T09:41:10.373Z",
+      "verification_code": "EMG-FD5F",
+      "verification_token": "afa27f3c6768f50efd3377cba38c4cb4e24a650cca55ffeafd7a33bf1993819d"
+    },
+    "0e0eb3b4-08fc-4061-8588-ef874b278f74": {
+      "id": "0e0eb3b4-08fc-4061-8588-ef874b278f74",
+      "emergency_id": "EMG-2026-98915",
+      "customer_id": "b0ef9604-54c8-4ad1-9a7a-c353cfd339ef",
+      "federation_id": "b765df3b-c418-4a15-b79f-3cbc09e475dc",
+      "category_name": "Water & Plumbing Disasters",
+      "emergency_type": "Society Water Tank Burst",
+      "response_matrix_code": "wat-tank-burst",
+      "severity": "CRITICAL",
+      "status": "CLOSED",
+      "location": "Tower C, Shivalik Highrise, Satellite, Ahmedabad, Sector 53",
+      "address_details": {},
+      "description": "Overhead tank ruptured, flooding electrical shafts and corridors.",
+      "evidence_photos": [],
+      "approx_people_affected": 30,
+      "immediate_danger": true,
+      "danger_details": "Water flooding electrical main room.",
+      "metadata": {
+        "createdVia": "CUSTOMER_PORTAL_EMERGENCY_FLOW",
+        "sourceUserAgent": "unknown",
+        "is_verified": true,
+        "verified_at": "2026-09-20T09:42:42.944Z",
+        "verified_by_worker_id": "59eca4ff-a589-4363-ad76-24a4ff5b6e2e"
+      },
+      "created_at": "2026-09-20T09:41:33.871Z",
+      "updated_at": "2026-09-20T09:43:26.157Z",
+      "verification_code": "EMG-821F",
+      "verification_token": "74af3477e8f82b66d37b3c1bf9befa53206aceadfbec076329b1c27148f59cb4",
+      "resolution_requested_at": "2026-09-20T09:43:25.030Z",
+      "resolution_requested_by_worker_id": "59eca4ff-a589-4363-ad76-24a4ff5b6e2e",
+      "resolution_summary": "Pressure test passed at 4.5 bar. All clear.",
+      "completed_work": "Re-tested auxiliary riser pressure. Verified 0 leaks.",
+      "remaining_concerns": null,
+      "resolution_evidence_photos": [],
+      "resolved_at": "2026-09-20T09:43:25.030Z",
+      "closure_notes": "Cooperative disaster response verified and incident closed formally.",
+      "closed_at": "2026-09-20T09:43:26.157Z",
+      "closed_by_admin_id": "096b0708-3193-41a6-9f49-03ff8903a0ed"
+    },
+    "EMG-2026-98915": {
+      "id": "0e0eb3b4-08fc-4061-8588-ef874b278f74",
+      "emergency_id": "EMG-2026-98915",
+      "customer_id": "b0ef9604-54c8-4ad1-9a7a-c353cfd339ef",
+      "federation_id": "b765df3b-c418-4a15-b79f-3cbc09e475dc",
+      "category_name": "Water & Plumbing Disasters",
+      "emergency_type": "Society Water Tank Burst",
+      "response_matrix_code": "wat-tank-burst",
+      "severity": "CRITICAL",
+      "status": "CLOSED",
+      "location": "Tower C, Shivalik Highrise, Satellite, Ahmedabad, Sector 53",
+      "address_details": {},
+      "description": "Overhead tank ruptured, flooding electrical shafts and corridors.",
+      "evidence_photos": [],
+      "approx_people_affected": 30,
+      "immediate_danger": true,
+      "danger_details": "Water flooding electrical main room.",
+      "metadata": {
+        "createdVia": "CUSTOMER_PORTAL_EMERGENCY_FLOW",
+        "sourceUserAgent": "unknown",
+        "is_verified": true,
+        "verified_at": "2026-09-20T09:42:42.944Z",
+        "verified_by_worker_id": "59eca4ff-a589-4363-ad76-24a4ff5b6e2e"
+      },
+      "created_at": "2026-09-20T09:41:33.871Z",
+      "updated_at": "2026-09-20T09:43:26.157Z",
+      "verification_code": "EMG-821F",
+      "verification_token": "74af3477e8f82b66d37b3c1bf9befa53206aceadfbec076329b1c27148f59cb4",
+      "resolution_requested_at": "2026-09-20T09:43:25.030Z",
+      "resolution_requested_by_worker_id": "59eca4ff-a589-4363-ad76-24a4ff5b6e2e",
+      "resolution_summary": "Pressure test passed at 4.5 bar. All clear.",
+      "completed_work": "Re-tested auxiliary riser pressure. Verified 0 leaks.",
+      "remaining_concerns": null,
+      "resolution_evidence_photos": [],
+      "resolved_at": "2026-09-20T09:43:25.030Z",
+      "closure_notes": "Cooperative disaster response verified and incident closed formally.",
+      "closed_at": "2026-09-20T09:43:26.157Z",
+      "closed_by_admin_id": "096b0708-3193-41a6-9f49-03ff8903a0ed"
+    },
+    "489151eb-5176-4ae5-83cc-1ae834391838": {
+      "id": "489151eb-5176-4ae5-83cc-1ae834391838",
+      "emergency_id": "EMG-2026-82469",
+      "customer_id": "b0ef9604-54c8-4ad1-9a7a-c353cfd339ef",
+      "federation_id": "b765df3b-c418-4a15-b79f-3cbc09e475dc",
+      "category_name": "Electrical Systems",
+      "emergency_type": "Electrical Short Circuit & Sparking",
+      "response_matrix_code": "elec-short-spark",
+      "severity": "CRITICAL",
+      "status": "ACTIVE",
+      "location": "Bimanagar Society, Block B",
+      "address_details": {},
+      "description": "Main circuit breaker flashing and smoking",
+      "evidence_photos": [],
+      "approx_people_affected": 12,
+      "immediate_danger": true,
+      "danger_details": null,
+      "metadata": {
+        "createdVia": "CUSTOMER_PORTAL_EMERGENCY_FLOW",
+        "sourceUserAgent": "unknown"
+      },
+      "created_at": "2026-09-20T09:43:45.103Z",
+      "updated_at": "2026-09-20T09:43:56.986Z",
+      "verification_code": "EMG-9942",
+      "verification_token": "3bdabd24ea39a1f09b732cece0292e1b66e795d88e1e603145eadd353a395290"
+    },
+    "EMG-2026-82469": {
+      "id": "489151eb-5176-4ae5-83cc-1ae834391838",
+      "emergency_id": "EMG-2026-82469",
+      "customer_id": "b0ef9604-54c8-4ad1-9a7a-c353cfd339ef",
+      "federation_id": "b765df3b-c418-4a15-b79f-3cbc09e475dc",
+      "category_name": "Electrical Systems",
+      "emergency_type": "Electrical Short Circuit & Sparking",
+      "response_matrix_code": "elec-short-spark",
+      "severity": "CRITICAL",
+      "status": "ACTIVE",
+      "location": "Bimanagar Society, Block B",
+      "address_details": {},
+      "description": "Main circuit breaker flashing and smoking",
+      "evidence_photos": [],
+      "approx_people_affected": 12,
+      "immediate_danger": true,
+      "danger_details": null,
+      "metadata": {
+        "createdVia": "CUSTOMER_PORTAL_EMERGENCY_FLOW",
+        "sourceUserAgent": "unknown"
+      },
+      "created_at": "2026-09-20T09:43:45.103Z",
+      "updated_at": "2026-09-20T09:43:56.986Z",
+      "verification_code": "EMG-9942",
+      "verification_token": "3bdabd24ea39a1f09b732cece0292e1b66e795d88e1e603145eadd353a395290"
+    },
+    "fb04ac3c-69e2-43bd-b0d3-f5e4c81cc1cd": {
+      "id": "fb04ac3c-69e2-43bd-b0d3-f5e4c81cc1cd",
+      "emergency_id": "EMG-2026-22720",
+      "customer_id": "b0ef9604-54c8-4ad1-9a7a-c353cfd339ef",
+      "federation_id": "b765df3b-c418-4a15-b79f-3cbc09e475dc",
+      "category_name": "Water Infrastructure",
+      "emergency_type": "Society Water Tank Burst",
+      "response_matrix_code": "wat-tank-burst",
+      "severity": "CRITICAL",
+      "status": "DISPATCHING",
+      "location": "Satellite Cross Roads, Ahmedabad",
+      "address_details": {},
+      "description": "High pressure municipal main pipe ruptured, street flooding.",
+      "evidence_photos": [],
+      "approx_people_affected": 15,
+      "immediate_danger": true,
+      "danger_details": null,
+      "metadata": {
+        "createdVia": "CUSTOMER_PORTAL_EMERGENCY_FLOW",
+        "sourceUserAgent": "unknown"
+      },
+      "created_at": "2026-09-20T09:44:27.364Z",
+      "updated_at": "2026-09-20T09:44:48.590Z",
+      "verification_code": "EMG-1316",
+      "verification_token": "08277fec522fe65b5ceae3884741b591fef35d27c9ef145a9e5af1e3dca617c7"
+    },
+    "EMG-2026-22720": {
+      "id": "fb04ac3c-69e2-43bd-b0d3-f5e4c81cc1cd",
+      "emergency_id": "EMG-2026-22720",
+      "customer_id": "b0ef9604-54c8-4ad1-9a7a-c353cfd339ef",
+      "federation_id": "b765df3b-c418-4a15-b79f-3cbc09e475dc",
+      "category_name": "Water Infrastructure",
+      "emergency_type": "Society Water Tank Burst",
+      "response_matrix_code": "wat-tank-burst",
+      "severity": "CRITICAL",
+      "status": "DISPATCHING",
+      "location": "Satellite Cross Roads, Ahmedabad",
+      "address_details": {},
+      "description": "High pressure municipal main pipe ruptured, street flooding.",
+      "evidence_photos": [],
+      "approx_people_affected": 15,
+      "immediate_danger": true,
+      "danger_details": null,
+      "metadata": {
+        "createdVia": "CUSTOMER_PORTAL_EMERGENCY_FLOW",
+        "sourceUserAgent": "unknown"
+      },
+      "created_at": "2026-09-20T09:44:27.364Z",
+      "updated_at": "2026-09-20T09:44:48.590Z",
+      "verification_code": "EMG-1316",
+      "verification_token": "08277fec522fe65b5ceae3884741b591fef35d27c9ef145a9e5af1e3dca617c7"
+    },
+    "97b34cca-38f4-47dd-b36e-464170cf9e73": {
+      "id": "97b34cca-38f4-47dd-b36e-464170cf9e73",
+      "emergency_id": "EMG-2026-24423",
+      "customer_id": "b0ef9604-54c8-4ad1-9a7a-c353cfd339ef",
+      "federation_id": "b765df3b-c418-4a15-b79f-3cbc09e475dc",
+      "category_name": "Water Infrastructure",
+      "emergency_type": "Society Water Tank Burst",
+      "response_matrix_code": "wat-tank-burst",
+      "severity": "CRITICAL",
+      "status": "TEAM_FORMING",
+      "location": "Vastrapur, Ahmedabad",
+      "address_details": {},
+      "description": "Community water tank cracked in apartment basement.",
+      "evidence_photos": [],
+      "approx_people_affected": 12,
+      "immediate_danger": false,
+      "danger_details": null,
+      "metadata": {
+        "createdVia": "CUSTOMER_PORTAL_EMERGENCY_FLOW",
+        "sourceUserAgent": "unknown"
+      },
+      "created_at": "2026-09-20T09:44:53.503Z",
+      "updated_at": "2026-09-20T09:45:11.127Z",
+      "verification_code": "EMG-5443",
+      "verification_token": "2a4eca90a166756f98a46caba93343e239ceece9cf31733ff8af8bd5a3cd1054"
+    },
+    "EMG-2026-24423": {
+      "id": "97b34cca-38f4-47dd-b36e-464170cf9e73",
+      "emergency_id": "EMG-2026-24423",
+      "customer_id": "b0ef9604-54c8-4ad1-9a7a-c353cfd339ef",
+      "federation_id": "b765df3b-c418-4a15-b79f-3cbc09e475dc",
+      "category_name": "Water Infrastructure",
+      "emergency_type": "Society Water Tank Burst",
+      "response_matrix_code": "wat-tank-burst",
+      "severity": "CRITICAL",
+      "status": "TEAM_FORMING",
+      "location": "Vastrapur, Ahmedabad",
+      "address_details": {},
+      "description": "Community water tank cracked in apartment basement.",
+      "evidence_photos": [],
+      "approx_people_affected": 12,
+      "immediate_danger": false,
+      "danger_details": null,
+      "metadata": {
+        "createdVia": "CUSTOMER_PORTAL_EMERGENCY_FLOW",
+        "sourceUserAgent": "unknown"
+      },
+      "created_at": "2026-09-20T09:44:53.503Z",
+      "updated_at": "2026-09-20T09:45:11.127Z",
+      "verification_code": "EMG-5443",
+      "verification_token": "2a4eca90a166756f98a46caba93343e239ceece9cf31733ff8af8bd5a3cd1054"
+    },
+    "b9d70576-a76b-4795-9507-536e40178069": {
+      "id": "b9d70576-a76b-4795-9507-536e40178069",
+      "emergency_id": "EMG-2026-CONCURR",
+      "customer_id": "b0ef9604-54c8-4ad1-9a7a-c353cfd339ef",
+      "federation_id": "b765df3b-c418-4a15-b79f-3cbc09e475dc",
+      "category_name": "Electrical Systems",
+      "emergency_type": "Electrical Short Circuit & Sparking",
+      "response_matrix_code": "elec-short-spark",
+      "severity": "CRITICAL",
+      "status": "ACTIVE",
+      "location": "Bopal, Ahmedabad",
+      "address_details": {},
+      "description": "Active electrical arcing and sparking from main panel.",
+      "evidence_photos": [],
+      "approx_people_affected": 4,
+      "immediate_danger": true,
+      "danger_details": null,
+      "metadata": {},
+      "created_at": "2026-09-20T09:45:13.883Z",
+      "updated_at": "2026-09-20T09:45:18.795Z",
+      "verification_code": "EMG-7184",
+      "verification_token": "230ef79e87a92c7e7fea10e320a2947d3bd8bf2fe30bc19b0744bed3e1596370"
+    },
+    "EMG-2026-CONCURR": {
+      "id": "b9d70576-a76b-4795-9507-536e40178069",
+      "emergency_id": "EMG-2026-CONCURR",
+      "customer_id": "b0ef9604-54c8-4ad1-9a7a-c353cfd339ef",
+      "federation_id": "b765df3b-c418-4a15-b79f-3cbc09e475dc",
+      "category_name": "Electrical Systems",
+      "emergency_type": "Electrical Short Circuit & Sparking",
+      "response_matrix_code": "elec-short-spark",
+      "severity": "CRITICAL",
+      "status": "ACTIVE",
+      "location": "Bopal, Ahmedabad",
+      "address_details": {},
+      "description": "Active electrical arcing and sparking from main panel.",
+      "evidence_photos": [],
+      "approx_people_affected": 4,
+      "immediate_danger": true,
+      "danger_details": null,
+      "metadata": {},
+      "created_at": "2026-09-20T09:45:13.883Z",
+      "updated_at": "2026-09-20T09:45:18.795Z",
+      "verification_code": "EMG-7184",
+      "verification_token": "230ef79e87a92c7e7fea10e320a2947d3bd8bf2fe30bc19b0744bed3e1596370"
+    },
+    "9c772248-c549-425b-8f97-a458c02c3c6a": {
+      "id": "9c772248-c549-425b-8f97-a458c02c3c6a",
+      "emergency_id": "EMG-2026-TEAM-TEST",
+      "customer_id": "b0ef9604-54c8-4ad1-9a7a-c353cfd339ef",
+      "federation_id": "b765df3b-c418-4a15-b79f-3cbc09e475dc",
+      "category_name": "Electrical Systems",
+      "emergency_type": "Substation / Main Panel Failure",
+      "response_matrix_code": "elec-substation-fail",
+      "severity": "HIGH",
+      "status": "ACTIVE",
+      "location": "Prahladnagar, Ahmedabad",
+      "address_details": {},
+      "description": "Central distribution panel burnout, busbar failure.",
+      "evidence_photos": [],
+      "approx_people_affected": 20,
+      "immediate_danger": false,
+      "danger_details": null,
+      "metadata": {},
+      "created_at": "2026-09-20T09:45:21.052Z",
+      "updated_at": "2026-09-20T09:45:26.682Z",
+      "verification_code": "EMG-4F9A",
+      "verification_token": "0d61fd5ab6fbaa079267efe625fe1b16e8b05882593c62c92e71429f1bdfd8af"
+    },
+    "EMG-2026-TEAM-TEST": {
+      "id": "9c772248-c549-425b-8f97-a458c02c3c6a",
+      "emergency_id": "EMG-2026-TEAM-TEST",
+      "customer_id": "b0ef9604-54c8-4ad1-9a7a-c353cfd339ef",
+      "federation_id": "b765df3b-c418-4a15-b79f-3cbc09e475dc",
+      "category_name": "Electrical Systems",
+      "emergency_type": "Substation / Main Panel Failure",
+      "response_matrix_code": "elec-substation-fail",
+      "severity": "HIGH",
+      "status": "ACTIVE",
+      "location": "Prahladnagar, Ahmedabad",
+      "address_details": {},
+      "description": "Central distribution panel burnout, busbar failure.",
+      "evidence_photos": [],
+      "approx_people_affected": 20,
+      "immediate_danger": false,
+      "danger_details": null,
+      "metadata": {},
+      "created_at": "2026-09-20T09:45:21.052Z",
+      "updated_at": "2026-09-20T09:45:26.682Z",
+      "verification_code": "EMG-4F9A",
+      "verification_token": "0d61fd5ab6fbaa079267efe625fe1b16e8b05882593c62c92e71429f1bdfd8af"
+    },
+    "009bbb28-9742-40d5-843d-9fd753a08fdf": {
+      "id": "009bbb28-9742-40d5-843d-9fd753a08fdf",
+      "emergency_id": "EMG-2026-PARTIAL",
+      "customer_id": "b0ef9604-54c8-4ad1-9a7a-c353cfd339ef",
+      "federation_id": "b765df3b-c418-4a15-b79f-3cbc09e475dc",
+      "category_name": "Gas & Fire Hazard",
+      "emergency_type": "Piped Gas Leakage",
+      "response_matrix_code": "gas-piped-leak",
+      "severity": "CRITICAL",
+      "status": "TEAM_FORMING",
+      "location": "SG Highway, Ahmedabad",
+      "address_details": {},
+      "description": "Strong gas odor detected from building gas riser.",
+      "evidence_photos": [],
+      "approx_people_affected": 6,
+      "immediate_danger": true,
+      "danger_details": "Riser pipe leaking on ground floor.",
+      "metadata": {},
+      "created_at": "2026-09-20T09:45:27.709Z",
+      "updated_at": "2026-09-20T09:45:28.839Z",
+      "verification_code": "EMG-38F8",
+      "verification_token": "21ea3131024ad0910e93368a2563e4ba2ca92c112e22577fae47f22f87e4959b"
+    },
+    "EMG-2026-PARTIAL": {
+      "id": "009bbb28-9742-40d5-843d-9fd753a08fdf",
+      "emergency_id": "EMG-2026-PARTIAL",
+      "customer_id": "b0ef9604-54c8-4ad1-9a7a-c353cfd339ef",
+      "federation_id": "b765df3b-c418-4a15-b79f-3cbc09e475dc",
+      "category_name": "Gas & Fire Hazard",
+      "emergency_type": "Piped Gas Leakage",
+      "response_matrix_code": "gas-piped-leak",
+      "severity": "CRITICAL",
+      "status": "TEAM_FORMING",
+      "location": "SG Highway, Ahmedabad",
+      "address_details": {},
+      "description": "Strong gas odor detected from building gas riser.",
+      "evidence_photos": [],
+      "approx_people_affected": 6,
+      "immediate_danger": true,
+      "danger_details": "Riser pipe leaking on ground floor.",
+      "metadata": {},
+      "created_at": "2026-09-20T09:45:27.709Z",
+      "updated_at": "2026-09-20T09:45:28.839Z",
+      "verification_code": "EMG-38F8",
+      "verification_token": "21ea3131024ad0910e93368a2563e4ba2ca92c112e22577fae47f22f87e4959b"
+    },
+    "0536ff33-0367-4764-a4e1-b13f98bf97bd": {
+      "id": "0536ff33-0367-4764-a4e1-b13f98bf97bd",
+      "emergency_id": "EMG-2026-95562",
+      "customer_id": "b0ef9604-54c8-4ad1-9a7a-c353cfd339ef",
+      "federation_id": "b765df3b-c418-4a15-b79f-3cbc09e475dc",
+      "category_name": "Water Infrastructure",
+      "emergency_type": "Society Water Tank Burst",
+      "response_matrix_code": "wat-tank-burst",
+      "severity": "CRITICAL",
+      "status": "DISPATCHING",
+      "location": "Block C, Satellite Apartments, Ahmedabad",
+      "address_details": {},
+      "description": "5000L rooftop water tank cracked open, flooding residential terraces and stairwells.",
+      "evidence_photos": [],
+      "approx_people_affected": 30,
+      "immediate_danger": true,
+      "danger_details": "Water pouring into main power electrical conduits.",
+      "metadata": {
+        "createdVia": "CUSTOMER_PORTAL_EMERGENCY_FLOW",
+        "sourceUserAgent": "unknown"
+      },
+      "created_at": "2026-09-20T09:45:45.696Z",
+      "updated_at": "2026-09-20T09:46:04.196Z",
+      "verification_code": "EMG-2440",
+      "verification_token": "878b5a38275eb490f4a432a90c8941e6a5006e256295568b6f825b7891bbf430"
+    },
+    "EMG-2026-95562": {
+      "id": "0536ff33-0367-4764-a4e1-b13f98bf97bd",
+      "emergency_id": "EMG-2026-95562",
+      "customer_id": "b0ef9604-54c8-4ad1-9a7a-c353cfd339ef",
+      "federation_id": "b765df3b-c418-4a15-b79f-3cbc09e475dc",
+      "category_name": "Water Infrastructure",
+      "emergency_type": "Society Water Tank Burst",
+      "response_matrix_code": "wat-tank-burst",
+      "severity": "CRITICAL",
+      "status": "DISPATCHING",
+      "location": "Block C, Satellite Apartments, Ahmedabad",
+      "address_details": {},
+      "description": "5000L rooftop water tank cracked open, flooding residential terraces and stairwells.",
+      "evidence_photos": [],
+      "approx_people_affected": 30,
+      "immediate_danger": true,
+      "danger_details": "Water pouring into main power electrical conduits.",
+      "metadata": {
+        "createdVia": "CUSTOMER_PORTAL_EMERGENCY_FLOW",
+        "sourceUserAgent": "unknown"
+      },
+      "created_at": "2026-09-20T09:45:45.696Z",
+      "updated_at": "2026-09-20T09:46:04.196Z",
+      "verification_code": "EMG-2440",
+      "verification_token": "878b5a38275eb490f4a432a90c8941e6a5006e256295568b6f825b7891bbf430"
+    },
+    "53541d63-4648-4c54-aa9a-c6cc5a43311f": {
+      "id": "53541d63-4648-4c54-aa9a-c6cc5a43311f",
+      "emergency_id": "EMG-2026-92714",
+      "customer_id": "b0ef9604-54c8-4ad1-9a7a-c353cfd339ef",
+      "federation_id": "b765df3b-c418-4a15-b79f-3cbc09e475dc",
+      "category_name": "Water Infrastructure",
+      "emergency_type": "Society Water Tank Burst",
+      "response_matrix_code": "wat-tank-burst",
+      "severity": "CRITICAL",
+      "status": "AWAITING_RESPONSE",
+      "location": "Terrace Block B, Vraj Vihar, Satellite, Ahmedabad",
+      "address_details": {},
+      "description": "10,000L rooftop water tank cracked vertically. Severe water flood entering elevator shaft.",
+      "evidence_photos": [],
+      "approx_people_affected": 40,
+      "immediate_danger": true,
+      "danger_details": "Water approaching main lift motor room wiring.",
+      "metadata": {
+        "createdVia": "CUSTOMER_PORTAL_EMERGENCY_FLOW",
+        "sourceUserAgent": "unknown"
+      },
+      "created_at": "2026-09-20T09:46:20.552Z",
+      "updated_at": "2026-09-20T09:46:20.552Z",
+      "verification_code": "EMG-C4B1",
+      "verification_token": "e2f497c200b0956d769b1a9dd729c69b1a24985d80758835f9caed1cf6b6708c"
+    },
+    "EMG-2026-92714": {
+      "id": "53541d63-4648-4c54-aa9a-c6cc5a43311f",
+      "emergency_id": "EMG-2026-92714",
+      "customer_id": "b0ef9604-54c8-4ad1-9a7a-c353cfd339ef",
+      "federation_id": "b765df3b-c418-4a15-b79f-3cbc09e475dc",
+      "category_name": "Water Infrastructure",
+      "emergency_type": "Society Water Tank Burst",
+      "response_matrix_code": "wat-tank-burst",
+      "severity": "CRITICAL",
+      "status": "AWAITING_RESPONSE",
+      "location": "Terrace Block B, Vraj Vihar, Satellite, Ahmedabad",
+      "address_details": {},
+      "description": "10,000L rooftop water tank cracked vertically. Severe water flood entering elevator shaft.",
+      "evidence_photos": [],
+      "approx_people_affected": 40,
+      "immediate_danger": true,
+      "danger_details": "Water approaching main lift motor room wiring.",
+      "metadata": {
+        "createdVia": "CUSTOMER_PORTAL_EMERGENCY_FLOW",
+        "sourceUserAgent": "unknown"
+      },
+      "created_at": "2026-09-20T09:46:20.552Z",
+      "updated_at": "2026-09-20T09:46:20.552Z",
+      "verification_code": "EMG-C4B1",
+      "verification_token": "e2f497c200b0956d769b1a9dd729c69b1a24985d80758835f9caed1cf6b6708c"
+    },
+    "820bbcd7-9082-4b3d-8ceb-723b0f9840ee": {
+      "id": "820bbcd7-9082-4b3d-8ceb-723b0f9840ee",
+      "emergency_id": "EMG-2026-93556",
+      "customer_id": "b0ef9604-54c8-4ad1-9a7a-c353cfd339ef",
+      "federation_id": "b765df3b-c418-4a15-b79f-3cbc09e475dc",
+      "category_name": "Water Infrastructure",
+      "emergency_type": "Society Water Tank Burst",
+      "response_matrix_code": "wat-tank-burst",
+      "severity": "CRITICAL",
+      "status": "AWAITING_RESPONSE",
+      "location": "Block C, Shivam Apartments, Satellite, Ahmedabad",
+      "address_details": {},
+      "description": "Overhead 5000L water tank split open flooding terrace and main electrical shafts.",
+      "evidence_photos": [
+        "https://example.com/evidence-tank-burst.jpg"
+      ],
+      "approx_people_affected": 25,
+      "immediate_danger": true,
+      "danger_details": "Water actively dripping onto building central circuit breaker panel.",
+      "metadata": {
+        "createdVia": "CUSTOMER_PORTAL_EMERGENCY_FLOW",
+        "sourceUserAgent": "unknown"
+      },
+      "created_at": "2026-09-20T09:46:54.033Z",
+      "updated_at": "2026-09-20T09:46:54.033Z",
+      "verification_code": "EMG-4913",
+      "verification_token": "29fba5778622ba03efe52f3374d7789a9dd91f508d087b5d47dfa49ca5884c94"
+    },
+    "EMG-2026-93556": {
+      "id": "820bbcd7-9082-4b3d-8ceb-723b0f9840ee",
+      "emergency_id": "EMG-2026-93556",
+      "customer_id": "b0ef9604-54c8-4ad1-9a7a-c353cfd339ef",
+      "federation_id": "b765df3b-c418-4a15-b79f-3cbc09e475dc",
+      "category_name": "Water Infrastructure",
+      "emergency_type": "Society Water Tank Burst",
+      "response_matrix_code": "wat-tank-burst",
+      "severity": "CRITICAL",
+      "status": "AWAITING_RESPONSE",
+      "location": "Block C, Shivam Apartments, Satellite, Ahmedabad",
+      "address_details": {},
+      "description": "Overhead 5000L water tank split open flooding terrace and main electrical shafts.",
+      "evidence_photos": [
+        "https://example.com/evidence-tank-burst.jpg"
+      ],
+      "approx_people_affected": 25,
+      "immediate_danger": true,
+      "danger_details": "Water actively dripping onto building central circuit breaker panel.",
+      "metadata": {
+        "createdVia": "CUSTOMER_PORTAL_EMERGENCY_FLOW",
+        "sourceUserAgent": "unknown"
+      },
+      "created_at": "2026-09-20T09:46:54.033Z",
+      "updated_at": "2026-09-20T09:46:54.033Z",
+      "verification_code": "EMG-4913",
+      "verification_token": "29fba5778622ba03efe52f3374d7789a9dd91f508d087b5d47dfa49ca5884c94"
+    },
+    "13740237-814a-49c5-ad7b-d91ed6bf5b1b": {
+      "id": "13740237-814a-49c5-ad7b-d91ed6bf5b1b",
+      "emergency_id": "EMG-2026-17199",
+      "customer_id": "aa0d4b81-fee0-4f1a-b533-b322b17a7d59",
+      "federation_id": "b765df3b-c418-4a15-b79f-3cbc09e475dc",
+      "category_name": "Electrical Systems",
+      "emergency_type": "Electrical Short Circuit & Sparking",
+      "response_matrix_code": "elec-short-spark",
+      "severity": "CRITICAL",
+      "status": "AWAITING_RESPONSE",
+      "location": "Flat 202, Radhe Shyam Complex, Ahmedabad",
+      "address_details": {},
+      "description": "Main line sparks emitting from hallway junction box.",
+      "evidence_photos": [],
+      "approx_people_affected": 4,
+      "immediate_danger": true,
+      "danger_details": null,
+      "metadata": {
+        "createdVia": "CUSTOMER_PORTAL_EMERGENCY_FLOW",
+        "sourceUserAgent": "unknown"
+      },
+      "created_at": "2026-09-20T09:47:06.417Z",
+      "updated_at": "2026-09-20T09:47:06.417Z",
+      "verification_code": "EMG-B8B4",
+      "verification_token": "9065bb54337c94e229e1585e75621242ec87e7f4b216a0feff1d8f61cb39bb47"
+    },
+    "EMG-2026-17199": {
+      "id": "13740237-814a-49c5-ad7b-d91ed6bf5b1b",
+      "emergency_id": "EMG-2026-17199",
+      "customer_id": "aa0d4b81-fee0-4f1a-b533-b322b17a7d59",
+      "federation_id": "b765df3b-c418-4a15-b79f-3cbc09e475dc",
+      "category_name": "Electrical Systems",
+      "emergency_type": "Electrical Short Circuit & Sparking",
+      "response_matrix_code": "elec-short-spark",
+      "severity": "CRITICAL",
+      "status": "AWAITING_RESPONSE",
+      "location": "Flat 202, Radhe Shyam Complex, Ahmedabad",
+      "address_details": {},
+      "description": "Main line sparks emitting from hallway junction box.",
+      "evidence_photos": [],
+      "approx_people_affected": 4,
+      "immediate_danger": true,
+      "danger_details": null,
+      "metadata": {
+        "createdVia": "CUSTOMER_PORTAL_EMERGENCY_FLOW",
+        "sourceUserAgent": "unknown"
+      },
+      "created_at": "2026-09-20T09:47:06.417Z",
+      "updated_at": "2026-09-20T09:47:06.417Z",
+      "verification_code": "EMG-B8B4",
+      "verification_token": "9065bb54337c94e229e1585e75621242ec87e7f4b216a0feff1d8f61cb39bb47"
+    },
+    "1596ff7b-ab5b-45e2-a86c-0dfde5a03972": {
+      "id": "1596ff7b-ab5b-45e2-a86c-0dfde5a03972",
+      "emergency_id": "EMG-2026-80601",
+      "customer_id": "b0ef9604-54c8-4ad1-9a7a-c353cfd339ef",
+      "federation_id": "b765df3b-c418-4a15-b79f-3cbc09e475dc",
+      "category_name": "Water Infrastructure",
+      "emergency_type": "Main Water Supply Line Rupture",
+      "response_matrix_code": "wat-pipe-rupture",
+      "severity": "HIGH",
+      "status": "AWAITING_RESPONSE",
+      "location": "Near Iscon Cross Road, Ahmedabad",
+      "address_details": {},
+      "description": "Main municipal line burst flooding commercial road.",
+      "evidence_photos": [],
+      "approx_people_affected": 1,
+      "immediate_danger": false,
+      "danger_details": null,
+      "metadata": {
+        "createdVia": "CUSTOMER_PORTAL_EMERGENCY_FLOW",
+        "sourceUserAgent": "unknown"
+      },
+      "created_at": "2026-09-20T09:47:17.776Z",
+      "updated_at": "2026-09-20T09:47:17.776Z",
+      "verification_code": "EMG-E64C",
+      "verification_token": "7502a03a456e035f2d8e18a31cf1e49967aa9b58f30e6502addffecbd64bf072"
+    },
+    "EMG-2026-80601": {
+      "id": "1596ff7b-ab5b-45e2-a86c-0dfde5a03972",
+      "emergency_id": "EMG-2026-80601",
+      "customer_id": "b0ef9604-54c8-4ad1-9a7a-c353cfd339ef",
+      "federation_id": "b765df3b-c418-4a15-b79f-3cbc09e475dc",
+      "category_name": "Water Infrastructure",
+      "emergency_type": "Main Water Supply Line Rupture",
+      "response_matrix_code": "wat-pipe-rupture",
+      "severity": "HIGH",
+      "status": "AWAITING_RESPONSE",
+      "location": "Near Iscon Cross Road, Ahmedabad",
+      "address_details": {},
+      "description": "Main municipal line burst flooding commercial road.",
+      "evidence_photos": [],
+      "approx_people_affected": 1,
+      "immediate_danger": false,
+      "danger_details": null,
+      "metadata": {
+        "createdVia": "CUSTOMER_PORTAL_EMERGENCY_FLOW",
+        "sourceUserAgent": "unknown"
+      },
+      "created_at": "2026-09-20T09:47:17.776Z",
+      "updated_at": "2026-09-20T09:47:17.776Z",
+      "verification_code": "EMG-E64C",
+      "verification_token": "7502a03a456e035f2d8e18a31cf1e49967aa9b58f30e6502addffecbd64bf072"
+    },
+    "5cb9c40c-facb-4b74-b457-eb668820e426": {
+      "id": "5cb9c40c-facb-4b74-b457-eb668820e426",
+      "emergency_id": "EMG-2026-71391",
+      "customer_id": "b0ef9604-54c8-4ad1-9a7a-c353cfd339ef",
+      "federation_id": "b765df3b-c418-4a15-b79f-3cbc09e475dc",
+      "category_name": "Gas & Fire Hazard",
+      "emergency_type": "Piped Gas Leakage",
+      "response_matrix_code": "gas-piped-leak",
+      "severity": "CRITICAL",
+      "status": "AWAITING_RESPONSE",
+      "location": "Building 4, Piped Gas Meter Bank, Ahmedabad",
+      "address_details": {},
+      "description": "Strong pungent gas odor near society main manifold.",
+      "evidence_photos": [
+        "https://dxvnwbmxeubpbunwlmnd.supabase.co/storage/v1/object/public/avatars/incident-evidence-test-123.jpg"
+      ],
+      "approx_people_affected": 1,
+      "immediate_danger": true,
+      "danger_details": "Active gas leak inside enclosed utility room.",
+      "metadata": {
+        "createdVia": "CUSTOMER_PORTAL_EMERGENCY_FLOW",
+        "sourceUserAgent": "unknown"
+      },
+      "created_at": "2026-09-20T09:47:35.058Z",
+      "updated_at": "2026-09-20T09:47:35.058Z",
+      "verification_code": "EMG-D31C",
+      "verification_token": "4268490d2608a254f090a62add379c3f9fdd830b4eba1e8e7299b085de997f60"
+    },
+    "EMG-2026-71391": {
+      "id": "5cb9c40c-facb-4b74-b457-eb668820e426",
+      "emergency_id": "EMG-2026-71391",
+      "customer_id": "b0ef9604-54c8-4ad1-9a7a-c353cfd339ef",
+      "federation_id": "b765df3b-c418-4a15-b79f-3cbc09e475dc",
+      "category_name": "Gas & Fire Hazard",
+      "emergency_type": "Piped Gas Leakage",
+      "response_matrix_code": "gas-piped-leak",
+      "severity": "CRITICAL",
+      "status": "AWAITING_RESPONSE",
+      "location": "Building 4, Piped Gas Meter Bank, Ahmedabad",
+      "address_details": {},
+      "description": "Strong pungent gas odor near society main manifold.",
+      "evidence_photos": [
+        "https://dxvnwbmxeubpbunwlmnd.supabase.co/storage/v1/object/public/avatars/incident-evidence-test-123.jpg"
+      ],
+      "approx_people_affected": 1,
+      "immediate_danger": true,
+      "danger_details": "Active gas leak inside enclosed utility room.",
+      "metadata": {
+        "createdVia": "CUSTOMER_PORTAL_EMERGENCY_FLOW",
+        "sourceUserAgent": "unknown"
+      },
+      "created_at": "2026-09-20T09:47:35.058Z",
+      "updated_at": "2026-09-20T09:47:35.058Z",
+      "verification_code": "EMG-D31C",
+      "verification_token": "4268490d2608a254f090a62add379c3f9fdd830b4eba1e8e7299b085de997f60"
+    },
+    "618874c8-6dc8-40da-9846-800ff776531a": {
+      "id": "618874c8-6dc8-40da-9846-800ff776531a",
+      "emergency_id": "EMG-2026-70349",
+      "customer_id": "b0ef9604-54c8-4ad1-9a7a-c353cfd339ef",
+      "federation_id": "b765df3b-c418-4a15-b79f-3cbc09e475dc",
+      "category_name": "Water Infrastructure",
+      "emergency_type": "Society Water Tank Burst",
+      "response_matrix_code": "wat-tank-burst",
+      "severity": "CRITICAL",
+      "status": "TEAM_FORMING",
+      "location": "Block C, Shivalik Residency, Satellite, Ahmedabad, Gujarat",
+      "address_details": {},
+      "description": "alsjn i43 i34j5iut",
+      "evidence_photos": [],
+      "approx_people_affected": 20,
+      "immediate_danger": true,
+      "danger_details": "Water cascading rapidly down common elevator shaft and main electrical riser panel.",
+      "metadata": {
+        "createdVia": "CUSTOMER_PORTAL_EMERGENCY_FLOW",
+        "sourceUserAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/153.0.0.0 Safari/537.36"
+      },
+      "created_at": "2026-09-20T10:01:28.231Z",
+      "updated_at": "2026-09-20T11:30:56.898Z",
+      "verification_code": "EMG-9305",
+      "verification_token": "5b0a66f154ba2bdbc30d37f660126a229f682db26dd77a6df5f855f0e60c3297"
+    },
+    "EMG-2026-70349": {
+      "id": "618874c8-6dc8-40da-9846-800ff776531a",
+      "emergency_id": "EMG-2026-70349",
+      "customer_id": "b0ef9604-54c8-4ad1-9a7a-c353cfd339ef",
+      "federation_id": "b765df3b-c418-4a15-b79f-3cbc09e475dc",
+      "category_name": "Water Infrastructure",
+      "emergency_type": "Society Water Tank Burst",
+      "response_matrix_code": "wat-tank-burst",
+      "severity": "CRITICAL",
+      "status": "TEAM_FORMING",
+      "location": "Block C, Shivalik Residency, Satellite, Ahmedabad, Gujarat",
+      "address_details": {},
+      "description": "alsjn i43 i34j5iut",
+      "evidence_photos": [],
+      "approx_people_affected": 20,
+      "immediate_danger": true,
+      "danger_details": "Water cascading rapidly down common elevator shaft and main electrical riser panel.",
+      "metadata": {
+        "createdVia": "CUSTOMER_PORTAL_EMERGENCY_FLOW",
+        "sourceUserAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/153.0.0.0 Safari/537.36"
+      },
+      "created_at": "2026-09-20T10:01:28.231Z",
+      "updated_at": "2026-09-20T11:30:56.898Z",
+      "verification_code": "EMG-9305",
+      "verification_token": "5b0a66f154ba2bdbc30d37f660126a229f682db26dd77a6df5f855f0e60c3297"
+    },
+    "2b9bcbc4-d702-465e-8bc2-535b028776a5": {
+      "id": "2b9bcbc4-d702-465e-8bc2-535b028776a5",
+      "emergency_id": "EMG-2026-46467",
+      "customer_id": "b0ef9604-54c8-4ad1-9a7a-c353cfd339ef",
+      "federation_id": "b765df3b-c418-4a15-b79f-3cbc09e475dc",
+      "category_name": "Water & Plumbing Disasters",
+      "emergency_type": "Society Water Tank Burst",
+      "response_matrix_code": "wat-tank-burst",
+      "severity": "CRITICAL",
+      "status": "CLOSED",
+      "location": "Tower C, Shivalik Highrise, Satellite, Ahmedabad, Sector 81",
+      "address_details": {},
+      "description": "Overhead tank ruptured, flooding electrical shafts and corridors.",
+      "evidence_photos": [],
+      "approx_people_affected": 30,
+      "immediate_danger": true,
+      "danger_details": "Water flooding electrical main room.",
+      "metadata": {
+        "createdVia": "CUSTOMER_PORTAL_EMERGENCY_FLOW",
+        "sourceUserAgent": "unknown",
+        "is_verified": true,
+        "verified_at": "2026-09-20T10:19:03.828Z",
+        "verified_by_worker_id": "59eca4ff-a589-4363-ad76-24a4ff5b6e2e"
+      },
+      "created_at": "2026-09-20T10:18:45.347Z",
+      "updated_at": "2026-09-20T10:19:20.889Z",
+      "verification_code": "EMG-1BB0",
+      "verification_token": "c3eff4522025c4fb9d8d4bee774779169a8664bf612edc3348279e0548ff1f74",
+      "resolution_requested_at": "2026-09-20T10:19:20.185Z",
+      "resolution_requested_by_worker_id": "59eca4ff-a589-4363-ad76-24a4ff5b6e2e",
+      "resolution_summary": "Pressure test passed at 4.5 bar. All clear.",
+      "completed_work": "Re-tested auxiliary riser pressure. Verified 0 leaks.",
+      "remaining_concerns": null,
+      "resolution_evidence_photos": [],
+      "resolved_at": "2026-09-20T10:19:20.185Z",
+      "closure_notes": "Cooperative disaster response verified and incident closed formally.",
+      "closed_at": "2026-09-20T10:19:20.889Z",
+      "closed_by_admin_id": "096b0708-3193-41a6-9f49-03ff8903a0ed"
+    },
+    "EMG-2026-46467": {
+      "id": "2b9bcbc4-d702-465e-8bc2-535b028776a5",
+      "emergency_id": "EMG-2026-46467",
+      "customer_id": "b0ef9604-54c8-4ad1-9a7a-c353cfd339ef",
+      "federation_id": "b765df3b-c418-4a15-b79f-3cbc09e475dc",
+      "category_name": "Water & Plumbing Disasters",
+      "emergency_type": "Society Water Tank Burst",
+      "response_matrix_code": "wat-tank-burst",
+      "severity": "CRITICAL",
+      "status": "CLOSED",
+      "location": "Tower C, Shivalik Highrise, Satellite, Ahmedabad, Sector 81",
+      "address_details": {},
+      "description": "Overhead tank ruptured, flooding electrical shafts and corridors.",
+      "evidence_photos": [],
+      "approx_people_affected": 30,
+      "immediate_danger": true,
+      "danger_details": "Water flooding electrical main room.",
+      "metadata": {
+        "createdVia": "CUSTOMER_PORTAL_EMERGENCY_FLOW",
+        "sourceUserAgent": "unknown",
+        "is_verified": true,
+        "verified_at": "2026-09-20T10:19:03.828Z",
+        "verified_by_worker_id": "59eca4ff-a589-4363-ad76-24a4ff5b6e2e"
+      },
+      "created_at": "2026-09-20T10:18:45.347Z",
+      "updated_at": "2026-09-20T10:19:20.889Z",
+      "verification_code": "EMG-1BB0",
+      "verification_token": "c3eff4522025c4fb9d8d4bee774779169a8664bf612edc3348279e0548ff1f74",
+      "resolution_requested_at": "2026-09-20T10:19:20.185Z",
+      "resolution_requested_by_worker_id": "59eca4ff-a589-4363-ad76-24a4ff5b6e2e",
+      "resolution_summary": "Pressure test passed at 4.5 bar. All clear.",
+      "completed_work": "Re-tested auxiliary riser pressure. Verified 0 leaks.",
+      "remaining_concerns": null,
+      "resolution_evidence_photos": [],
+      "resolved_at": "2026-09-20T10:19:20.185Z",
+      "closure_notes": "Cooperative disaster response verified and incident closed formally.",
+      "closed_at": "2026-09-20T10:19:20.889Z",
+      "closed_by_admin_id": "096b0708-3193-41a6-9f49-03ff8903a0ed"
+    },
+    "8f9a546c-c343-44da-9c1d-9368fe403d1a": {
+      "id": "8f9a546c-c343-44da-9c1d-9368fe403d1a",
+      "emergency_id": "EMG-2026-91132",
+      "customer_id": "b0ef9604-54c8-4ad1-9a7a-c353cfd339ef",
+      "federation_id": "b765df3b-c418-4a15-b79f-3cbc09e475dc",
+      "category_name": "Water & Plumbing Disasters",
+      "emergency_type": "Society Water Tank Burst",
+      "response_matrix_code": "wat-tank-burst",
+      "severity": "CRITICAL",
+      "status": "CLOSED",
+      "location": "Tower C, Shivalik Highrise, Satellite, Ahmedabad, Sector 55",
+      "address_details": {},
+      "description": "Overhead tank ruptured, flooding electrical shafts and corridors.",
+      "evidence_photos": [],
+      "approx_people_affected": 30,
+      "immediate_danger": true,
+      "danger_details": "Water flooding electrical main room.",
+      "metadata": {
+        "createdVia": "CUSTOMER_PORTAL_EMERGENCY_FLOW",
+        "sourceUserAgent": "unknown",
+        "is_verified": true,
+        "verified_at": "2026-09-20T11:38:33.043Z",
+        "verified_by_worker_id": "59eca4ff-a589-4363-ad76-24a4ff5b6e2e"
+      },
+      "created_at": "2026-09-20T11:38:15.387Z",
+      "updated_at": "2026-09-20T11:38:52.786Z",
+      "verification_code": "EMG-88D9",
+      "verification_token": "d7999eb0e47f7afba7cdeee45b72e1640fe70afc0d68f1b2bc2ae7229eb83493",
+      "resolution_requested_at": "2026-09-20T11:38:52.115Z",
+      "resolution_requested_by_worker_id": "59eca4ff-a589-4363-ad76-24a4ff5b6e2e",
+      "resolution_summary": "Pressure test passed at 4.5 bar. All clear.",
+      "completed_work": "Re-tested auxiliary riser pressure. Verified 0 leaks.",
+      "remaining_concerns": null,
+      "resolution_evidence_photos": [],
+      "resolved_at": "2026-09-20T11:38:52.115Z",
+      "closure_notes": "Cooperative disaster response verified and incident closed formally.",
+      "closed_at": "2026-09-20T11:38:52.786Z",
+      "closed_by_admin_id": "096b0708-3193-41a6-9f49-03ff8903a0ed"
+    },
+    "EMG-2026-91132": {
+      "id": "8f9a546c-c343-44da-9c1d-9368fe403d1a",
+      "emergency_id": "EMG-2026-91132",
+      "customer_id": "b0ef9604-54c8-4ad1-9a7a-c353cfd339ef",
+      "federation_id": "b765df3b-c418-4a15-b79f-3cbc09e475dc",
+      "category_name": "Water & Plumbing Disasters",
+      "emergency_type": "Society Water Tank Burst",
+      "response_matrix_code": "wat-tank-burst",
+      "severity": "CRITICAL",
+      "status": "CLOSED",
+      "location": "Tower C, Shivalik Highrise, Satellite, Ahmedabad, Sector 55",
+      "address_details": {},
+      "description": "Overhead tank ruptured, flooding electrical shafts and corridors.",
+      "evidence_photos": [],
+      "approx_people_affected": 30,
+      "immediate_danger": true,
+      "danger_details": "Water flooding electrical main room.",
+      "metadata": {
+        "createdVia": "CUSTOMER_PORTAL_EMERGENCY_FLOW",
+        "sourceUserAgent": "unknown",
+        "is_verified": true,
+        "verified_at": "2026-09-20T11:38:33.043Z",
+        "verified_by_worker_id": "59eca4ff-a589-4363-ad76-24a4ff5b6e2e"
+      },
+      "created_at": "2026-09-20T11:38:15.387Z",
+      "updated_at": "2026-09-20T11:38:52.786Z",
+      "verification_code": "EMG-88D9",
+      "verification_token": "d7999eb0e47f7afba7cdeee45b72e1640fe70afc0d68f1b2bc2ae7229eb83493",
+      "resolution_requested_at": "2026-09-20T11:38:52.115Z",
+      "resolution_requested_by_worker_id": "59eca4ff-a589-4363-ad76-24a4ff5b6e2e",
+      "resolution_summary": "Pressure test passed at 4.5 bar. All clear.",
+      "completed_work": "Re-tested auxiliary riser pressure. Verified 0 leaks.",
+      "remaining_concerns": null,
+      "resolution_evidence_photos": [],
+      "resolved_at": "2026-09-20T11:38:52.115Z",
+      "closure_notes": "Cooperative disaster response verified and incident closed formally.",
+      "closed_at": "2026-09-20T11:38:52.786Z",
+      "closed_by_admin_id": "096b0708-3193-41a6-9f49-03ff8903a0ed"
+    }
+  },
+  "teams": {
+    "60bcbc30-a284-4ec1-af03-0e9edf1a48aa": {
+      "id": "60bcbc30-a284-4ec1-af03-0e9edf1a48aa",
+      "incident_id": "bf7eeccd-b1f3-43a0-82ce-c4f79c037e39",
+      "federation_id": "b765df3b-c418-4a15-b79f-3cbc09e475dc",
+      "status": "ACTIVE",
+      "team_lead_worker_id": "59eca4ff-a589-4363-ad76-24a4ff5b6e2e",
+      "requires_team_lead": true,
+      "required_worker_count": 3,
+      "accepted_worker_count": 3,
+      "created_at": "2026-09-20T09:38:09.624Z",
+      "updated_at": "2026-09-20T09:38:09.624Z",
+      "members": [
+        {
+          "id": "3b20b24d-fa30-48b0-93cf-f21f484b364b",
+          "team_id": "60bcbc30-a284-4ec1-af03-0e9edf1a48aa",
+          "incident_id": "bf7eeccd-b1f3-43a0-82ce-c4f79c037e39",
+          "worker_id": "59eca4ff-a589-4363-ad76-24a4ff5b6e2e",
+          "role": "Team Lead / Senior Electrician",
+          "is_team_lead": true,
+          "status": "ACTIVE",
+          "accepted_at": "2026-09-20T09:38:09.624Z",
+          "created_at": "2026-09-20T09:38:09.624Z",
+          "updated_at": "2026-09-20T09:38:09.624Z"
+        },
+        {
+          "id": "e190e83d-f250-403c-808a-e2b8a554792a",
+          "team_id": "60bcbc30-a284-4ec1-af03-0e9edf1a48aa",
+          "incident_id": "bf7eeccd-b1f3-43a0-82ce-c4f79c037e39",
+          "worker_id": "fe1dafe8-4d12-4618-9223-0f4452ea20f7",
+          "role": "Assistant Electrician",
+          "is_team_lead": false,
+          "status": "RELEASED",
+          "accepted_at": "2026-09-20T09:38:15.396Z",
+          "created_at": "2026-09-20T09:38:15.396Z",
+          "updated_at": "2026-09-20T09:38:18.360Z",
+          "worker_name": "Govind Suthar",
+          "worker_phone": "+91 98250 44003",
+          "profession": "Carpenter"
+        },
+        {
+          "id": "480f03f2-3b71-4e08-a207-16fe368a2b2c",
+          "team_id": "60bcbc30-a284-4ec1-af03-0e9edf1a48aa",
+          "incident_id": "bf7eeccd-b1f3-43a0-82ce-c4f79c037e39",
+          "worker_id": "10d74e2a-62ce-4260-adf9-67e16de838fb",
+          "role": "Assistant Electrician",
+          "is_team_lead": false,
+          "status": "ACTIVE",
+          "accepted_at": "2026-09-20T09:38:18.360Z",
+          "created_at": "2026-09-20T09:38:18.360Z",
+          "updated_at": "2026-09-20T09:38:18.360Z",
+          "worker_name": "Bhavin Mistri",
+          "worker_phone": "+91 98250 44004",
+          "profession": "Carpenter"
+        }
+      ]
+    },
+    "bf7eeccd-b1f3-43a0-82ce-c4f79c037e39": {
+      "id": "60bcbc30-a284-4ec1-af03-0e9edf1a48aa",
+      "incident_id": "bf7eeccd-b1f3-43a0-82ce-c4f79c037e39",
+      "federation_id": "b765df3b-c418-4a15-b79f-3cbc09e475dc",
+      "status": "ACTIVE",
+      "team_lead_worker_id": "59eca4ff-a589-4363-ad76-24a4ff5b6e2e",
+      "requires_team_lead": true,
+      "required_worker_count": 3,
+      "accepted_worker_count": 3,
+      "created_at": "2026-09-20T09:38:09.624Z",
+      "updated_at": "2026-09-20T09:38:09.624Z",
+      "members": [
+        {
+          "id": "3b20b24d-fa30-48b0-93cf-f21f484b364b",
+          "team_id": "60bcbc30-a284-4ec1-af03-0e9edf1a48aa",
+          "incident_id": "bf7eeccd-b1f3-43a0-82ce-c4f79c037e39",
+          "worker_id": "59eca4ff-a589-4363-ad76-24a4ff5b6e2e",
+          "role": "Team Lead / Senior Electrician",
+          "is_team_lead": true,
+          "status": "ACTIVE",
+          "accepted_at": "2026-09-20T09:38:09.624Z",
+          "created_at": "2026-09-20T09:38:09.624Z",
+          "updated_at": "2026-09-20T09:38:09.624Z"
+        },
+        {
+          "id": "e190e83d-f250-403c-808a-e2b8a554792a",
+          "team_id": "60bcbc30-a284-4ec1-af03-0e9edf1a48aa",
+          "incident_id": "bf7eeccd-b1f3-43a0-82ce-c4f79c037e39",
+          "worker_id": "fe1dafe8-4d12-4618-9223-0f4452ea20f7",
+          "role": "Assistant Electrician",
+          "is_team_lead": false,
+          "status": "RELEASED",
+          "accepted_at": "2026-09-20T09:38:15.396Z",
+          "created_at": "2026-09-20T09:38:15.396Z",
+          "updated_at": "2026-09-20T09:38:18.360Z",
+          "worker_name": "Govind Suthar",
+          "worker_phone": "+91 98250 44003",
+          "profession": "Carpenter"
+        },
+        {
+          "id": "480f03f2-3b71-4e08-a207-16fe368a2b2c",
+          "team_id": "60bcbc30-a284-4ec1-af03-0e9edf1a48aa",
+          "incident_id": "bf7eeccd-b1f3-43a0-82ce-c4f79c037e39",
+          "worker_id": "10d74e2a-62ce-4260-adf9-67e16de838fb",
+          "role": "Assistant Electrician",
+          "is_team_lead": false,
+          "status": "ACTIVE",
+          "accepted_at": "2026-09-20T09:38:18.360Z",
+          "created_at": "2026-09-20T09:38:18.360Z",
+          "updated_at": "2026-09-20T09:38:18.360Z",
+          "worker_name": "Bhavin Mistri",
+          "worker_phone": "+91 98250 44004",
+          "profession": "Carpenter"
+        }
+      ]
+    },
+    "7e52005c-f54f-40ba-b194-1391b88299df": {
+      "id": "7e52005c-f54f-40ba-b194-1391b88299df",
+      "incident_id": "924dc158-888d-4ac3-bd85-8edbad8aa2c9",
+      "federation_id": "b765df3b-c418-4a15-b79f-3cbc09e475dc",
+      "status": "ACTIVE",
+      "team_type": "PRIMARY",
+      "team_lead_worker_id": "59eca4ff-a589-4363-ad76-24a4ff5b6e2e",
+      "requires_team_lead": true,
+      "required_worker_count": 3,
+      "accepted_worker_count": 3,
+      "created_at": "2026-09-20T09:38:54.619Z",
+      "updated_at": "2026-09-20T09:38:54.619Z",
+      "members": [
+        {
+          "id": "7c58755c-d8f3-445e-98eb-325e06236911",
+          "team_id": "7e52005c-f54f-40ba-b194-1391b88299df",
+          "incident_id": "924dc158-888d-4ac3-bd85-8edbad8aa2c9",
+          "worker_id": "59eca4ff-a589-4363-ad76-24a4ff5b6e2e",
+          "role": "Team Lead / Plumber",
+          "is_team_lead": true,
+          "status": "ACTIVE",
+          "accepted_at": "2026-09-20T09:38:54.619Z",
+          "created_at": "2026-09-20T09:38:54.619Z",
+          "updated_at": "2026-09-20T09:38:54.619Z"
+        },
+        {
+          "id": "fe71bcf1-1953-4a10-b7e0-3be9cf2423fd",
+          "team_id": "7e52005c-f54f-40ba-b194-1391b88299df",
+          "incident_id": "924dc158-888d-4ac3-bd85-8edbad8aa2c9",
+          "worker_id": "b5473d80-9397-45c0-90cc-7f110b0c1dda",
+          "role": "Pump Technician",
+          "is_team_lead": false,
+          "status": "RELEASED",
+          "accepted_at": "2026-09-20T09:40:02.050Z",
+          "created_at": "2026-09-20T09:40:02.050Z",
+          "updated_at": "2026-09-20T09:40:18.559Z"
+        },
+        {
+          "id": "087f924b-493f-4d6b-ae61-0872691232de",
+          "team_id": "7e52005c-f54f-40ba-b194-1391b88299df",
+          "incident_id": "924dc158-888d-4ac3-bd85-8edbad8aa2c9",
+          "worker_id": "a982a999-7d23-4243-9e49-a675ab98c569",
+          "role": "Pump Technician",
+          "is_team_lead": false,
+          "status": "ACTIVE",
+          "accepted_at": "2026-09-20T09:40:18.559Z",
+          "created_at": "2026-09-20T09:40:18.559Z",
+          "updated_at": "2026-09-20T09:40:18.559Z"
+        }
+      ]
+    },
+    "924dc158-888d-4ac3-bd85-8edbad8aa2c9": {
+      "id": "00652248-ff60-48f6-bd19-61fd9b4e734f",
+      "incident_id": "924dc158-888d-4ac3-bd85-8edbad8aa2c9",
+      "federation_id": "11111111-2222-3333-4444-555555555555",
+      "status": "FORMING",
+      "team_lead_worker_id": null,
+      "requires_team_lead": false,
+      "required_worker_count": 2,
+      "accepted_worker_count": 0,
+      "created_at": "2026-09-20T09:40:29.733Z",
+      "updated_at": "2026-09-20T09:40:29.733Z",
+      "team_type": "SUPPORT",
+      "parent_team_id": null,
+      "members": []
+    },
+    "21ca2bb0-5797-4ad8-a499-ac077b56709e": {
+      "id": "21ca2bb0-5797-4ad8-a499-ac077b56709e",
+      "incident_id": "924dc158-888d-4ac3-bd85-8edbad8aa2c9",
+      "federation_id": "b765df3b-c418-4a15-b79f-3cbc09e475dc",
+      "status": "FORMING",
+      "team_lead_worker_id": null,
+      "requires_team_lead": false,
+      "required_worker_count": 2,
+      "accepted_worker_count": 0,
+      "created_at": "2026-09-20T09:38:55.373Z",
+      "updated_at": "2026-09-20T09:38:55.373Z",
+      "team_type": "SPECIALIZED_UNIT",
+      "parent_team_id": "7e52005c-f54f-40ba-b194-1391b88299df",
+      "members": []
+    },
+    "00652248-ff60-48f6-bd19-61fd9b4e734f": {
+      "id": "00652248-ff60-48f6-bd19-61fd9b4e734f",
+      "incident_id": "924dc158-888d-4ac3-bd85-8edbad8aa2c9",
+      "federation_id": "11111111-2222-3333-4444-555555555555",
+      "status": "FORMING",
+      "team_lead_worker_id": null,
+      "requires_team_lead": false,
+      "required_worker_count": 2,
+      "accepted_worker_count": 0,
+      "created_at": "2026-09-20T09:40:29.733Z",
+      "updated_at": "2026-09-20T09:40:29.733Z",
+      "team_type": "SUPPORT",
+      "parent_team_id": null,
+      "members": []
+    },
+    "7b620bab-adec-4ab1-8f83-2d72ac297bb9": {
+      "id": "7b620bab-adec-4ab1-8f83-2d72ac297bb9",
+      "incident_id": "0e0eb3b4-08fc-4061-8588-ef874b278f74",
+      "federation_id": "b765df3b-c418-4a15-b79f-3cbc09e475dc",
+      "status": "FORMED",
+      "field_status": "RESOLVED",
+      "team_lead_worker_id": "59eca4ff-a589-4363-ad76-24a4ff5b6e2e",
+      "requires_team_lead": true,
+      "required_worker_count": 2,
+      "accepted_worker_count": 2,
+      "created_at": "2026-09-20T09:42:37.615Z",
+      "updated_at": "2026-09-20T09:43:26.260Z",
+      "members": [
+        {
+          "id": "93dd0ad8-2a78-4a96-88d7-af543ca8d2b8",
+          "team_id": "7b620bab-adec-4ab1-8f83-2d72ac297bb9",
+          "incident_id": "0e0eb3b4-08fc-4061-8588-ef874b278f74",
+          "worker_id": "59eca4ff-a589-4363-ad76-24a4ff5b6e2e",
+          "role": "Team Lead",
+          "is_team_lead": true,
+          "status": "ACTIVE",
+          "accepted_at": "2026-09-20T09:42:37.615Z",
+          "created_at": "2026-09-20T09:42:37.615Z",
+          "updated_at": "2026-09-20T09:42:43.455Z",
+          "worker_name": "Ravi Patel",
+          "worker_phone": "+91 98765 43210"
+        },
+        {
+          "id": "a04b05a1-7cce-49cb-b383-4de5af84c0da",
+          "team_id": "7b620bab-adec-4ab1-8f83-2d72ac297bb9",
+          "incident_id": "0e0eb3b4-08fc-4061-8588-ef874b278f74",
+          "worker_id": "b9bc4bd6-1fc9-4df9-85d4-294e396116e8",
+          "role": "Plumber",
+          "is_team_lead": false,
+          "status": "ACTIVE",
+          "accepted_at": "2026-09-20T09:42:40.149Z",
+          "created_at": "2026-09-20T09:42:40.149Z",
+          "updated_at": "2026-09-20T09:42:47.548Z",
+          "worker_name": "Hitesh Solanki"
+        }
+      ]
+    },
+    "0e0eb3b4-08fc-4061-8588-ef874b278f74": {
+      "id": "7b620bab-adec-4ab1-8f83-2d72ac297bb9",
+      "incident_id": "0e0eb3b4-08fc-4061-8588-ef874b278f74",
+      "federation_id": "b765df3b-c418-4a15-b79f-3cbc09e475dc",
+      "status": "FORMED",
+      "field_status": "RESOLVED",
+      "team_lead_worker_id": "59eca4ff-a589-4363-ad76-24a4ff5b6e2e",
+      "requires_team_lead": true,
+      "required_worker_count": 2,
+      "accepted_worker_count": 2,
+      "created_at": "2026-09-20T09:42:37.615Z",
+      "updated_at": "2026-09-20T09:43:26.260Z",
+      "members": [
+        {
+          "id": "93dd0ad8-2a78-4a96-88d7-af543ca8d2b8",
+          "team_id": "7b620bab-adec-4ab1-8f83-2d72ac297bb9",
+          "incident_id": "0e0eb3b4-08fc-4061-8588-ef874b278f74",
+          "worker_id": "59eca4ff-a589-4363-ad76-24a4ff5b6e2e",
+          "role": "Team Lead",
+          "is_team_lead": true,
+          "status": "ACTIVE",
+          "accepted_at": "2026-09-20T09:42:37.615Z",
+          "created_at": "2026-09-20T09:42:37.615Z",
+          "updated_at": "2026-09-20T09:42:43.455Z",
+          "worker_name": "Ravi Patel",
+          "worker_phone": "+91 98765 43210"
+        },
+        {
+          "id": "a04b05a1-7cce-49cb-b383-4de5af84c0da",
+          "team_id": "7b620bab-adec-4ab1-8f83-2d72ac297bb9",
+          "incident_id": "0e0eb3b4-08fc-4061-8588-ef874b278f74",
+          "worker_id": "b9bc4bd6-1fc9-4df9-85d4-294e396116e8",
+          "role": "Plumber",
+          "is_team_lead": false,
+          "status": "ACTIVE",
+          "accepted_at": "2026-09-20T09:42:40.149Z",
+          "created_at": "2026-09-20T09:42:40.149Z",
+          "updated_at": "2026-09-20T09:42:47.548Z",
+          "worker_name": "Hitesh Solanki"
+        }
+      ]
+    },
+    "6dd254f4-b475-4300-b499-bb981c8bebce": {
+      "id": "6dd254f4-b475-4300-b499-bb981c8bebce",
+      "incident_id": "2b9bcbc4-d702-465e-8bc2-535b028776a5",
+      "federation_id": "b765df3b-c418-4a15-b79f-3cbc09e475dc",
+      "status": "FORMED",
+      "field_status": "RESOLVED",
+      "team_lead_worker_id": "59eca4ff-a589-4363-ad76-24a4ff5b6e2e",
+      "requires_team_lead": true,
+      "required_worker_count": 2,
+      "accepted_worker_count": 2,
+      "created_at": "2026-09-20T10:19:01.113Z",
+      "updated_at": "2026-09-20T10:19:20.955Z",
+      "members": [
+        {
+          "id": "ae818777-f4e6-4c7b-9c77-5f905a3f63a0",
+          "team_id": "6dd254f4-b475-4300-b499-bb981c8bebce",
+          "incident_id": "2b9bcbc4-d702-465e-8bc2-535b028776a5",
+          "worker_id": "59eca4ff-a589-4363-ad76-24a4ff5b6e2e",
+          "role": "Team Lead",
+          "is_team_lead": true,
+          "status": "ACTIVE",
+          "accepted_at": "2026-09-20T10:19:01.113Z",
+          "created_at": "2026-09-20T10:19:01.113Z",
+          "updated_at": "2026-09-20T10:19:04.228Z",
+          "worker_name": "Ravi Patel",
+          "worker_phone": "+91 98765 43210"
+        },
+        {
+          "id": "8ec49571-41b2-466e-bfcd-0a834884288a",
+          "team_id": "6dd254f4-b475-4300-b499-bb981c8bebce",
+          "incident_id": "2b9bcbc4-d702-465e-8bc2-535b028776a5",
+          "worker_id": "b9bc4bd6-1fc9-4df9-85d4-294e396116e8",
+          "role": "Plumber",
+          "is_team_lead": false,
+          "status": "ACTIVE",
+          "accepted_at": "2026-09-20T10:19:02.610Z",
+          "created_at": "2026-09-20T10:19:02.610Z",
+          "updated_at": "2026-09-20T10:19:06.639Z",
+          "worker_name": "Hitesh Solanki"
+        }
+      ]
+    },
+    "2b9bcbc4-d702-465e-8bc2-535b028776a5": {
+      "id": "6dd254f4-b475-4300-b499-bb981c8bebce",
+      "incident_id": "2b9bcbc4-d702-465e-8bc2-535b028776a5",
+      "federation_id": "b765df3b-c418-4a15-b79f-3cbc09e475dc",
+      "status": "FORMED",
+      "field_status": "RESOLVED",
+      "team_lead_worker_id": "59eca4ff-a589-4363-ad76-24a4ff5b6e2e",
+      "requires_team_lead": true,
+      "required_worker_count": 2,
+      "accepted_worker_count": 2,
+      "created_at": "2026-09-20T10:19:01.113Z",
+      "updated_at": "2026-09-20T10:19:20.955Z",
+      "members": [
+        {
+          "id": "ae818777-f4e6-4c7b-9c77-5f905a3f63a0",
+          "team_id": "6dd254f4-b475-4300-b499-bb981c8bebce",
+          "incident_id": "2b9bcbc4-d702-465e-8bc2-535b028776a5",
+          "worker_id": "59eca4ff-a589-4363-ad76-24a4ff5b6e2e",
+          "role": "Team Lead",
+          "is_team_lead": true,
+          "status": "ACTIVE",
+          "accepted_at": "2026-09-20T10:19:01.113Z",
+          "created_at": "2026-09-20T10:19:01.113Z",
+          "updated_at": "2026-09-20T10:19:04.228Z",
+          "worker_name": "Ravi Patel",
+          "worker_phone": "+91 98765 43210"
+        },
+        {
+          "id": "8ec49571-41b2-466e-bfcd-0a834884288a",
+          "team_id": "6dd254f4-b475-4300-b499-bb981c8bebce",
+          "incident_id": "2b9bcbc4-d702-465e-8bc2-535b028776a5",
+          "worker_id": "b9bc4bd6-1fc9-4df9-85d4-294e396116e8",
+          "role": "Plumber",
+          "is_team_lead": false,
+          "status": "ACTIVE",
+          "accepted_at": "2026-09-20T10:19:02.610Z",
+          "created_at": "2026-09-20T10:19:02.610Z",
+          "updated_at": "2026-09-20T10:19:06.639Z",
+          "worker_name": "Hitesh Solanki"
+        }
+      ]
+    },
+    "ceb0cc8b-dfb4-4e17-8162-22ced1dfae67": {
+      "id": "ceb0cc8b-dfb4-4e17-8162-22ced1dfae67",
+      "incident_id": "618874c8-6dc8-40da-9846-800ff776531a",
+      "federation_id": "b765df3b-c418-4a15-b79f-3cbc09e475dc",
+      "team_type": "PRIMARY",
+      "status": "FORMING",
+      "team_lead_worker_id": "59eca4ff-a589-4363-ad76-24a4ff5b6e2e",
+      "requires_team_lead": true,
+      "required_worker_count": 6,
+      "accepted_worker_count": 2,
+      "created_at": "2026-09-20T11:30:55.786Z",
+      "updated_at": "2026-09-20T11:30:56.389Z",
+      "members": [
+        {
+          "id": "04ee5bf7-d748-4609-a5b6-097cefba0a06",
+          "team_id": "ceb0cc8b-dfb4-4e17-8162-22ced1dfae67",
+          "incident_id": "618874c8-6dc8-40da-9846-800ff776531a",
+          "worker_id": "59eca4ff-a589-4363-ad76-24a4ff5b6e2e",
+          "role": "Plumber",
+          "is_team_lead": true,
+          "status": "ACTIVE",
+          "accepted_at": "2026-09-20T11:30:56.389Z",
+          "created_at": "2026-09-20T11:30:56.389Z",
+          "updated_at": "2026-09-20T11:30:56.389Z",
+          "worker_name": "Ravi Patel",
+          "worker_phone": "+91 98250 11021",
+          "profession": "Plumber"
+        },
+        {
+          "id": "04ee5bf7-d748-4609-a5b6-097cefba0a06",
+          "team_id": "ceb0cc8b-dfb4-4e17-8162-22ced1dfae67",
+          "incident_id": "618874c8-6dc8-40da-9846-800ff776531a",
+          "worker_id": "59eca4ff-a589-4363-ad76-24a4ff5b6e2e",
+          "role": "Plumber",
+          "is_team_lead": true,
+          "status": "ACTIVE",
+          "accepted_at": "2026-09-20T11:30:56.389Z",
+          "created_at": "2026-09-20T11:30:56.389Z",
+          "updated_at": "2026-09-20T11:30:56.389Z",
+          "worker_name": "Ravi Patel",
+          "worker_phone": "+91 98250 11021",
+          "profession": "Plumber"
+        }
+      ]
+    },
+    "618874c8-6dc8-40da-9846-800ff776531a": {
+      "id": "ceb0cc8b-dfb4-4e17-8162-22ced1dfae67",
+      "incident_id": "618874c8-6dc8-40da-9846-800ff776531a",
+      "federation_id": "b765df3b-c418-4a15-b79f-3cbc09e475dc",
+      "team_type": "PRIMARY",
+      "status": "FORMING",
+      "team_lead_worker_id": "59eca4ff-a589-4363-ad76-24a4ff5b6e2e",
+      "requires_team_lead": true,
+      "required_worker_count": 6,
+      "accepted_worker_count": 2,
+      "created_at": "2026-09-20T11:30:55.786Z",
+      "updated_at": "2026-09-20T11:30:56.389Z",
+      "members": [
+        {
+          "id": "04ee5bf7-d748-4609-a5b6-097cefba0a06",
+          "team_id": "ceb0cc8b-dfb4-4e17-8162-22ced1dfae67",
+          "incident_id": "618874c8-6dc8-40da-9846-800ff776531a",
+          "worker_id": "59eca4ff-a589-4363-ad76-24a4ff5b6e2e",
+          "role": "Plumber",
+          "is_team_lead": true,
+          "status": "ACTIVE",
+          "accepted_at": "2026-09-20T11:30:56.389Z",
+          "created_at": "2026-09-20T11:30:56.389Z",
+          "updated_at": "2026-09-20T11:30:56.389Z",
+          "worker_name": "Ravi Patel",
+          "worker_phone": "+91 98250 11021",
+          "profession": "Plumber"
+        },
+        {
+          "id": "04ee5bf7-d748-4609-a5b6-097cefba0a06",
+          "team_id": "ceb0cc8b-dfb4-4e17-8162-22ced1dfae67",
+          "incident_id": "618874c8-6dc8-40da-9846-800ff776531a",
+          "worker_id": "59eca4ff-a589-4363-ad76-24a4ff5b6e2e",
+          "role": "Plumber",
+          "is_team_lead": true,
+          "status": "ACTIVE",
+          "accepted_at": "2026-09-20T11:30:56.389Z",
+          "created_at": "2026-09-20T11:30:56.389Z",
+          "updated_at": "2026-09-20T11:30:56.389Z",
+          "worker_name": "Ravi Patel",
+          "worker_phone": "+91 98250 11021",
+          "profession": "Plumber"
+        }
+      ]
+    },
+    "f99efc5e-2897-455b-b2c0-300d8b2058be": {
+      "id": "f99efc5e-2897-455b-b2c0-300d8b2058be",
+      "incident_id": "8f9a546c-c343-44da-9c1d-9368fe403d1a",
+      "federation_id": "b765df3b-c418-4a15-b79f-3cbc09e475dc",
+      "status": "FORMED",
+      "field_status": "RESOLVED",
+      "team_lead_worker_id": "59eca4ff-a589-4363-ad76-24a4ff5b6e2e",
+      "requires_team_lead": true,
+      "required_worker_count": 2,
+      "accepted_worker_count": 2,
+      "created_at": "2026-09-20T11:38:30.541Z",
+      "updated_at": "2026-09-20T11:38:52.871Z",
+      "members": [
+        {
+          "id": "fa639f7a-8e55-4f8a-b7ba-43e93913b8d0",
+          "team_id": "f99efc5e-2897-455b-b2c0-300d8b2058be",
+          "incident_id": "8f9a546c-c343-44da-9c1d-9368fe403d1a",
+          "worker_id": "59eca4ff-a589-4363-ad76-24a4ff5b6e2e",
+          "role": "Team Lead",
+          "is_team_lead": true,
+          "status": "ACTIVE",
+          "accepted_at": "2026-09-20T11:38:30.541Z",
+          "created_at": "2026-09-20T11:38:30.541Z",
+          "updated_at": "2026-09-20T11:38:33.423Z",
+          "worker_name": "Ravi Patel",
+          "worker_phone": "+91 98765 43210"
+        },
+        {
+          "id": "2d2fcb90-5b3e-44e0-9a03-2cb63c07b0dd",
+          "team_id": "f99efc5e-2897-455b-b2c0-300d8b2058be",
+          "incident_id": "8f9a546c-c343-44da-9c1d-9368fe403d1a",
+          "worker_id": "b9bc4bd6-1fc9-4df9-85d4-294e396116e8",
+          "role": "Plumber",
+          "is_team_lead": false,
+          "status": "ACTIVE",
+          "accepted_at": "2026-09-20T11:38:31.662Z",
+          "created_at": "2026-09-20T11:38:31.662Z",
+          "updated_at": "2026-09-20T11:38:35.758Z",
+          "worker_name": "Hitesh Solanki"
+        }
+      ]
+    },
+    "8f9a546c-c343-44da-9c1d-9368fe403d1a": {
+      "id": "f99efc5e-2897-455b-b2c0-300d8b2058be",
+      "incident_id": "8f9a546c-c343-44da-9c1d-9368fe403d1a",
+      "federation_id": "b765df3b-c418-4a15-b79f-3cbc09e475dc",
+      "status": "FORMED",
+      "field_status": "RESOLVED",
+      "team_lead_worker_id": "59eca4ff-a589-4363-ad76-24a4ff5b6e2e",
+      "requires_team_lead": true,
+      "required_worker_count": 2,
+      "accepted_worker_count": 2,
+      "created_at": "2026-09-20T11:38:30.541Z",
+      "updated_at": "2026-09-20T11:38:52.871Z",
+      "members": [
+        {
+          "id": "fa639f7a-8e55-4f8a-b7ba-43e93913b8d0",
+          "team_id": "f99efc5e-2897-455b-b2c0-300d8b2058be",
+          "incident_id": "8f9a546c-c343-44da-9c1d-9368fe403d1a",
+          "worker_id": "59eca4ff-a589-4363-ad76-24a4ff5b6e2e",
+          "role": "Team Lead",
+          "is_team_lead": true,
+          "status": "ACTIVE",
+          "accepted_at": "2026-09-20T11:38:30.541Z",
+          "created_at": "2026-09-20T11:38:30.541Z",
+          "updated_at": "2026-09-20T11:38:33.423Z",
+          "worker_name": "Ravi Patel",
+          "worker_phone": "+91 98765 43210"
+        },
+        {
+          "id": "2d2fcb90-5b3e-44e0-9a03-2cb63c07b0dd",
+          "team_id": "f99efc5e-2897-455b-b2c0-300d8b2058be",
+          "incident_id": "8f9a546c-c343-44da-9c1d-9368fe403d1a",
+          "worker_id": "b9bc4bd6-1fc9-4df9-85d4-294e396116e8",
+          "role": "Plumber",
+          "is_team_lead": false,
+          "status": "ACTIVE",
+          "accepted_at": "2026-09-20T11:38:31.662Z",
+          "created_at": "2026-09-20T11:38:31.662Z",
+          "updated_at": "2026-09-20T11:38:35.758Z",
+          "worker_name": "Hitesh Solanki"
+        }
+      ]
+    }
+  },
+  "teamMembers": {
+    "60bcbc30-a284-4ec1-af03-0e9edf1a48aa": [
+      {
+        "id": "3b20b24d-fa30-48b0-93cf-f21f484b364b",
+        "team_id": "60bcbc30-a284-4ec1-af03-0e9edf1a48aa",
+        "incident_id": "bf7eeccd-b1f3-43a0-82ce-c4f79c037e39",
+        "worker_id": "59eca4ff-a589-4363-ad76-24a4ff5b6e2e",
+        "role": "Team Lead / Senior Electrician",
+        "is_team_lead": true,
+        "status": "ACTIVE",
+        "accepted_at": "2026-09-20T09:38:09.624Z",
+        "created_at": "2026-09-20T09:38:09.624Z",
+        "updated_at": "2026-09-20T09:38:09.624Z"
+      },
+      {
+        "id": "e190e83d-f250-403c-808a-e2b8a554792a",
+        "team_id": "60bcbc30-a284-4ec1-af03-0e9edf1a48aa",
+        "incident_id": "bf7eeccd-b1f3-43a0-82ce-c4f79c037e39",
+        "worker_id": "fe1dafe8-4d12-4618-9223-0f4452ea20f7",
+        "role": "Assistant Electrician",
+        "is_team_lead": false,
+        "status": "RELEASED",
+        "accepted_at": "2026-09-20T09:38:15.396Z",
+        "created_at": "2026-09-20T09:38:15.396Z",
+        "updated_at": "2026-09-20T09:38:18.360Z",
+        "worker_name": "Govind Suthar",
+        "worker_phone": "+91 98250 44003",
+        "profession": "Carpenter"
+      },
+      {
+        "id": "480f03f2-3b71-4e08-a207-16fe368a2b2c",
+        "team_id": "60bcbc30-a284-4ec1-af03-0e9edf1a48aa",
+        "incident_id": "bf7eeccd-b1f3-43a0-82ce-c4f79c037e39",
+        "worker_id": "10d74e2a-62ce-4260-adf9-67e16de838fb",
+        "role": "Assistant Electrician",
+        "is_team_lead": false,
+        "status": "ACTIVE",
+        "accepted_at": "2026-09-20T09:38:18.360Z",
+        "created_at": "2026-09-20T09:38:18.360Z",
+        "updated_at": "2026-09-20T09:38:18.360Z",
+        "worker_name": "Bhavin Mistri",
+        "worker_phone": "+91 98250 44004",
+        "profession": "Carpenter"
+      }
+    ],
+    "7e52005c-f54f-40ba-b194-1391b88299df": [
+      {
+        "id": "7c58755c-d8f3-445e-98eb-325e06236911",
+        "team_id": "7e52005c-f54f-40ba-b194-1391b88299df",
+        "incident_id": "924dc158-888d-4ac3-bd85-8edbad8aa2c9",
+        "worker_id": "59eca4ff-a589-4363-ad76-24a4ff5b6e2e",
+        "role": "Team Lead / Plumber",
+        "is_team_lead": true,
+        "status": "ACTIVE",
+        "accepted_at": "2026-09-20T09:38:54.619Z",
+        "created_at": "2026-09-20T09:38:54.619Z",
+        "updated_at": "2026-09-20T09:38:54.619Z"
+      },
+      {
+        "id": "fe71bcf1-1953-4a10-b7e0-3be9cf2423fd",
+        "team_id": "7e52005c-f54f-40ba-b194-1391b88299df",
+        "incident_id": "924dc158-888d-4ac3-bd85-8edbad8aa2c9",
+        "worker_id": "b5473d80-9397-45c0-90cc-7f110b0c1dda",
+        "role": "Pump Technician",
+        "is_team_lead": false,
+        "status": "RELEASED",
+        "accepted_at": "2026-09-20T09:40:02.050Z",
+        "created_at": "2026-09-20T09:40:02.050Z",
+        "updated_at": "2026-09-20T09:40:18.559Z"
+      },
+      {
+        "id": "087f924b-493f-4d6b-ae61-0872691232de",
+        "team_id": "7e52005c-f54f-40ba-b194-1391b88299df",
+        "incident_id": "924dc158-888d-4ac3-bd85-8edbad8aa2c9",
+        "worker_id": "a982a999-7d23-4243-9e49-a675ab98c569",
+        "role": "Pump Technician",
+        "is_team_lead": false,
+        "status": "ACTIVE",
+        "accepted_at": "2026-09-20T09:40:18.559Z",
+        "created_at": "2026-09-20T09:40:18.559Z",
+        "updated_at": "2026-09-20T09:40:18.559Z"
+      }
+    ],
+    "21ca2bb0-5797-4ad8-a499-ac077b56709e": [],
+    "00652248-ff60-48f6-bd19-61fd9b4e734f": [],
+    "7b620bab-adec-4ab1-8f83-2d72ac297bb9": [
+      {
+        "id": "93dd0ad8-2a78-4a96-88d7-af543ca8d2b8",
+        "team_id": "7b620bab-adec-4ab1-8f83-2d72ac297bb9",
+        "incident_id": "0e0eb3b4-08fc-4061-8588-ef874b278f74",
+        "worker_id": "59eca4ff-a589-4363-ad76-24a4ff5b6e2e",
+        "role": "Team Lead",
+        "is_team_lead": true,
+        "status": "ACTIVE",
+        "accepted_at": "2026-09-20T09:42:37.615Z",
+        "created_at": "2026-09-20T09:42:37.615Z",
+        "updated_at": "2026-09-20T09:42:43.455Z",
+        "worker_name": "Ravi Patel",
+        "worker_phone": "+91 98765 43210"
+      },
+      {
+        "id": "a04b05a1-7cce-49cb-b383-4de5af84c0da",
+        "team_id": "7b620bab-adec-4ab1-8f83-2d72ac297bb9",
+        "incident_id": "0e0eb3b4-08fc-4061-8588-ef874b278f74",
+        "worker_id": "b9bc4bd6-1fc9-4df9-85d4-294e396116e8",
+        "role": "Plumber",
+        "is_team_lead": false,
+        "status": "ACTIVE",
+        "accepted_at": "2026-09-20T09:42:40.149Z",
+        "created_at": "2026-09-20T09:42:40.149Z",
+        "updated_at": "2026-09-20T09:42:47.548Z",
+        "worker_name": "Hitesh Solanki"
+      }
+    ],
+    "6dd254f4-b475-4300-b499-bb981c8bebce": [
+      {
+        "id": "ae818777-f4e6-4c7b-9c77-5f905a3f63a0",
+        "team_id": "6dd254f4-b475-4300-b499-bb981c8bebce",
+        "incident_id": "2b9bcbc4-d702-465e-8bc2-535b028776a5",
+        "worker_id": "59eca4ff-a589-4363-ad76-24a4ff5b6e2e",
+        "role": "Team Lead",
+        "is_team_lead": true,
+        "status": "ACTIVE",
+        "accepted_at": "2026-09-20T10:19:01.113Z",
+        "created_at": "2026-09-20T10:19:01.113Z",
+        "updated_at": "2026-09-20T10:19:04.228Z",
+        "worker_name": "Ravi Patel",
+        "worker_phone": "+91 98765 43210"
+      },
+      {
+        "id": "8ec49571-41b2-466e-bfcd-0a834884288a",
+        "team_id": "6dd254f4-b475-4300-b499-bb981c8bebce",
+        "incident_id": "2b9bcbc4-d702-465e-8bc2-535b028776a5",
+        "worker_id": "b9bc4bd6-1fc9-4df9-85d4-294e396116e8",
+        "role": "Plumber",
+        "is_team_lead": false,
+        "status": "ACTIVE",
+        "accepted_at": "2026-09-20T10:19:02.610Z",
+        "created_at": "2026-09-20T10:19:02.610Z",
+        "updated_at": "2026-09-20T10:19:06.639Z",
+        "worker_name": "Hitesh Solanki"
+      }
+    ],
+    "ceb0cc8b-dfb4-4e17-8162-22ced1dfae67": [
+      {
+        "id": "04ee5bf7-d748-4609-a5b6-097cefba0a06",
+        "team_id": "ceb0cc8b-dfb4-4e17-8162-22ced1dfae67",
+        "incident_id": "618874c8-6dc8-40da-9846-800ff776531a",
+        "worker_id": "59eca4ff-a589-4363-ad76-24a4ff5b6e2e",
+        "role": "Plumber",
+        "is_team_lead": true,
+        "status": "ACTIVE",
+        "accepted_at": "2026-09-20T11:30:56.389Z",
+        "created_at": "2026-09-20T11:30:56.389Z",
+        "updated_at": "2026-09-20T11:30:56.389Z",
+        "worker_name": "Ravi Patel",
+        "worker_phone": "+91 98250 11021",
+        "profession": "Plumber"
+      },
+      {
+        "id": "04ee5bf7-d748-4609-a5b6-097cefba0a06",
+        "team_id": "ceb0cc8b-dfb4-4e17-8162-22ced1dfae67",
+        "incident_id": "618874c8-6dc8-40da-9846-800ff776531a",
+        "worker_id": "59eca4ff-a589-4363-ad76-24a4ff5b6e2e",
+        "role": "Plumber",
+        "is_team_lead": true,
+        "status": "ACTIVE",
+        "accepted_at": "2026-09-20T11:30:56.389Z",
+        "created_at": "2026-09-20T11:30:56.389Z",
+        "updated_at": "2026-09-20T11:30:56.389Z",
+        "worker_name": "Ravi Patel",
+        "worker_phone": "+91 98250 11021",
+        "profession": "Plumber"
+      }
+    ],
+    "f99efc5e-2897-455b-b2c0-300d8b2058be": [
+      {
+        "id": "fa639f7a-8e55-4f8a-b7ba-43e93913b8d0",
+        "team_id": "f99efc5e-2897-455b-b2c0-300d8b2058be",
+        "incident_id": "8f9a546c-c343-44da-9c1d-9368fe403d1a",
+        "worker_id": "59eca4ff-a589-4363-ad76-24a4ff5b6e2e",
+        "role": "Team Lead",
+        "is_team_lead": true,
+        "status": "ACTIVE",
+        "accepted_at": "2026-09-20T11:38:30.541Z",
+        "created_at": "2026-09-20T11:38:30.541Z",
+        "updated_at": "2026-09-20T11:38:33.423Z",
+        "worker_name": "Ravi Patel",
+        "worker_phone": "+91 98765 43210"
+      },
+      {
+        "id": "2d2fcb90-5b3e-44e0-9a03-2cb63c07b0dd",
+        "team_id": "f99efc5e-2897-455b-b2c0-300d8b2058be",
+        "incident_id": "8f9a546c-c343-44da-9c1d-9368fe403d1a",
+        "worker_id": "b9bc4bd6-1fc9-4df9-85d4-294e396116e8",
+        "role": "Plumber",
+        "is_team_lead": false,
+        "status": "ACTIVE",
+        "accepted_at": "2026-09-20T11:38:31.662Z",
+        "created_at": "2026-09-20T11:38:31.662Z",
+        "updated_at": "2026-09-20T11:38:35.758Z",
+        "worker_name": "Hitesh Solanki"
+      }
+    ]
+  },
+  "tasks": {
+    "6475fc45-f95b-4616-8064-35cc1d138253": {
+      "id": "6475fc45-f95b-4616-8064-35cc1d138253",
+      "incident_id": "0e0eb3b4-08fc-4061-8588-ef874b278f74",
+      "team_id": "7b620bab-adec-4ab1-8f83-2d72ac297bb9",
+      "title": "Main Riser Isolation",
+      "description": "Locate and shut off primary intake and booster riser valves immediately.",
+      "task_order": 1,
+      "status": "COMPLETED",
+      "assigned_worker_id": "59eca4ff-a589-4363-ad76-24a4ff5b6e2e",
+      "assigned_role": "Team Lead",
+      "created_at": "2026-09-20T09:42:38.089Z",
+      "updated_at": "2026-09-20T09:42:55.538Z",
+      "started_at": "2026-09-20T09:42:54.338Z",
+      "completed_at": "2026-09-20T09:42:55.538Z",
+      "completion_notes": "Task completed per emergency protocol.",
+      "assigned_worker_name": "Ravi Patel",
+      "assigned_worker_phone": "+91 98765 43210"
+    },
+    "b00d4acb-e7c0-46ba-8690-ea026b46e796": {
+      "id": "b00d4acb-e7c0-46ba-8690-ea026b46e796",
+      "incident_id": "0e0eb3b4-08fc-4061-8588-ef874b278f74",
+      "team_id": "7b620bab-adec-4ab1-8f83-2d72ac297bb9",
+      "title": "Pump Substation Power Cutoff",
+      "description": "De-energize pump room distribution panel to eliminate electrocution hazard.",
+      "task_order": 2,
+      "status": "COMPLETED",
+      "assigned_worker_id": "59eca4ff-a589-4363-ad76-24a4ff5b6e2e",
+      "assigned_role": "Team Lead",
+      "created_at": "2026-09-20T09:42:38.089Z",
+      "updated_at": "2026-09-20T09:43:00.250Z",
+      "started_at": "2026-09-20T09:42:59.133Z",
+      "completed_at": "2026-09-20T09:43:00.250Z",
+      "completion_notes": "Task completed per emergency protocol.",
+      "assigned_worker_name": "Ravi Patel",
+      "assigned_worker_phone": "+91 98765 43210"
+    },
+    "7d109f5e-e06f-4fe5-85b3-41f154d9115c": {
+      "id": "7d109f5e-e06f-4fe5-85b3-41f154d9115c",
+      "incident_id": "0e0eb3b4-08fc-4061-8588-ef874b278f74",
+      "team_id": "7b620bab-adec-4ab1-8f83-2d72ac297bb9",
+      "title": "Structural & Drainage Perimeter Check",
+      "description": "Inspect foundation walls, basement conduits, and clear storm drains.",
+      "task_order": 3,
+      "status": "COMPLETED",
+      "assigned_worker_id": "59eca4ff-a589-4363-ad76-24a4ff5b6e2e",
+      "assigned_role": "Team Lead",
+      "created_at": "2026-09-20T09:42:38.089Z",
+      "updated_at": "2026-09-20T09:43:04.719Z",
+      "started_at": "2026-09-20T09:43:03.326Z",
+      "completed_at": "2026-09-20T09:43:04.719Z",
+      "completion_notes": "Task completed per emergency protocol.",
+      "assigned_worker_name": "Ravi Patel",
+      "assigned_worker_phone": "+91 98765 43210"
+    },
+    "58dea489-a11a-40ff-8a85-6ea2b600a19b": {
+      "id": "58dea489-a11a-40ff-8a85-6ea2b600a19b",
+      "incident_id": "0e0eb3b4-08fc-4061-8588-ef874b278f74",
+      "team_id": "7b620bab-adec-4ab1-8f83-2d72ac297bb9",
+      "title": "Deploy Dewatering Submersible Pump",
+      "description": "Deploy heavy-duty submersible dewatering pump to evacuate standing water.",
+      "task_order": 4,
+      "status": "COMPLETED",
+      "assigned_worker_id": "59eca4ff-a589-4363-ad76-24a4ff5b6e2e",
+      "assigned_role": "Team Lead",
+      "created_at": "2026-09-20T09:42:38.089Z",
+      "updated_at": "2026-09-20T09:43:12.133Z",
+      "started_at": "2026-09-20T09:43:10.493Z",
+      "completed_at": "2026-09-20T09:43:12.133Z",
+      "completion_notes": "Task completed per emergency protocol.",
+      "assigned_worker_name": "Ravi Patel",
+      "assigned_worker_phone": "+91 98765 43210"
+    },
+    "c605144a-d169-4d56-b9f0-ce7eb4b8add9": {
+      "id": "c605144a-d169-4d56-b9f0-ce7eb4b8add9",
+      "incident_id": "489151eb-5176-4ae5-83cc-1ae834391838",
+      "team_id": "10af3abe-721e-46f5-9364-8d002d3a07bd",
+      "title": "Upstream Breaker Trip",
+      "description": "Locate and isolate upstream main breaker or fuse switch immediately.",
+      "task_order": 1,
+      "status": "COMPLETED",
+      "assigned_worker_id": "59eca4ff-a589-4363-ad76-24a4ff5b6e2e",
+      "assigned_role": "Team Lead / Senior Electrician",
+      "created_at": "2026-09-20T09:43:56.649Z",
+      "updated_at": "2026-09-20T09:44:03.821Z",
+      "started_at": "2026-09-20T09:44:02.094Z",
+      "completed_at": "2026-09-20T09:44:03.821Z",
+      "completion_notes": "Main distribution board isolated with lock-out tag."
+    },
+    "ab2713ad-297a-4333-aeb1-90f067490761": {
+      "id": "ab2713ad-297a-4333-aeb1-90f067490761",
+      "incident_id": "489151eb-5176-4ae5-83cc-1ae834391838",
+      "team_id": "10af3abe-721e-46f5-9364-8d002d3a07bd",
+      "title": "Thermal Scan & Arc Source Trace",
+      "description": "Use non-contact infrared scanner to identify scorched cable section.",
+      "task_order": 2,
+      "status": "ASSIGNED",
+      "assigned_worker_id": "7b17bbbc-7051-4436-b78d-66ff8b0466da",
+      "assigned_role": "Electrician",
+      "created_at": "2026-09-20T09:43:56.649Z",
+      "updated_at": "2026-09-20T09:44:00.423Z",
+      "started_at": null,
+      "completed_at": null,
+      "completion_notes": null
+    },
+    "1f81c285-be13-4638-b814-a513765849df": {
+      "id": "1f81c285-be13-4638-b814-a513765849df",
+      "incident_id": "489151eb-5176-4ae5-83cc-1ae834391838",
+      "team_id": "10af3abe-721e-46f5-9364-8d002d3a07bd",
+      "title": "Dielectric Test & Jointing",
+      "description": "Strip melted insulation, verify zero voltage, and install heat-shrink splice.",
+      "task_order": 3,
+      "status": "PENDING",
+      "assigned_worker_id": null,
+      "assigned_role": null,
+      "created_at": "2026-09-20T09:43:56.649Z",
+      "updated_at": "2026-09-20T09:43:56.649Z",
+      "started_at": null,
+      "completed_at": null,
+      "completion_notes": null
+    },
+    "3eba02f8-1e26-4459-92c2-48edd2b560ea": {
+      "id": "3eba02f8-1e26-4459-92c2-48edd2b560ea",
+      "incident_id": "b9d70576-a76b-4795-9507-536e40178069",
+      "team_id": "918a0cdd-0f5b-4f46-b093-877ffc8111f5",
+      "title": "Upstream Breaker Trip",
+      "description": "Locate and isolate upstream main breaker or fuse switch immediately.",
+      "task_order": 1,
+      "status": "PENDING",
+      "assigned_worker_id": null,
+      "assigned_role": null,
+      "created_at": "2026-09-20T09:45:18.190Z",
+      "updated_at": "2026-09-20T09:45:18.190Z",
+      "started_at": null,
+      "completed_at": null,
+      "completion_notes": null
+    },
+    "fefa8e1b-d88f-471f-9254-d68418de73b7": {
+      "id": "fefa8e1b-d88f-471f-9254-d68418de73b7",
+      "incident_id": "b9d70576-a76b-4795-9507-536e40178069",
+      "team_id": "918a0cdd-0f5b-4f46-b093-877ffc8111f5",
+      "title": "Thermal Scan & Arc Source Trace",
+      "description": "Use non-contact infrared scanner to identify scorched cable section.",
+      "task_order": 2,
+      "status": "PENDING",
+      "assigned_worker_id": null,
+      "assigned_role": null,
+      "created_at": "2026-09-20T09:45:18.190Z",
+      "updated_at": "2026-09-20T09:45:18.190Z",
+      "started_at": null,
+      "completed_at": null,
+      "completion_notes": null
+    },
+    "f8afb9d6-dcf6-410c-a519-94d00e67b5ae": {
+      "id": "f8afb9d6-dcf6-410c-a519-94d00e67b5ae",
+      "incident_id": "b9d70576-a76b-4795-9507-536e40178069",
+      "team_id": "918a0cdd-0f5b-4f46-b093-877ffc8111f5",
+      "title": "Dielectric Test & Jointing",
+      "description": "Strip melted insulation, verify zero voltage, and install heat-shrink splice.",
+      "task_order": 3,
+      "status": "PENDING",
+      "assigned_worker_id": null,
+      "assigned_role": null,
+      "created_at": "2026-09-20T09:45:18.190Z",
+      "updated_at": "2026-09-20T09:45:18.190Z",
+      "started_at": null,
+      "completed_at": null,
+      "completion_notes": null
+    },
+    "e6563e08-5964-457f-b109-c99c67387c02": {
+      "id": "e6563e08-5964-457f-b109-c99c67387c02",
+      "incident_id": "9c772248-c549-425b-8f97-a458c02c3c6a",
+      "team_id": "1e167c26-c559-4a19-a914-435457b47ba2",
+      "title": "Lock-Out Tag-Out (LOTO)",
+      "description": "Engage mechanical padlock and tag on primary transformer circuit breaker.",
+      "task_order": 1,
+      "status": "PENDING",
+      "assigned_worker_id": null,
+      "assigned_role": null,
+      "created_at": "2026-09-20T09:45:25.249Z",
+      "updated_at": "2026-09-20T09:45:25.249Z",
+      "started_at": null,
+      "completed_at": null,
+      "completion_notes": null
+    },
+    "ac3279bf-508e-489c-b4ae-daa2867043de": {
+      "id": "ac3279bf-508e-489c-b4ae-daa2867043de",
+      "incident_id": "9c772248-c549-425b-8f97-a458c02c3c6a",
+      "team_id": "1e167c26-c559-4a19-a914-435457b47ba2",
+      "title": "Busbar Chamber Inspection",
+      "description": "Inspect phase separation insulators and busbar couplers for flashover.",
+      "task_order": 2,
+      "status": "PENDING",
+      "assigned_worker_id": null,
+      "assigned_role": null,
+      "created_at": "2026-09-20T09:45:25.249Z",
+      "updated_at": "2026-09-20T09:45:25.249Z",
+      "started_at": null,
+      "completed_at": null,
+      "completion_notes": null
+    },
+    "347206cf-cc51-4db1-932f-fdc4a0122974": {
+      "id": "347206cf-cc51-4db1-932f-fdc4a0122974",
+      "incident_id": "9c772248-c549-425b-8f97-a458c02c3c6a",
+      "team_id": "1e167c26-c559-4a19-a914-435457b47ba2",
+      "title": "Phase Continuity Testing",
+      "description": "Measure 3-phase resistance across terminal lugs before re-energizing.",
+      "task_order": 3,
+      "status": "PENDING",
+      "assigned_worker_id": null,
+      "assigned_role": null,
+      "created_at": "2026-09-20T09:45:25.249Z",
+      "updated_at": "2026-09-20T09:45:25.249Z",
+      "started_at": null,
+      "completed_at": null,
+      "completion_notes": null
+    },
+    "e8012c17-a117-48f9-9106-2161d307b42e": {
+      "id": "e8012c17-a117-48f9-9106-2161d307b42e",
+      "incident_id": "2b9bcbc4-d702-465e-8bc2-535b028776a5",
+      "team_id": "6dd254f4-b475-4300-b499-bb981c8bebce",
+      "title": "Main Riser Isolation",
+      "description": "Locate and shut off primary intake and booster riser valves immediately.",
+      "task_order": 1,
+      "status": "COMPLETED",
+      "assigned_worker_id": "59eca4ff-a589-4363-ad76-24a4ff5b6e2e",
+      "assigned_role": "Team Lead",
+      "created_at": "2026-09-20T10:19:01.608Z",
+      "updated_at": "2026-09-20T10:19:09.821Z",
+      "started_at": "2026-09-20T10:19:09.171Z",
+      "completed_at": "2026-09-20T10:19:09.821Z",
+      "completion_notes": "Task completed per emergency protocol.",
+      "assigned_worker_name": "Ravi Patel",
+      "assigned_worker_phone": "+91 98765 43210"
+    },
+    "ea6c50fd-188e-42dd-81a9-68be8dcb83da": {
+      "id": "ea6c50fd-188e-42dd-81a9-68be8dcb83da",
+      "incident_id": "2b9bcbc4-d702-465e-8bc2-535b028776a5",
+      "team_id": "6dd254f4-b475-4300-b499-bb981c8bebce",
+      "title": "Pump Substation Power Cutoff",
+      "description": "De-energize pump room distribution panel to eliminate electrocution hazard.",
+      "task_order": 2,
+      "status": "COMPLETED",
+      "assigned_worker_id": "59eca4ff-a589-4363-ad76-24a4ff5b6e2e",
+      "assigned_role": "Team Lead",
+      "created_at": "2026-09-20T10:19:01.608Z",
+      "updated_at": "2026-09-20T10:19:11.772Z",
+      "started_at": "2026-09-20T10:19:11.149Z",
+      "completed_at": "2026-09-20T10:19:11.772Z",
+      "completion_notes": "Task completed per emergency protocol.",
+      "assigned_worker_name": "Ravi Patel",
+      "assigned_worker_phone": "+91 98765 43210"
+    },
+    "3af4b015-d016-4fa9-a7a9-6affa538c2b9": {
+      "id": "3af4b015-d016-4fa9-a7a9-6affa538c2b9",
+      "incident_id": "2b9bcbc4-d702-465e-8bc2-535b028776a5",
+      "team_id": "6dd254f4-b475-4300-b499-bb981c8bebce",
+      "title": "Structural & Drainage Perimeter Check",
+      "description": "Inspect foundation walls, basement conduits, and clear storm drains.",
+      "task_order": 3,
+      "status": "COMPLETED",
+      "assigned_worker_id": "59eca4ff-a589-4363-ad76-24a4ff5b6e2e",
+      "assigned_role": "Team Lead",
+      "created_at": "2026-09-20T10:19:01.608Z",
+      "updated_at": "2026-09-20T10:19:13.742Z",
+      "started_at": "2026-09-20T10:19:13.062Z",
+      "completed_at": "2026-09-20T10:19:13.742Z",
+      "completion_notes": "Task completed per emergency protocol.",
+      "assigned_worker_name": "Ravi Patel",
+      "assigned_worker_phone": "+91 98765 43210"
+    },
+    "9e0f320b-0ee9-4bf9-ba78-ae83a5041a33": {
+      "id": "9e0f320b-0ee9-4bf9-ba78-ae83a5041a33",
+      "incident_id": "2b9bcbc4-d702-465e-8bc2-535b028776a5",
+      "team_id": "6dd254f4-b475-4300-b499-bb981c8bebce",
+      "title": "Deploy Dewatering Submersible Pump",
+      "description": "Deploy heavy-duty submersible dewatering pump to evacuate standing water.",
+      "task_order": 4,
+      "status": "COMPLETED",
+      "assigned_worker_id": "59eca4ff-a589-4363-ad76-24a4ff5b6e2e",
+      "assigned_role": "Team Lead",
+      "created_at": "2026-09-20T10:19:01.608Z",
+      "updated_at": "2026-09-20T10:19:15.648Z",
+      "started_at": "2026-09-20T10:19:14.996Z",
+      "completed_at": "2026-09-20T10:19:15.648Z",
+      "completion_notes": "Task completed per emergency protocol.",
+      "assigned_worker_name": "Ravi Patel",
+      "assigned_worker_phone": "+91 98765 43210"
+    },
+    "3781bf12-0230-4c32-9d75-62227de7eef4": {
+      "id": "3781bf12-0230-4c32-9d75-62227de7eef4",
+      "incident_id": "618874c8-6dc8-40da-9846-800ff776531a",
+      "team_id": "ceb0cc8b-dfb4-4e17-8162-22ced1dfae67",
+      "title": "Main Riser Isolation",
+      "description": "Locate and shut off primary intake and booster riser valves immediately.",
+      "task_order": 1,
+      "status": "PENDING",
+      "assigned_worker_id": null,
+      "assigned_role": null,
+      "created_at": "2026-09-20T11:30:55.958Z",
+      "updated_at": "2026-09-20T11:30:55.958Z",
+      "started_at": null,
+      "completed_at": null,
+      "completion_notes": null
+    },
+    "2d54310f-58f7-4f9d-bb3f-b587122148c2": {
+      "id": "2d54310f-58f7-4f9d-bb3f-b587122148c2",
+      "incident_id": "618874c8-6dc8-40da-9846-800ff776531a",
+      "team_id": "ceb0cc8b-dfb4-4e17-8162-22ced1dfae67",
+      "title": "Pump Substation Power Cutoff",
+      "description": "De-energize pump room distribution panel to eliminate electrocution hazard.",
+      "task_order": 2,
+      "status": "PENDING",
+      "assigned_worker_id": null,
+      "assigned_role": null,
+      "created_at": "2026-09-20T11:30:55.958Z",
+      "updated_at": "2026-09-20T11:30:55.958Z",
+      "started_at": null,
+      "completed_at": null,
+      "completion_notes": null
+    },
+    "0fbdf5b2-cea7-402c-8f11-315a7c8f194a": {
+      "id": "0fbdf5b2-cea7-402c-8f11-315a7c8f194a",
+      "incident_id": "618874c8-6dc8-40da-9846-800ff776531a",
+      "team_id": "ceb0cc8b-dfb4-4e17-8162-22ced1dfae67",
+      "title": "Structural & Drainage Perimeter Check",
+      "description": "Inspect foundation walls, basement conduits, and clear storm drains.",
+      "task_order": 3,
+      "status": "PENDING",
+      "assigned_worker_id": null,
+      "assigned_role": null,
+      "created_at": "2026-09-20T11:30:55.958Z",
+      "updated_at": "2026-09-20T11:30:55.958Z",
+      "started_at": null,
+      "completed_at": null,
+      "completion_notes": null
+    },
+    "037d5752-3987-4db0-8738-ec4b5833794c": {
+      "id": "037d5752-3987-4db0-8738-ec4b5833794c",
+      "incident_id": "618874c8-6dc8-40da-9846-800ff776531a",
+      "team_id": "ceb0cc8b-dfb4-4e17-8162-22ced1dfae67",
+      "title": "Deploy Dewatering Submersible Pump",
+      "description": "Deploy heavy-duty submersible dewatering pump to evacuate standing water.",
+      "task_order": 4,
+      "status": "PENDING",
+      "assigned_worker_id": null,
+      "assigned_role": null,
+      "created_at": "2026-09-20T11:30:55.958Z",
+      "updated_at": "2026-09-20T11:30:55.958Z",
+      "started_at": null,
+      "completed_at": null,
+      "completion_notes": null
+    },
+    "ca27aa75-323a-4120-80a6-01330034117b": {
+      "id": "ca27aa75-323a-4120-80a6-01330034117b",
+      "incident_id": "8f9a546c-c343-44da-9c1d-9368fe403d1a",
+      "team_id": "f99efc5e-2897-455b-b2c0-300d8b2058be",
+      "title": "Main Riser Isolation",
+      "description": "Locate and shut off primary intake and booster riser valves immediately.",
+      "task_order": 1,
+      "status": "COMPLETED",
+      "assigned_worker_id": "59eca4ff-a589-4363-ad76-24a4ff5b6e2e",
+      "assigned_role": "Team Lead",
+      "created_at": "2026-09-20T11:38:30.903Z",
+      "updated_at": "2026-09-20T11:38:38.958Z",
+      "started_at": "2026-09-20T11:38:38.317Z",
+      "completed_at": "2026-09-20T11:38:38.958Z",
+      "completion_notes": "Task completed per emergency protocol.",
+      "assigned_worker_name": "Ravi Patel",
+      "assigned_worker_phone": "+91 98765 43210"
+    },
+    "b182e92c-e057-4762-9714-3f2f71d104c1": {
+      "id": "b182e92c-e057-4762-9714-3f2f71d104c1",
+      "incident_id": "8f9a546c-c343-44da-9c1d-9368fe403d1a",
+      "team_id": "f99efc5e-2897-455b-b2c0-300d8b2058be",
+      "title": "Pump Substation Power Cutoff",
+      "description": "De-energize pump room distribution panel to eliminate electrocution hazard.",
+      "task_order": 2,
+      "status": "COMPLETED",
+      "assigned_worker_id": "59eca4ff-a589-4363-ad76-24a4ff5b6e2e",
+      "assigned_role": "Team Lead",
+      "created_at": "2026-09-20T11:38:30.903Z",
+      "updated_at": "2026-09-20T11:38:41.052Z",
+      "started_at": "2026-09-20T11:38:40.261Z",
+      "completed_at": "2026-09-20T11:38:41.052Z",
+      "completion_notes": "Task completed per emergency protocol.",
+      "assigned_worker_name": "Ravi Patel",
+      "assigned_worker_phone": "+91 98765 43210"
+    },
+    "834d4493-b6a6-4fbf-ac10-b0fe677807c5": {
+      "id": "834d4493-b6a6-4fbf-ac10-b0fe677807c5",
+      "incident_id": "8f9a546c-c343-44da-9c1d-9368fe403d1a",
+      "team_id": "f99efc5e-2897-455b-b2c0-300d8b2058be",
+      "title": "Structural & Drainage Perimeter Check",
+      "description": "Inspect foundation walls, basement conduits, and clear storm drains.",
+      "task_order": 3,
+      "status": "COMPLETED",
+      "assigned_worker_id": "59eca4ff-a589-4363-ad76-24a4ff5b6e2e",
+      "assigned_role": "Team Lead",
+      "created_at": "2026-09-20T11:38:30.903Z",
+      "updated_at": "2026-09-20T11:38:43.371Z",
+      "started_at": "2026-09-20T11:38:42.606Z",
+      "completed_at": "2026-09-20T11:38:43.371Z",
+      "completion_notes": "Task completed per emergency protocol.",
+      "assigned_worker_name": "Ravi Patel",
+      "assigned_worker_phone": "+91 98765 43210"
+    },
+    "5b31b368-6eb2-4d5a-9818-b1c7f4e4065d": {
+      "id": "5b31b368-6eb2-4d5a-9818-b1c7f4e4065d",
+      "incident_id": "8f9a546c-c343-44da-9c1d-9368fe403d1a",
+      "team_id": "f99efc5e-2897-455b-b2c0-300d8b2058be",
+      "title": "Deploy Dewatering Submersible Pump",
+      "description": "Deploy heavy-duty submersible dewatering pump to evacuate standing water.",
+      "task_order": 4,
+      "status": "COMPLETED",
+      "assigned_worker_id": "59eca4ff-a589-4363-ad76-24a4ff5b6e2e",
+      "assigned_role": "Team Lead",
+      "created_at": "2026-09-20T11:38:30.903Z",
+      "updated_at": "2026-09-20T11:38:46.526Z",
+      "started_at": "2026-09-20T11:38:44.959Z",
+      "completed_at": "2026-09-20T11:38:46.526Z",
+      "completion_notes": "Task completed per emergency protocol.",
+      "assigned_worker_name": "Ravi Patel",
+      "assigned_worker_phone": "+91 98765 43210"
+    }
+  },
+  "additionalRequests": {
+    "0d3a68a1-e2cc-428f-b43b-4bb2d4355fe9": {
+      "id": "0d3a68a1-e2cc-428f-b43b-4bb2d4355fe9",
+      "incident_id": "bf7eeccd-b1f3-43a0-82ce-c4f79c037e39",
+      "team_id": "60bcbc30-a284-4ec1-af03-0e9edf1a48aa",
+      "requested_by_worker_id": "59eca4ff-a589-4363-ad76-24a4ff5b6e2e",
+      "reason": "Panel transformer oil overheating",
+      "requested_role": "High Voltage Specialist",
+      "requested_skill": "High Voltage Specialist",
+      "requested_worker_count": 2,
+      "count": 2,
+      "status": "APPROVED",
+      "created_at": "2026-09-20T09:38:10.456Z",
+      "updated_at": "2026-09-20T09:38:13.736Z"
+    },
+    "6bcd43f2-1d02-4693-87ce-6dd1e4d94f15": {
+      "id": "6bcd43f2-1d02-4693-87ce-6dd1e4d94f15",
+      "incident_id": "924dc158-888d-4ac3-bd85-8edbad8aa2c9",
+      "team_id": "7e52005c-f54f-40ba-b194-1391b88299df",
+      "requested_by_worker_id": "59eca4ff-a589-4363-ad76-24a4ff5b6e2e",
+      "reason": "High-volume basement submerged pumps required",
+      "requested_role": "Plumbing",
+      "requested_skill": "Plumbing",
+      "requested_worker_count": 2,
+      "count": 2,
+      "status": "APPROVED",
+      "created_at": "2026-09-20T09:38:57.662Z",
+      "updated_at": "2026-09-20T09:38:58.481Z"
+    },
+    "28fd182e-8e41-40bb-a17a-37998c28cbe2": {
+      "id": "28fd182e-8e41-40bb-a17a-37998c28cbe2",
+      "incident_id": "489151eb-5176-4ae5-83cc-1ae834391838",
+      "team_id": "10af3abe-721e-46f5-9364-8d002d3a07bd",
+      "requested_by_worker_id": "59eca4ff-a589-4363-ad76-24a4ff5b6e2e",
+      "reason": "Busbar insulation destroyed, requires backup substation crew",
+      "requested_role": "High Voltage Specialist",
+      "requested_skill": "High Voltage Specialist",
+      "requested_worker_count": 2,
+      "count": 2,
+      "status": "PENDING_FEDERATION_REVIEW",
+      "created_at": "2026-09-20T09:44:06.783Z",
+      "updated_at": "2026-09-20T09:44:06.783Z"
+    }
+  },
+  "verifications": {
+    "8cfb6a9b-7c0d-4ca2-b1ca-a9b29d45ced3": {
+      "id": "8cfb6a9b-7c0d-4ca2-b1ca-a9b29d45ced3",
+      "incident_id": "bf7eeccd-b1f3-43a0-82ce-c4f79c037e39",
+      "verification_token": "bd09b29e6568e8f16c3a0d274ea8b8539a386ebdadc2f83e2070922c8fe0face",
+      "verification_code": "EMG-2B81",
+      "status": "PENDING",
+      "verified_at": null,
+      "verified_by_worker_id": null,
+      "team_id": null,
+      "expires_at": "2026-09-21T09:37:41.791Z",
+      "created_at": "2026-09-20T09:37:41.791Z"
+    },
+    "bf7eeccd-b1f3-43a0-82ce-c4f79c037e39": {
+      "id": "8cfb6a9b-7c0d-4ca2-b1ca-a9b29d45ced3",
+      "incident_id": "bf7eeccd-b1f3-43a0-82ce-c4f79c037e39",
+      "verification_token": "bd09b29e6568e8f16c3a0d274ea8b8539a386ebdadc2f83e2070922c8fe0face",
+      "verification_code": "EMG-2B81",
+      "status": "PENDING",
+      "verified_at": null,
+      "verified_by_worker_id": null,
+      "team_id": null,
+      "expires_at": "2026-09-21T09:37:41.791Z",
+      "created_at": "2026-09-20T09:37:41.791Z"
+    },
+    "EMG-2B81": {
+      "id": "8cfb6a9b-7c0d-4ca2-b1ca-a9b29d45ced3",
+      "incident_id": "bf7eeccd-b1f3-43a0-82ce-c4f79c037e39",
+      "verification_token": "bd09b29e6568e8f16c3a0d274ea8b8539a386ebdadc2f83e2070922c8fe0face",
+      "verification_code": "EMG-2B81",
+      "status": "PENDING",
+      "verified_at": null,
+      "verified_by_worker_id": null,
+      "team_id": null,
+      "expires_at": "2026-09-21T09:37:41.791Z",
+      "created_at": "2026-09-20T09:37:41.791Z"
+    },
+    "bd09b29e6568e8f16c3a0d274ea8b8539a386ebdadc2f83e2070922c8fe0face": {
+      "id": "8cfb6a9b-7c0d-4ca2-b1ca-a9b29d45ced3",
+      "incident_id": "bf7eeccd-b1f3-43a0-82ce-c4f79c037e39",
+      "verification_token": "bd09b29e6568e8f16c3a0d274ea8b8539a386ebdadc2f83e2070922c8fe0face",
+      "verification_code": "EMG-2B81",
+      "status": "PENDING",
+      "verified_at": null,
+      "verified_by_worker_id": null,
+      "team_id": null,
+      "expires_at": "2026-09-21T09:37:41.791Z",
+      "created_at": "2026-09-20T09:37:41.791Z"
+    },
+    "c214d161-9a9f-43b6-82fe-70664c1b27e3": {
+      "id": "c214d161-9a9f-43b6-82fe-70664c1b27e3",
+      "incident_id": "924dc158-888d-4ac3-bd85-8edbad8aa2c9",
+      "verification_token": "afa27f3c6768f50efd3377cba38c4cb4e24a650cca55ffeafd7a33bf1993819d",
+      "verification_code": "EMG-FD5F",
+      "status": "PENDING",
+      "verified_at": null,
+      "verified_by_worker_id": null,
+      "team_id": null,
+      "expires_at": "2026-09-21T09:38:40.666Z",
+      "created_at": "2026-09-20T09:38:40.666Z"
+    },
+    "924dc158-888d-4ac3-bd85-8edbad8aa2c9": {
+      "id": "c214d161-9a9f-43b6-82fe-70664c1b27e3",
+      "incident_id": "924dc158-888d-4ac3-bd85-8edbad8aa2c9",
+      "verification_token": "afa27f3c6768f50efd3377cba38c4cb4e24a650cca55ffeafd7a33bf1993819d",
+      "verification_code": "EMG-FD5F",
+      "status": "PENDING",
+      "verified_at": null,
+      "verified_by_worker_id": null,
+      "team_id": null,
+      "expires_at": "2026-09-21T09:38:40.666Z",
+      "created_at": "2026-09-20T09:38:40.666Z"
+    },
+    "EMG-FD5F": {
+      "id": "c214d161-9a9f-43b6-82fe-70664c1b27e3",
+      "incident_id": "924dc158-888d-4ac3-bd85-8edbad8aa2c9",
+      "verification_token": "afa27f3c6768f50efd3377cba38c4cb4e24a650cca55ffeafd7a33bf1993819d",
+      "verification_code": "EMG-FD5F",
+      "status": "PENDING",
+      "verified_at": null,
+      "verified_by_worker_id": null,
+      "team_id": null,
+      "expires_at": "2026-09-21T09:38:40.666Z",
+      "created_at": "2026-09-20T09:38:40.666Z"
+    },
+    "afa27f3c6768f50efd3377cba38c4cb4e24a650cca55ffeafd7a33bf1993819d": {
+      "id": "c214d161-9a9f-43b6-82fe-70664c1b27e3",
+      "incident_id": "924dc158-888d-4ac3-bd85-8edbad8aa2c9",
+      "verification_token": "afa27f3c6768f50efd3377cba38c4cb4e24a650cca55ffeafd7a33bf1993819d",
+      "verification_code": "EMG-FD5F",
+      "status": "PENDING",
+      "verified_at": null,
+      "verified_by_worker_id": null,
+      "team_id": null,
+      "expires_at": "2026-09-21T09:38:40.666Z",
+      "created_at": "2026-09-20T09:38:40.666Z"
+    },
+    "11290f4f-4c81-427b-8c19-9ffd9449360c": {
+      "id": "11290f4f-4c81-427b-8c19-9ffd9449360c",
+      "incident_id": "0e0eb3b4-08fc-4061-8588-ef874b278f74",
+      "verification_token": "74af3477e8f82b66d37b3c1bf9befa53206aceadfbec076329b1c27148f59cb4",
+      "verification_code": "EMG-821F",
+      "status": "VERIFIED",
+      "verified_at": "2026-09-20T09:42:42.944Z",
+      "verified_by_worker_id": "59eca4ff-a589-4363-ad76-24a4ff5b6e2e",
+      "team_id": "7b620bab-adec-4ab1-8f83-2d72ac297bb9",
+      "expires_at": "2026-09-21T09:41:34.559Z",
+      "created_at": "2026-09-20T09:41:34.559Z"
+    },
+    "0e0eb3b4-08fc-4061-8588-ef874b278f74": {
+      "id": "11290f4f-4c81-427b-8c19-9ffd9449360c",
+      "incident_id": "0e0eb3b4-08fc-4061-8588-ef874b278f74",
+      "verification_token": "74af3477e8f82b66d37b3c1bf9befa53206aceadfbec076329b1c27148f59cb4",
+      "verification_code": "EMG-821F",
+      "status": "VERIFIED",
+      "verified_at": "2026-09-20T09:42:42.944Z",
+      "verified_by_worker_id": "59eca4ff-a589-4363-ad76-24a4ff5b6e2e",
+      "team_id": "7b620bab-adec-4ab1-8f83-2d72ac297bb9",
+      "expires_at": "2026-09-21T09:41:34.559Z",
+      "created_at": "2026-09-20T09:41:34.559Z"
+    },
+    "EMG-821F": {
+      "id": "11290f4f-4c81-427b-8c19-9ffd9449360c",
+      "incident_id": "0e0eb3b4-08fc-4061-8588-ef874b278f74",
+      "verification_token": "74af3477e8f82b66d37b3c1bf9befa53206aceadfbec076329b1c27148f59cb4",
+      "verification_code": "EMG-821F",
+      "status": "VERIFIED",
+      "verified_at": "2026-09-20T09:42:42.944Z",
+      "verified_by_worker_id": "59eca4ff-a589-4363-ad76-24a4ff5b6e2e",
+      "team_id": "7b620bab-adec-4ab1-8f83-2d72ac297bb9",
+      "expires_at": "2026-09-21T09:41:34.559Z",
+      "created_at": "2026-09-20T09:41:34.559Z"
+    },
+    "74af3477e8f82b66d37b3c1bf9befa53206aceadfbec076329b1c27148f59cb4": {
+      "id": "11290f4f-4c81-427b-8c19-9ffd9449360c",
+      "incident_id": "0e0eb3b4-08fc-4061-8588-ef874b278f74",
+      "verification_token": "74af3477e8f82b66d37b3c1bf9befa53206aceadfbec076329b1c27148f59cb4",
+      "verification_code": "EMG-821F",
+      "status": "VERIFIED",
+      "verified_at": "2026-09-20T09:42:42.944Z",
+      "verified_by_worker_id": "59eca4ff-a589-4363-ad76-24a4ff5b6e2e",
+      "team_id": "7b620bab-adec-4ab1-8f83-2d72ac297bb9",
+      "expires_at": "2026-09-21T09:41:34.559Z",
+      "created_at": "2026-09-20T09:41:34.559Z"
+    },
+    "a102a5c7-3a0c-47e3-adc1-824ff5bac278": {
+      "id": "a102a5c7-3a0c-47e3-adc1-824ff5bac278",
+      "incident_id": "489151eb-5176-4ae5-83cc-1ae834391838",
+      "verification_token": "3bdabd24ea39a1f09b732cece0292e1b66e795d88e1e603145eadd353a395290",
+      "verification_code": "EMG-9942",
+      "status": "PENDING",
+      "verified_at": null,
+      "verified_by_worker_id": null,
+      "team_id": null,
+      "expires_at": "2026-09-21T09:43:45.304Z",
+      "created_at": "2026-09-20T09:43:45.304Z"
+    },
+    "489151eb-5176-4ae5-83cc-1ae834391838": {
+      "id": "a102a5c7-3a0c-47e3-adc1-824ff5bac278",
+      "incident_id": "489151eb-5176-4ae5-83cc-1ae834391838",
+      "verification_token": "3bdabd24ea39a1f09b732cece0292e1b66e795d88e1e603145eadd353a395290",
+      "verification_code": "EMG-9942",
+      "status": "PENDING",
+      "verified_at": null,
+      "verified_by_worker_id": null,
+      "team_id": null,
+      "expires_at": "2026-09-21T09:43:45.304Z",
+      "created_at": "2026-09-20T09:43:45.304Z"
+    },
+    "EMG-9942": {
+      "id": "a102a5c7-3a0c-47e3-adc1-824ff5bac278",
+      "incident_id": "489151eb-5176-4ae5-83cc-1ae834391838",
+      "verification_token": "3bdabd24ea39a1f09b732cece0292e1b66e795d88e1e603145eadd353a395290",
+      "verification_code": "EMG-9942",
+      "status": "PENDING",
+      "verified_at": null,
+      "verified_by_worker_id": null,
+      "team_id": null,
+      "expires_at": "2026-09-21T09:43:45.304Z",
+      "created_at": "2026-09-20T09:43:45.304Z"
+    },
+    "3bdabd24ea39a1f09b732cece0292e1b66e795d88e1e603145eadd353a395290": {
+      "id": "a102a5c7-3a0c-47e3-adc1-824ff5bac278",
+      "incident_id": "489151eb-5176-4ae5-83cc-1ae834391838",
+      "verification_token": "3bdabd24ea39a1f09b732cece0292e1b66e795d88e1e603145eadd353a395290",
+      "verification_code": "EMG-9942",
+      "status": "PENDING",
+      "verified_at": null,
+      "verified_by_worker_id": null,
+      "team_id": null,
+      "expires_at": "2026-09-21T09:43:45.304Z",
+      "created_at": "2026-09-20T09:43:45.304Z"
+    },
+    "d5384c68-558b-4516-81b6-6a95c22940e1": {
+      "id": "d5384c68-558b-4516-81b6-6a95c22940e1",
+      "incident_id": "fb04ac3c-69e2-43bd-b0d3-f5e4c81cc1cd",
+      "verification_token": "08277fec522fe65b5ceae3884741b591fef35d27c9ef145a9e5af1e3dca617c7",
+      "verification_code": "EMG-1316",
+      "status": "PENDING",
+      "verified_at": null,
+      "verified_by_worker_id": null,
+      "team_id": null,
+      "expires_at": "2026-09-21T09:44:27.475Z",
+      "created_at": "2026-09-20T09:44:27.475Z"
+    },
+    "fb04ac3c-69e2-43bd-b0d3-f5e4c81cc1cd": {
+      "id": "d5384c68-558b-4516-81b6-6a95c22940e1",
+      "incident_id": "fb04ac3c-69e2-43bd-b0d3-f5e4c81cc1cd",
+      "verification_token": "08277fec522fe65b5ceae3884741b591fef35d27c9ef145a9e5af1e3dca617c7",
+      "verification_code": "EMG-1316",
+      "status": "PENDING",
+      "verified_at": null,
+      "verified_by_worker_id": null,
+      "team_id": null,
+      "expires_at": "2026-09-21T09:44:27.475Z",
+      "created_at": "2026-09-20T09:44:27.475Z"
+    },
+    "EMG-1316": {
+      "id": "d5384c68-558b-4516-81b6-6a95c22940e1",
+      "incident_id": "fb04ac3c-69e2-43bd-b0d3-f5e4c81cc1cd",
+      "verification_token": "08277fec522fe65b5ceae3884741b591fef35d27c9ef145a9e5af1e3dca617c7",
+      "verification_code": "EMG-1316",
+      "status": "PENDING",
+      "verified_at": null,
+      "verified_by_worker_id": null,
+      "team_id": null,
+      "expires_at": "2026-09-21T09:44:27.475Z",
+      "created_at": "2026-09-20T09:44:27.475Z"
+    },
+    "08277fec522fe65b5ceae3884741b591fef35d27c9ef145a9e5af1e3dca617c7": {
+      "id": "d5384c68-558b-4516-81b6-6a95c22940e1",
+      "incident_id": "fb04ac3c-69e2-43bd-b0d3-f5e4c81cc1cd",
+      "verification_token": "08277fec522fe65b5ceae3884741b591fef35d27c9ef145a9e5af1e3dca617c7",
+      "verification_code": "EMG-1316",
+      "status": "PENDING",
+      "verified_at": null,
+      "verified_by_worker_id": null,
+      "team_id": null,
+      "expires_at": "2026-09-21T09:44:27.475Z",
+      "created_at": "2026-09-20T09:44:27.475Z"
+    },
+    "fa7428ff-14c7-496b-a8e8-7a46a323d623": {
+      "id": "fa7428ff-14c7-496b-a8e8-7a46a323d623",
+      "incident_id": "97b34cca-38f4-47dd-b36e-464170cf9e73",
+      "verification_token": "2a4eca90a166756f98a46caba93343e239ceece9cf31733ff8af8bd5a3cd1054",
+      "verification_code": "EMG-5443",
+      "status": "PENDING",
+      "verified_at": null,
+      "verified_by_worker_id": null,
+      "team_id": null,
+      "expires_at": "2026-09-21T09:44:53.606Z",
+      "created_at": "2026-09-20T09:44:53.606Z"
+    },
+    "97b34cca-38f4-47dd-b36e-464170cf9e73": {
+      "id": "fa7428ff-14c7-496b-a8e8-7a46a323d623",
+      "incident_id": "97b34cca-38f4-47dd-b36e-464170cf9e73",
+      "verification_token": "2a4eca90a166756f98a46caba93343e239ceece9cf31733ff8af8bd5a3cd1054",
+      "verification_code": "EMG-5443",
+      "status": "PENDING",
+      "verified_at": null,
+      "verified_by_worker_id": null,
+      "team_id": null,
+      "expires_at": "2026-09-21T09:44:53.606Z",
+      "created_at": "2026-09-20T09:44:53.606Z"
+    },
+    "EMG-5443": {
+      "id": "fa7428ff-14c7-496b-a8e8-7a46a323d623",
+      "incident_id": "97b34cca-38f4-47dd-b36e-464170cf9e73",
+      "verification_token": "2a4eca90a166756f98a46caba93343e239ceece9cf31733ff8af8bd5a3cd1054",
+      "verification_code": "EMG-5443",
+      "status": "PENDING",
+      "verified_at": null,
+      "verified_by_worker_id": null,
+      "team_id": null,
+      "expires_at": "2026-09-21T09:44:53.606Z",
+      "created_at": "2026-09-20T09:44:53.606Z"
+    },
+    "2a4eca90a166756f98a46caba93343e239ceece9cf31733ff8af8bd5a3cd1054": {
+      "id": "fa7428ff-14c7-496b-a8e8-7a46a323d623",
+      "incident_id": "97b34cca-38f4-47dd-b36e-464170cf9e73",
+      "verification_token": "2a4eca90a166756f98a46caba93343e239ceece9cf31733ff8af8bd5a3cd1054",
+      "verification_code": "EMG-5443",
+      "status": "PENDING",
+      "verified_at": null,
+      "verified_by_worker_id": null,
+      "team_id": null,
+      "expires_at": "2026-09-21T09:44:53.606Z",
+      "created_at": "2026-09-20T09:44:53.606Z"
+    },
+    "8cc26427-07c8-43f1-b532-e128ec81f7f8": {
+      "id": "8cc26427-07c8-43f1-b532-e128ec81f7f8",
+      "incident_id": "b9d70576-a76b-4795-9507-536e40178069",
+      "verification_token": "230ef79e87a92c7e7fea10e320a2947d3bd8bf2fe30bc19b0744bed3e1596370",
+      "verification_code": "EMG-7184",
+      "status": "PENDING",
+      "verified_at": null,
+      "verified_by_worker_id": null,
+      "team_id": null,
+      "expires_at": "2026-09-21T09:45:13.992Z",
+      "created_at": "2026-09-20T09:45:13.992Z"
+    },
+    "b9d70576-a76b-4795-9507-536e40178069": {
+      "id": "8cc26427-07c8-43f1-b532-e128ec81f7f8",
+      "incident_id": "b9d70576-a76b-4795-9507-536e40178069",
+      "verification_token": "230ef79e87a92c7e7fea10e320a2947d3bd8bf2fe30bc19b0744bed3e1596370",
+      "verification_code": "EMG-7184",
+      "status": "PENDING",
+      "verified_at": null,
+      "verified_by_worker_id": null,
+      "team_id": null,
+      "expires_at": "2026-09-21T09:45:13.992Z",
+      "created_at": "2026-09-20T09:45:13.992Z"
+    },
+    "EMG-7184": {
+      "id": "8cc26427-07c8-43f1-b532-e128ec81f7f8",
+      "incident_id": "b9d70576-a76b-4795-9507-536e40178069",
+      "verification_token": "230ef79e87a92c7e7fea10e320a2947d3bd8bf2fe30bc19b0744bed3e1596370",
+      "verification_code": "EMG-7184",
+      "status": "PENDING",
+      "verified_at": null,
+      "verified_by_worker_id": null,
+      "team_id": null,
+      "expires_at": "2026-09-21T09:45:13.992Z",
+      "created_at": "2026-09-20T09:45:13.992Z"
+    },
+    "230ef79e87a92c7e7fea10e320a2947d3bd8bf2fe30bc19b0744bed3e1596370": {
+      "id": "8cc26427-07c8-43f1-b532-e128ec81f7f8",
+      "incident_id": "b9d70576-a76b-4795-9507-536e40178069",
+      "verification_token": "230ef79e87a92c7e7fea10e320a2947d3bd8bf2fe30bc19b0744bed3e1596370",
+      "verification_code": "EMG-7184",
+      "status": "PENDING",
+      "verified_at": null,
+      "verified_by_worker_id": null,
+      "team_id": null,
+      "expires_at": "2026-09-21T09:45:13.992Z",
+      "created_at": "2026-09-20T09:45:13.992Z"
+    },
+    "e8a7d1a7-29e3-4d8d-ab43-7b0b507f16b2": {
+      "id": "e8a7d1a7-29e3-4d8d-ab43-7b0b507f16b2",
+      "incident_id": "9c772248-c549-425b-8f97-a458c02c3c6a",
+      "verification_token": "0d61fd5ab6fbaa079267efe625fe1b16e8b05882593c62c92e71429f1bdfd8af",
+      "verification_code": "EMG-4F9A",
+      "status": "PENDING",
+      "verified_at": null,
+      "verified_by_worker_id": null,
+      "team_id": null,
+      "expires_at": "2026-09-21T09:45:22.558Z",
+      "created_at": "2026-09-20T09:45:22.558Z"
+    },
+    "9c772248-c549-425b-8f97-a458c02c3c6a": {
+      "id": "e8a7d1a7-29e3-4d8d-ab43-7b0b507f16b2",
+      "incident_id": "9c772248-c549-425b-8f97-a458c02c3c6a",
+      "verification_token": "0d61fd5ab6fbaa079267efe625fe1b16e8b05882593c62c92e71429f1bdfd8af",
+      "verification_code": "EMG-4F9A",
+      "status": "PENDING",
+      "verified_at": null,
+      "verified_by_worker_id": null,
+      "team_id": null,
+      "expires_at": "2026-09-21T09:45:22.558Z",
+      "created_at": "2026-09-20T09:45:22.558Z"
+    },
+    "EMG-4F9A": {
+      "id": "e8a7d1a7-29e3-4d8d-ab43-7b0b507f16b2",
+      "incident_id": "9c772248-c549-425b-8f97-a458c02c3c6a",
+      "verification_token": "0d61fd5ab6fbaa079267efe625fe1b16e8b05882593c62c92e71429f1bdfd8af",
+      "verification_code": "EMG-4F9A",
+      "status": "PENDING",
+      "verified_at": null,
+      "verified_by_worker_id": null,
+      "team_id": null,
+      "expires_at": "2026-09-21T09:45:22.558Z",
+      "created_at": "2026-09-20T09:45:22.558Z"
+    },
+    "0d61fd5ab6fbaa079267efe625fe1b16e8b05882593c62c92e71429f1bdfd8af": {
+      "id": "e8a7d1a7-29e3-4d8d-ab43-7b0b507f16b2",
+      "incident_id": "9c772248-c549-425b-8f97-a458c02c3c6a",
+      "verification_token": "0d61fd5ab6fbaa079267efe625fe1b16e8b05882593c62c92e71429f1bdfd8af",
+      "verification_code": "EMG-4F9A",
+      "status": "PENDING",
+      "verified_at": null,
+      "verified_by_worker_id": null,
+      "team_id": null,
+      "expires_at": "2026-09-21T09:45:22.558Z",
+      "created_at": "2026-09-20T09:45:22.558Z"
+    },
+    "0c034551-6d92-46c4-9346-39b52c741796": {
+      "id": "0c034551-6d92-46c4-9346-39b52c741796",
+      "incident_id": "009bbb28-9742-40d5-843d-9fd753a08fdf",
+      "verification_token": "21ea3131024ad0910e93368a2563e4ba2ca92c112e22577fae47f22f87e4959b",
+      "verification_code": "EMG-38F8",
+      "status": "PENDING",
+      "verified_at": null,
+      "verified_by_worker_id": null,
+      "team_id": null,
+      "expires_at": "2026-09-21T09:45:27.813Z",
+      "created_at": "2026-09-20T09:45:27.813Z"
+    },
+    "009bbb28-9742-40d5-843d-9fd753a08fdf": {
+      "id": "0c034551-6d92-46c4-9346-39b52c741796",
+      "incident_id": "009bbb28-9742-40d5-843d-9fd753a08fdf",
+      "verification_token": "21ea3131024ad0910e93368a2563e4ba2ca92c112e22577fae47f22f87e4959b",
+      "verification_code": "EMG-38F8",
+      "status": "PENDING",
+      "verified_at": null,
+      "verified_by_worker_id": null,
+      "team_id": null,
+      "expires_at": "2026-09-21T09:45:27.813Z",
+      "created_at": "2026-09-20T09:45:27.813Z"
+    },
+    "EMG-38F8": {
+      "id": "0c034551-6d92-46c4-9346-39b52c741796",
+      "incident_id": "009bbb28-9742-40d5-843d-9fd753a08fdf",
+      "verification_token": "21ea3131024ad0910e93368a2563e4ba2ca92c112e22577fae47f22f87e4959b",
+      "verification_code": "EMG-38F8",
+      "status": "PENDING",
+      "verified_at": null,
+      "verified_by_worker_id": null,
+      "team_id": null,
+      "expires_at": "2026-09-21T09:45:27.813Z",
+      "created_at": "2026-09-20T09:45:27.813Z"
+    },
+    "21ea3131024ad0910e93368a2563e4ba2ca92c112e22577fae47f22f87e4959b": {
+      "id": "0c034551-6d92-46c4-9346-39b52c741796",
+      "incident_id": "009bbb28-9742-40d5-843d-9fd753a08fdf",
+      "verification_token": "21ea3131024ad0910e93368a2563e4ba2ca92c112e22577fae47f22f87e4959b",
+      "verification_code": "EMG-38F8",
+      "status": "PENDING",
+      "verified_at": null,
+      "verified_by_worker_id": null,
+      "team_id": null,
+      "expires_at": "2026-09-21T09:45:27.813Z",
+      "created_at": "2026-09-20T09:45:27.813Z"
+    },
+    "1b01284d-a3cb-443c-ab99-109f85c288e1": {
+      "id": "1b01284d-a3cb-443c-ab99-109f85c288e1",
+      "incident_id": "0536ff33-0367-4764-a4e1-b13f98bf97bd",
+      "verification_token": "878b5a38275eb490f4a432a90c8941e6a5006e256295568b6f825b7891bbf430",
+      "verification_code": "EMG-2440",
+      "status": "PENDING",
+      "verified_at": null,
+      "verified_by_worker_id": null,
+      "team_id": null,
+      "expires_at": "2026-09-21T09:45:45.795Z",
+      "created_at": "2026-09-20T09:45:45.795Z"
+    },
+    "0536ff33-0367-4764-a4e1-b13f98bf97bd": {
+      "id": "1b01284d-a3cb-443c-ab99-109f85c288e1",
+      "incident_id": "0536ff33-0367-4764-a4e1-b13f98bf97bd",
+      "verification_token": "878b5a38275eb490f4a432a90c8941e6a5006e256295568b6f825b7891bbf430",
+      "verification_code": "EMG-2440",
+      "status": "PENDING",
+      "verified_at": null,
+      "verified_by_worker_id": null,
+      "team_id": null,
+      "expires_at": "2026-09-21T09:45:45.795Z",
+      "created_at": "2026-09-20T09:45:45.795Z"
+    },
+    "EMG-2440": {
+      "id": "1b01284d-a3cb-443c-ab99-109f85c288e1",
+      "incident_id": "0536ff33-0367-4764-a4e1-b13f98bf97bd",
+      "verification_token": "878b5a38275eb490f4a432a90c8941e6a5006e256295568b6f825b7891bbf430",
+      "verification_code": "EMG-2440",
+      "status": "PENDING",
+      "verified_at": null,
+      "verified_by_worker_id": null,
+      "team_id": null,
+      "expires_at": "2026-09-21T09:45:45.795Z",
+      "created_at": "2026-09-20T09:45:45.795Z"
+    },
+    "878b5a38275eb490f4a432a90c8941e6a5006e256295568b6f825b7891bbf430": {
+      "id": "1b01284d-a3cb-443c-ab99-109f85c288e1",
+      "incident_id": "0536ff33-0367-4764-a4e1-b13f98bf97bd",
+      "verification_token": "878b5a38275eb490f4a432a90c8941e6a5006e256295568b6f825b7891bbf430",
+      "verification_code": "EMG-2440",
+      "status": "PENDING",
+      "verified_at": null,
+      "verified_by_worker_id": null,
+      "team_id": null,
+      "expires_at": "2026-09-21T09:45:45.795Z",
+      "created_at": "2026-09-20T09:45:45.795Z"
+    },
+    "d10d19c5-4636-46a5-a5fa-83c2ef2dc41f": {
+      "id": "d10d19c5-4636-46a5-a5fa-83c2ef2dc41f",
+      "incident_id": "53541d63-4648-4c54-aa9a-c6cc5a43311f",
+      "verification_token": "e2f497c200b0956d769b1a9dd729c69b1a24985d80758835f9caed1cf6b6708c",
+      "verification_code": "EMG-C4B1",
+      "status": "PENDING",
+      "verified_at": null,
+      "verified_by_worker_id": null,
+      "team_id": null,
+      "expires_at": "2026-09-21T09:46:20.753Z",
+      "created_at": "2026-09-20T09:46:20.753Z"
+    },
+    "53541d63-4648-4c54-aa9a-c6cc5a43311f": {
+      "id": "d10d19c5-4636-46a5-a5fa-83c2ef2dc41f",
+      "incident_id": "53541d63-4648-4c54-aa9a-c6cc5a43311f",
+      "verification_token": "e2f497c200b0956d769b1a9dd729c69b1a24985d80758835f9caed1cf6b6708c",
+      "verification_code": "EMG-C4B1",
+      "status": "PENDING",
+      "verified_at": null,
+      "verified_by_worker_id": null,
+      "team_id": null,
+      "expires_at": "2026-09-21T09:46:20.753Z",
+      "created_at": "2026-09-20T09:46:20.753Z"
+    },
+    "EMG-C4B1": {
+      "id": "d10d19c5-4636-46a5-a5fa-83c2ef2dc41f",
+      "incident_id": "53541d63-4648-4c54-aa9a-c6cc5a43311f",
+      "verification_token": "e2f497c200b0956d769b1a9dd729c69b1a24985d80758835f9caed1cf6b6708c",
+      "verification_code": "EMG-C4B1",
+      "status": "PENDING",
+      "verified_at": null,
+      "verified_by_worker_id": null,
+      "team_id": null,
+      "expires_at": "2026-09-21T09:46:20.753Z",
+      "created_at": "2026-09-20T09:46:20.753Z"
+    },
+    "e2f497c200b0956d769b1a9dd729c69b1a24985d80758835f9caed1cf6b6708c": {
+      "id": "d10d19c5-4636-46a5-a5fa-83c2ef2dc41f",
+      "incident_id": "53541d63-4648-4c54-aa9a-c6cc5a43311f",
+      "verification_token": "e2f497c200b0956d769b1a9dd729c69b1a24985d80758835f9caed1cf6b6708c",
+      "verification_code": "EMG-C4B1",
+      "status": "PENDING",
+      "verified_at": null,
+      "verified_by_worker_id": null,
+      "team_id": null,
+      "expires_at": "2026-09-21T09:46:20.753Z",
+      "created_at": "2026-09-20T09:46:20.753Z"
+    },
+    "762de60e-0c13-4103-8629-4e33263ee771": {
+      "id": "762de60e-0c13-4103-8629-4e33263ee771",
+      "incident_id": "820bbcd7-9082-4b3d-8ceb-723b0f9840ee",
+      "verification_token": "29fba5778622ba03efe52f3374d7789a9dd91f508d087b5d47dfa49ca5884c94",
+      "verification_code": "EMG-4913",
+      "status": "PENDING",
+      "verified_at": null,
+      "verified_by_worker_id": null,
+      "team_id": null,
+      "expires_at": "2026-09-21T09:46:54.134Z",
+      "created_at": "2026-09-20T09:46:54.134Z"
+    },
+    "820bbcd7-9082-4b3d-8ceb-723b0f9840ee": {
+      "id": "762de60e-0c13-4103-8629-4e33263ee771",
+      "incident_id": "820bbcd7-9082-4b3d-8ceb-723b0f9840ee",
+      "verification_token": "29fba5778622ba03efe52f3374d7789a9dd91f508d087b5d47dfa49ca5884c94",
+      "verification_code": "EMG-4913",
+      "status": "PENDING",
+      "verified_at": null,
+      "verified_by_worker_id": null,
+      "team_id": null,
+      "expires_at": "2026-09-21T09:46:54.134Z",
+      "created_at": "2026-09-20T09:46:54.134Z"
+    },
+    "EMG-4913": {
+      "id": "762de60e-0c13-4103-8629-4e33263ee771",
+      "incident_id": "820bbcd7-9082-4b3d-8ceb-723b0f9840ee",
+      "verification_token": "29fba5778622ba03efe52f3374d7789a9dd91f508d087b5d47dfa49ca5884c94",
+      "verification_code": "EMG-4913",
+      "status": "PENDING",
+      "verified_at": null,
+      "verified_by_worker_id": null,
+      "team_id": null,
+      "expires_at": "2026-09-21T09:46:54.134Z",
+      "created_at": "2026-09-20T09:46:54.134Z"
+    },
+    "29fba5778622ba03efe52f3374d7789a9dd91f508d087b5d47dfa49ca5884c94": {
+      "id": "762de60e-0c13-4103-8629-4e33263ee771",
+      "incident_id": "820bbcd7-9082-4b3d-8ceb-723b0f9840ee",
+      "verification_token": "29fba5778622ba03efe52f3374d7789a9dd91f508d087b5d47dfa49ca5884c94",
+      "verification_code": "EMG-4913",
+      "status": "PENDING",
+      "verified_at": null,
+      "verified_by_worker_id": null,
+      "team_id": null,
+      "expires_at": "2026-09-21T09:46:54.134Z",
+      "created_at": "2026-09-20T09:46:54.134Z"
+    },
+    "2fbe5a67-9f1f-463b-9545-d9df2612e908": {
+      "id": "2fbe5a67-9f1f-463b-9545-d9df2612e908",
+      "incident_id": "13740237-814a-49c5-ad7b-d91ed6bf5b1b",
+      "verification_token": "9065bb54337c94e229e1585e75621242ec87e7f4b216a0feff1d8f61cb39bb47",
+      "verification_code": "EMG-B8B4",
+      "status": "PENDING",
+      "verified_at": null,
+      "verified_by_worker_id": null,
+      "team_id": null,
+      "expires_at": "2026-09-21T09:47:06.480Z",
+      "created_at": "2026-09-20T09:47:06.480Z"
+    },
+    "13740237-814a-49c5-ad7b-d91ed6bf5b1b": {
+      "id": "2fbe5a67-9f1f-463b-9545-d9df2612e908",
+      "incident_id": "13740237-814a-49c5-ad7b-d91ed6bf5b1b",
+      "verification_token": "9065bb54337c94e229e1585e75621242ec87e7f4b216a0feff1d8f61cb39bb47",
+      "verification_code": "EMG-B8B4",
+      "status": "PENDING",
+      "verified_at": null,
+      "verified_by_worker_id": null,
+      "team_id": null,
+      "expires_at": "2026-09-21T09:47:06.480Z",
+      "created_at": "2026-09-20T09:47:06.480Z"
+    },
+    "EMG-B8B4": {
+      "id": "2fbe5a67-9f1f-463b-9545-d9df2612e908",
+      "incident_id": "13740237-814a-49c5-ad7b-d91ed6bf5b1b",
+      "verification_token": "9065bb54337c94e229e1585e75621242ec87e7f4b216a0feff1d8f61cb39bb47",
+      "verification_code": "EMG-B8B4",
+      "status": "PENDING",
+      "verified_at": null,
+      "verified_by_worker_id": null,
+      "team_id": null,
+      "expires_at": "2026-09-21T09:47:06.480Z",
+      "created_at": "2026-09-20T09:47:06.480Z"
+    },
+    "9065bb54337c94e229e1585e75621242ec87e7f4b216a0feff1d8f61cb39bb47": {
+      "id": "2fbe5a67-9f1f-463b-9545-d9df2612e908",
+      "incident_id": "13740237-814a-49c5-ad7b-d91ed6bf5b1b",
+      "verification_token": "9065bb54337c94e229e1585e75621242ec87e7f4b216a0feff1d8f61cb39bb47",
+      "verification_code": "EMG-B8B4",
+      "status": "PENDING",
+      "verified_at": null,
+      "verified_by_worker_id": null,
+      "team_id": null,
+      "expires_at": "2026-09-21T09:47:06.480Z",
+      "created_at": "2026-09-20T09:47:06.480Z"
+    },
+    "d21ed35b-f51f-4c21-82dd-8b6e4b9ff578": {
+      "id": "d21ed35b-f51f-4c21-82dd-8b6e4b9ff578",
+      "incident_id": "1596ff7b-ab5b-45e2-a86c-0dfde5a03972",
+      "verification_token": "7502a03a456e035f2d8e18a31cf1e49967aa9b58f30e6502addffecbd64bf072",
+      "verification_code": "EMG-E64C",
+      "status": "PENDING",
+      "verified_at": null,
+      "verified_by_worker_id": null,
+      "team_id": null,
+      "expires_at": "2026-09-21T09:47:17.853Z",
+      "created_at": "2026-09-20T09:47:17.853Z"
+    },
+    "1596ff7b-ab5b-45e2-a86c-0dfde5a03972": {
+      "id": "d21ed35b-f51f-4c21-82dd-8b6e4b9ff578",
+      "incident_id": "1596ff7b-ab5b-45e2-a86c-0dfde5a03972",
+      "verification_token": "7502a03a456e035f2d8e18a31cf1e49967aa9b58f30e6502addffecbd64bf072",
+      "verification_code": "EMG-E64C",
+      "status": "PENDING",
+      "verified_at": null,
+      "verified_by_worker_id": null,
+      "team_id": null,
+      "expires_at": "2026-09-21T09:47:17.853Z",
+      "created_at": "2026-09-20T09:47:17.853Z"
+    },
+    "EMG-E64C": {
+      "id": "d21ed35b-f51f-4c21-82dd-8b6e4b9ff578",
+      "incident_id": "1596ff7b-ab5b-45e2-a86c-0dfde5a03972",
+      "verification_token": "7502a03a456e035f2d8e18a31cf1e49967aa9b58f30e6502addffecbd64bf072",
+      "verification_code": "EMG-E64C",
+      "status": "PENDING",
+      "verified_at": null,
+      "verified_by_worker_id": null,
+      "team_id": null,
+      "expires_at": "2026-09-21T09:47:17.853Z",
+      "created_at": "2026-09-20T09:47:17.853Z"
+    },
+    "7502a03a456e035f2d8e18a31cf1e49967aa9b58f30e6502addffecbd64bf072": {
+      "id": "d21ed35b-f51f-4c21-82dd-8b6e4b9ff578",
+      "incident_id": "1596ff7b-ab5b-45e2-a86c-0dfde5a03972",
+      "verification_token": "7502a03a456e035f2d8e18a31cf1e49967aa9b58f30e6502addffecbd64bf072",
+      "verification_code": "EMG-E64C",
+      "status": "PENDING",
+      "verified_at": null,
+      "verified_by_worker_id": null,
+      "team_id": null,
+      "expires_at": "2026-09-21T09:47:17.853Z",
+      "created_at": "2026-09-20T09:47:17.853Z"
+    },
+    "220c70c0-c13e-4d12-859b-0cbef9bc6489": {
+      "id": "220c70c0-c13e-4d12-859b-0cbef9bc6489",
+      "incident_id": "5cb9c40c-facb-4b74-b457-eb668820e426",
+      "verification_token": "4268490d2608a254f090a62add379c3f9fdd830b4eba1e8e7299b085de997f60",
+      "verification_code": "EMG-D31C",
+      "status": "PENDING",
+      "verified_at": null,
+      "verified_by_worker_id": null,
+      "team_id": null,
+      "expires_at": "2026-09-21T09:47:35.199Z",
+      "created_at": "2026-09-20T09:47:35.199Z"
+    },
+    "5cb9c40c-facb-4b74-b457-eb668820e426": {
+      "id": "220c70c0-c13e-4d12-859b-0cbef9bc6489",
+      "incident_id": "5cb9c40c-facb-4b74-b457-eb668820e426",
+      "verification_token": "4268490d2608a254f090a62add379c3f9fdd830b4eba1e8e7299b085de997f60",
+      "verification_code": "EMG-D31C",
+      "status": "PENDING",
+      "verified_at": null,
+      "verified_by_worker_id": null,
+      "team_id": null,
+      "expires_at": "2026-09-21T09:47:35.199Z",
+      "created_at": "2026-09-20T09:47:35.199Z"
+    },
+    "EMG-D31C": {
+      "id": "220c70c0-c13e-4d12-859b-0cbef9bc6489",
+      "incident_id": "5cb9c40c-facb-4b74-b457-eb668820e426",
+      "verification_token": "4268490d2608a254f090a62add379c3f9fdd830b4eba1e8e7299b085de997f60",
+      "verification_code": "EMG-D31C",
+      "status": "PENDING",
+      "verified_at": null,
+      "verified_by_worker_id": null,
+      "team_id": null,
+      "expires_at": "2026-09-21T09:47:35.199Z",
+      "created_at": "2026-09-20T09:47:35.199Z"
+    },
+    "4268490d2608a254f090a62add379c3f9fdd830b4eba1e8e7299b085de997f60": {
+      "id": "220c70c0-c13e-4d12-859b-0cbef9bc6489",
+      "incident_id": "5cb9c40c-facb-4b74-b457-eb668820e426",
+      "verification_token": "4268490d2608a254f090a62add379c3f9fdd830b4eba1e8e7299b085de997f60",
+      "verification_code": "EMG-D31C",
+      "status": "PENDING",
+      "verified_at": null,
+      "verified_by_worker_id": null,
+      "team_id": null,
+      "expires_at": "2026-09-21T09:47:35.199Z",
+      "created_at": "2026-09-20T09:47:35.199Z"
+    },
+    "1936d59b-e371-4911-9999-a6ca4a80f93e": {
+      "id": "1936d59b-e371-4911-9999-a6ca4a80f93e",
+      "incident_id": "618874c8-6dc8-40da-9846-800ff776531a",
+      "verification_token": "5b0a66f154ba2bdbc30d37f660126a229f682db26dd77a6df5f855f0e60c3297",
+      "verification_code": "EMG-9305",
+      "status": "PENDING",
+      "verified_at": null,
+      "verified_by_worker_id": null,
+      "team_id": null,
+      "expires_at": "2026-09-21T10:01:28.330Z",
+      "created_at": "2026-09-20T10:01:28.330Z"
+    },
+    "618874c8-6dc8-40da-9846-800ff776531a": {
+      "id": "1936d59b-e371-4911-9999-a6ca4a80f93e",
+      "incident_id": "618874c8-6dc8-40da-9846-800ff776531a",
+      "verification_token": "5b0a66f154ba2bdbc30d37f660126a229f682db26dd77a6df5f855f0e60c3297",
+      "verification_code": "EMG-9305",
+      "status": "PENDING",
+      "verified_at": null,
+      "verified_by_worker_id": null,
+      "team_id": null,
+      "expires_at": "2026-09-21T10:01:28.330Z",
+      "created_at": "2026-09-20T10:01:28.330Z"
+    },
+    "EMG-9305": {
+      "id": "1936d59b-e371-4911-9999-a6ca4a80f93e",
+      "incident_id": "618874c8-6dc8-40da-9846-800ff776531a",
+      "verification_token": "5b0a66f154ba2bdbc30d37f660126a229f682db26dd77a6df5f855f0e60c3297",
+      "verification_code": "EMG-9305",
+      "status": "PENDING",
+      "verified_at": null,
+      "verified_by_worker_id": null,
+      "team_id": null,
+      "expires_at": "2026-09-21T10:01:28.330Z",
+      "created_at": "2026-09-20T10:01:28.330Z"
+    },
+    "5b0a66f154ba2bdbc30d37f660126a229f682db26dd77a6df5f855f0e60c3297": {
+      "id": "1936d59b-e371-4911-9999-a6ca4a80f93e",
+      "incident_id": "618874c8-6dc8-40da-9846-800ff776531a",
+      "verification_token": "5b0a66f154ba2bdbc30d37f660126a229f682db26dd77a6df5f855f0e60c3297",
+      "verification_code": "EMG-9305",
+      "status": "PENDING",
+      "verified_at": null,
+      "verified_by_worker_id": null,
+      "team_id": null,
+      "expires_at": "2026-09-21T10:01:28.330Z",
+      "created_at": "2026-09-20T10:01:28.330Z"
+    },
+    "a041351c-2003-489b-a625-a9c1bc3dfd2e": {
+      "id": "a041351c-2003-489b-a625-a9c1bc3dfd2e",
+      "incident_id": "2b9bcbc4-d702-465e-8bc2-535b028776a5",
+      "verification_token": "c3eff4522025c4fb9d8d4bee774779169a8664bf612edc3348279e0548ff1f74",
+      "verification_code": "EMG-1BB0",
+      "status": "VERIFIED",
+      "verified_at": "2026-09-20T10:19:03.828Z",
+      "verified_by_worker_id": "59eca4ff-a589-4363-ad76-24a4ff5b6e2e",
+      "team_id": "6dd254f4-b475-4300-b499-bb981c8bebce",
+      "expires_at": "2026-09-21T10:18:45.424Z",
+      "created_at": "2026-09-20T10:18:45.424Z"
+    },
+    "2b9bcbc4-d702-465e-8bc2-535b028776a5": {
+      "id": "a041351c-2003-489b-a625-a9c1bc3dfd2e",
+      "incident_id": "2b9bcbc4-d702-465e-8bc2-535b028776a5",
+      "verification_token": "c3eff4522025c4fb9d8d4bee774779169a8664bf612edc3348279e0548ff1f74",
+      "verification_code": "EMG-1BB0",
+      "status": "VERIFIED",
+      "verified_at": "2026-09-20T10:19:03.828Z",
+      "verified_by_worker_id": "59eca4ff-a589-4363-ad76-24a4ff5b6e2e",
+      "team_id": "6dd254f4-b475-4300-b499-bb981c8bebce",
+      "expires_at": "2026-09-21T10:18:45.424Z",
+      "created_at": "2026-09-20T10:18:45.424Z"
+    },
+    "EMG-1BB0": {
+      "id": "a041351c-2003-489b-a625-a9c1bc3dfd2e",
+      "incident_id": "2b9bcbc4-d702-465e-8bc2-535b028776a5",
+      "verification_token": "c3eff4522025c4fb9d8d4bee774779169a8664bf612edc3348279e0548ff1f74",
+      "verification_code": "EMG-1BB0",
+      "status": "VERIFIED",
+      "verified_at": "2026-09-20T10:19:03.828Z",
+      "verified_by_worker_id": "59eca4ff-a589-4363-ad76-24a4ff5b6e2e",
+      "team_id": "6dd254f4-b475-4300-b499-bb981c8bebce",
+      "expires_at": "2026-09-21T10:18:45.424Z",
+      "created_at": "2026-09-20T10:18:45.424Z"
+    },
+    "c3eff4522025c4fb9d8d4bee774779169a8664bf612edc3348279e0548ff1f74": {
+      "id": "a041351c-2003-489b-a625-a9c1bc3dfd2e",
+      "incident_id": "2b9bcbc4-d702-465e-8bc2-535b028776a5",
+      "verification_token": "c3eff4522025c4fb9d8d4bee774779169a8664bf612edc3348279e0548ff1f74",
+      "verification_code": "EMG-1BB0",
+      "status": "VERIFIED",
+      "verified_at": "2026-09-20T10:19:03.828Z",
+      "verified_by_worker_id": "59eca4ff-a589-4363-ad76-24a4ff5b6e2e",
+      "team_id": "6dd254f4-b475-4300-b499-bb981c8bebce",
+      "expires_at": "2026-09-21T10:18:45.424Z",
+      "created_at": "2026-09-20T10:18:45.424Z"
+    },
+    "b7e2883f-42ab-4a45-b5a7-d85124425715": {
+      "id": "b7e2883f-42ab-4a45-b5a7-d85124425715",
+      "incident_id": "8f9a546c-c343-44da-9c1d-9368fe403d1a",
+      "verification_token": "d7999eb0e47f7afba7cdeee45b72e1640fe70afc0d68f1b2bc2ae7229eb83493",
+      "verification_code": "EMG-88D9",
+      "status": "VERIFIED",
+      "verified_at": "2026-09-20T11:38:33.043Z",
+      "verified_by_worker_id": "59eca4ff-a589-4363-ad76-24a4ff5b6e2e",
+      "team_id": "f99efc5e-2897-455b-b2c0-300d8b2058be",
+      "expires_at": "2026-09-21T11:38:15.480Z",
+      "created_at": "2026-09-20T11:38:15.480Z"
+    },
+    "8f9a546c-c343-44da-9c1d-9368fe403d1a": {
+      "id": "b7e2883f-42ab-4a45-b5a7-d85124425715",
+      "incident_id": "8f9a546c-c343-44da-9c1d-9368fe403d1a",
+      "verification_token": "d7999eb0e47f7afba7cdeee45b72e1640fe70afc0d68f1b2bc2ae7229eb83493",
+      "verification_code": "EMG-88D9",
+      "status": "VERIFIED",
+      "verified_at": "2026-09-20T11:38:33.043Z",
+      "verified_by_worker_id": "59eca4ff-a589-4363-ad76-24a4ff5b6e2e",
+      "team_id": "f99efc5e-2897-455b-b2c0-300d8b2058be",
+      "expires_at": "2026-09-21T11:38:15.480Z",
+      "created_at": "2026-09-20T11:38:15.480Z"
+    },
+    "EMG-88D9": {
+      "id": "b7e2883f-42ab-4a45-b5a7-d85124425715",
+      "incident_id": "8f9a546c-c343-44da-9c1d-9368fe403d1a",
+      "verification_token": "d7999eb0e47f7afba7cdeee45b72e1640fe70afc0d68f1b2bc2ae7229eb83493",
+      "verification_code": "EMG-88D9",
+      "status": "VERIFIED",
+      "verified_at": "2026-09-20T11:38:33.043Z",
+      "verified_by_worker_id": "59eca4ff-a589-4363-ad76-24a4ff5b6e2e",
+      "team_id": "f99efc5e-2897-455b-b2c0-300d8b2058be",
+      "expires_at": "2026-09-21T11:38:15.480Z",
+      "created_at": "2026-09-20T11:38:15.480Z"
+    },
+    "d7999eb0e47f7afba7cdeee45b72e1640fe70afc0d68f1b2bc2ae7229eb83493": {
+      "id": "b7e2883f-42ab-4a45-b5a7-d85124425715",
+      "incident_id": "8f9a546c-c343-44da-9c1d-9368fe403d1a",
+      "verification_token": "d7999eb0e47f7afba7cdeee45b72e1640fe70afc0d68f1b2bc2ae7229eb83493",
+      "verification_code": "EMG-88D9",
+      "status": "VERIFIED",
+      "verified_at": "2026-09-20T11:38:33.043Z",
+      "verified_by_worker_id": "59eca4ff-a589-4363-ad76-24a4ff5b6e2e",
+      "team_id": "f99efc5e-2897-455b-b2c0-300d8b2058be",
+      "expires_at": "2026-09-21T11:38:15.480Z",
+      "created_at": "2026-09-20T11:38:15.480Z"
+    }
+  },
+  "checkIns": {
+    "7b620bab-adec-4ab1-8f83-2d72ac297bb9:59eca4ff-a589-4363-ad76-24a4ff5b6e2e": {
+      "id": "7f04978f-e0ab-4e60-a436-efaffdfdc868",
+      "incident_id": "0e0eb3b4-08fc-4061-8588-ef874b278f74",
+      "team_id": "7b620bab-adec-4ab1-8f83-2d72ac297bb9",
+      "worker_id": "59eca4ff-a589-4363-ad76-24a4ff5b6e2e",
+      "check_in_time": "2026-09-20T09:42:43.455Z",
+      "status": "CHECKED_IN",
+      "verification_method": "QR_VERIFICATION",
+      "created_at": "2026-09-20T09:42:43.455Z",
+      "worker_name": "Ravi Patel",
+      "worker_role": "Team Lead"
+    },
+    "7f04978f-e0ab-4e60-a436-efaffdfdc868": {
+      "id": "7f04978f-e0ab-4e60-a436-efaffdfdc868",
+      "incident_id": "0e0eb3b4-08fc-4061-8588-ef874b278f74",
+      "team_id": "7b620bab-adec-4ab1-8f83-2d72ac297bb9",
+      "worker_id": "59eca4ff-a589-4363-ad76-24a4ff5b6e2e",
+      "check_in_time": "2026-09-20T09:42:43.455Z",
+      "status": "CHECKED_IN",
+      "verification_method": "QR_VERIFICATION",
+      "created_at": "2026-09-20T09:42:43.455Z",
+      "worker_name": "Ravi Patel",
+      "worker_role": "Team Lead"
+    },
+    "7b620bab-adec-4ab1-8f83-2d72ac297bb9:b9bc4bd6-1fc9-4df9-85d4-294e396116e8": {
+      "id": "1cafa53b-8952-417c-bd4c-214a449ad847",
+      "incident_id": "0e0eb3b4-08fc-4061-8588-ef874b278f74",
+      "team_id": "7b620bab-adec-4ab1-8f83-2d72ac297bb9",
+      "worker_id": "b9bc4bd6-1fc9-4df9-85d4-294e396116e8",
+      "check_in_time": "2026-09-20T09:42:47.548Z",
+      "status": "CHECKED_IN",
+      "verification_method": "QR_EMERGENCY_VERIFICATION",
+      "created_at": "2026-09-20T09:42:47.548Z",
+      "worker_name": "Hitesh Solanki",
+      "worker_role": "Plumber"
+    },
+    "1cafa53b-8952-417c-bd4c-214a449ad847": {
+      "id": "1cafa53b-8952-417c-bd4c-214a449ad847",
+      "incident_id": "0e0eb3b4-08fc-4061-8588-ef874b278f74",
+      "team_id": "7b620bab-adec-4ab1-8f83-2d72ac297bb9",
+      "worker_id": "b9bc4bd6-1fc9-4df9-85d4-294e396116e8",
+      "check_in_time": "2026-09-20T09:42:47.548Z",
+      "status": "CHECKED_IN",
+      "verification_method": "QR_EMERGENCY_VERIFICATION",
+      "created_at": "2026-09-20T09:42:47.548Z",
+      "worker_name": "Hitesh Solanki",
+      "worker_role": "Plumber"
+    },
+    "6dd254f4-b475-4300-b499-bb981c8bebce:59eca4ff-a589-4363-ad76-24a4ff5b6e2e": {
+      "id": "3d2606c6-fc94-4205-b600-79b7028397d5",
+      "incident_id": "2b9bcbc4-d702-465e-8bc2-535b028776a5",
+      "team_id": "6dd254f4-b475-4300-b499-bb981c8bebce",
+      "worker_id": "59eca4ff-a589-4363-ad76-24a4ff5b6e2e",
+      "check_in_time": "2026-09-20T10:19:04.228Z",
+      "status": "CHECKED_IN",
+      "verification_method": "QR_VERIFICATION",
+      "created_at": "2026-09-20T10:19:04.228Z",
+      "worker_name": "Ravi Patel",
+      "worker_role": "Team Lead"
+    },
+    "3d2606c6-fc94-4205-b600-79b7028397d5": {
+      "id": "3d2606c6-fc94-4205-b600-79b7028397d5",
+      "incident_id": "2b9bcbc4-d702-465e-8bc2-535b028776a5",
+      "team_id": "6dd254f4-b475-4300-b499-bb981c8bebce",
+      "worker_id": "59eca4ff-a589-4363-ad76-24a4ff5b6e2e",
+      "check_in_time": "2026-09-20T10:19:04.228Z",
+      "status": "CHECKED_IN",
+      "verification_method": "QR_VERIFICATION",
+      "created_at": "2026-09-20T10:19:04.228Z",
+      "worker_name": "Ravi Patel",
+      "worker_role": "Team Lead"
+    },
+    "6dd254f4-b475-4300-b499-bb981c8bebce:b9bc4bd6-1fc9-4df9-85d4-294e396116e8": {
+      "id": "85305205-dd7a-4f91-952c-b4df3d411286",
+      "incident_id": "2b9bcbc4-d702-465e-8bc2-535b028776a5",
+      "team_id": "6dd254f4-b475-4300-b499-bb981c8bebce",
+      "worker_id": "b9bc4bd6-1fc9-4df9-85d4-294e396116e8",
+      "check_in_time": "2026-09-20T10:19:06.639Z",
+      "status": "CHECKED_IN",
+      "verification_method": "QR_EMERGENCY_VERIFICATION",
+      "created_at": "2026-09-20T10:19:06.639Z",
+      "worker_name": "Hitesh Solanki",
+      "worker_role": "Plumber"
+    },
+    "85305205-dd7a-4f91-952c-b4df3d411286": {
+      "id": "85305205-dd7a-4f91-952c-b4df3d411286",
+      "incident_id": "2b9bcbc4-d702-465e-8bc2-535b028776a5",
+      "team_id": "6dd254f4-b475-4300-b499-bb981c8bebce",
+      "worker_id": "b9bc4bd6-1fc9-4df9-85d4-294e396116e8",
+      "check_in_time": "2026-09-20T10:19:06.639Z",
+      "status": "CHECKED_IN",
+      "verification_method": "QR_EMERGENCY_VERIFICATION",
+      "created_at": "2026-09-20T10:19:06.639Z",
+      "worker_name": "Hitesh Solanki",
+      "worker_role": "Plumber"
+    },
+    "f99efc5e-2897-455b-b2c0-300d8b2058be:59eca4ff-a589-4363-ad76-24a4ff5b6e2e": {
+      "id": "7bec2d1e-ad36-43f1-9fe7-f6afe0ade796",
+      "incident_id": "8f9a546c-c343-44da-9c1d-9368fe403d1a",
+      "team_id": "f99efc5e-2897-455b-b2c0-300d8b2058be",
+      "worker_id": "59eca4ff-a589-4363-ad76-24a4ff5b6e2e",
+      "check_in_time": "2026-09-20T11:38:33.423Z",
+      "status": "CHECKED_IN",
+      "verification_method": "QR_VERIFICATION",
+      "created_at": "2026-09-20T11:38:33.423Z",
+      "worker_name": "Ravi Patel",
+      "worker_role": "Team Lead"
+    },
+    "7bec2d1e-ad36-43f1-9fe7-f6afe0ade796": {
+      "id": "7bec2d1e-ad36-43f1-9fe7-f6afe0ade796",
+      "incident_id": "8f9a546c-c343-44da-9c1d-9368fe403d1a",
+      "team_id": "f99efc5e-2897-455b-b2c0-300d8b2058be",
+      "worker_id": "59eca4ff-a589-4363-ad76-24a4ff5b6e2e",
+      "check_in_time": "2026-09-20T11:38:33.423Z",
+      "status": "CHECKED_IN",
+      "verification_method": "QR_VERIFICATION",
+      "created_at": "2026-09-20T11:38:33.423Z",
+      "worker_name": "Ravi Patel",
+      "worker_role": "Team Lead"
+    },
+    "f99efc5e-2897-455b-b2c0-300d8b2058be:b9bc4bd6-1fc9-4df9-85d4-294e396116e8": {
+      "id": "cedc7e58-cd47-494a-a70a-6037cbada692",
+      "incident_id": "8f9a546c-c343-44da-9c1d-9368fe403d1a",
+      "team_id": "f99efc5e-2897-455b-b2c0-300d8b2058be",
+      "worker_id": "b9bc4bd6-1fc9-4df9-85d4-294e396116e8",
+      "check_in_time": "2026-09-20T11:38:35.758Z",
+      "status": "CHECKED_IN",
+      "verification_method": "QR_EMERGENCY_VERIFICATION",
+      "created_at": "2026-09-20T11:38:35.758Z",
+      "worker_name": "Hitesh Solanki",
+      "worker_role": "Plumber"
+    },
+    "cedc7e58-cd47-494a-a70a-6037cbada692": {
+      "id": "cedc7e58-cd47-494a-a70a-6037cbada692",
+      "incident_id": "8f9a546c-c343-44da-9c1d-9368fe403d1a",
+      "team_id": "f99efc5e-2897-455b-b2c0-300d8b2058be",
+      "worker_id": "b9bc4bd6-1fc9-4df9-85d4-294e396116e8",
+      "check_in_time": "2026-09-20T11:38:35.758Z",
+      "status": "CHECKED_IN",
+      "verification_method": "QR_EMERGENCY_VERIFICATION",
+      "created_at": "2026-09-20T11:38:35.758Z",
+      "worker_name": "Hitesh Solanki",
+      "worker_role": "Plumber"
+    }
+  },
+  "dispatchPool": {},
+  "auditLogs": {
+    "bf7eeccd-b1f3-43a0-82ce-c4f79c037e39": [
+      {
+        "id": "40cc79b0-fbd9-4b72-861f-4a0f7a5d155f",
+        "incident_id": "bf7eeccd-b1f3-43a0-82ce-c4f79c037e39",
+        "federation_id": "b765df3b-c418-4a15-b79f-3cbc09e475dc",
+        "actor_id": "096b0708-3193-41a6-9f49-03ff8903a0ed",
+        "action_type": "SUPPORT_REQUESTED",
+        "previous_state": {},
+        "new_state": {
+          "requestType": "ADDITIONAL_TEAM",
+          "count": 4,
+          "roles": [
+            "Heavy Machinery Operator",
+            "Structural Engineer"
+          ],
+          "targetFederationId": null
+        },
+        "notes": "Shaft structural integrity compromised; backup deconstruction crew requested.",
+        "created_at": "2026-09-20T09:38:21.584Z"
+      },
+      {
+        "id": "c1c5d8dc-c099-49b2-a0bb-60c7ff8edfea",
+        "incident_id": "bf7eeccd-b1f3-43a0-82ce-c4f79c037e39",
+        "federation_id": "b765df3b-c418-4a15-b79f-3cbc09e475dc",
+        "actor_id": "096b0708-3193-41a6-9f49-03ff8903a0ed",
+        "action_type": "TASK_MODIFIED",
+        "previous_state": {
+          "taskId": "209d309c-017a-4f0d-a408-a689e75aa663",
+          "status": "PENDING"
+        },
+        "new_state": {
+          "taskId": "209d309c-017a-4f0d-a408-a689e75aa663",
+          "status": "CANCELLED"
+        },
+        "notes": "Thermal scanner battery depleted; visual inspection completed",
+        "created_at": "2026-09-20T09:38:21.130Z"
+      },
+      {
+        "id": "c9692c12-c0de-4678-ab3f-6a43e0fc5074",
+        "incident_id": "bf7eeccd-b1f3-43a0-82ce-c4f79c037e39",
+        "federation_id": "b765df3b-c418-4a15-b79f-3cbc09e475dc",
+        "actor_id": "096b0708-3193-41a6-9f49-03ff8903a0ed",
+        "action_type": "TASK_MODIFIED",
+        "previous_state": {},
+        "new_state": {
+          "action": "ADD_TASK",
+          "taskId": "209d309c-017a-4f0d-a408-a689e75aa663",
+          "title": "Substation Busbar Thermal Scan"
+        },
+        "notes": "Operational task added by Federation Admin: Substation Busbar Thermal Scan",
+        "created_at": "2026-09-20T09:38:20.403Z"
+      },
+      {
+        "id": "719a1c2a-641b-4d45-81d8-b808227c17e6",
+        "incident_id": "bf7eeccd-b1f3-43a0-82ce-c4f79c037e39",
+        "federation_id": "b765df3b-c418-4a15-b79f-3cbc09e475dc",
+        "actor_id": "096b0708-3193-41a6-9f49-03ff8903a0ed",
+        "action_type": "WORKER_REPLACED",
+        "previous_state": {
+          "releasedWorkerId": "fe1dafe8-4d12-4618-9223-0f4452ea20f7",
+          "role": "Assistant Electrician",
+          "wasLead": false
+        },
+        "new_state": {
+          "replacementWorkerId": "10d74e2a-62ce-4260-adf9-67e16de838fb",
+          "role": "Assistant Electrician",
+          "isLead": false
+        },
+        "notes": "Worker 2 requested medical leave from site",
+        "created_at": "2026-09-20T09:38:18.611Z"
+      },
+      {
+        "id": "d721eb1b-1cda-4a5c-81a5-fc4b3b799ed8",
+        "incident_id": "bf7eeccd-b1f3-43a0-82ce-c4f79c037e39",
+        "federation_id": "b765df3b-c418-4a15-b79f-3cbc09e475dc",
+        "actor_id": "096b0708-3193-41a6-9f49-03ff8903a0ed",
+        "action_type": "WORKER_ADDED",
+        "previous_state": {
+          "acceptedWorkerCount": 2
+        },
+        "new_state": {
+          "addedWorkerId": "fe1dafe8-4d12-4618-9223-0f4452ea20f7",
+          "role": "Assistant Electrician",
+          "workerName": "Govind Suthar"
+        },
+        "notes": "Worker Govind Suthar added to emergency response team as Assistant Electrician",
+        "created_at": "2026-09-20T09:38:15.796Z"
+      },
+      {
+        "id": "1323c0d5-3e24-44ec-ad33-6d219d2c7bf4",
+        "incident_id": "bf7eeccd-b1f3-43a0-82ce-c4f79c037e39",
+        "federation_id": "b765df3b-c418-4a15-b79f-3cbc09e475dc",
+        "actor_id": "096b0708-3193-41a6-9f49-03ff8903a0ed",
+        "action_type": "ADDITIONAL_WORKER_APPROVED",
+        "previous_state": {
+          "status": "PENDING_FEDERATION_REVIEW",
+          "requestId": "0d3a68a1-e2cc-428f-b43b-4bb2d4355fe9"
+        },
+        "new_state": {
+          "status": "APPROVED",
+          "count": 2,
+          "role": "High Voltage Specialist"
+        },
+        "notes": "Approved by Federation Administrator",
+        "created_at": "2026-09-20T09:38:13.938Z"
+      },
+      {
+        "id": "39bf231b-2db6-4f6c-9f22-d7d0657bdadd",
+        "incident_id": "bf7eeccd-b1f3-43a0-82ce-c4f79c037e39",
+        "federation_id": "b765df3b-c418-4a15-b79f-3cbc09e475dc",
+        "actor_id": "096b0708-3193-41a6-9f49-03ff8903a0ed",
+        "action_type": "SEVERITY_CHANGED",
+        "previous_state": {
+          "severity": "CRITICAL"
+        },
+        "new_state": {
+          "severity": "HIGH"
+        },
+        "notes": "Main breaker isolated; fire hazard mitigated.",
+        "created_at": "2026-09-20T09:38:07.597Z"
+      }
+    ],
+    "924dc158-888d-4ac3-bd85-8edbad8aa2c9": [
+      {
+        "id": "5f8cc3f6-2c59-4f51-be23-d9eb007e796d",
+        "incident_id": "924dc158-888d-4ac3-bd85-8edbad8aa2c9",
+        "federation_id": "b765df3b-c418-4a15-b79f-3cbc09e475dc",
+        "actor_id": "096b0708-3193-41a6-9f49-03ff8903a0ed",
+        "action_type": "SEARCH_RADIUS_EXPANDED",
+        "previous_state": {
+          "expansionMultiplier": 1
+        },
+        "new_state": {
+          "expansionMultiplier": 1.5,
+          "maxRadiusKm": 50,
+          "newOffersCount": 0
+        },
+        "notes": "Acute local shortage: expanding candidate perimeter across suburban sector",
+        "created_at": "2026-09-20T09:41:10.475Z"
+      },
+      {
+        "id": "18bd9151-ced7-4c7e-af59-7ab362e302d4",
+        "incident_id": "924dc158-888d-4ac3-bd85-8edbad8aa2c9",
+        "federation_id": "11111111-2222-3333-4444-555555555555",
+        "actor_id": "8e9eb8eb-f720-40bd-9e9c-741fd6097d7c",
+        "action_type": "ADDITIONAL_TEAM_CREATED",
+        "previous_state": {},
+        "new_state": {
+          "teamId": "00652248-ff60-48f6-bd19-61fd9b4e734f",
+          "teamType": "SUPPORT",
+          "requiredCount": 2,
+          "leadWorkerId": null
+        },
+        "notes": "External support crew provided by Federation 11111111-2222-3333-4444-555555555555",
+        "created_at": "2026-09-20T09:40:30.162Z"
+      },
+      {
+        "id": "fa391a93-7dc6-4e58-b2a0-6f21b435dd1a",
+        "incident_id": "924dc158-888d-4ac3-bd85-8edbad8aa2c9",
+        "federation_id": "11111111-2222-3333-4444-555555555555",
+        "actor_id": "8e9eb8eb-f720-40bd-9e9c-741fd6097d7c",
+        "action_type": "CROSS_FEDERATION_SUPPORT_REVIEWED",
+        "previous_state": {
+          "requestId": "70b0f657-952f-4280-bcc4-651df63298d1",
+          "status": "PENDING_REVIEW"
+        },
+        "new_state": {
+          "requestId": "70b0f657-952f-4280-bcc4-651df63298d1",
+          "status": "ACCEPTED",
+          "action": "ACCEPT"
+        },
+        "notes": "Surat support crew deployed with 2 high-capacity pumps",
+        "created_at": "2026-09-20T09:40:29.220Z"
+      },
+      {
+        "id": "1bf41384-6785-47d8-a377-1bf4d0dad726",
+        "incident_id": "924dc158-888d-4ac3-bd85-8edbad8aa2c9",
+        "federation_id": "b765df3b-c418-4a15-b79f-3cbc09e475dc",
+        "actor_id": "096b0708-3193-41a6-9f49-03ff8903a0ed",
+        "action_type": "SUPPORT_REQUESTED",
+        "previous_state": {},
+        "new_state": {
+          "requestType": "EXTERNAL_FEDERATION_SUPPORT",
+          "count": 2,
+          "roles": [
+            "Heavy Machinery Operator"
+          ],
+          "targetFederationId": "11111111-2222-3333-4444-555555555555"
+        },
+        "notes": "Ahmedabad local heavy submersible pump fleet fully committed; mutual aid requested.",
+        "created_at": "2026-09-20T09:40:20.708Z"
+      },
+      {
+        "id": "37b643ab-ec38-4576-b6a6-3108d60c872d",
+        "incident_id": "924dc158-888d-4ac3-bd85-8edbad8aa2c9",
+        "federation_id": "b765df3b-c418-4a15-b79f-3cbc09e475dc",
+        "actor_id": "096b0708-3193-41a6-9f49-03ff8903a0ed",
+        "action_type": "ESCALATION_STAGE_CHANGED",
+        "previous_state": {
+          "stage": "STAGE_2_RETRY_ELIGIBLE"
+        },
+        "new_state": {
+          "stage": "STAGE_4_ADDITIONAL_TEAM_REQUIRED"
+        },
+        "notes": "Severe structural flooding exceeds single team extraction capabilities",
+        "created_at": "2026-09-20T09:40:20.198Z"
+      },
+      {
+        "id": "2b9b0c61-3ed5-4947-ade3-511f44727015",
+        "incident_id": "924dc158-888d-4ac3-bd85-8edbad8aa2c9",
+        "federation_id": "b765df3b-c418-4a15-b79f-3cbc09e475dc",
+        "actor_id": "096b0708-3193-41a6-9f49-03ff8903a0ed",
+        "action_type": "WORKER_REPLACED",
+        "previous_state": {
+          "releasedWorkerId": "b5473d80-9397-45c0-90cc-7f110b0c1dda",
+          "role": "Pump Technician"
+        },
+        "new_state": {
+          "replacementWorkerId": "a982a999-7d23-4243-9e49-a675ab98c569",
+          "role": "Pump Technician",
+          "status": "ACTIVE"
+        },
+        "notes": "Replacement deployed following worker 2 no-show",
+        "created_at": "2026-09-20T09:40:18.559Z"
+      },
+      {
+        "id": "2aba6095-6f02-44a3-b49c-404a5878ee35",
+        "incident_id": "924dc158-888d-4ac3-bd85-8edbad8aa2c9",
+        "federation_id": "b765df3b-c418-4a15-b79f-3cbc09e475dc",
+        "actor_id": "096b0708-3193-41a6-9f49-03ff8903a0ed",
+        "action_type": "WORKER_NO_SHOW",
+        "previous_state": {
+          "memberId": "fe71bcf1-1953-4a10-b7e0-3be9cf2423fd",
+          "workerId": "b5473d80-9397-45c0-90cc-7f110b0c1dda",
+          "status": "ACTIVE"
+        },
+        "new_state": {
+          "memberId": "fe71bcf1-1953-4a10-b7e0-3be9cf2423fd",
+          "status": "NO_SHOW"
+        },
+        "notes": "Worker failed to arrive at emergency site within 30-minute window",
+        "created_at": "2026-09-20T09:40:02.590Z"
+      },
+      {
+        "id": "dc831d56-e3cc-4295-8d8b-74ef93ef879c",
+        "incident_id": "924dc158-888d-4ac3-bd85-8edbad8aa2c9",
+        "federation_id": "b765df3b-c418-4a15-b79f-3cbc09e475dc",
+        "actor_id": "b5473d80-9397-45c0-90cc-7f110b0c1dda",
+        "action_type": "WORKER_DECLINED",
+        "previous_state": {
+          "dispatchId": "7b8d9d03-90ba-4867-9d34-9edafa9957e6",
+          "status": "DISPATCHED"
+        },
+        "new_state": {
+          "dispatchId": "7b8d9d03-90ba-4867-9d34-9edafa9957e6",
+          "status": "DECLINED"
+        },
+        "notes": "Equipment in maintenance",
+        "created_at": "2026-09-20T09:39:48.646Z"
+      },
+      {
+        "id": "c3c61ba5-04d8-4a0f-9118-c2e366e69c1e",
+        "incident_id": "924dc158-888d-4ac3-bd85-8edbad8aa2c9",
+        "federation_id": "b765df3b-c418-4a15-b79f-3cbc09e475dc",
+        "actor_id": "SYSTEM_MONITOR",
+        "action_type": "DISPATCH_AUTO_RETRY",
+        "previous_state": {
+          "expiredWorkerId": "f1c067b0-283e-4441-9000-e110d02b6db2",
+          "role": "Plumbing"
+        },
+        "new_state": {
+          "newWorkerId": "3880703c-4e54-4386-865e-15abc571f6f4",
+          "newDispatchId": "2f5d7417-42cc-4c1a-89ad-8ab8a5e445dc"
+        },
+        "notes": "Dispatched next ranked candidate following offer expiration",
+        "created_at": "2026-09-20T09:39:44.156Z"
+      },
+      {
+        "id": "d6cb774e-3bdb-4bf5-a8d0-e987e08c11f4",
+        "incident_id": "924dc158-888d-4ac3-bd85-8edbad8aa2c9",
+        "federation_id": "b765df3b-c418-4a15-b79f-3cbc09e475dc",
+        "actor_id": "SYSTEM_MONITOR",
+        "action_type": "WORKER_OFFER_EXPIRED",
+        "previous_state": {
+          "dispatchId": "9e7ade3a-2c3e-4f4f-a7d8-82c47b09af2d",
+          "workerId": "f1c067b0-283e-4441-9000-e110d02b6db2",
+          "status": "DISPATCHED"
+        },
+        "new_state": {
+          "dispatchId": "9e7ade3a-2c3e-4f4f-a7d8-82c47b09af2d",
+          "status": "EXPIRED"
+        },
+        "notes": "Emergency response window expired for worker f1c067b0-283e-4441-9000-e110d02b6db2 on role Plumbing",
+        "created_at": "2026-09-20T09:39:29.817Z"
+      },
+      {
+        "id": "3433f7ac-267d-4ec3-8b4f-7fb38ca65429",
+        "incident_id": "924dc158-888d-4ac3-bd85-8edbad8aa2c9",
+        "federation_id": "b765df3b-c418-4a15-b79f-3cbc09e475dc",
+        "actor_id": "SYSTEM_MONITOR",
+        "action_type": "DISPATCH_AUTO_RETRY",
+        "previous_state": {
+          "expiredWorkerId": "f1c067b0-283e-4441-9000-e110d02b6db2",
+          "role": "Plumbing"
+        },
+        "new_state": {
+          "newWorkerId": "44044e79-b3a2-497b-a7a4-e4eaeb932f70",
+          "newDispatchId": "1526177f-0bcd-4343-893f-bb69ca79bda0"
+        },
+        "notes": "Dispatched next ranked candidate following offer expiration",
+        "created_at": "2026-09-20T09:39:29.611Z"
+      },
+      {
+        "id": "5049d3c5-76dd-4b2b-9442-c535d2e08c5d",
+        "incident_id": "924dc158-888d-4ac3-bd85-8edbad8aa2c9",
+        "federation_id": "b765df3b-c418-4a15-b79f-3cbc09e475dc",
+        "actor_id": "SYSTEM_MONITOR",
+        "action_type": "WORKER_OFFER_EXPIRED",
+        "previous_state": {
+          "dispatchId": "9e7ade3a-2c3e-4f4f-a7d8-82c47b09af2d",
+          "workerId": "f1c067b0-283e-4441-9000-e110d02b6db2",
+          "status": "DISPATCHED"
+        },
+        "new_state": {
+          "dispatchId": "9e7ade3a-2c3e-4f4f-a7d8-82c47b09af2d",
+          "status": "EXPIRED"
+        },
+        "notes": "Emergency response window expired for worker f1c067b0-283e-4441-9000-e110d02b6db2 on role Plumbing",
+        "created_at": "2026-09-20T09:39:15.275Z"
+      },
+      {
+        "id": "2c556758-4091-459c-96e7-45d5ea9eb6ca",
+        "incident_id": "924dc158-888d-4ac3-bd85-8edbad8aa2c9",
+        "federation_id": "b765df3b-c418-4a15-b79f-3cbc09e475dc",
+        "actor_id": "096b0708-3193-41a6-9f49-03ff8903a0ed",
+        "action_type": "ADDITIONAL_WORKERS_DISPATCHED",
+        "previous_state": {
+          "requestId": "6bcd43f2-1d02-4693-87ce-6dd1e4d94f15",
+          "status": "APPROVED"
+        },
+        "new_state": {
+          "requestId": "6bcd43f2-1d02-4693-87ce-6dd1e4d94f15",
+          "dispatchedCount": 1,
+          "workerIds": [
+            "f1c067b0-283e-4441-9000-e110d02b6db2"
+          ],
+          "skill": "Plumbing"
+        },
+        "notes": "Dispatched 1 workers for approved request: Plumbing",
+        "created_at": "2026-09-20T09:39:14.316Z"
+      },
+      {
+        "id": "568e6645-f22c-4cf7-89d2-a1e22061c736",
+        "incident_id": "924dc158-888d-4ac3-bd85-8edbad8aa2c9",
+        "federation_id": "b765df3b-c418-4a15-b79f-3cbc09e475dc",
+        "actor_id": "096b0708-3193-41a6-9f49-03ff8903a0ed",
+        "action_type": "ADDITIONAL_WORKER_APPROVED",
+        "previous_state": {
+          "status": "PENDING_FEDERATION_REVIEW",
+          "requestId": "6bcd43f2-1d02-4693-87ce-6dd1e4d94f15"
+        },
+        "new_state": {
+          "status": "APPROVED",
+          "count": 2,
+          "role": "Plumbing"
+        },
+        "notes": "Approved by Federation Administrator",
+        "created_at": "2026-09-20T09:38:58.586Z"
+      },
+      {
+        "id": "9bacdccf-56c9-412d-936e-254e4321b7bf",
+        "incident_id": "924dc158-888d-4ac3-bd85-8edbad8aa2c9",
+        "federation_id": "b765df3b-c418-4a15-b79f-3cbc09e475dc",
+        "actor_id": "096b0708-3193-41a6-9f49-03ff8903a0ed",
+        "action_type": "ADDITIONAL_TEAM_CREATED",
+        "previous_state": {},
+        "new_state": {
+          "teamId": "21ca2bb0-5797-4ad8-a499-ac077b56709e",
+          "teamType": "SPECIALIZED_UNIT",
+          "requiredCount": 2,
+          "leadWorkerId": null
+        },
+        "notes": "Secondary drainage and dewatering extraction team required in basement utility area",
+        "created_at": "2026-09-20T09:38:55.497Z"
+      }
+    ],
+    "0e0eb3b4-08fc-4061-8588-ef874b278f74": [
+      {
+        "id": "99fa2ef1-3842-4168-81a7-2d4412f9391a",
+        "incident_id": "0e0eb3b4-08fc-4061-8588-ef874b278f74",
+        "federation_id": "b765df3b-c418-4a15-b79f-3cbc09e475dc",
+        "actor_id": "096b0708-3193-41a6-9f49-03ff8903a0ed",
+        "action_type": "EMERGENCY_CLOSED",
+        "previous_state": {
+          "status": "RESOLVED"
+        },
+        "new_state": {
+          "status": "CLOSED",
+          "closure_notes": "Cooperative disaster response verified and incident closed formally."
+        },
+        "notes": "Emergency resolution approved and closed.",
+        "created_at": "2026-09-20T09:43:26.465Z"
+      },
+      {
+        "id": "2db6fa48-ef24-4c1c-90a7-1a609d4c76f7",
+        "incident_id": "0e0eb3b4-08fc-4061-8588-ef874b278f74",
+        "federation_id": "b765df3b-c418-4a15-b79f-3cbc09e475dc",
+        "actor_id": "70fbdb46-120f-459e-a616-67b4f676f5d0",
+        "action_type": "RESOLUTION_REQUESTED",
+        "previous_state": {
+          "status": "ACTIVE",
+          "team_field_status": "READY_FOR_RESOLUTION"
+        },
+        "new_state": {
+          "status": "RESOLVED",
+          "team_field_status": "READY_FOR_RESOLUTION",
+          "resolution_summary": "Pressure test passed at 4.5 bar. All clear."
+        },
+        "notes": "Resolution requested by worker 59eca4ff-a589-4363-ad76-24a4ff5b6e2e: Pressure test passed at 4.5 bar. All clear.",
+        "created_at": "2026-09-20T09:43:25.344Z"
+      },
+      {
+        "id": "633b35af-0988-4f97-b915-3713e27cd8d0",
+        "incident_id": "0e0eb3b4-08fc-4061-8588-ef874b278f74",
+        "federation_id": "b765df3b-c418-4a15-b79f-3cbc09e475dc",
+        "actor_id": "096b0708-3193-41a6-9f49-03ff8903a0ed",
+        "action_type": "EMERGENCY_REOPENED",
+        "previous_state": {
+          "status": "RESOLVED"
+        },
+        "new_state": {
+          "status": "ACTIVE",
+          "closure_notes": "Re-check auxiliary riser pressure."
+        },
+        "notes": "Emergency reopened for further work. Notes: Re-check auxiliary riser pressure.",
+        "created_at": "2026-09-20T09:43:22.682Z"
+      },
+      {
+        "id": "4cb477f9-7360-4d13-aada-27e59afd19f7",
+        "incident_id": "0e0eb3b4-08fc-4061-8588-ef874b278f74",
+        "federation_id": "b765df3b-c418-4a15-b79f-3cbc09e475dc",
+        "actor_id": "70fbdb46-120f-459e-a616-67b4f676f5d0",
+        "action_type": "RESOLUTION_REQUESTED",
+        "previous_state": {
+          "status": "ACTIVE",
+          "team_field_status": "READY_FOR_RESOLUTION"
+        },
+        "new_state": {
+          "status": "RESOLVED",
+          "team_field_status": "READY_FOR_RESOLUTION",
+          "resolution_summary": "Society water tank burst contained and auxiliary line sealed."
+        },
+        "notes": "Resolution requested by worker 59eca4ff-a589-4363-ad76-24a4ff5b6e2e: Society water tank burst contained and auxiliary line sealed.",
+        "created_at": "2026-09-20T09:43:18.344Z"
+      },
+      {
+        "id": "051c5890-03ac-4802-8cdf-ecded0d8cf0e",
+        "incident_id": "0e0eb3b4-08fc-4061-8588-ef874b278f74",
+        "federation_id": "b765df3b-c418-4a15-b79f-3cbc09e475dc",
+        "actor_id": "70fbdb46-120f-459e-a616-67b4f676f5d0",
+        "action_type": "TEAM_FIELD_STATUS_UPDATED",
+        "previous_state": {
+          "field_status": "ON_SITE"
+        },
+        "new_state": {
+          "field_status": "WORK_IN_PROGRESS"
+        },
+        "notes": "Team field status changed to WORK_IN_PROGRESS.",
+        "created_at": "2026-09-20T09:42:49.808Z"
+      },
+      {
+        "id": "8ce670d6-063b-4cc1-bf9c-e18ba79f4a2a",
+        "incident_id": "0e0eb3b4-08fc-4061-8588-ef874b278f74",
+        "federation_id": "b765df3b-c418-4a15-b79f-3cbc09e475dc",
+        "actor_id": "1b95eb7e-ef40-436c-ab7a-895c9fcb4907",
+        "action_type": "WORKER_CHECKED_IN",
+        "previous_state": {
+          "member_status": "ASSIGNED"
+        },
+        "new_state": {
+          "member_status": "ACTIVE",
+          "check_in_time": "2026-09-20T09:42:47.548Z",
+          "verification_method": "QR_EMERGENCY_VERIFICATION"
+        },
+        "notes": "Worker Hitesh Solanki (Plumber) checked in on scene.",
+        "created_at": "2026-09-20T09:42:47.860Z"
+      },
+      {
+        "id": "60ca4abe-0105-44e6-8614-8214b1d144ab",
+        "incident_id": "0e0eb3b4-08fc-4061-8588-ef874b278f74",
+        "federation_id": "b765df3b-c418-4a15-b79f-3cbc09e475dc",
+        "actor_id": "70fbdb46-120f-459e-a616-67b4f676f5d0",
+        "action_type": "EMERGENCY_VERIFIED",
+        "previous_state": {
+          "is_verified": false,
+          "team_field_status": "ON_SITE"
+        },
+        "new_state": {
+          "is_verified": true,
+          "verified_at": "2026-09-20T09:42:42.944Z",
+          "team_field_status": "ON_SITE"
+        },
+        "notes": "Emergency verified on scene via code/QR by worker 59eca4ff-a589-4363-ad76-24a4ff5b6e2e.",
+        "created_at": "2026-09-20T09:42:44.075Z"
+      },
+      {
+        "id": "350333aa-ea64-41d4-8829-b803aecc82b5",
+        "incident_id": "0e0eb3b4-08fc-4061-8588-ef874b278f74",
+        "federation_id": "b765df3b-c418-4a15-b79f-3cbc09e475dc",
+        "actor_id": "70fbdb46-120f-459e-a616-67b4f676f5d0",
+        "action_type": "WORKER_CHECKED_IN",
+        "previous_state": {
+          "member_status": "ASSIGNED"
+        },
+        "new_state": {
+          "member_status": "ACTIVE",
+          "check_in_time": "2026-09-20T09:42:43.455Z",
+          "verification_method": "QR_VERIFICATION"
+        },
+        "notes": "Worker Ravi Patel (Team Lead) checked in on scene.",
+        "created_at": "2026-09-20T09:42:43.763Z"
+      }
+    ],
+    "2b9bcbc4-d702-465e-8bc2-535b028776a5": [
+      {
+        "id": "66021790-671a-4fe3-9995-5daa80929aaf",
+        "incident_id": "2b9bcbc4-d702-465e-8bc2-535b028776a5",
+        "federation_id": "b765df3b-c418-4a15-b79f-3cbc09e475dc",
+        "actor_id": "096b0708-3193-41a6-9f49-03ff8903a0ed",
+        "action_type": "EMERGENCY_CLOSED",
+        "previous_state": {
+          "status": "RESOLVED"
+        },
+        "new_state": {
+          "status": "CLOSED",
+          "closure_notes": "Cooperative disaster response verified and incident closed formally."
+        },
+        "notes": "Emergency resolution approved and closed.",
+        "created_at": "2026-09-20T10:19:21.090Z"
+      },
+      {
+        "id": "3a965cb0-aab1-4362-b728-ed4d0c3aa44c",
+        "incident_id": "2b9bcbc4-d702-465e-8bc2-535b028776a5",
+        "federation_id": "b765df3b-c418-4a15-b79f-3cbc09e475dc",
+        "actor_id": "70fbdb46-120f-459e-a616-67b4f676f5d0",
+        "action_type": "RESOLUTION_REQUESTED",
+        "previous_state": {
+          "status": "ACTIVE",
+          "team_field_status": "READY_FOR_RESOLUTION"
+        },
+        "new_state": {
+          "status": "RESOLVED",
+          "team_field_status": "READY_FOR_RESOLUTION",
+          "resolution_summary": "Pressure test passed at 4.5 bar. All clear."
+        },
+        "notes": "Resolution requested by worker 59eca4ff-a589-4363-ad76-24a4ff5b6e2e: Pressure test passed at 4.5 bar. All clear.",
+        "created_at": "2026-09-20T10:19:20.431Z"
+      },
+      {
+        "id": "141357a9-cfef-481e-8a2c-5d0078c8f4c9",
+        "incident_id": "2b9bcbc4-d702-465e-8bc2-535b028776a5",
+        "federation_id": "b765df3b-c418-4a15-b79f-3cbc09e475dc",
+        "actor_id": "096b0708-3193-41a6-9f49-03ff8903a0ed",
+        "action_type": "EMERGENCY_REOPENED",
+        "previous_state": {
+          "status": "RESOLVED"
+        },
+        "new_state": {
+          "status": "ACTIVE",
+          "closure_notes": "Re-check auxiliary riser pressure."
+        },
+        "notes": "Emergency reopened for further work. Notes: Re-check auxiliary riser pressure.",
+        "created_at": "2026-09-20T10:19:19.609Z"
+      },
+      {
+        "id": "78efea7a-f0d9-4585-8fb5-9bf788f56a0c",
+        "incident_id": "2b9bcbc4-d702-465e-8bc2-535b028776a5",
+        "federation_id": "b765df3b-c418-4a15-b79f-3cbc09e475dc",
+        "actor_id": "70fbdb46-120f-459e-a616-67b4f676f5d0",
+        "action_type": "RESOLUTION_REQUESTED",
+        "previous_state": {
+          "status": "ACTIVE",
+          "team_field_status": "READY_FOR_RESOLUTION"
+        },
+        "new_state": {
+          "status": "RESOLVED",
+          "team_field_status": "READY_FOR_RESOLUTION",
+          "resolution_summary": "Society water tank burst contained and auxiliary line sealed."
+        },
+        "notes": "Resolution requested by worker 59eca4ff-a589-4363-ad76-24a4ff5b6e2e: Society water tank burst contained and auxiliary line sealed.",
+        "created_at": "2026-09-20T10:19:17.914Z"
+      },
+      {
+        "id": "efa95d54-c147-4f29-85af-826882a154dc",
+        "incident_id": "2b9bcbc4-d702-465e-8bc2-535b028776a5",
+        "federation_id": "b765df3b-c418-4a15-b79f-3cbc09e475dc",
+        "actor_id": "70fbdb46-120f-459e-a616-67b4f676f5d0",
+        "action_type": "TEAM_FIELD_STATUS_UPDATED",
+        "previous_state": {
+          "field_status": "ON_SITE"
+        },
+        "new_state": {
+          "field_status": "WORK_IN_PROGRESS"
+        },
+        "notes": "Team field status changed to WORK_IN_PROGRESS.",
+        "created_at": "2026-09-20T10:19:07.418Z"
+      },
+      {
+        "id": "48948a40-2313-4ad0-8d44-4f22423a1366",
+        "incident_id": "2b9bcbc4-d702-465e-8bc2-535b028776a5",
+        "federation_id": "b765df3b-c418-4a15-b79f-3cbc09e475dc",
+        "actor_id": "1b95eb7e-ef40-436c-ab7a-895c9fcb4907",
+        "action_type": "WORKER_CHECKED_IN",
+        "previous_state": {
+          "member_status": "ASSIGNED"
+        },
+        "new_state": {
+          "member_status": "ACTIVE",
+          "check_in_time": "2026-09-20T10:19:06.639Z",
+          "verification_method": "QR_EMERGENCY_VERIFICATION"
+        },
+        "notes": "Worker Hitesh Solanki (Plumber) checked in on scene.",
+        "created_at": "2026-09-20T10:19:06.851Z"
+      },
+      {
+        "id": "a583800c-20eb-45b5-a99f-7dc17f9ccdef",
+        "incident_id": "2b9bcbc4-d702-465e-8bc2-535b028776a5",
+        "federation_id": "b765df3b-c418-4a15-b79f-3cbc09e475dc",
+        "actor_id": "70fbdb46-120f-459e-a616-67b4f676f5d0",
+        "action_type": "EMERGENCY_VERIFIED",
+        "previous_state": {
+          "is_verified": false,
+          "team_field_status": "ON_SITE"
+        },
+        "new_state": {
+          "is_verified": true,
+          "verified_at": "2026-09-20T10:19:03.828Z",
+          "team_field_status": "ON_SITE"
+        },
+        "notes": "Emergency verified on scene via code/QR by worker 59eca4ff-a589-4363-ad76-24a4ff5b6e2e.",
+        "created_at": "2026-09-20T10:19:04.624Z"
+      },
+      {
+        "id": "f182e522-035c-48f5-89b6-ed94cecbe69d",
+        "incident_id": "2b9bcbc4-d702-465e-8bc2-535b028776a5",
+        "federation_id": "b765df3b-c418-4a15-b79f-3cbc09e475dc",
+        "actor_id": "70fbdb46-120f-459e-a616-67b4f676f5d0",
+        "action_type": "WORKER_CHECKED_IN",
+        "previous_state": {
+          "member_status": "ASSIGNED"
+        },
+        "new_state": {
+          "member_status": "ACTIVE",
+          "check_in_time": "2026-09-20T10:19:04.228Z",
+          "verification_method": "QR_VERIFICATION"
+        },
+        "notes": "Worker Ravi Patel (Team Lead) checked in on scene.",
+        "created_at": "2026-09-20T10:19:04.478Z"
+      }
+    ],
+    "618874c8-6dc8-40da-9846-800ff776531a": [
+      {
+        "id": "3608023a-aedb-4522-a4e8-53cb0820d31a",
+        "incident_id": "618874c8-6dc8-40da-9846-800ff776531a",
+        "federation_id": "b765df3b-c418-4a15-b79f-3cbc09e475dc",
+        "actor_id": "096b0708-3193-41a6-9f49-03ff8903a0ed",
+        "action_type": "WORKER_ADDED",
+        "previous_state": {
+          "acceptedWorkerCount": 1
+        },
+        "new_state": {
+          "addedWorkerId": "59eca4ff-a589-4363-ad76-24a4ff5b6e2e",
+          "role": "Plumber",
+          "workerName": "Ravi Patel",
+          "teamStatus": "FORMING"
+        },
+        "notes": "Worker Ravi Patel added to emergency response team as Plumber",
+        "created_at": "2026-09-20T11:30:57.128Z"
+      }
+    ],
+    "8f9a546c-c343-44da-9c1d-9368fe403d1a": [
+      {
+        "id": "de43f04c-21cd-4153-9298-1a29fbd01fd8",
+        "incident_id": "8f9a546c-c343-44da-9c1d-9368fe403d1a",
+        "federation_id": "b765df3b-c418-4a15-b79f-3cbc09e475dc",
+        "actor_id": "096b0708-3193-41a6-9f49-03ff8903a0ed",
+        "action_type": "EMERGENCY_CLOSED",
+        "previous_state": {
+          "status": "RESOLVED"
+        },
+        "new_state": {
+          "status": "CLOSED",
+          "closure_notes": "Cooperative disaster response verified and incident closed formally."
+        },
+        "notes": "Emergency resolution approved and closed.",
+        "created_at": "2026-09-20T11:38:53.030Z"
+      },
+      {
+        "id": "4623dbd2-4cc2-4673-8670-ac593a28d532",
+        "incident_id": "8f9a546c-c343-44da-9c1d-9368fe403d1a",
+        "federation_id": "b765df3b-c418-4a15-b79f-3cbc09e475dc",
+        "actor_id": "70fbdb46-120f-459e-a616-67b4f676f5d0",
+        "action_type": "RESOLUTION_REQUESTED",
+        "previous_state": {
+          "status": "ACTIVE",
+          "team_field_status": "READY_FOR_RESOLUTION"
+        },
+        "new_state": {
+          "status": "RESOLVED",
+          "team_field_status": "READY_FOR_RESOLUTION",
+          "resolution_summary": "Pressure test passed at 4.5 bar. All clear."
+        },
+        "notes": "Resolution requested by worker 59eca4ff-a589-4363-ad76-24a4ff5b6e2e: Pressure test passed at 4.5 bar. All clear.",
+        "created_at": "2026-09-20T11:38:52.353Z"
+      },
+      {
+        "id": "03213762-90ab-496b-b766-21497ba731a8",
+        "incident_id": "8f9a546c-c343-44da-9c1d-9368fe403d1a",
+        "federation_id": "b765df3b-c418-4a15-b79f-3cbc09e475dc",
+        "actor_id": "096b0708-3193-41a6-9f49-03ff8903a0ed",
+        "action_type": "EMERGENCY_REOPENED",
+        "previous_state": {
+          "status": "RESOLVED"
+        },
+        "new_state": {
+          "status": "ACTIVE",
+          "closure_notes": "Re-check auxiliary riser pressure."
+        },
+        "notes": "Emergency reopened for further work. Notes: Re-check auxiliary riser pressure.",
+        "created_at": "2026-09-20T11:38:51.554Z"
+      },
+      {
+        "id": "6831a965-452a-48ab-905d-1a9c9c815055",
+        "incident_id": "8f9a546c-c343-44da-9c1d-9368fe403d1a",
+        "federation_id": "b765df3b-c418-4a15-b79f-3cbc09e475dc",
+        "actor_id": "70fbdb46-120f-459e-a616-67b4f676f5d0",
+        "action_type": "RESOLUTION_REQUESTED",
+        "previous_state": {
+          "status": "ACTIVE",
+          "team_field_status": "READY_FOR_RESOLUTION"
+        },
+        "new_state": {
+          "status": "RESOLVED",
+          "team_field_status": "READY_FOR_RESOLUTION",
+          "resolution_summary": "Society water tank burst contained and auxiliary line sealed."
+        },
+        "notes": "Resolution requested by worker 59eca4ff-a589-4363-ad76-24a4ff5b6e2e: Society water tank burst contained and auxiliary line sealed.",
+        "created_at": "2026-09-20T11:38:49.374Z"
+      },
+      {
+        "id": "b6b93c23-56b6-40b0-ad6c-09ea5e852ccf",
+        "incident_id": "8f9a546c-c343-44da-9c1d-9368fe403d1a",
+        "federation_id": "b765df3b-c418-4a15-b79f-3cbc09e475dc",
+        "actor_id": "70fbdb46-120f-459e-a616-67b4f676f5d0",
+        "action_type": "TEAM_FIELD_STATUS_UPDATED",
+        "previous_state": {
+          "field_status": "ON_SITE"
+        },
+        "new_state": {
+          "field_status": "WORK_IN_PROGRESS"
+        },
+        "notes": "Team field status changed to WORK_IN_PROGRESS.",
+        "created_at": "2026-09-20T11:38:36.555Z"
+      },
+      {
+        "id": "cbd68021-bc6d-4dfb-a894-0fa8c5704888",
+        "incident_id": "8f9a546c-c343-44da-9c1d-9368fe403d1a",
+        "federation_id": "b765df3b-c418-4a15-b79f-3cbc09e475dc",
+        "actor_id": "1b95eb7e-ef40-436c-ab7a-895c9fcb4907",
+        "action_type": "WORKER_CHECKED_IN",
+        "previous_state": {
+          "member_status": "ASSIGNED"
+        },
+        "new_state": {
+          "member_status": "ACTIVE",
+          "check_in_time": "2026-09-20T11:38:35.758Z",
+          "verification_method": "QR_EMERGENCY_VERIFICATION"
+        },
+        "notes": "Worker Hitesh Solanki (Plumber) checked in on scene.",
+        "created_at": "2026-09-20T11:38:36.009Z"
+      },
+      {
+        "id": "9d21726d-8bf9-45c2-9f64-a7a646087cd2",
+        "incident_id": "8f9a546c-c343-44da-9c1d-9368fe403d1a",
+        "federation_id": "b765df3b-c418-4a15-b79f-3cbc09e475dc",
+        "actor_id": "70fbdb46-120f-459e-a616-67b4f676f5d0",
+        "action_type": "EMERGENCY_VERIFIED",
+        "previous_state": {
+          "is_verified": false,
+          "team_field_status": "ON_SITE"
+        },
+        "new_state": {
+          "is_verified": true,
+          "verified_at": "2026-09-20T11:38:33.043Z",
+          "team_field_status": "ON_SITE"
+        },
+        "notes": "Emergency verified on scene via code/QR by worker 59eca4ff-a589-4363-ad76-24a4ff5b6e2e.",
+        "created_at": "2026-09-20T11:38:33.793Z"
+      },
+      {
+        "id": "74058c9c-4ca6-42b2-b780-88c50fc1b168",
+        "incident_id": "8f9a546c-c343-44da-9c1d-9368fe403d1a",
+        "federation_id": "b765df3b-c418-4a15-b79f-3cbc09e475dc",
+        "actor_id": "70fbdb46-120f-459e-a616-67b4f676f5d0",
+        "action_type": "WORKER_CHECKED_IN",
+        "previous_state": {
+          "member_status": "ASSIGNED"
+        },
+        "new_state": {
+          "member_status": "ACTIVE",
+          "check_in_time": "2026-09-20T11:38:33.423Z",
+          "verification_method": "QR_VERIFICATION"
+        },
+        "notes": "Worker Ravi Patel (Team Lead) checked in on scene.",
+        "created_at": "2026-09-20T11:38:33.635Z"
+      }
+    ]
+  },
+  "supportRequests": {
+    "a14e2aea-9e54-4bb0-8dae-313a3ecf2678": {
+      "id": "a14e2aea-9e54-4bb0-8dae-313a3ecf2678",
+      "incident_id": "bf7eeccd-b1f3-43a0-82ce-c4f79c037e39",
+      "requesting_federation_id": "b765df3b-c418-4a15-b79f-3cbc09e475dc",
+      "requested_by_admin_id": "096b0708-3193-41a6-9f49-03ff8903a0ed",
+      "request_type": "ADDITIONAL_TEAM",
+      "target_federation_id": null,
+      "requested_roles": [
+        "Heavy Machinery Operator",
+        "Structural Engineer"
+      ],
+      "requested_worker_count": 4,
+      "reason": "Shaft structural integrity compromised; backup deconstruction crew requested.",
+      "status": "PENDING_REVIEW",
+      "admin_notes": null,
+      "created_at": "2026-09-20T09:38:21.492Z",
+      "updated_at": "2026-09-20T09:38:21.492Z"
+    },
+    "70b0f657-952f-4280-bcc4-651df63298d1": {
+      "id": "70b0f657-952f-4280-bcc4-651df63298d1",
+      "incident_id": "924dc158-888d-4ac3-bd85-8edbad8aa2c9",
+      "requesting_federation_id": "b765df3b-c418-4a15-b79f-3cbc09e475dc",
+      "requested_by_admin_id": "096b0708-3193-41a6-9f49-03ff8903a0ed",
+      "request_type": "EXTERNAL_FEDERATION_SUPPORT",
+      "target_federation_id": "11111111-2222-3333-4444-555555555555",
+      "requested_roles": [
+        "Heavy Machinery Operator"
+      ],
+      "requested_worker_count": 2,
+      "reason": "Ahmedabad local heavy submersible pump fleet fully committed; mutual aid requested.",
+      "status": "ACCEPTED",
+      "admin_notes": "Surat support crew deployed with 2 high-capacity pumps",
+      "created_at": "2026-09-20T09:40:20.608Z",
+      "updated_at": "2026-09-20T09:40:28.604Z"
+    }
+  },
+  "escalationStages": {},
+  "timeRules": {}
+}

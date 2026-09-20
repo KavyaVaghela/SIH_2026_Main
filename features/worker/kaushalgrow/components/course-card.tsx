@@ -54,7 +54,7 @@ export function CourseCard({ course, onCourseClick }: CourseCardProps) {
             </div>
             <div>
               <span className="text-[10px] text-white/80 uppercase font-mono tracking-wider font-semibold block">
-                {course.level || "Skill Module"}
+                {course.difficulty || "Beginner"}
               </span>
               <span className="text-xs font-bold text-white line-clamp-1">
                 {course.category}
@@ -78,22 +78,22 @@ export function CourseCard({ course, onCourseClick }: CourseCardProps) {
           <div className="space-y-1.5 pt-1">
             <div className="flex items-center justify-between text-[11px]">
               <span className="text-muted-foreground font-medium">Progress:</span>
-              <span className="font-bold text-foreground font-mono">{course.progress}%</span>
+              <span className="font-bold text-foreground font-mono">{course.progress ?? 0}%</span>
             </div>
-            <Progress value={course.progress} className="h-2 bg-muted" />
+            <Progress value={course.progress ?? 0} className="h-2 bg-muted" />
           </div>
 
           {/* Action Button */}
           <Button
             onClick={() => onCourseClick(course)}
             className={`w-full text-xs font-semibold h-9 rounded-lg gap-2 ${
-              course.progress > 0
+              (course.progress ?? 0) > 0
                 ? "bg-emerald-700 hover:bg-emerald-800 text-white"
                 : "bg-slate-900 hover:bg-slate-800 dark:bg-slate-100 dark:hover:bg-slate-200 text-white dark:text-slate-900"
             }`}
           >
             <PlayCircle className="h-4 w-4" />
-            <span>{course.buttonText}</span>
+            <span>{course.buttonText || "Start Learning"}</span>
           </Button>
         </div>
       </CardContent>

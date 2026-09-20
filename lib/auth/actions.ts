@@ -440,7 +440,7 @@ export async function signOut() {
   if (error) {
     return { success: false, error: error.message };
   }
-  return { success: true, redirectUrl: "/login" };
+  return { success: true, redirectUrl: "/" };
 }
 
 /**

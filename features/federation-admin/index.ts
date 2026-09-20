@@ -13,11 +13,10 @@ export * from "./components/dashboard-section";
 
 // Charts
 export * from "./components/charts/job-status-chart";
-export * from "./components/charts/jobs-comparative-chart";
+export * from "./components/recent-activity-card";
 export * from "./components/charts/profession-distribution-chart";
 export * from "./components/charts/job-activity-chart";
 export * from "./components/charts/worker-performance-chart";
-export * from "./components/charts/demand-distribution-chart";
 
 // Stage 2: Federation Information & Change Requests
 export * from "./federation-information";
@@ -27,6 +26,9 @@ export * from "./worker-information";
 
 // Stage 4: Workforce Management (Add Worker & Account Status)
 export * from "./workforce-management";
+
+// Stage 5: Welfare & Development
+export * from "./welfare";
 
 // Stage 6: Complaint Management
 export * from "./complaint-management";

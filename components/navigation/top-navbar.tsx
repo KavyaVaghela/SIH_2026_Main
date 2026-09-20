@@ -1,23 +1,26 @@
 "use client";
 
 import * as React from "react";
-import { Building2, Menu } from "lucide-react";
+import { Menu } from "lucide-react";
+import { Logo } from "@/components/ui/logo";
 import { NotificationCenter } from "./notification-center";
 import { UserMenu } from "./user-menu";
+import type { PlatformRole } from "@/config/navigation";
 import { cn } from "@/lib/utils";
 
 export interface TopNavbarProps {
   platformTitle?: string;
   userName?: string;
   userRole?: string;
+  role?: PlatformRole;
   onToggleMobileMenu?: () => void;
   className?: string;
 }
 
 export function TopNavbar({
-  platformTitle = "KaushalyaSetu",
   userName,
   userRole,
+  role,
   onToggleMobileMenu,
   className,
 }: TopNavbarProps) {
@@ -35,23 +38,11 @@ export function TopNavbar({
             </button>
           )}
 
-          <div className="flex items-center space-x-2">
-            <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-primary text-primary-foreground shadow-sm">
-              <Building2 className="h-5 w-5" />
-            </div>
-            <div className="flex flex-col">
-              <span className="font-bold text-sm leading-tight text-foreground">{platformTitle}</span>
-              <span className="text-[10px] text-emerald-600 dark:text-emerald-400 font-medium">
-                Community Owned Digital Marketplace
-              </span>
-            </div>
-          </div>
+          <Logo href="/" showTagline size="md" />
         </div>
 
-        {/* Global Search Bar removed per Customer Task 7 guidelines */}
-
         <div className="flex items-center space-x-2 sm:space-x-3">
-          <NotificationCenter />
+          <NotificationCenter role={role} />
           <UserMenu userName={userName} userRole={userRole} />
         </div>
       </div>

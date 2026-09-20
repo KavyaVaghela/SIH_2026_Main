@@ -47,6 +47,7 @@ export interface BookingListItem {
   status: BookingStatus;
   lifecycleStage: BookingLifecycleStage;
   paymentStatus: PaymentStatus;
+  priority?: "LOW" | "MODERATE" | "HIGH" | string | null;
 }
 
 export interface BookingDetails extends BookingListItem {
