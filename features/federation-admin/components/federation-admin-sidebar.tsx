@@ -61,6 +61,11 @@ export function FederationAdminSidebar({
       icon: <Briefcase className="h-4 w-4 shrink-0" />,
     },
     {
+      title: "Large Projects",
+      href: "/federation-admin/projects",
+      icon: <Building2 className="h-4 w-4 shrink-0" />,
+    },
+    {
       title: "Welfare & Development",
       href: "/federation-admin/welfare",
       icon: <HeartHandshake className="h-4 w-4 shrink-0" />,
