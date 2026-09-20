@@ -200,6 +200,121 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ booking: mapDbBooking(updated) });
     }
 
+    if (action === "allocate_worker") {
+      const { workerId, adminId } = body;
+      if (!bookingId || !workerId) {
+        return NextResponse.json({ error: "bookingId and workerId are required for allocation" }, { status: 400 });
+      }
+
+      // 1. Verify booking exists
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const { data: bookingRecord, error: bErr } = await (supabase.from("bookings") as any)
+        .select("*")
+        .eq("id", bookingId)
+        .single();
+
+      if (bErr || !bookingRecord) {
+        return NextResponse.json({ error: "Booking not found" }, { status: 404 });
+      }
+
+      // 2. Concurrency-safe atomic lock: worker must be AVAILABLE
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const { data: lockedWorker, error: lockErr } = await (supabase.from("workers") as any)
+        .update({
+          availability_status: "BUSY",
+          updated_at: new Date().toISOString(),
+        })
+        .eq("id", workerId)
+        .eq("availability_status", "AVAILABLE")
+        .select("id, profile_id, profession")
+        .maybeSingle();
+
+      if (lockErr || !lockedWorker) {
+        return NextResponse.json(
+          { error: "Worker is no longer available (currently busy or allocated to another booking)." },
+          { status: 409 }
+        );
+      }
+
+      // 3. If previous worker was assigned and different, release previous worker
+      if (bookingRecord.worker_id && bookingRecord.worker_id !== workerId) {
+        try {
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          await (supabase.from("workers") as any)
+            .update({ availability_status: "AVAILABLE", updated_at: new Date().toISOString() })
+            .eq("id", bookingRecord.worker_id);
+        } catch (relErr) {
+          console.warn("Release old worker notice:", relErr);
+        }
+      }
+
+      // 4. Update booking with worker_id and status BOOKING_CONFIRMED
+      const now = new Date().toISOString();
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const { data: updatedBooking, error: upErr } = await (supabase.from("bookings") as any)
+        .update({
+          worker_id: workerId,
+          status: "BOOKING_CONFIRMED",
+          updated_at: now,
+        })
+        .eq("id", bookingId)
+        .select(`
+          *,
+          customer:profiles!customer_id (full_name, phone, email),
+          worker:workers (
+            id,
+            profession,
+            profile:profiles!profile_id (full_name, phone)
+          ),
+          services (title, service_categories (name)),
+          addresses (address_line1, city),
+          federations (name)
+        `)
+        .single();
+
+      if (upErr || !updatedBooking) {
+        // Revert worker lock if booking update failed
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        await (supabase.from("workers") as any)
+          .update({ availability_status: "AVAILABLE", updated_at: now })
+          .eq("id", workerId);
+        return NextResponse.json({ error: upErr?.message || "Failed to allocate worker" }, { status: 500 });
+      }
+
+      // 5. Record status history
+      try {
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        await (supabase.from("booking_status_history") as any).insert({
+          booking_id: bookingId,
+          previous_status: bookingRecord.status,
+          new_status: "BOOKING_CONFIRMED",
+          changed_by: adminId || "b0ef9604-54c8-4ad1-9a7a-c353cfd339ef",
+          notes: reason || "Worker allocated by Administrator",
+        });
+      } catch (histErr) {
+        console.warn("Status history note:", histErr);
+      }
+
+      // 6. Notify allocated worker
+      if (lockedWorker.profile_id) {
+        try {
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          await (supabase.from("notifications") as any).insert({
+            profile_id: lockedWorker.profile_id,
+            title: "Emergency Service Assigned by Admin",
+            message: `You have been allocated to emergency booking ${bookingRecord.booking_number}.`,
+            type: "warning",
+            is_read: false,
+            metadata: { bookingId, priority: "HIGH" },
+          });
+        } catch (nErr) {
+          console.warn("Worker notif note:", nErr);
+        }
+      }
+
+      return NextResponse.json({ booking: mapDbBooking(updatedBooking) });
+    }
+
     if (action === "create") {
       const isUuid = (str?: string | null) =>
         Boolean(str && /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(str));
@@ -208,9 +323,9 @@ export async function POST(request: NextRequest) {
         ? createPayload.customerId
         : "b0ef9604-54c8-4ad1-9a7a-c353cfd339ef"; // Prince Patel
 
-      const targetWorkerId = isUuid(createPayload.workerId)
+      let targetWorkerId = isUuid(createPayload.workerId)
         ? createPayload.workerId
-        : "59eca4ff-a589-4363-ad76-24a4ff5b6e2e"; // Ravi Patel
+        : null;
 
       const targetFederationId = isUuid(createPayload.federationId)
         ? createPayload.federationId
@@ -230,24 +345,45 @@ export async function POST(request: NextRequest) {
       const scheduledEnd =
         createPayload.scheduledEndAt || new Date(Date.now() + 2 * 60 * 60 * 1000).toISOString();
 
+      const targetPriority: "LOW" | "MODERATE" | "HIGH" | null =
+        createPayload.priority && ["LOW", "MODERATE", "HIGH"].includes(createPayload.priority)
+          ? createPayload.priority
+          : null;
+
+      const bookingStatus = "REQUEST_SENT";
+
+      if (!targetWorkerId && !createPayload.workerId) {
+        // Assign default dev worker or leave pending
+        targetWorkerId = "59eca4ff-a589-4363-ad76-24a4ff5b6e2e"; // Ravi Patel default
+      }
+
+      const problemDescription = createPayload.problemDescription || "Service request initiated by customer";
+
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      const { data: newBooking, error: insertErr } = await (supabase.from("bookings") as any)
-        .insert({
-          booking_number: bookingNumber,
-          customer_id: targetCustomerId,
-          worker_id: targetWorkerId,
-          service_id: targetServiceId,
-          federation_id: targetFederationId,
-          address_id: targetAddressId,
-          status: "REQUEST_SENT",
-          problem_description: createPayload.problemDescription || "Service request initiated by customer",
-          otp_code: "940218",
-          scheduled_start_at: scheduledStart,
-          scheduled_end_at: scheduledEnd,
-          total_amount: totalAmount,
-          platform_fee: Math.round(totalAmount * 0.05),
-          worker_earnings: Math.round(totalAmount * 0.85),
-        })
+      const insertData: Record<string, any> = {
+        booking_number: bookingNumber,
+        customer_id: targetCustomerId,
+        worker_id: targetWorkerId,
+        service_id: targetServiceId,
+        federation_id: targetFederationId,
+        address_id: targetAddressId,
+        status: bookingStatus,
+        problem_description: problemDescription,
+        otp_code: "940218",
+        scheduled_start_at: scheduledStart,
+        scheduled_end_at: scheduledEnd,
+        total_amount: totalAmount,
+        platform_fee: Math.round(totalAmount * 0.05),
+        worker_earnings: Math.round(totalAmount * 0.85),
+      };
+
+      if (targetPriority) {
+        insertData.priority = targetPriority;
+      }
+
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      let { data: newBooking, error: insertErr } = await (supabase.from("bookings") as any)
+        .insert(insertData)
         .select(`
           *,
           customer:profiles!customer_id (full_name, phone, email),
@@ -262,6 +398,28 @@ export async function POST(request: NextRequest) {
         `)
         .single();
 
+      if (insertErr && targetPriority && insertErr.message?.includes("priority")) {
+        delete insertData.priority;
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        const retry = await (supabase.from("bookings") as any)
+          .insert(insertData)
+          .select(`
+            *,
+            customer:profiles!customer_id (full_name, phone, email),
+            worker:workers (
+              id,
+              profession,
+              profile:profiles!profile_id (full_name, phone)
+            ),
+            services (title, service_categories (name)),
+            addresses (address_line1, city),
+            federations (name)
+          `)
+          .single();
+        newBooking = retry.data;
+        insertErr = retry.error;
+      }
+
       if (insertErr || !newBooking) {
         console.error("Booking create error:", insertErr);
         return NextResponse.json({ error: insertErr?.message || "Failed to create booking" }, { status: 500 });
@@ -273,15 +431,17 @@ export async function POST(request: NextRequest) {
         await (supabase.from("booking_status_history") as any).insert({
           booking_id: newBooking.id,
           previous_status: null,
-          new_status: "REQUEST_SENT",
+          new_status: newBooking.status || "REQUEST_SENT",
           changed_by: targetCustomerId,
-          notes: "Booking request created by customer",
+          notes: targetPriority
+            ? `Booking created with ${targetPriority} priority`
+            : "Booking request created by customer",
         });
       } catch (histErr) {
         console.warn("Status history note:", histErr);
       }
 
-      return NextResponse.json({ booking: mapDbBooking(newBooking) });
+      return NextResponse.json({ booking: mapDbBooking(newBooking, targetPriority) });
     }
 
     return NextResponse.json({ error: `Unknown action: ${action}` }, { status: 400 });
@@ -292,13 +452,21 @@ export async function POST(request: NextRequest) {
 }
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
-function mapDbBooking(b: any) {
+function mapDbBooking(b: any, fallbackPriority?: string | null) {
   const customerName = b.customer?.full_name || "Prince Patel";
   const customerPhone = b.customer?.phone || "+91 98765 43210";
   const workerProfile = b.worker?.profile;
   const workerName = workerProfile?.full_name || "Ravi Patel";
   const workerPhone = workerProfile?.phone || "+91 98250 11021";
   const addressText = b.addresses ? `${b.addresses.address_line1}, ${b.addresses.city || "Ahmedabad"}` : "Satellite, Ahmedabad";
+
+  let priority = b.priority || fallbackPriority || null;
+  if (!priority && typeof b.problem_description === "string") {
+    const match = b.problem_description.match(/\[PRIORITY:\s*(LOW|MODERATE|HIGH)\]/i);
+    if (match) {
+      priority = match[1].toUpperCase();
+    }
+  }
 
   return {
     id: b.id,
@@ -317,6 +485,7 @@ function mapDbBooking(b: any) {
     addressId: b.address_id,
     addressText,
     status: b.status,
+    priority: priority || null,
     problemDescription: b.problem_description,
     problemPhotoUrl: b.problem_photo_url || null,
     otpCode: b.otp_code || "940218",

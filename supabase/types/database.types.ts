@@ -35,10 +35,50 @@ export type InvoiceStatus = "draft" | "issued" | "paid" | "cancelled" | "overdue
 export type ComplaintStatus = "OPEN" | "IN_REVIEW" | "RESOLVED";
 export type ApplicationStatus = "PENDING" | "APPROVED" | "REJECTED";
 export type CertificationStatus = "VERIFIED" | "EXPIRING_SOON" | "EXPIRED";
+export type EmergencyPriority = "LOW" | "MODERATE" | "HIGH";
+
+export type EmergencyIncidentStatus =
+  | "AWAITING_RESPONSE"
+  | "DISPATCHING"
+  | "TEAM_FORMING"
+  | "ACTIVE"
+  | "STAFFING_SHORTAGE"
+  | "RESOLVED"
+  | "CLOSED";
+
+export type EmergencyIncidentSeverity = "LOW" | "MEDIUM" | "HIGH" | "CRITICAL";
 
 export interface Database {
   public: {
     Tables: {
+      emergency_incidents: {
+        Row: {
+          id: string;
+          emergency_id: string;
+          customer_id: string;
+          federation_id: string | null;
+          category_name: string;
+          emergency_type: string;
+          severity: EmergencyIncidentSeverity;
+          status: EmergencyIncidentStatus;
+          location: string;
+          address_details: Json;
+          description: string;
+          evidence_photos: string[];
+          approx_people_affected: number;
+          immediate_danger: boolean;
+          danger_details: string | null;
+          metadata: Json;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: Omit<Database["public"]["Tables"]["emergency_incidents"]["Row"], "id" | "created_at" | "updated_at"> & {
+          id?: string;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: Partial<Database["public"]["Tables"]["emergency_incidents"]["Insert"]>;
+      };
       federations: {
         Row: {
           id: string;
@@ -280,6 +320,7 @@ export interface Database {
           total_amount: number;
           platform_fee: number;
           worker_earnings: number;
+          priority?: EmergencyPriority | null;
           created_at: string;
           updated_at: string;
         };

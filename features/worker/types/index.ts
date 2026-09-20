@@ -64,6 +64,7 @@ export interface WorkerJobItem {
   workerEarnings: number;
   status: WorkerRequestStatus;
   urgency: "EMERGENCY" | "STANDARD";
+  priority?: "LOW" | "MODERATE" | "HIGH" | null;
   cooperativeName: string;
   isMultiWorkerRequest?: boolean;
   timeSlot?: string;

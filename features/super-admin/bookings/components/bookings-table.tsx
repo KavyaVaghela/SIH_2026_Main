@@ -151,12 +151,24 @@ export function BookingsTable({
               <TableRow key={booking.id} className="hover:bg-muted/40 transition-colors">
                 {/* Booking ID */}
                 <TableCell>
-                  <Link
-                    href={`/super-admin/bookings/${booking.id}`}
-                    className="font-mono font-bold text-xs text-foreground hover:text-emerald-700 hover:underline"
-                  >
-                    {booking.bookingNumber}
-                  </Link>
+                  <div className="space-y-1">
+                    <Link
+                      href={`/super-admin/bookings/${booking.id}`}
+                      className="font-mono font-bold text-xs text-foreground hover:text-emerald-700 hover:underline block"
+                    >
+                      {booking.bookingNumber}
+                    </Link>
+                    {booking.priority === "HIGH" && (
+                      <span className="inline-flex items-center px-1.5 py-0.5 rounded text-[9px] font-bold bg-rose-600 text-white animate-pulse shadow-sm shadow-rose-500/50">
+                        HIGH EMERGENCY
+                      </span>
+                    )}
+                    {booking.priority && booking.priority !== "HIGH" && (
+                      <span className="inline-flex items-center px-1.5 py-0.2 rounded text-[9px] font-semibold bg-amber-100 dark:bg-amber-950 text-amber-800 dark:text-amber-300 border border-amber-300/40">
+                        {booking.priority}
+                      </span>
+                    )}
+                  </div>
                 </TableCell>
 
                 {/* Customer */}
