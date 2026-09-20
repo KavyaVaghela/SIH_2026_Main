@@ -9,6 +9,7 @@ import {
   Users,
   Briefcase,
   AlertTriangle,
+  ShieldAlert,
   Building,
   HeartHandshake,
   HelpCircle,
@@ -78,6 +79,11 @@ export function FederationAdminSidebar({
       title: "Dashboard",
       href: "/federation-admin",
       icon: <LayoutDashboard className="h-4 w-4 shrink-0" />,
+    },
+    {
+      title: "Emergency Control",
+      href: "/federation-admin/emergency",
+      icon: <ShieldAlert className="h-4 w-4 shrink-0 text-red-500" />,
     },
     {
       title: "Federation Information",
