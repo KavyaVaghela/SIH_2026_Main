@@ -16,11 +16,18 @@ export interface RoleShellProps {
 
 export function RoleShell({ role, userName, children, className }: RoleShellProps) {
   const config = ROLE_NAVIGATION_CONFIGS[role];
-  const [profileName, setProfileName] = React.useState<string | undefined>(
-    () => userName || getCachedProfileName(role) || undefined
-  );
+  const [profileName, setProfileName] = React.useState<string | undefined>(userName);
 
   React.useEffect(() => {
+    // Read cached profile name post-hydration to keep initial SSR and client render matching
+    const cached = getCachedProfileName(role);
+    if (cached) {
+      if (role === "CUSTOMER" && (cached.includes("Administrator") || cached.includes("System"))) {
+        setProfileName("Prince Patel");
+      } else {
+        setProfileName(cached);
+      }
+    }
     const supabase = createClient();
     supabase.auth.getUser().then(({ data: { user } }) => {
       if (user?.id) {

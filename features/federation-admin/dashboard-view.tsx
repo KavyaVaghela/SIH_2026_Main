@@ -45,14 +45,18 @@ export function FederationAdminDashboardView() {
     refresh,
   } = useFederationDashboard();
 
-  const [adminName, setAdminName] = React.useState<string>(
-    () => getCachedProfileName("FEDERATION_ADMIN") || ""
-  );
-  const [isLoadingAdminName, setIsLoadingAdminName] = React.useState<boolean>(
-    () => !getCachedProfileName("FEDERATION_ADMIN")
-  );
+  // Deterministic initial state for SSR and client first render to avoid hydration mismatches
+  const [adminName, setAdminName] = React.useState<string>("");
+  const [isLoadingAdminName, setIsLoadingAdminName] = React.useState<boolean>(true);
 
   React.useEffect(() => {
+    // Read cached profile name post-hydration for instantaneous UI update without hydration mismatch
+    const cached = getCachedProfileName("FEDERATION_ADMIN");
+    if (cached) {
+      setAdminName(cached);
+      setIsLoadingAdminName(false);
+    }
+
     let isMounted = true;
     async function fetchAdminProfile() {
       try {

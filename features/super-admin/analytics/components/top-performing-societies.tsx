@@ -19,7 +19,7 @@ export function TopPerformingSocieties({
 }: TopPerformingSocietiesProps) {
   if (isLoading) {
     return (
-      <Card className="border shadow-sm p-6">
+      <Card className="border bg-card shadow-xs p-6">
         <Skeleton className="h-6 w-48 mb-4" />
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
           <Skeleton className="h-44 rounded-xl" />
@@ -36,7 +36,7 @@ export function TopPerformingSocieties({
     .slice(0, 3);
 
   return (
-    <Card className="border shadow-sm border-emerald-300/70 dark:border-emerald-800/60 bg-gradient-to-br from-card via-card to-emerald-950/5 dark:to-emerald-950/20">
+    <Card className="border shadow-xs border-emerald-300/70 dark:border-emerald-800/60 bg-gradient-to-br from-card via-card to-emerald-950/5 dark:to-emerald-950/20">
       <CardHeader className="pb-3 border-b flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
         <div className="space-y-1">
           <div className="flex items-center space-x-2">

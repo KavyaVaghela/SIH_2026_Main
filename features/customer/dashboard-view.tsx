@@ -18,14 +18,18 @@ import { getCachedProfileName, setCachedProfileName } from "@/lib/auth/session-u
 export function CustomerDashboardView() {
   const router = useRouter();
   const [searchQuery, setSearchQuery] = React.useState("");
-  const initialCachedName = React.useMemo(() => getCachedProfileName("CUSTOMER"), []);
-  const [customerDisplayName, setCustomerDisplayName] = React.useState<string>(initialCachedName || "");
-  const [isNameLoading, setIsNameLoading] = React.useState<boolean>(!initialCachedName);
+  const [customerDisplayName, setCustomerDisplayName] = React.useState<string>("");
+  const [isNameLoading, setIsNameLoading] = React.useState<boolean>(true);
   const [customerLocationArea, setCustomerLocationArea] = React.useState("Ahmedabad, Gujarat");
   const [activeBooking, setActiveBooking] = React.useState<CurrentBookingData | null>(null);
   const [upcomingBookings, setUpcomingBookings] = React.useState<UpcomingBookingData[]>([]);
 
   React.useEffect(() => {
+    const cached = getCachedProfileName("CUSTOMER");
+    if (cached) {
+      setCustomerDisplayName(cached);
+      setIsNameLoading(false);
+    }
     const supabase = createClient();
     supabase.auth.getUser().then(({ data: { user } }) => {
       if (user?.id) {

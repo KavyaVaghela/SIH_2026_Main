@@ -219,10 +219,14 @@ export function SocietyTable({
                 </TableCell>
 
                 <TableCell>
-                  <div className="flex items-center space-x-1 text-xs font-bold text-foreground">
-                    <Star className="h-3.5 w-3.5 text-amber-500 fill-amber-500" />
-                    <span>{society.averageRating}</span>
-                  </div>
+                  {society.averageRating !== null && society.averageRating !== undefined && society.averageRating > 0 ? (
+                    <div className="flex items-center space-x-1 text-xs font-bold text-foreground">
+                      <Star className="h-3.5 w-3.5 text-amber-500 fill-amber-500" />
+                      <span>{society.averageRating.toFixed(1)}</span>
+                    </div>
+                  ) : (
+                    <span className="text-muted-foreground font-normal text-xs pl-2">—</span>
+                  )}
                 </TableCell>
 
                 <TableCell>

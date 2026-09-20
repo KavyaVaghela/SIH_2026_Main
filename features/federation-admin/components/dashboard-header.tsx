@@ -44,6 +44,12 @@ export function DashboardHeader({
     { key: "90d", label: "90 Days" },
   ];
 
+  const [greeting, setGreeting] = React.useState<string>("Good Morning");
+
+  React.useEffect(() => {
+    setGreeting(getGreeting());
+  }, []);
+
   return (
     <div className="space-y-4 pb-2 border-b border-border/60">
       {/* Dev fallback alert banner if active */}
@@ -83,7 +89,7 @@ export function DashboardHeader({
           <h1 className="text-2xl font-bold tracking-tight text-foreground flex items-center gap-2">
             {adminName !== undefined || isLoadingAdminName !== undefined ? (
               <>
-                {getGreeting()},{" "}
+                {greeting},{" "}
                 {isLoadingAdminName || !adminName ? (
                   <span className="inline-block h-8 w-36 sm:w-44 bg-slate-200 dark:bg-slate-800 animate-pulse rounded-md align-middle" />
                 ) : (

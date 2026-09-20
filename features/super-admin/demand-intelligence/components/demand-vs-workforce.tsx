@@ -14,7 +14,7 @@ interface DemandVsWorkforceProps {
 export function DemandVsWorkforce({ stats, isLoading }: DemandVsWorkforceProps) {
   if (isLoading || !stats) {
     return (
-      <Card className="border shadow-sm p-6">
+      <Card className="border bg-card shadow-xs p-6">
         <div className="h-28 animate-pulse bg-muted/40 rounded-lg" />
       </Card>
     );
@@ -25,7 +25,7 @@ export function DemandVsWorkforce({ stats, isLoading }: DemandVsWorkforceProps) 
   const isSurplus = stats.balanceStatus === "SURPLUS";
 
   return (
-    <Card className="border shadow-sm">
+    <Card className="border bg-card shadow-xs">
       <CardHeader className="pb-3 border-b">
         <div className="flex items-center justify-between">
           <div className="space-y-1">

@@ -5,20 +5,32 @@ import type {
   OverviewTimeframe,
   BookingActivityPoint,
   DemandCategorySummary,
-  DemandDistrictCluster,
-  PeakDemandHour,
   CriticalAlert,
-  SmartInsight,
 } from "../types";
 
 export class SuperAdminService {
   /**
-   * Fetches Super Admin Overview metrics, trends, alerts, and insights.
-   * Leverages Supabase queries with fallback for local dev state.
+   * Fetches Super Admin Overview metrics, trends, and operational alerts.
+   * Directly queries real Supabase data with zero mock fallback values.
    */
-  async getOverviewData(timeframe: OverviewTimeframe = "30d"): Promise<SuperAdminOverviewData> {
-    const supabase = createClient();
-    
+  async getOverviewData(
+    timeframe: OverviewTimeframe = "30d",
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    clientOverride?: any
+  ): Promise<SuperAdminOverviewData> {
+    if (typeof window !== "undefined" && !clientOverride) {
+      try {
+        const res = await fetch(`/api/super-admin/overview?timeframe=${timeframe}`);
+        if (res.ok) {
+          return await res.json();
+        }
+      } catch (e) {
+        console.warn("Notice: falling back to direct client query for overview:", e);
+      }
+    }
+
+    const supabase = clientOverride || createClient();
+
     let stats: SuperAdminOverviewStats = {
       totalSocieties: 0,
       totalWorkers: 0,
@@ -29,240 +41,273 @@ export class SuperAdminService {
       completedServices: 0,
       activeJobs: 0,
       pendingRequests: 0,
-      averageRating: 4.8,
+      averageRating: 0,
     };
 
+    const activityTrends: BookingActivityPoint[] = [];
+    const alerts: CriticalAlert[] = [];
+    const topDemandCategories: DemandCategorySummary[] = [];
+
     try {
-      // 1. Fetch Federations (Societies) Count
-      const { count: federationCount } = await supabase
-        .from("federations")
-        .select("*", { count: "exact", head: true });
+      // 1. Parallel queries for platform governance metrics
+      const [
+        { count: federationCount },
+        { data: workersData },
+        { count: customerCount },
+        { data: bookingsData },
+        { count: openJobRequestsCount },
+        { data: reviewsData },
+        { count: pendingFedsCount },
+        { data: complaintsData },
+        { data: servicesData },
+      ] = await Promise.all([
+        supabase.from("federations").select("*", { count: "exact", head: true }),
+        supabase.from("workers").select("account_status, availability_status, verification_status"),
+        supabase.from("profiles").select("*", { count: "exact", head: true }).eq("role", "CUSTOMER"),
+        supabase.from("bookings").select("id, status, created_at, service_id"),
+        supabase.from("job_requests").select("*", { count: "exact", head: true }).eq("status", "OPEN"),
+        supabase.from("reviews").select("rating"),
+        supabase.from("federations").select("*", { count: "exact", head: true }).or("is_active.eq.false,status.eq.PENDING"),
+        supabase.from("complaints").select("id, status, description, created_at"),
+        supabase.from("services").select("id, title, category:service_categories(id, name)"),
+      ]);
 
-      // 2. Fetch Workers Count & Status breakdown
-      const { data: workersData } = await supabase
-        .from("workers")
-        .select("account_status, availability_status");
+      const workers = (workersData || []) as Array<{
+        account_status?: string;
+        availability_status?: string;
+        verification_status?: string;
+      }>;
+      const bookings = (bookingsData || []) as Array<{
+        id: string;
+        status?: string;
+        created_at?: string;
+        service_id?: string;
+      }>;
+      const reviews = (reviewsData || []) as Array<{ rating?: number }>;
 
-      // 3. Fetch Customer Profiles Count
-      const { count: customerCount } = await supabase
-        .from("profiles")
-        .select("*", { count: "exact", head: true })
-        .eq("role", "CUSTOMER");
+      // Compute exact counts
+      const totalWorkers = workers.length;
+      const activeWorkers = workers.filter((w) => w.account_status === "ACTIVE").length;
+      const availableWorkers = workers.filter((w) => w.availability_status === "AVAILABLE").length;
+      const pendingKycWorkers = workers.filter((w) => w.verification_status === "pending_verification").length;
 
-      // 4. Fetch Bookings Count & Status Breakdown
-      const { data: bookingsData } = await supabase
-        .from("bookings")
-        .select("status");
-
-      // 5. Fetch Active Job Requests
-      const { count: jobRequestsCount } = await supabase
-        .from("job_requests")
-        .select("*", { count: "exact", head: true })
-        .eq("status", "OPEN");
-
-      // 6. Fetch Average Reviews Rating
-      const { data: reviewsData } = await supabase
-        .from("reviews")
-        .select("rating");
-
-      const hasRealData =
-        (federationCount && federationCount > 0) ||
-        (workersData && workersData.length > 0) ||
-        (bookingsData && bookingsData.length > 0);
-
-      if (hasRealData) {
-        const typedWorkers = (workersData || []) as Array<{ account_status?: string; availability_status?: string }>;
-        const typedBookings = (bookingsData || []) as Array<{ status?: string }>;
-        const typedReviews = (reviewsData || []) as Array<{ rating?: number }>;
-
-        const totalWorkers = typedWorkers.length;
-        const activeWorkers = typedWorkers.filter((w) => w.account_status === "ACTIVE").length;
-        const availableWorkers = typedWorkers.filter((w) => w.availability_status === "AVAILABLE").length;
-
-        const totalBookings = typedBookings.length;
-        const completedServices = typedBookings.filter((b) =>
-          b.status && ["BOOKING_COMPLETED", "SERVICE_COMPLETED"].includes(b.status)
-        ).length;
-        const activeJobs = typedBookings.filter((b) =>
-          b.status && ["ON_THE_WAY", "ARRIVED", "OTP_VERIFIED", "SERVICE_STARTED", "BOOKING_CONFIRMED"].includes(b.status)
-        ).length;
-        const pendingRequests = typedBookings.filter((b) =>
+      const totalBookings = bookings.length;
+      const completedServices = bookings.filter((b) =>
+        b.status && ["BOOKING_COMPLETED", "SERVICE_COMPLETED"].includes(b.status)
+      ).length;
+      const activeJobs = bookings.filter((b) =>
+        b.status && ["ON_THE_WAY", "ARRIVED", "OTP_VERIFIED", "SERVICE_STARTED", "BOOKING_CONFIRMED"].includes(b.status)
+      ).length;
+      const pendingRequests =
+        bookings.filter((b) =>
           b.status && ["REQUEST_SENT", "WORKER_REVIEWING", "CUSTOMER_CONFIRMATION_PENDING"].includes(b.status)
-        ).length;
+        ).length + (openJobRequestsCount || 0);
 
-        let avgRating = 4.8;
-        if (typedReviews.length > 0) {
-          const sum = typedReviews.reduce((acc, r) => acc + (r.rating || 0), 0);
-          avgRating = Number((sum / typedReviews.length).toFixed(1));
-        }
-
-        stats = {
-          totalSocieties: federationCount || 12,
-          totalWorkers: totalWorkers || 1240,
-          activeWorkers: activeWorkers || 1110,
-          availableWorkers: availableWorkers || 850,
-          totalCustomers: customerCount || 8950,
-          totalBookings: totalBookings || 4320,
-          completedServices: completedServices || 3890,
-          activeJobs: activeJobs || 142,
-          pendingRequests: (pendingRequests || 0) + (jobRequestsCount || 0),
-          averageRating: avgRating,
-        };
-      } else {
-        // Dev fallback dataset reflective of active platform state
-        stats = {
-          totalSocieties: 18,
-          totalWorkers: 1420,
-          activeWorkers: 1280,
-          availableWorkers: 940,
-          totalCustomers: 9850,
-          totalBookings: 5640,
-          completedServices: 4980,
-          activeJobs: 186,
-          pendingRequests: 42,
-          averageRating: 4.85,
-        };
+      let avgRating = 0;
+      if (reviews.length > 0) {
+        const sum = reviews.reduce((acc, r) => acc + (r.rating || 0), 0);
+        avgRating = Number((sum / reviews.length).toFixed(1));
       }
-    } catch {
-      // Fallback stats on exception
+
       stats = {
-        totalSocieties: 18,
-        totalWorkers: 1420,
-        activeWorkers: 1280,
-        availableWorkers: 940,
-        totalCustomers: 9850,
-        totalBookings: 5640,
-        completedServices: 4980,
-        activeJobs: 186,
-        pendingRequests: 42,
-        averageRating: 4.85,
+        totalSocieties: federationCount || 0,
+        totalWorkers,
+        activeWorkers,
+        availableWorkers,
+        totalCustomers: customerCount || 0,
+        totalBookings,
+        completedServices,
+        activeJobs,
+        pendingRequests,
+        averageRating: avgRating,
       };
+
+      // 2. Real Booking Activity Trends based on timeframe
+      const now = new Date();
+
+      if (timeframe === "7d") {
+        const days = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
+        for (let i = 6; i >= 0; i--) {
+          const targetDate = new Date(now);
+          targetDate.setDate(targetDate.getDate() - i);
+          const dayStart = new Date(targetDate.getFullYear(), targetDate.getMonth(), targetDate.getDate(), 0, 0, 0).getTime();
+          const dayEnd = new Date(targetDate.getFullYear(), targetDate.getMonth(), targetDate.getDate(), 23, 59, 59).getTime();
+
+          const bInDay = bookings.filter((b) => {
+            if (!b.created_at) return false;
+            const bTime = new Date(b.created_at).getTime();
+            return bTime >= dayStart && bTime <= dayEnd;
+          });
+
+          activityTrends.push({
+            date: days[targetDate.getDay()],
+            completed: bInDay.filter((b) => ["BOOKING_COMPLETED", "SERVICE_COMPLETED"].includes(b.status || "")).length,
+            active: bInDay.filter((b) =>
+              ["ON_THE_WAY", "ARRIVED", "OTP_VERIFIED", "SERVICE_STARTED", "BOOKING_CONFIRMED"].includes(b.status || "")
+            ).length,
+            pending: bInDay.filter((b) =>
+              ["REQUEST_SENT", "WORKER_REVIEWING", "CUSTOMER_CONFIRMATION_PENDING"].includes(b.status || "")
+            ).length,
+            cancelled: bInDay.filter((b) => b.status === "CANCELLED").length,
+          });
+        }
+      } else if (timeframe === "90d") {
+        const months = [
+          { label: "Month 1", startDaysAgo: 90, endDaysAgo: 60 },
+          { label: "Month 2", startDaysAgo: 60, endDaysAgo: 30 },
+          { label: "Month 3", startDaysAgo: 30, endDaysAgo: 0 },
+        ];
+
+        for (const m of months) {
+          const start = now.getTime() - m.startDaysAgo * 86400000;
+          const end = now.getTime() - m.endDaysAgo * 86400000;
+
+          const bInWindow = bookings.filter((b) => {
+            if (!b.created_at) return false;
+            const bTime = new Date(b.created_at).getTime();
+            return bTime >= start && bTime <= end;
+          });
+
+          activityTrends.push({
+            date: m.label,
+            completed: bInWindow.filter((b) => ["BOOKING_COMPLETED", "SERVICE_COMPLETED"].includes(b.status || "")).length,
+            active: bInWindow.filter((b) =>
+              ["ON_THE_WAY", "ARRIVED", "OTP_VERIFIED", "SERVICE_STARTED", "BOOKING_CONFIRMED"].includes(b.status || "")
+            ).length,
+            pending: bInWindow.filter((b) =>
+              ["REQUEST_SENT", "WORKER_REVIEWING", "CUSTOMER_CONFIRMATION_PENDING"].includes(b.status || "")
+            ).length,
+            cancelled: bInWindow.filter((b) => b.status === "CANCELLED").length,
+          });
+        }
+      } else {
+        // Default 30d
+        const weeks = [
+          { label: "Week 1", startDaysAgo: 28, endDaysAgo: 21 },
+          { label: "Week 2", startDaysAgo: 21, endDaysAgo: 14 },
+          { label: "Week 3", startDaysAgo: 14, endDaysAgo: 7 },
+          { label: "Week 4", startDaysAgo: 7, endDaysAgo: 0 },
+        ];
+
+        for (const w of weeks) {
+          const start = now.getTime() - w.startDaysAgo * 86400000;
+          const end = now.getTime() - w.endDaysAgo * 86400000;
+
+          const bInWindow = bookings.filter((b) => {
+            if (!b.created_at) return false;
+            const bTime = new Date(b.created_at).getTime();
+            return bTime >= start && bTime <= end;
+          });
+
+          activityTrends.push({
+            date: w.label,
+            completed: bInWindow.filter((b) => ["BOOKING_COMPLETED", "SERVICE_COMPLETED"].includes(b.status || "")).length,
+            active: bInWindow.filter((b) =>
+              ["ON_THE_WAY", "ARRIVED", "OTP_VERIFIED", "SERVICE_STARTED", "BOOKING_CONFIRMED"].includes(b.status || "")
+            ).length,
+            pending: bInWindow.filter((b) =>
+              ["REQUEST_SENT", "WORKER_REVIEWING", "CUSTOMER_CONFIRMATION_PENDING"].includes(b.status || "")
+            ).length,
+            cancelled: bInWindow.filter((b) => b.status === "CANCELLED").length,
+          });
+        }
+      }
+
+      // 3. Real Operational Alerts derived from platform state
+      // Alert 1: Escalated Complaints
+      const complaints = (complaintsData || []) as Array<{ status?: string; description?: string }>;
+      const escalatedCount = complaints.filter((c) => {
+        if (c.status === "ESCALATED") return true;
+        if (c.description && c.description.includes('"escalation"')) return true;
+        return false;
+      }).length;
+
+      if (escalatedCount > 0) {
+        alerts.push({
+          id: "alt-grievance-escalation",
+          type: "HIGH_COMPLAINT",
+          severity: "CRITICAL",
+          title: "Escalated Grievance Arbitration",
+          description: `${escalatedCount} grievance(s) escalated to Super Admin requiring central arbitration.`,
+          timestamp: "Immediate Action",
+          actionUrl: "/super-admin/complaints",
+        });
+      }
+
+      // Alert 2: Pending Cooperative Society Verification
+      if (pendingFedsCount && pendingFedsCount > 0) {
+        alerts.push({
+          id: "alt-society-clearance",
+          type: "VERIFICATION_PENDING",
+          severity: "HIGH",
+          title: "Cooperative Society Audit Clearance",
+          description: `${pendingFedsCount} registered cooperative unit(s) pending administrative clearance.`,
+          timestamp: "Governance Review",
+          actionUrl: "/super-admin/societies",
+        });
+      }
+
+      // Alert 3: Pending Worker KYC / Verification
+      if (pendingKycWorkers > 0) {
+        alerts.push({
+          id: "alt-worker-kyc",
+          type: "COMPLIANCE_WARNING",
+          severity: "MEDIUM",
+          title: "Workforce KYC Approvals",
+          description: `${pendingKycWorkers} cooperative worker member(s) awaiting credential verification.`,
+          timestamp: "Credential Audit",
+          actionUrl: "/super-admin/workforce",
+        });
+      }
+
+      // 4. Real Top Demand Categories from Bookings
+      const serviceToCatMap = new Map<string, { id: string; name: string }>();
+      const services = (servicesData || []) as Array<{
+        id: string;
+        title: string;
+        category?: { id: string; name: string } | null;
+      }>;
+      for (const s of services) {
+        if (s.category) {
+          serviceToCatMap.set(s.id, { id: s.category.id, name: s.category.name });
+        }
+      }
+
+      const categoryCountMap = new Map<string, { name: string; count: number }>();
+      for (const b of bookings) {
+        if (b.service_id) {
+          const cat = serviceToCatMap.get(b.service_id);
+          if (cat) {
+            const curr = categoryCountMap.get(cat.id) || { name: cat.name, count: 0 };
+            curr.count++;
+            categoryCountMap.set(cat.id, curr);
+          }
+        }
+      }
+
+      const sortedCategories = Array.from(categoryCountMap.entries())
+        .map(([id, val]) => ({
+          categoryId: id,
+          categoryName: val.name,
+          bookingCount: val.count,
+          growthPercentage: totalBookings > 0 ? Math.round((val.count / totalBookings) * 100) : 0,
+        }))
+        .sort((a, b) => b.bookingCount - a.bookingCount);
+
+      topDemandCategories.push(...sortedCategories.slice(0, 5));
+
+    } catch (err) {
+      console.error("Error loading Super Admin Overview data from Supabase:", err);
     }
-
-    // Dynamic Activity Trends based on timeframe
-    const activityTrends: BookingActivityPoint[] =
-      timeframe === "7d"
-        ? [
-            { date: "Mon", completed: 120, active: 34, pending: 8, cancelled: 3 },
-            { date: "Tue", completed: 145, active: 40, pending: 12, cancelled: 4 },
-            { date: "Wed", completed: 160, active: 42, pending: 10, cancelled: 2 },
-            { date: "Thu", completed: 150, active: 38, pending: 15, cancelled: 5 },
-            { date: "Fri", completed: 190, active: 55, pending: 18, cancelled: 3 },
-            { date: "Sat", completed: 210, active: 60, pending: 22, cancelled: 6 },
-            { date: "Sun", completed: 175, active: 45, pending: 14, cancelled: 4 },
-          ]
-        : timeframe === "90d"
-        ? [
-            { date: "Month 1", completed: 1420, active: 380, pending: 110, cancelled: 32 },
-            { date: "Month 2", completed: 1680, active: 420, pending: 130, cancelled: 28 },
-            { date: "Month 3", completed: 1880, active: 460, pending: 145, cancelled: 35 },
-          ]
-        : [
-            { date: "Week 1", completed: 1050, active: 280, pending: 70, cancelled: 22 },
-            { date: "Week 2", completed: 1220, active: 310, pending: 85, cancelled: 18 },
-            { date: "Week 3", completed: 1340, active: 350, pending: 95, cancelled: 25 },
-            { date: "Week 4", completed: 1370, active: 340, pending: 90, cancelled: 19 },
-          ];
-
-    const topDemandCategories: DemandCategorySummary[] = [
-      { categoryId: "1", categoryName: "Electrical & Power Systems", bookingCount: 1420, growthPercentage: 18.5 },
-      { categoryId: "2", categoryName: "Plumbing & Sanitation", bookingCount: 1280, growthPercentage: 14.2 },
-      { categoryId: "3", categoryName: "Solar & Clean Tech", bookingCount: 940, growthPercentage: 32.1 },
-      { categoryId: "4", categoryName: "Carpentry & Repairs", bookingCount: 760, growthPercentage: 8.7 },
-      { categoryId: "5", categoryName: "HVAC & Climate Control", bookingCount: 650, growthPercentage: 21.4 },
-    ];
-
-    const districtClusters: DemandDistrictCluster[] = [
-      { district: "District 4 (South Zone)", demandScore: 94, primarySkillNeeded: "Solar Technicians", activeWorkersCount: 145 },
-      { district: "District 2 (Central Hub)", demandScore: 88, primarySkillNeeded: "Certified Electricians", activeWorkersCount: 210 },
-      { district: "District 7 (East Corridor)", demandScore: 82, primarySkillNeeded: "Sanitation Specialists", activeWorkersCount: 98 },
-      { district: "District 1 (North Sector)", demandScore: 76, primarySkillNeeded: "HVAC Technicians", activeWorkersCount: 112 },
-    ];
-
-    const peakHours: PeakDemandHour[] = [
-      { timeSlot: "08:00 AM - 11:00 AM", demandLevel: "PEAK", percentageShare: 42 },
-      { timeSlot: "02:00 PM - 05:00 PM", demandLevel: "HIGH", percentageShare: 33 },
-      { timeSlot: "06:00 PM - 09:00 PM", demandLevel: "MEDIUM", percentageShare: 18 },
-      { timeSlot: "11:00 AM - 02:00 PM", demandLevel: "MEDIUM", percentageShare: 7 },
-    ];
-
-    const alerts: CriticalAlert[] = [
-      {
-        id: "alt-1",
-        type: "SLA_BREACH",
-        severity: "CRITICAL",
-        title: "Delayed Response Warning",
-        description: "3 emergency plumbing bookings in District 4 exceeding 30-minute matching SLA.",
-        timestamp: "12 mins ago",
-        actionUrl: "/super-admin/bookings",
-      },
-      {
-        id: "alt-2",
-        type: "VERIFICATION_PENDING",
-        severity: "HIGH",
-        title: "Cooperative Audit Action",
-        description: "Navi Mumbai Service Cooperative verification documents awaiting superadmin clearance.",
-        timestamp: "45 mins ago",
-        actionUrl: "/super-admin/societies",
-      },
-      {
-        id: "alt-3",
-        type: "COMPLIANCE_WARNING",
-        severity: "HIGH",
-        title: "Expiring Safety Certification",
-        description: "42 electrical workers in Region South have safety licenses expiring within 7 days.",
-        timestamp: "2 hours ago",
-        actionUrl: "/super-admin/workforce",
-      },
-      {
-        id: "alt-4",
-        type: "HIGH_COMPLAINT",
-        severity: "MEDIUM",
-        title: "Customer Escalation Flagged",
-        description: "Ticket #CMP-9402 raised regarding billing discrepancy requires administrative review.",
-        timestamp: "4 hours ago",
-        actionUrl: "/super-admin/complaints",
-      },
-    ];
-
-    const insights: SmartInsight[] = [
-      {
-        id: "ins-1",
-        category: "WORKFORCE",
-        title: "Critical Workforce Deficit in District 4",
-        insight: "Solar installation demand has increased by 32% while available certified solar technicians dropped by 12%.",
-        impact: "Estimated revenue loss of ₹85,000/week if not re-allocated.",
-        actionLabel: "Re-assign Workforce",
-        actionUrl: "/super-admin/workforce",
-      },
-      {
-        id: "ins-2",
-        category: "WELFARE",
-        title: "Welfare Fund Contribution Milestone",
-        insight: "Platform escrow matched ₹1.45L in health insurance subsidies for 320 high-performing cooperative members.",
-        impact: "Worker retention in participating societies increased by 19%.",
-        actionLabel: "View Welfare Fund",
-        actionUrl: "/super-admin/welfare",
-      },
-      {
-        id: "ins-3",
-        category: "DEMAND",
-        title: "Morning Peak Surge Pattern",
-        insight: "42% of customer requests occur between 8:00 AM and 11:00 AM on weekdays.",
-        impact: "Pre-scheduling worker shifts during peak hours reduces customer wait times by 65%.",
-        actionLabel: "Optimize Scheduling",
-        actionUrl: "/super-admin/demand",
-      },
-    ];
 
     return {
       stats,
       activityTrends,
       topDemandCategories,
-      districtClusters,
-      peakHours,
+      districtClusters: [],
+      peakHours: [],
       alerts,
-      insights,
+      insights: [],
       lastUpdated: new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }),
     };
   }

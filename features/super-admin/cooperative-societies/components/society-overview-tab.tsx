@@ -47,9 +47,13 @@ export function SocietyOverviewTab({ society }: SocietyOverviewTabProps) {
         <Card className="border shadow-xs p-4">
           <p className="text-xs font-semibold text-muted-foreground uppercase">Customer Rating</p>
           <p className="text-2xl font-bold text-amber-600 dark:text-amber-400 mt-1">
-            ★ {society.averageRating}
+            {society.averageRating !== null && society.averageRating !== undefined && society.averageRating > 0
+              ? `★ ${society.averageRating.toFixed(1)}`
+              : "—"}
           </p>
-          <p className="text-[11px] text-muted-foreground mt-0.5">Average customer feedback</p>
+          <p className="text-[11px] text-muted-foreground mt-0.5">
+            {society.averageRating ? "Average derived from worker reviews" : "No worker reviews recorded yet"}
+          </p>
         </Card>
       </div>
 

@@ -23,10 +23,9 @@ export function HomeOverviewView() {
     overallRating: 0,
     completedJobs: 0,
   });
-  const initialCachedName = React.useMemo(() => getCachedProfileName("WORKER"), []);
-  const [isNameLoading, setIsNameLoading] = React.useState<boolean>(!initialCachedName);
+  const [isNameLoading, setIsNameLoading] = React.useState<boolean>(true);
   const [workerIdentity, setWorkerIdentity] = React.useState<WorkerIdentity>({
-    name: initialCachedName || "",
+    name: "",
     trade: "Tradesperson",
     cooperativeName: "Cooperative Federation",
     cooperativeRole: "Member",
@@ -36,6 +35,14 @@ export function HomeOverviewView() {
     reviewsCount: 0,
     isVerified: false,
   });
+
+  React.useEffect(() => {
+    const cached = getCachedProfileName("WORKER");
+    if (cached) {
+      setWorkerIdentity((prev) => ({ ...prev, name: cached }));
+      setIsNameLoading(false);
+    }
+  }, []);
 
   const [workerDbId, setWorkerDbId] = React.useState<string>("");
   // Monotonically increasing counter: only the latest fetch generation may commit state

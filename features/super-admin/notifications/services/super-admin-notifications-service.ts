@@ -8,7 +8,7 @@ import type {
 } from "../types";
 
 // In-memory cache for deterministic persistence across page navigations
-let inMemoryNotifications: SuperAdminNotification[] = [...MOCK_NOTIFICATIONS];
+let inMemoryNotifications: SuperAdminNotification[] = [];
 
 export class SuperAdminNotificationsService {
   async getNotifications(filters: Partial<NotificationFilterOptions> = {}): Promise<{
@@ -16,41 +16,72 @@ export class SuperAdminNotificationsService {
     stats: NotificationStats;
     totalCount: number;
   }> {
-    let records = [...inMemoryNotifications];
+    let records: SuperAdminNotification[] = [];
 
-    // Attempt to fetch any real notifications for Super Admin from Supabase
+    // Primary: fetch real notifications for Super Admin from central API route
     try {
-      const supabase = createClient();
-      const { data } = await (supabase.from("notifications") as any)
-        .select("*")
-        .order("created_at", { ascending: false });
-
-      if (data && data.length > 0) {
-        const realMapped: SuperAdminNotification[] = data.map((n: any) => ({
-          id: n.id,
-          title: n.title,
-          description: n.message,
-          createdAt: new Date(n.created_at).toLocaleDateString("en-IN", {
-            hour: "2-digit",
-            minute: "2-digit",
-            day: "numeric",
-            month: "short",
-          }),
-          isRead: Boolean(n.is_read),
-          category: (n.metadata?.category as NotificationCategory) || "WORKER_SHORTAGE",
-          severity: n.type === "error" ? "HIGH" : n.type === "warning" ? "MEDIUM" : "LOW",
-          targetRoute: n.metadata?.targetRoute || "/super-admin",
-          actionLabel: n.metadata?.actionLabel || "View Details",
-          entityId: n.metadata?.entityId,
-          entityType: n.metadata?.entityType,
-        }));
-
-        if (realMapped.length >= 3) {
-          records = realMapped;
+      if (typeof window !== "undefined") {
+        const res = await fetch("/api/notifications?role=SUPER_ADMIN");
+        if (res.ok) {
+          const json = await res.json();
+          if (Array.isArray(json.notifications)) {
+            records = json.notifications.map((n: any) => ({
+              id: n.id,
+              title: n.title,
+              description: n.message,
+              createdAt: new Date(n.createdAt).toLocaleDateString("en-IN", {
+                hour: "2-digit",
+                minute: "2-digit",
+                day: "numeric",
+                month: "short",
+              }),
+              isRead: Boolean(n.isRead),
+              category: (n.metadata?.category as NotificationCategory) || "WORKER_SHORTAGE",
+              severity: n.type === "alert" || n.type === "error" ? "HIGH" : n.type === "warning" ? "MEDIUM" : "LOW",
+              targetRoute: n.targetRoute || "/super-admin",
+              actionLabel: n.metadata?.actionLabel || "View Details",
+              entityId: n.metadata?.entityId,
+              entityType: n.metadata?.entityType,
+            }));
+            inMemoryNotifications = records;
+          }
         }
       }
     } catch {
-      // Fallback to in-memory records
+      // Fall back to direct supabase client or in-memory
+    }
+
+    if (records.length === 0) {
+      try {
+        const supabase = createClient();
+        const { data } = await (supabase.from("notifications") as any)
+          .select("*")
+          .order("created_at", { ascending: false });
+
+        if (data && data.length > 0) {
+          records = data.map((n: any) => ({
+            id: n.id,
+            title: n.title,
+            description: n.message,
+            createdAt: new Date(n.created_at).toLocaleDateString("en-IN", {
+              hour: "2-digit",
+              minute: "2-digit",
+              day: "numeric",
+              month: "short",
+            }),
+            isRead: Boolean(n.is_read),
+            category: (n.metadata?.category as NotificationCategory) || "WORKER_SHORTAGE",
+            severity: n.type === "error" ? "HIGH" : n.type === "warning" ? "MEDIUM" : "LOW",
+            targetRoute: n.metadata?.targetRoute || "/super-admin",
+            actionLabel: n.metadata?.actionLabel || "View Details",
+            entityId: n.metadata?.entityId,
+            entityType: n.metadata?.entityType,
+          }));
+          inMemoryNotifications = records;
+        }
+      } catch {
+        records = [...inMemoryNotifications];
+      }
     }
 
     // Compute global stats before filters
