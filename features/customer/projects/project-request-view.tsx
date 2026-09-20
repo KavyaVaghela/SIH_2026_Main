@@ -26,6 +26,7 @@ import {
   TrendingUp,
   Receipt,
   CheckSquare,
+  RefreshCw,
 } from "lucide-react";
 import { formatINR } from "@/lib/formatters/currency";
 import { resolveProjectFinancialEstimates } from "@/lib/financials/large-project-financials";
@@ -427,12 +428,7 @@ export function ProjectRequestView() {
       )
       .subscribe();
 
-    const interval = setInterval(() => {
-      loadProjects();
-    }, 10000);
-
     return () => {
-      clearInterval(interval);
       supabase.removeChannel(channel);
     };
   }, [loadProjects]);
@@ -794,15 +790,26 @@ export function ProjectRequestView() {
           { label: "Project Workforce" },
         ]}
         actions={
-          !showForm ? (
+          <div className="flex items-center gap-2">
             <Button
-              onClick={() => setShowForm(true)}
-              className="bg-emerald-700 hover:bg-emerald-800 text-white font-bold text-xs px-4 py-2 shadow-md gap-1.5"
+              variant="ghost"
+              size="sm"
+              onClick={loadProjects}
+              className="h-7 text-xs text-emerald-700 dark:text-emerald-300 hover:bg-emerald-100/50"
             >
-              <Plus className="w-4 h-4" />
-              Submit New Project Request
+              <RefreshCw className={`h-3 w-3 mr-1 ${isLoading ? "animate-spin" : ""}`} />
+              Refresh
             </Button>
-          ) : undefined
+            {!showForm && (
+              <Button
+                onClick={() => setShowForm(true)}
+                className="bg-emerald-700 hover:bg-emerald-800 text-white font-bold text-xs px-4 py-2 shadow-md gap-1.5"
+              >
+                <Plus className="w-4 h-4" />
+                Submit New Project Request
+              </Button>
+            )}
+          </div>
         }
       />
 
