@@ -299,11 +299,11 @@ export async function saveDailyUpdate(params: {
   if (!store.expenses[projectId]) store.expenses[projectId] = [];
 
   // Check if update exists for this date/worker to prevent duplicates
-  let existingUpd = store.updates[projectId].find(
+  const existingUpd = store.updates[projectId].find(
     (u) => u.worker_id === workerId && (u.work_date || "").slice(0, 10) === targetDate
   );
 
-  let updateId = existingUpd ? existingUpd.id : `upd-${Date.now()}-${Math.random().toString(36).substring(2, 6)}`;
+  const updateId = existingUpd ? existingUpd.id : `upd-${Date.now()}-${Math.random().toString(36).substring(2, 6)}`;
 
   const mediaList = photoUrl || storagePath
     ? [

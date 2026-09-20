@@ -34,7 +34,7 @@ export async function GET(request: NextRequest) {
     }
 
     // 2. Fetch project_requests description for [Workers] count if available
-    const { data: projReq } = await (admin.from("project_requests") as any)
+    const { data: projReq } = await (admin.from("project_requests") as ReturnType<typeof admin.from>)
       .select("description")
       .eq("id", projectId)
       .maybeSingle();
@@ -45,11 +45,10 @@ export async function GET(request: NextRequest) {
       if (wm) initialWorkerCount = Number(wm[1]);
     }
 
-    const { data: skills } = await (admin.from("skills") as any).select("id").limit(1);
+    const { data: skills } = await (admin.from("skills") as ReturnType<typeof admin.from>).select("id").limit(1);
     const defaultSkillId = skills?.[0]?.id || "9f757d17-0f01-4d11-8d0f-601a832f8aba";
 
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const { data: created, error: insErr } = await (admin.from("project_requirements") as any)
+    const { data: created, error: insErr } = await (admin.from("project_requirements") as ReturnType<typeof admin.from>)
       .insert({
         project_request_id: projectId,
         skill_id: defaultSkillId,

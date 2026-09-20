@@ -3,7 +3,6 @@ import { createAdminClient } from "@/lib/supabase/admin";
 import {
   generateSupportedPaymentPlans,
   calculateRemainingBalance,
-  calculateEstimateRevision,
   getInstallmentDueDateText,
   resolveProjectFinancialEstimates,
   evaluateInstallmentStatus,
@@ -18,25 +17,11 @@ import {
   proposeEstimateRevision,
   confirmEstimateRevision,
   declineEstimateRevision,
+  StoredEstimateRevision,
 } from "@/lib/projects/daily-monitoring-store";
 
 export const dynamic = "force-dynamic";
 
-interface RevisionRow {
-  id: string;
-  project_request_id: string;
-  version: number;
-  previous_amount: number;
-  current_amount: number;
-  difference_amount: number;
-  revision_reason: string | null;
-  status?: string;
-  customer_response?: string;
-  customer_responded_at?: string | null;
-  notes?: string | null;
-  created_by: string | null;
-  created_at: string;
-}
 
 interface PlanRow {
   id: string;
@@ -147,9 +132,9 @@ export async function GET(request: NextRequest) {
       try {
         const sched = JSON.parse(schedMatch[1].trim());
         if (Array.isArray(sched)) {
-          const schedPaidSum = sched
-            .filter((i: any) => i.paymentStatus === "PAID" || i.status === "PAID")
-            .reduce((acc: number, i: any) => acc + Number(i.amount || 0), 0);
+          const schedPaidSum = (sched as Array<Partial<CalculatedInstallment> & { status?: string }>)
+            .filter((i) => i.paymentStatus === "PAID" || i.status === "PAID")
+            .reduce((acc: number, i) => acc + Number(i.amount || 0), 0);
           if (schedPaidSum > sumPaymentsReceived) {
             sumPaymentsReceived = schedPaidSum;
           }
@@ -192,7 +177,7 @@ export async function GET(request: NextRequest) {
     const supportedPlans = generateSupportedPaymentPlans(currentEstimate, activationDateIso, projectTimeline);
 
     // 3. Fetch Revisions using robust getProjectEstimateRevisions
-    let revisions: any[] = [];
+    let revisions: StoredEstimateRevision[] = [];
     try {
       revisions = await getProjectEstimateRevisions(projectId);
     } catch {
@@ -473,13 +458,13 @@ export async function POST(request: NextRequest) {
 
     // ACTION 1D: CANCEL PROJECT WITH FINAL SETTLEMENT
     if (action === "CANCEL_PROJECT_SETTLEMENT") {
-      const { cancellationSettlementAmount, reason, paymentReference } = body;
+      const { cancellationSettlementAmount, paymentReference } = body;
       const settlementAmt = Number(cancellationSettlementAmount || 0);
       const nowIso = new Date().toISOString();
 
       if (settlementAmt > 0 && paymentReference) {
         try {
-          await (admin.from("project_payments") as any).insert({
+          await (admin.from("project_payments") as ReturnType<typeof admin.from>).insert({
             id: `pay-${Date.now()}-${Math.random().toString(36).substring(2, 6)}`,
             project_request_id: projectId,
             customer_id: String(projRecord.customer_id || "cust-default"),
@@ -516,7 +501,7 @@ export async function POST(request: NextRequest) {
 
     // LEGACY DIRECT REVISE ESTIMATE
     if (action === "REVISE_ESTIMATE") {
-      const { newAmount, reason, createdBy } = body;
+      const { newAmount } = body;
       const parsedNewAmount = Number(newAmount);
 
       if (isNaN(parsedNewAmount) || parsedNewAmount < 0) {
@@ -725,7 +710,7 @@ export async function POST(request: NextRequest) {
       }
 
       // Insert into project_payments ledger (with try/catch fallback for missing table)
-      let pmt: any = null;
+      let pmt: Record<string, unknown> | null = null;
       try {
         const { data: pmtRes, error: pmtErr } = await (admin.from("project_payments") as ReturnType<typeof admin.from>)
           .insert({
@@ -766,13 +751,13 @@ export async function POST(request: NextRequest) {
           const parsedSchedule = JSON.parse(scheduleTagMatch[1].trim());
           if (Array.isArray(parsedSchedule)) {
             let markedOne = false;
-            const updatedSchedule = parsedSchedule.map((inst: any) => {
+            const updatedSchedule = (parsedSchedule as Array<CalculatedInstallment & { id?: string; status?: string }>).map((inst) => {
               const instIdMatch = installmentId && (String(inst.id) === String(installmentId) || String(inst.installmentNumber) === String(installmentId));
               if (!markedOne && (instIdMatch || inst.paymentStatus !== "PAID")) {
                 markedOne = true;
                 return {
                   ...inst,
-                  paymentStatus: "PAID",
+                  paymentStatus: "PAID" as const,
                   paidAtIso: new Date().toISOString(),
                 };
               }
@@ -805,7 +790,7 @@ export async function POST(request: NextRequest) {
         updateData.status = "CONFIRMED";
       }
 
-      let { error: updateProjErr } = await (admin.from("project_requests") as ReturnType<typeof admin.from>)
+      const { error: updateProjErr } = await (admin.from("project_requests") as ReturnType<typeof admin.from>)
         .update({
           ...updateData,
           payments_received: updatedPaymentsReceived,

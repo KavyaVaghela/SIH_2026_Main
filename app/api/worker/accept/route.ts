@@ -88,7 +88,7 @@ export async function POST(req: Request) {
     requiredWorkers = Math.max(1, requiredWorkers);
 
     // 3. Count current valid fulfillment records for this requirement
-    let allocQuery = admin.from("project_allocations").select("id, status, worker_id, requirement_id, project_request_id");
+    const allocQuery = admin.from("project_allocations").select("id, status, worker_id, requirement_id, project_request_id");
     
     let orFilter = `project_request_id.eq.${projectId}`;
     if (resolvedRequirementId) {
