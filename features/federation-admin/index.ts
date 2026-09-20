@@ -33,6 +33,5 @@ export * from "./welfare";
 // Stage 6: Complaint Management
 export * from "./complaint-management";
 
-
-
-
+// Stage 7: Large Projects Management
+export * from "./projects/federation-projects-view";
