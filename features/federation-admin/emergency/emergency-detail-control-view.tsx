@@ -1051,15 +1051,30 @@ export function EmergencyDetailControlView({ incidentId }: EmergencyDetailContro
                 <select
                   className="w-full h-8 rounded border border-input bg-background px-2 text-xs"
                   value={selectedWorkerId}
-                  onChange={(e) => setSelectedWorkerId(e.target.value)}
+                  onChange={(e) => {
+                    const wid = e.target.value;
+                    setSelectedWorkerId(wid);
+                    if (wid && !workerRole) {
+                      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                      const found = (eligibleWorkers || []).find((w: any) => w.id === wid);
+                      if (found?.profession) {
+                        setWorkerRole(found.profession);
+                      }
+                    }
+                  }}
                 >
                   <option value="">Select an available cooperative worker</option>
-                  {eligibleWorkers.map((w: any) => (
+                  {(eligibleWorkers || []).map((w: any) => (
                     <option key={w.id} value={w.id}>
                       {w.full_name} ({w.profession}) — {w.availability_status}
                     </option>
                   ))}
                 </select>
+                {(!eligibleWorkers || eligibleWorkers.length === 0) && (
+                  <p className="text-[11px] text-amber-500 mt-1">
+                    No available verified workers matching the required emergency skills currently found in this federation.
+                  </p>
+                )}
               </div>
               <div>
                 <label className="font-medium text-foreground block mb-1">Assigned Operational Role</label>

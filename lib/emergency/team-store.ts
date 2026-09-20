@@ -642,7 +642,7 @@ export class EmergencyTeamRepository {
         `)
         .eq("worker_id", workerId)
         .in("status", ["ASSIGNED", "ACTIVE"])
-        .in("emergency_response_teams.status", ["FORMED", "ACTIVE"])
+        .in("emergency_response_teams.status", ["FORMING", "FORMED", "ACTIVE"])
         .order("created_at", { ascending: false })
         .limit(1)
         .maybeSingle();
@@ -659,7 +659,7 @@ export class EmergencyTeamRepository {
       const member = members.find((m) => m.worker_id === workerId && (m.status === "ACTIVE" || m.status === "ASSIGNED"));
       if (member) {
         const team = inMemoryTeams.get(teamId) || inMemoryTeams.get(member.incident_id);
-        if (team && (team.status === "FORMED" || team.status === "ACTIVE")) {
+        if (team && (team.status === "FORMING" || team.status === "FORMED" || team.status === "ACTIVE")) {
           return await this.getTeamById(team.id);
         }
       }

@@ -1,9 +1,9 @@
 import { createAdminClient } from "@/lib/supabase/admin";
-import { EmergencyIncidentRepository } from "@/lib/emergency/incident-store";
+import { EmergencyIncidentRepository, EmergencyIncidentRecord } from "@/lib/emergency/incident-store";
 import { EmergencyTeamRepository, EmergencyResponseTeamRecord, EmergencyTeamMemberRecord } from "@/lib/emergency/team-store";
 import { EmergencyTaskRepository, EmergencyIncidentTaskRecord, EmergencyAdditionalWorkerRequestRecord, IncidentTaskProgress } from "@/lib/emergency/task-store";
 import { EmergencyResponseMatrixRepository, EmergencyResponseMatrixRecord } from "@/lib/emergency/response-matrix-store";
-import type { EmergencyIncidentSeverity } from "@/supabase/types/database.types";
+import type { EmergencyIncidentSeverity, EmergencyIncidentStatus } from "@/supabase/types/database.types";
 
 export interface EmergencyAuditLogRecord {
   id: string;
@@ -364,7 +364,15 @@ export class EmergencyControlCenterRepository {
     const additionalRequests = await EmergencyTaskRepository.listAdditionalWorkerRequests(incidentId);
     const supportRequests = await this.listSupportRequestsForIncident(incidentId);
     const auditLogs = await this.listAuditLogs(incidentId);
-    const eligibleWorkers = await this.getFederationEligibleWorkers(federationId, responseMatrix?.required_skills);
+    const teamMembers = team ? await EmergencyTeamRepository.listTeamMembers(team.id) : [];
+    const excludedWorkerIds = teamMembers.filter((m) => m.status !== "RELEASED").map((m) => m.worker_id);
+    const eligibleWorkers = await this.getFederationEligibleWorkers({
+      federationId,
+      skills: responseMatrix?.required_skills,
+      incident,
+      responseMatrix,
+      excludedWorkerIds,
+    });
 
     const required = team?.required_worker_count || responseMatrix?.recommended_worker_count || 1;
     const accepted = team?.accepted_worker_count || 0;
@@ -559,9 +567,32 @@ export class EmergencyControlCenterRepository {
       return { success: false, code: 403, error: "Forbidden: Incident belongs to another federation." };
     }
 
-    const team = await EmergencyTeamRepository.getTeamByIncidentId(incidentId);
+    let team = await EmergencyTeamRepository.getTeamByIncidentId(incidentId);
     if (!team) {
-      return { success: false, code: 404, error: "No response team found for this incident." };
+      // If team doesn't exist yet (e.g. initial staffing shortage), form initial team
+      const responseMatrix = await EmergencyResponseMatrixRepository.findByEmergencyType(incident.emergency_type);
+      const teamId = crypto.randomUUID();
+      const now = new Date().toISOString();
+      const initialTeam: EmergencyResponseTeamRecord = {
+        id: teamId,
+        incident_id: incidentId,
+        federation_id: incident.federation_id || federationId,
+        team_type: "PRIMARY",
+        status: "FORMING",
+        team_lead_worker_id: null,
+        requires_team_lead: responseMatrix?.team_lead_required ?? true,
+        required_worker_count: responseMatrix?.recommended_worker_count || 1,
+        accepted_worker_count: 0,
+        created_at: now,
+        updated_at: now,
+        members: [],
+      };
+      team = await EmergencyTeamRepository.registerTeam(initialTeam, []);
+
+      // Initialize initial tasks from matrix if available
+      if (responseMatrix?.initial_tasks && responseMatrix.initial_tasks.length > 0) {
+        await EmergencyTaskRepository.createInitialTasksForIncident(incidentId, teamId, responseMatrix.initial_tasks);
+      }
     }
 
     // Verify worker eligibility in federation
@@ -606,13 +637,14 @@ export class EmergencyControlCenterRepository {
     // Insert new member
     const now = new Date().toISOString();
     const newMemberId = crypto.randomUUID();
+    const isTeamLead = role.toLowerCase().includes("lead") || (!team.team_lead_worker_id && (team.requires_team_lead ?? false) && members.length === 0);
     const newMember: EmergencyTeamMemberRecord = {
       id: newMemberId,
       team_id: team.id,
       incident_id: incidentId,
       worker_id: workerId,
       role,
-      is_team_lead: false,
+      is_team_lead: isTeamLead,
       status: "ACTIVE",
       accepted_at: now,
       created_at: now,
@@ -622,8 +654,24 @@ export class EmergencyControlCenterRepository {
       profession: workerRec.profession,
     };
 
+    if (isTeamLead && !team.team_lead_worker_id) {
+      team.team_lead_worker_id = workerId;
+    }
+
     // Update in-memory team store
     await EmergencyTeamRepository.addMember(team.id, newMember);
+
+    // Increment accepted worker count on team
+    const newAcceptedCount = members.filter((m) => m.status !== "RELEASED").length + 1;
+    const newRequiredCount = Math.max(team.required_worker_count, newAcceptedCount);
+    const isTeamFormed = newAcceptedCount >= newRequiredCount;
+
+    team.accepted_worker_count = newAcceptedCount;
+    team.required_worker_count = newRequiredCount;
+    team.status = isTeamFormed ? "FORMED" : "FORMING";
+    team.updated_at = now;
+
+    await EmergencyTeamRepository.registerTeam(team, [...members, newMember]);
 
     try {
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -640,18 +688,55 @@ export class EmergencyControlCenterRepository {
         updated_at: newMember.updated_at,
       });
 
-      // Increment accepted worker count on team
-      const newAcceptedCount = (team.accepted_worker_count || 0) + 1;
-      const newRequiredCount = Math.max(team.required_worker_count, newAcceptedCount);
-
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       await (supabase.from("emergency_response_teams") as any)
         .update({
           accepted_worker_count: newAcceptedCount,
           required_worker_count: newRequiredCount,
+          status: team.status,
+          team_lead_worker_id: team.team_lead_worker_id,
           updated_at: now,
         })
         .eq("id", team.id);
+    } catch {
+      // Fallback
+    }
+
+    // Update incident status
+    try {
+      const incidentStatus: EmergencyIncidentStatus = isTeamFormed ? "ACTIVE" : "TEAM_FORMING";
+      await EmergencyIncidentRepository.updateIncidentStatus(incidentId, incidentStatus, actorId);
+    } catch {
+      // Fallback
+    }
+
+    // Synchronize worker dispatch pool status so worker dashboard sees this assignment
+    try {
+      const { EmergencyDispatchRepository } = await import("@/lib/emergency/dispatch-store");
+      const existingDispatch = await EmergencyDispatchRepository.findDispatch(incidentId, workerId);
+      if (existingDispatch) {
+        await EmergencyDispatchRepository.updateDispatchStatus(existingDispatch.id, "ACCEPTED", now);
+      } else {
+        const dispatchRecord = {
+          id: crypto.randomUUID(),
+          incident_id: incidentId,
+          worker_id: workerId,
+          federation_id: federationId,
+          required_role: role,
+          matched_skills: [workerRec.profession || role],
+          eligibility_score: 90,
+          eligibility_reasons: { reason: "Direct Federation Administrator deployment" },
+          status: "ACCEPTED" as const,
+          offered_at: now,
+          responded_at: now,
+          notes: `Directly deployed by federation administrator ${actorId}`,
+          created_at: now,
+          updated_at: now,
+          worker_name: workerRec.profiles?.full_name,
+          profession: workerRec.profession,
+        };
+        await EmergencyDispatchRepository.recordDirectAssignment(dispatchRecord);
+      }
     } catch {
       // Fallback
     }
@@ -662,8 +747,8 @@ export class EmergencyControlCenterRepository {
       federationId,
       actorId,
       actionType: "WORKER_ADDED",
-      previousState: { acceptedWorkerCount: team.accepted_worker_count },
-      newState: { addedWorkerId: workerId, role, workerName: newMember.worker_name },
+      previousState: { acceptedWorkerCount: members.length },
+      newState: { addedWorkerId: workerId, role, workerName: newMember.worker_name, teamStatus: team.status },
       notes: `Worker ${newMember.worker_name || workerId} added to emergency response team as ${role}`,
     });
 
@@ -1127,10 +1212,23 @@ export class EmergencyControlCenterRepository {
    * Discovers eligible verified active workers in a federation available for assignment
    */
   static async getFederationEligibleWorkers(
-    federationId: string,
-    skills?: string[]
+    paramsOrFedId:
+      | string
+      | {
+          federationId: string;
+          skills?: string[];
+          incident?: EmergencyIncidentRecord;
+          responseMatrix?: EmergencyResponseMatrixRecord | null;
+          excludedWorkerIds?: string[];
+        },
+    legacySkills?: string[]
   ): Promise<FederationEligibleWorkerSummary[]> {
-    void skills;
+    const federationId = typeof paramsOrFedId === "string" ? paramsOrFedId : paramsOrFedId.federationId;
+    const skills = typeof paramsOrFedId === "string" ? legacySkills : (paramsOrFedId.skills || legacySkills);
+    const incident = typeof paramsOrFedId === "object" ? paramsOrFedId.incident : undefined;
+    const responseMatrix = typeof paramsOrFedId === "object" ? paramsOrFedId.responseMatrix : undefined;
+    const excludedWorkerIds = typeof paramsOrFedId === "object" ? paramsOrFedId.excludedWorkerIds : undefined;
+
     try {
       const supabase = createAdminClient();
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -1138,31 +1236,124 @@ export class EmergencyControlCenterRepository {
         .select(`
           id,
           profile_id,
+          federation_id,
           profession,
           hourly_rate,
+          experience_years,
           verification_status,
+          account_status,
           availability_status,
           service_radius_km,
-          profiles ( full_name, phone )
+          current_latitude,
+          current_longitude,
+          profiles ( full_name, phone, email ),
+          worker_skills (
+            skill_id,
+            proficiency_level,
+            skills ( id, name )
+          ),
+          worker_certifications (
+            id,
+            certification_id,
+            certificate_number,
+            is_verified,
+            status,
+            expiry_date,
+            certifications ( title )
+          )
         `)
         .eq("federation_id", federationId)
-        .in("verification_status", ["verified", "VERIFIED"])
-        .in("account_status", ["active", "ACTIVE"])
-        .limit(20);
+        .eq("verification_status", "verified")
+        .eq("account_status", "ACTIVE")
+        .eq("availability_status", "AVAILABLE")
+        .limit(50);
 
-      if (!error && data) {
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        return data.map((w: any) => ({
-          id: w.id,
-          profile_id: w.profile_id,
-          full_name: w.profiles?.full_name || "Cooperative Worker",
-          phone: w.profiles?.phone || "N/A",
-          profession: w.profession,
-          hourly_rate: w.hourly_rate || 0,
-          verification_status: w.verification_status,
-          availability_status: w.availability_status,
-          service_radius_km: w.service_radius_km || 15,
-        }));
+      if (!error && data && data.length > 0) {
+        const { EmergencyDispatchRepository } = await import("@/lib/emergency/dispatch-store");
+
+        let resolvedMatrix = responseMatrix;
+        if (!resolvedMatrix && incident) {
+          resolvedMatrix = await EmergencyResponseMatrixRepository.findByEmergencyType(incident.emergency_type);
+        }
+
+        const eligibleList: (FederationEligibleWorkerSummary & { score?: number })[] = [];
+
+        for (const w of data) {
+          if (excludedWorkerIds && excludedWorkerIds.includes(w.id)) {
+            continue;
+          }
+
+          if (incident && resolvedMatrix) {
+            const evalResult = await EmergencyDispatchRepository.evaluateWorkerEligibility(
+              w,
+              incident,
+              resolvedMatrix,
+              { excludedWorkerIds, targetFederationId: federationId }
+            );
+
+            if (evalResult.isEligible) {
+              eligibleList.push({
+                id: w.id,
+                profile_id: w.profile_id,
+                full_name: w.profiles?.full_name || "Cooperative Worker",
+                phone: w.profiles?.phone || "N/A",
+                profession: w.profession,
+                hourly_rate: w.hourly_rate || 0,
+                verification_status: w.verification_status,
+                availability_status: w.availability_status,
+                service_radius_km: w.service_radius_km || 15,
+                score: evalResult.score,
+              });
+            }
+          } else {
+            // Fallback matching against skills/profession if incident is not provided
+            const wSkills: string[] = Array.isArray(w.worker_skills)
+              // eslint-disable-next-line @typescript-eslint/no-explicit-any
+              ? w.worker_skills.map((ws: any) => ws.skills?.name || "").filter(Boolean)
+              : [];
+            if (w.profession) wSkills.push(w.profession);
+
+            const targetSkills = (skills || []).map((s) => s.toLowerCase().trim());
+            let isMatch = targetSkills.length === 0;
+
+            if (!isMatch) {
+              isMatch = targetSkills.some((ts) =>
+                wSkills.some((ws) => {
+                  const normWs = ws.toLowerCase().trim();
+                  return (
+                    normWs === ts ||
+                    normWs.includes(ts) ||
+                    ts.includes(normWs) ||
+                    (normWs === "plumber" && ts.includes("plumb")) ||
+                    (normWs === "electrician" && (ts.includes("electr") || ts.includes("power")))
+                  );
+                })
+              );
+            }
+
+            if (isMatch) {
+              eligibleList.push({
+                id: w.id,
+                profile_id: w.profile_id,
+                full_name: w.profiles?.full_name || "Cooperative Worker",
+                phone: w.profiles?.phone || "N/A",
+                profession: w.profession,
+                hourly_rate: w.hourly_rate || 0,
+                verification_status: w.verification_status,
+                availability_status: w.availability_status,
+                service_radius_km: w.service_radius_km || 15,
+                score: 50,
+              });
+            }
+          }
+        }
+
+        // Sort by evaluation score descending
+        eligibleList.sort((a, b) => (b.score || 0) - (a.score || 0));
+        return eligibleList.map((item) => {
+          delete item.score;
+          return item;
+        });
       }
     } catch {
       // Fallback

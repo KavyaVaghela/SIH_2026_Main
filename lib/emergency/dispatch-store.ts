@@ -625,6 +625,39 @@ export class EmergencyDispatchRepository {
   }
 
   /**
+   * Records or updates a direct assignment in the dispatch pool
+   */
+  static async recordDirectAssignment(record: EmergencyDispatchPoolRecord): Promise<EmergencyDispatchPoolRecord> {
+    inMemoryDispatchPool.set(record.id, record);
+    inMemoryDispatchPool.set(`${record.incident_id}:${record.worker_id}`, record);
+
+    try {
+      const supabase = createAdminClient();
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      await (supabase.from("emergency_dispatch_pool") as any).upsert({
+        id: record.id,
+        incident_id: record.incident_id,
+        worker_id: record.worker_id,
+        federation_id: record.federation_id,
+        required_role: record.required_role,
+        matched_skills: record.matched_skills,
+        eligibility_score: record.eligibility_score,
+        eligibility_reasons: record.eligibility_reasons,
+        status: record.status,
+        offered_at: record.offered_at,
+        responded_at: record.responded_at,
+        notes: record.notes,
+        created_at: record.created_at,
+        updated_at: record.updated_at,
+      });
+    } catch {
+      // Memory fallback
+    }
+
+    return record;
+  }
+
+  /**
    * Lists all dispatch records for an incident
    */
   static async listDispatchesForIncident(incidentId: string): Promise<EmergencyDispatchPoolRecord[]> {
