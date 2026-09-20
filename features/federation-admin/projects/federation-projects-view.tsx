@@ -24,6 +24,7 @@ import {
   AlertTriangle,
   Image as ImageIcon,
   RotateCcw,
+  RefreshCw,
 } from "lucide-react";
 import { formatINR } from "@/lib/formatters/currency";
 import { resolveProjectFinancialEstimates } from "@/lib/financials/large-project-financials";
@@ -406,12 +407,7 @@ export function FederationProjectsView() {
       )
       .subscribe();
 
-    const interval = setInterval(() => {
-      loadProjects();
-    }, 10000);
-
     return () => {
-      clearInterval(interval);
       supabase.removeChannel(channel);
     };
   }, [loadProjects]);
@@ -750,35 +746,47 @@ export function FederationProjectsView() {
       )}
 
       {/* Unified Workflow Stage Navigation Bar (Merged Requests/Review -> Proposals -> Active -> Closed) */}
-      <div className="flex flex-wrap items-center gap-2 border-b border-border pb-3">
-        {[
-          { key: "REQUESTS", label: "1. Incoming Requests", icon: Clock },
-          { key: "PROPOSALS", label: "2. Formulated Proposals", icon: FileText },
-          { key: "ACTIVE", label: "3. Active & Confirmed", icon: Building2 },
-          { key: "CLOSED", label: "4. Closed Projects", icon: CheckCircle2 },
-        ].map((tab) => {
-          const count = getStageCount(tab.key as any);
-          const IconComp = tab.icon;
-          const isActive = filterStage === tab.key;
-          return (
-            <button
-              key={tab.key}
-              type="button"
-              onClick={() => setFilterStage(tab.key as any)}
-              className={`flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-xs font-bold transition-all ${
-                isActive
-                  ? "bg-emerald-800 text-white shadow-sm"
-                  : "bg-muted text-muted-foreground hover:bg-muted/80"
-              }`}
-            >
-              <IconComp className="w-3.5 h-3.5" />
-              <span>{tab.label}</span>
-              <span className={`ml-1 text-[10px] px-1.5 py-0.2 rounded-full ${isActive ? "bg-white/20 text-white" : "bg-slate-200 dark:bg-slate-800 text-slate-700 dark:text-slate-300"}`}>
-                {count}
-              </span>
-            </button>
-          );
-        })}
+      <div className="flex flex-wrap items-center justify-between gap-2 border-b border-border pb-3">
+        <div className="flex flex-wrap items-center gap-2">
+          {[
+            { key: "REQUESTS", label: "1. Incoming Requests", icon: Clock },
+            { key: "PROPOSALS", label: "2. Formulated Proposals", icon: FileText },
+            { key: "ACTIVE", label: "3. Active & Confirmed", icon: Building2 },
+            { key: "CLOSED", label: "4. Closed Projects", icon: CheckCircle2 },
+          ].map((tab) => {
+            const count = getStageCount(tab.key as any);
+            const IconComp = tab.icon;
+            const isActive = filterStage === tab.key;
+            return (
+              <button
+                key={tab.key}
+                type="button"
+                onClick={() => setFilterStage(tab.key as any)}
+                className={`flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-xs font-bold transition-all ${
+                  isActive
+                    ? "bg-emerald-800 text-white shadow-sm"
+                    : "bg-muted text-muted-foreground hover:bg-muted/80"
+                }`}
+              >
+                <IconComp className="w-3.5 h-3.5" />
+                <span>{tab.label}</span>
+                <span className={`ml-1 text-[10px] px-1.5 py-0.2 rounded-full ${isActive ? "bg-white/20 text-white" : "bg-slate-200 dark:bg-slate-800 text-slate-700 dark:text-slate-300"}`}>
+                  {count}
+                </span>
+              </button>
+            );
+          })}
+        </div>
+
+        <Button
+          variant="ghost"
+          size="sm"
+          onClick={loadProjects}
+          className="h-7 text-xs text-emerald-700 dark:text-emerald-300 hover:bg-emerald-100/50"
+        >
+          <RefreshCw className={`h-3 w-3 mr-1 ${isLoading ? "animate-spin" : ""}`} />
+          Refresh
+        </Button>
       </div>
 
       {/* DB Connection / Notice Banner */}

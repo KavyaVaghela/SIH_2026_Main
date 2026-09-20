@@ -2,7 +2,7 @@
 
 import * as React from "react";
 import Link from "next/link";
-import { Activity, MapPin, Clock, ShieldAlert, Navigation, Building2, Plus, CheckCircle2, FileText, DollarSign, Image as ImageIcon } from "lucide-react";
+import { Activity, MapPin, Clock, ShieldAlert, Navigation, Building2, Plus, CheckCircle2, FileText, DollarSign, Image as ImageIcon, RefreshCw } from "lucide-react";
 import { Card, CardHeader, CardTitle, CardContent, CardFooter } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -42,12 +42,14 @@ export interface ActiveJobsTabProps {
   activeJobs: WorkerJobItem[];
   loading?: boolean;
   error?: string | null;
+  onRefresh?: () => void;
 }
 
 export function ActiveJobsTab({
   activeJobs,
   loading = false,
   error = null,
+  onRefresh,
 }: ActiveJobsTabProps) {
   const [selectedBooking, setSelectedBooking] = React.useState<WorkerJobItem | null>(null);
   const [isModalOpen, setIsModalOpen] = React.useState(false);
@@ -363,7 +365,23 @@ export function ActiveJobsTab({
               <Building2 className="w-4 h-4" />
               Active Large Projects ({activeLargeProjects.length})
             </h3>
-            <span className="text-[11px] text-muted-foreground">Daily Update Protocol</span>
+            <div className="flex items-center space-x-2 shrink-0">
+              <span className="text-[11px] text-muted-foreground hidden sm:inline">Daily Update Protocol</span>
+              {onRefresh && (
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => {
+                    if (onRefresh) onRefresh();
+                    loadActiveLargeProjects();
+                  }}
+                  className="h-7 text-xs text-emerald-700 dark:text-emerald-300 hover:bg-emerald-100/50"
+                >
+                  <RefreshCw className={`h-3 w-3 mr-1 ${loading || loadingLp ? "animate-spin" : ""}`} />
+                  Refresh
+                </Button>
+              )}
+            </div>
           </div>
 
           {lpError && (

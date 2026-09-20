@@ -1,9 +1,10 @@
 "use client";
 
 import * as React from "react";
-import { CheckCircle2, Star, Calendar, MapPin, Check, Building2 } from "lucide-react";
+import { CheckCircle2, Star, Calendar, MapPin, Check, Building2, RefreshCw } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import { formatINR } from "@/lib/formatters/currency";
 import { BookingDetailModal } from "./components/booking-detail-modal";
 import type { WorkerJobItem } from "../types";
@@ -25,12 +26,14 @@ export interface CompletedJobsTabProps {
   completedJobs: WorkerJobItem[];
   loading?: boolean;
   error?: string | null;
+  onRefresh?: () => void;
 }
 
 export function CompletedJobsTab({
   completedJobs,
   loading = false,
   error = null,
+  onRefresh,
 }: CompletedJobsTabProps) {
   const [selectedBooking, setSelectedBooking] = React.useState<WorkerJobItem | null>(null);
   const [isModalOpen, setIsModalOpen] = React.useState(false);
@@ -119,7 +122,7 @@ export function CompletedJobsTab({
     <div className="space-y-4">
       {/* Category Type Filter Bar */}
       <div className="flex flex-wrap items-center justify-between gap-3 p-3 rounded-xl bg-card border border-border shadow-xs">
-        <div className="flex items-center gap-1.5">
+        <div className="flex flex-wrap items-center gap-1.5">
           <span className="text-xs font-bold text-muted-foreground mr-1">Workforce Category:</span>
           <button
             type="button"
@@ -158,6 +161,21 @@ export function CompletedJobsTab({
             Large Projects ({completedLargeProjects.length})
           </button>
         </div>
+
+        {onRefresh && (
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={() => {
+              if (onRefresh) onRefresh();
+              loadCompletedLargeProjects();
+            }}
+            className="h-7 text-xs text-emerald-700 dark:text-emerald-300 hover:bg-emerald-100/50"
+          >
+            <RefreshCw className={`h-3 w-3 mr-1 ${loading || loadingLp ? "animate-spin" : ""}`} />
+            Refresh
+          </Button>
+        )}
       </div>
 
       {/* Loading State */}
