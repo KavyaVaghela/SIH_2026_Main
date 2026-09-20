@@ -51,15 +51,10 @@ export function JobRequestCard({ request }: JobRequestCardProps) {
               <CardTitle className="text-base sm:text-lg font-bold text-foreground">
                 {request.serviceTitle}
               </CardTitle>
-              {request.priority === "HIGH" ? (
-                <Badge className="text-[10px] py-0 px-2 font-bold bg-rose-600 hover:bg-rose-700 text-white animate-pulse border-rose-500 shadow-sm shadow-rose-500/50">
-                  <AlertTriangle className="h-2.5 w-2.5 mr-1" />
-                  HIGH EMERGENCY
-                </Badge>
-              ) : request.urgency === "EMERGENCY" ? (
+              {request.urgency === "EMERGENCY" ? (
                 <Badge variant="destructive" className="text-[10px] py-0 px-2 font-semibold">
                   <AlertTriangle className="h-2.5 w-2.5 mr-1" />
-                  EMERGENCY {request.priority ? `(${request.priority})` : ""}
+                  EMERGENCY
                 </Badge>
               ) : (
                 <Badge variant="secondary" className="text-[10px] py-0 px-2">
