@@ -470,8 +470,12 @@ export class EmergencyControlCenterRepository {
     newSeverity: EmergencyIncidentSeverity;
     reason?: string;
     isSuperAdmin?: boolean;
-  }): Promise<{ success: boolean; code: number; error?: string; incident?: any }> {
-    // eslint-disable-line @typescript-eslint/no-explicit-any
+  }): Promise<{
+    success: boolean;
+    code: number;
+    error?: string;
+    incident?: EmergencyIncidentRecord;
+  }> {
     const { incidentId, federationId, actorId, newSeverity, reason, isSuperAdmin = false } = params;
 
     const allowedSeverities: EmergencyIncidentSeverity[] = ["LOW", "MEDIUM", "HIGH", "CRITICAL"];
@@ -1106,8 +1110,7 @@ export class EmergencyControlCenterRepository {
     action: "ADD_TASK" | "CANCEL_TASK" | "UPDATE_NOTES";
     payload: Record<string, unknown>;
     isSuperAdmin?: boolean;
-  }): Promise<{ success: boolean; code: number; error?: string; result?: any }> {
-    // eslint-disable-line @typescript-eslint/no-explicit-any
+  }): Promise<{ success: boolean; code: number; error?: string; result?: unknown }> {
     const { incidentId, federationId, actorId, action, payload, isSuperAdmin = false } = params;
 
     const incident = await EmergencyIncidentRepository.findById(incidentId);
