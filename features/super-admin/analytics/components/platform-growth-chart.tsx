@@ -24,7 +24,7 @@ interface PlatformGrowthChartProps {
 export function PlatformGrowthChart({ data, isLoading }: PlatformGrowthChartProps) {
   if (isLoading) {
     return (
-      <Card className="border shadow-sm p-6">
+      <Card className="border bg-card shadow-xs p-6">
         <Skeleton className="h-6 w-48 mb-2" />
         <Skeleton className="h-64 w-full rounded-xl" />
       </Card>
@@ -66,7 +66,7 @@ export function PlatformGrowthChart({ data, isLoading }: PlatformGrowthChartProp
   ];
 
   return (
-    <Card className="border shadow-sm">
+    <Card className="border bg-card shadow-xs">
       <CardHeader className="pb-3 border-b">
         <div className="flex items-center space-x-2">
           <TrendingUp className="h-5 w-5 text-emerald-700 dark:text-emerald-400" />
@@ -100,12 +100,16 @@ export function PlatformGrowthChart({ data, isLoading }: PlatformGrowthChartProp
         <div className="w-full h-72 pt-2">
           <ResponsiveContainer width="100%" height="100%">
             <LineChart data={data} margin={{ top: 10, right: 15, left: -10, bottom: 0 }}>
-              <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="hsl(var(--border))" />
+              <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="hsl(var(--border))" opacity={0.6} />
               <XAxis
                 dataKey="period"
+                tickLine={false}
+                axisLine={false}
                 tick={{ fontSize: 11, fill: "hsl(var(--muted-foreground))" }}
               />
               <YAxis
+                tickLine={false}
+                axisLine={false}
                 tick={{ fontSize: 11, fill: "hsl(var(--muted-foreground))" }}
                 allowDecimals={false}
               />
@@ -114,11 +118,12 @@ export function PlatformGrowthChart({ data, isLoading }: PlatformGrowthChartProp
                   backgroundColor: "hsl(var(--popover))",
                   borderColor: "hsl(var(--border))",
                   borderRadius: "8px",
+                  boxShadow: "0 4px 6px -1px rgba(0, 0, 0, 0.1)",
                   fontSize: "12px",
                   color: "hsl(var(--popover-foreground))",
                 }}
               />
-              <Legend wrapperStyle={{ fontSize: "12px", paddingTop: "8px" }} />
+              <Legend wrapperStyle={{ fontSize: "11px", paddingTop: "8px" }} />
               <Line
                 type="monotone"
                 dataKey="bookings"

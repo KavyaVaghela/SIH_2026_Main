@@ -12,6 +12,9 @@ import type {
   WorkforceUtilizationMetric,
   SocietyPerformanceMetric,
   PlatformGrowthPoint,
+  QualityAnalyticsData,
+  FinancialAnalyticsData,
+  EmergencyAnalyticsData,
 } from "../types";
 
 export function useAnalytics() {
@@ -36,6 +39,9 @@ export function useAnalytics() {
   const [workforceUtilization, setWorkforceUtilization] = React.useState<WorkforceUtilizationMetric | null>(null);
   const [societyPerformance, setSocietyPerformance] = React.useState<SocietyPerformanceMetric[]>([]);
   const [platformGrowth, setPlatformGrowth] = React.useState<PlatformGrowthPoint[]>([]);
+  const [qualityAnalytics, setQualityAnalytics] = React.useState<QualityAnalyticsData | null>(null);
+  const [financialAnalytics, setFinancialAnalytics] = React.useState<FinancialAnalyticsData | null>(null);
+  const [emergencyAnalytics, setEmergencyAnalytics] = React.useState<EmergencyAnalyticsData | null>(null);
 
   const [isLoading, setIsLoading] = React.useState<boolean>(true);
   const [error, setError] = React.useState<string | null>(null);
@@ -68,6 +74,9 @@ export function useAnalytics() {
       setWorkforceUtilization(res.workforceUtilization);
       setSocietyPerformance(res.societyPerformance);
       setPlatformGrowth(res.platformGrowth);
+      setQualityAnalytics(res.qualityAnalytics);
+      setFinancialAnalytics(res.financialAnalytics);
+      setEmergencyAnalytics(res.emergencyAnalytics);
     } catch (err) {
       console.error("Failed to load platform analytics:", err);
       setError("An error occurred while loading executive analytics.");
@@ -109,6 +118,9 @@ export function useAnalytics() {
     workforceUtilization,
     societyPerformance,
     platformGrowth,
+    qualityAnalytics,
+    financialAnalytics,
+    emergencyAnalytics,
     isLoading,
     error,
     updateTimeframe,

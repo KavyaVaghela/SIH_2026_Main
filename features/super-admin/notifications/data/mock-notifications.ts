@@ -6,7 +6,7 @@ export const NOTIFICATION_CATEGORY_META: Record<
 > = {
   WORKER_SHORTAGE: {
     label: "Worker Shortage",
-    defaultRoute: "/super-admin/demand-intelligence",
+    defaultRoute: "/super-admin/analytics",
   },
   NEW_SOCIETY_REGISTRATION: {
     label: "New Society Registration",
@@ -40,7 +40,7 @@ export const MOCK_NOTIFICATIONS: SuperAdminNotification[] = [
     isRead: false,
     category: "WORKER_SHORTAGE",
     severity: "HIGH",
-    targetRoute: "/super-admin/demand-intelligence",
+    targetRoute: "/super-admin/analytics",
     actionLabel: "Inspect Shortage Hotspot",
     entityId: "hotspot-001",
     entityType: "SHORTAGE_CLUSTER",

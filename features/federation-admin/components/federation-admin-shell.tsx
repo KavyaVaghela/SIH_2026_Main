@@ -25,8 +25,15 @@ export function FederationAdminShell({
   const [mobileDrawerOpen, setMobileDrawerOpen] = React.useState(false);
   const pathname = usePathname();
   const [displayName, setDisplayName] = React.useState<string>(
-    () => getCachedProfileName("FEDERATION_ADMIN") || (userName !== "Federation Administrator" ? userName : "Vikram Shah")
+    userName !== "Federation Administrator" ? userName : "Vikram Shah"
   );
+
+  React.useEffect(() => {
+    const cached = getCachedProfileName("FEDERATION_ADMIN");
+    if (cached) {
+      setDisplayName(cached);
+    }
+  }, []);
 
   // Close mobile drawer on route change
   React.useEffect(() => {

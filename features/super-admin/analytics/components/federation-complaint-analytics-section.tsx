@@ -83,7 +83,7 @@ export function FederationComplaintAnalyticsSection() {
 
       {/* 4 Summary Metric Indicators */}
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-        <Card className="p-3 border-border/40 bg-card shadow-sm">
+        <Card className="p-3 border bg-card shadow-xs">
           <div className="flex items-center justify-between text-muted-foreground text-xs">
             <span>Total Disputes Logged</span>
             <FileText className="h-3.5 w-3.5" />
@@ -92,7 +92,7 @@ export function FederationComplaintAnalyticsSection() {
           <span className="text-[10px] text-muted-foreground">Platform-wide cumulative</span>
         </Card>
 
-        <Card className="p-3 border-border/40 bg-card shadow-sm">
+        <Card className="p-3 border bg-card shadow-xs">
           <div className="flex items-center justify-between text-amber-600 dark:text-amber-400 text-xs">
             <span>Active Grievances</span>
             <Clock className="h-3.5 w-3.5" />
@@ -105,7 +105,7 @@ export function FederationComplaintAnalyticsSection() {
           </span>
         </Card>
 
-        <Card className="p-3 border-border/40 bg-card shadow-sm">
+        <Card className="p-3 border bg-card shadow-xs">
           <div className="flex items-center justify-between text-emerald-600 dark:text-emerald-400 text-xs">
             <span>Disputes Resolved</span>
             <CheckCircle2 className="h-3.5 w-3.5" />
@@ -116,7 +116,7 @@ export function FederationComplaintAnalyticsSection() {
           </span>
         </Card>
 
-        <Card className="p-3 border-border/40 bg-card shadow-sm">
+        <Card className="p-3 border bg-card shadow-xs">
           <div className="flex items-center justify-between text-indigo-600 dark:text-indigo-400 text-xs">
             <span>Avg Resolution Time</span>
             <TrendingUp className="h-3.5 w-3.5" />
@@ -130,7 +130,7 @@ export function FederationComplaintAnalyticsSection() {
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* Factual Federation Breakdown Table */}
-        <Card className="border shadow-sm overflow-hidden p-0">
+        <Card className="border bg-card shadow-xs overflow-hidden p-0">
           <CardHeader className="p-4 border-b bg-muted/30">
             <CardTitle className="text-sm font-bold flex items-center gap-2">
               <Layers className="h-4 w-4 text-indigo-600" />
@@ -187,7 +187,7 @@ export function FederationComplaintAnalyticsSection() {
         </Card>
 
         {/* Complaint Volume Trend */}
-        <Card className="border shadow-sm p-4">
+        <Card className="border bg-card shadow-xs p-4">
           <CardHeader className="p-0 pb-3 border-b mb-3">
             <CardTitle className="text-sm font-bold flex items-center gap-2">
               <TrendingUp className="h-4 w-4 text-emerald-600" />
@@ -205,10 +205,10 @@ export function FederationComplaintAnalyticsSection() {
             ) : (
               <ResponsiveContainer width="100%" height="100%">
                 <AreaChart data={volumeTrend} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
-                  <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#e2e8f0" />
-                  <XAxis dataKey="date" tick={{ fontSize: 10 }} />
-                  <YAxis tick={{ fontSize: 10 }} allowDecimals={false} />
-                  <Tooltip contentStyle={{ fontSize: "11px", borderRadius: "8px" }} />
+                  <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="hsl(var(--border))" opacity={0.6} />
+                  <XAxis dataKey="date" tickLine={false} axisLine={false} tick={{ fontSize: 10, fill: "hsl(var(--muted-foreground))" }} />
+                  <YAxis tickLine={false} axisLine={false} tick={{ fontSize: 10, fill: "hsl(var(--muted-foreground))" }} allowDecimals={false} />
+                  <Tooltip contentStyle={{ fontSize: "11px", borderRadius: "8px", backgroundColor: "hsl(var(--popover))", color: "hsl(var(--popover-foreground))", borderColor: "hsl(var(--border))" }} />
                   <Legend verticalAlign="top" align="right" height={20} iconSize={8} wrapperStyle={{ fontSize: "10px" }} />
                   <Area type="monotone" dataKey="created" name="Filed" stroke="#ef4444" fill="#fee2e2" />
                   <Area type="monotone" dataKey="resolved" name="Resolved" stroke="#10b981" fill="#d1fae5" />

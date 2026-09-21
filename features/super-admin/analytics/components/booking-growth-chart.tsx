@@ -31,7 +31,7 @@ export function BookingGrowthChart({
 }: BookingGrowthChartProps) {
   if (isLoading) {
     return (
-      <Card className="border shadow-sm p-6">
+      <Card className="border bg-card shadow-xs p-6">
         <Skeleton className="h-6 w-48 mb-2" />
         <Skeleton className="h-4 w-64 mb-4" />
         <Skeleton className="h-64 w-full rounded-xl" />
@@ -42,7 +42,7 @@ export function BookingGrowthChart({
   const totalPeriodBookings = data.reduce((acc, d) => acc + d.total, 0);
 
   return (
-    <Card className="border shadow-sm">
+    <Card className="border bg-card shadow-xs">
       <CardHeader className="pb-3 border-b flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
         <div className="space-y-1">
           <div className="flex items-center space-x-2">
@@ -114,12 +114,16 @@ export function BookingGrowthChart({
                   <stop offset="95%" stopColor="#0284c7" stopOpacity={0.05} />
                 </linearGradient>
               </defs>
-              <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="hsl(var(--border))" />
+              <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="hsl(var(--border))" opacity={0.6} />
               <XAxis
                 dataKey="periodLabel"
+                tickLine={false}
+                axisLine={false}
                 tick={{ fontSize: 11, fill: "hsl(var(--muted-foreground))" }}
               />
               <YAxis
+                tickLine={false}
+                axisLine={false}
                 tick={{ fontSize: 11, fill: "hsl(var(--muted-foreground))" }}
                 allowDecimals={false}
               />
@@ -128,11 +132,12 @@ export function BookingGrowthChart({
                   backgroundColor: "hsl(var(--popover))",
                   borderColor: "hsl(var(--border))",
                   borderRadius: "8px",
+                  boxShadow: "0 4px 6px -1px rgba(0, 0, 0, 0.1)",
                   fontSize: "12px",
                   color: "hsl(var(--popover-foreground))",
                 }}
               />
-              <Legend wrapperStyle={{ fontSize: "12px", paddingTop: "8px" }} />
+              <Legend wrapperStyle={{ fontSize: "11px", paddingTop: "8px" }} />
               <Area
                 type="monotone"
                 dataKey="completed"

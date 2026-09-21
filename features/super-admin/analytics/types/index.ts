@@ -70,3 +70,150 @@ export interface PlatformGrowthPoint {
   customers: number;
   bookings: number;
 }
+
+// Phase 5: Ratings & Feedback Intelligence Types
+export interface QualityOverviewMetrics {
+  averageWorkerRating: number | null;
+  totalReviews: number;
+  fiveStarShare: number;
+  fourStarShare: number;
+  oneTwoStarShare: number;
+  workersReviewedCount: number;
+  reviewedCompletedServicesCount: number;
+}
+
+export interface RatingDistributionItem {
+  stars: number;
+  count: number;
+  percentage: number;
+}
+
+export interface FederationQualityMetric {
+  federationId: string;
+  federationName: string;
+  city: string;
+  totalWorkers: number;
+  reviewCount: number;
+  averageRating: number | null;
+}
+
+export interface CustomerFeedbackComment {
+  id: string;
+  rating: number;
+  comment: string;
+  createdAt: string;
+  serviceTitle: string;
+  federationName: string;
+  workerProfession: string;
+}
+
+export interface QualityAnalyticsData {
+  overview: QualityOverviewMetrics;
+  distribution: RatingDistributionItem[];
+  federationQuality: FederationQualityMetric[];
+  recentComments: CustomerFeedbackComment[];
+}
+
+// Phase 6: Payments & Invoicing Analytics Types
+export interface FinancialOverviewMetrics {
+  totalTransactionVolume: number;
+  platformCommission: number;
+  taxCollected: number;
+  paidInvoicesCount: number;
+  outstandingReceivables: number;
+  paymentSuccessRate: number | null;
+  averageTransactionValue: number | null;
+  totalPaymentsCount: number;
+  successfulPaymentsCount: number;
+}
+
+export interface PaymentStatusBreakdown {
+  paidCount: number;
+  paidAmount: number;
+  pendingCount: number;
+  pendingAmount: number;
+  failedCount: number;
+  failedAmount: number;
+  refundedCount: number;
+  refundedAmount: number;
+}
+
+export interface InvoiceStatusBreakdown {
+  paidCount: number;
+  paidAmount: number;
+  issuedCount: number;
+  issuedAmount: number;
+  totalCount: number;
+  totalAmount: number;
+}
+
+export interface FinancialTrendPoint {
+  date: string;
+  volume: number;
+  transactionCount: number;
+}
+
+export interface FederationFinancialMetric {
+  federationId: string;
+  federationName: string;
+  city: string;
+  transactionCount: number;
+  transactionVolume: number;
+  platformFee: number;
+  paidInvoicesCount: number;
+  totalInvoicesCount: number;
+}
+
+export interface FinancialAnalyticsData {
+  overview: FinancialOverviewMetrics;
+  paymentStatusBreakdown: PaymentStatusBreakdown;
+  invoiceStatusBreakdown: InvoiceStatusBreakdown;
+  trend: FinancialTrendPoint[];
+  federationFinancials: FederationFinancialMetric[];
+}
+
+// Phase 7: Emergency & On-Demand Operational Intelligence Types
+export interface EmergencyOverviewMetrics {
+  totalEmergencyRequests: number;
+  liveUnassignedCount: number;
+  inProgressCount: number;
+  completedCount: number;
+  completionRate: number | null;
+  avgResponseTime: string;
+}
+
+export interface EmergencyStatusItem {
+  status: string;
+  label: string;
+  count: number;
+  percentage: number;
+}
+
+export interface EmergencyTradeItem {
+  tradeName: string;
+  count: number;
+  percentage: number;
+}
+
+export interface FederationEmergencyMetric {
+  federationId: string;
+  federationName: string;
+  city: string;
+  emergencyRequests: number;
+  activeEmergencies: number;
+  completedEmergencies: number;
+  unassignedEmergencies: number;
+}
+
+export interface EmergencyTrendPoint {
+  date: string;
+  requestsCount: number;
+}
+
+export interface EmergencyAnalyticsData {
+  overview: EmergencyOverviewMetrics;
+  statusDistribution: EmergencyStatusItem[];
+  tradeBreakdown: EmergencyTradeItem[];
+  federationWorkload: FederationEmergencyMetric[];
+  trend: EmergencyTrendPoint[];
+}
