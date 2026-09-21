@@ -7,7 +7,12 @@ import { FederationAdminSidebar } from "./federation-admin-sidebar";
 import { X } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { createClient } from "@/lib/supabase/client";
-import { getCachedProfileName, setCachedProfileName } from "@/lib/auth/session-user";
+import {
+  getCachedProfileName,
+  setCachedProfileName,
+  getCachedProfileAvatar,
+  setCachedProfileAvatar,
+} from "@/lib/auth/session-user";
 
 interface FederationAdminShellProps {
   children: React.ReactNode;
@@ -27,11 +32,16 @@ export function FederationAdminShell({
   const [displayName, setDisplayName] = React.useState<string>(
     userName !== "Federation Administrator" ? userName : "Vikram Shah"
   );
+  const [avatarUrl, setAvatarUrl] = React.useState<string | undefined>(undefined);
 
   React.useEffect(() => {
-    const cached = getCachedProfileName("FEDERATION_ADMIN");
-    if (cached) {
-      setDisplayName(cached);
+    const cachedName = getCachedProfileName("FEDERATION_ADMIN");
+    if (cachedName) {
+      setDisplayName(cachedName);
+    }
+    const cachedAvatar = getCachedProfileAvatar("FEDERATION_ADMIN");
+    if (cachedAvatar) {
+      setAvatarUrl(cachedAvatar);
     }
   }, []);
 
@@ -72,13 +82,17 @@ export function FederationAdminShell({
         if (user?.id) {
           // eslint-disable-next-line @typescript-eslint/no-explicit-any
           const { data: profile } = await (supabase.from("profiles") as any)
-            .select("full_name")
+            .select("full_name, avatar_url")
             .eq("id", user.id)
             .maybeSingle();
 
           if (isMounted && profile?.full_name) {
             setCachedProfileName("FEDERATION_ADMIN", profile.full_name);
             setDisplayName(profile.full_name);
+          }
+          if (isMounted && profile?.avatar_url) {
+            setCachedProfileAvatar("FEDERATION_ADMIN", profile.avatar_url);
+            setAvatarUrl(profile.avatar_url);
           }
         }
       } catch (err) {
@@ -99,6 +113,7 @@ export function FederationAdminShell({
         userName={displayName}
         userRole={userRole}
         role="FEDERATION_ADMIN"
+        avatarUrl={avatarUrl}
         onToggleMobileMenu={() => setMobileDrawerOpen(!mobileDrawerOpen)}
       />
 

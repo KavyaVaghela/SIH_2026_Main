@@ -17,6 +17,7 @@ export interface AppShellProps {
   userName?: string;
   userRole?: string;
   role?: PlatformRole;
+  avatarUrl?: string;
   className?: string;
 }
 
@@ -34,6 +35,7 @@ export function AppShell({
   userName = "Cooperative Member",
   userRole = "Platform Admin",
   role,
+  avatarUrl,
   className,
 }: AppShellProps) {
   const [mobileSidebarOpen, setMobileSidebarOpen] = React.useState(false);
@@ -73,6 +75,7 @@ export function AppShell({
         userName={userName}
         userRole={userRole}
         role={role}
+        avatarUrl={avatarUrl}
         onToggleMobileMenu={() => setMobileSidebarOpen(!mobileSidebarOpen)}
       />
 

@@ -27,6 +27,7 @@ export const DEMO_WORKER_IDENTITY: WorkerIdentity = {
   rating: 4.8,
   reviewsCount: 342,
   isVerified: true,
+  avatarUrl: "https://dxvnwbmxeubpbunwlmnd.supabase.co/storage/v1/object/public/avatars/avatar-1790013278075-xqmjxn1.png",
 };
 
 export const DEMO_WORKER_OVERVIEW_STATS: WorkerOverviewStats = {
@@ -129,6 +130,9 @@ export const DEMO_WORKER_PROFILE: WorkerProfileDetails = {
   federationName: "Gujarat Labour Cooperative Federation",
   location: "Ahmedabad, Gujarat",
   phone: "+91 98250 11021",
+  avatarUrl: "https://dxvnwbmxeubpbunwlmnd.supabase.co/storage/v1/object/public/avatars/avatar-1790013278075-xqmjxn1.png",
+  dateOfBirth: "1998-08-15",
+  gender: "Male",
   languages: ["Gujarati", "Hindi", "English"],
   skills: [
     "Pipe Repair",
@@ -151,9 +155,9 @@ export const DEMO_EARNINGS_SUMMARY: WorkerEarningsSummary = {
   thisWeekEarnings: 9400,
   thisMonthEarnings: 38250,
   completedJobsCount: 342,
-  bankName: "State Bank of India (Cooperative Payroll Account)",
-  accountEnding: "4129",
-  ifscPrefix: "SBIN0001234",
+  bankName: "Gujarat State Cooperative Bank (Labour Settlement Account)",
+  accountEnding: "4321",
+  ifscPrefix: "GSCB0001024",
   nextPayoutTime: "Today at 6:00 PM",
 };
 

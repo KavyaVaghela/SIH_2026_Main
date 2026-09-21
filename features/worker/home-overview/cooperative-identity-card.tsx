@@ -3,6 +3,7 @@
 import * as React from "react";
 import { ShieldCheck, MapPin, Landmark, Phone, Mail, Wrench, CheckCircle2, CircleDot } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
+import { Avatar } from "@/components/ui/avatar";
 import { Card, CardContent } from "@/components/ui/card";
 import type { WorkerIdentity } from "../types";
 
@@ -20,23 +21,30 @@ export function CooperativeIdentityCard({ identity, isNameLoading }: Cooperative
       <CardContent className="p-5 sm:p-6 space-y-4">
         <div className="flex flex-col md:flex-row md:items-start md:justify-between gap-4">
           {/* Greeting & Identity */}
-          <div className="space-y-2">
-            <div className="flex flex-wrap items-center gap-2">
-              <h1 className="text-2xl sm:text-3xl font-bold tracking-tight text-white flex items-center gap-2">
-                Good Morning,{" "}
-                {isNameLoading || !identity.name ? (
-                  <span className="inline-block h-8 w-36 sm:w-44 bg-emerald-800/60 animate-pulse rounded-md align-middle" />
-                ) : (
-                  identity.name
-                )}{" "}
-                👋
-              </h1>
-              {identity.memberId && (
-                <span className="text-xs font-mono bg-emerald-800/60 border border-emerald-600/40 px-2 py-0.5 rounded text-emerald-200">
-                  {identity.memberId}
-                </span>
-              )}
-            </div>
+          <div className="flex items-start space-x-3 sm:space-x-4">
+            <Avatar
+              src={identity.avatarUrl}
+              fallback={identity.name}
+              size="lg"
+              className="border-2 border-emerald-400/40 shadow-md shrink-0 mt-0.5"
+            />
+            <div className="space-y-2">
+              <div className="flex flex-wrap items-center gap-2">
+                <h1 className="text-2xl sm:text-3xl font-bold tracking-tight text-white flex items-center gap-2">
+                  Good Morning,{" "}
+                  {isNameLoading || !identity.name ? (
+                    <span className="inline-block h-8 w-36 sm:w-44 bg-emerald-800/60 animate-pulse rounded-md align-middle" />
+                  ) : (
+                    identity.name
+                  )}{" "}
+                  👋
+                </h1>
+                {identity.memberId && (
+                  <span className="text-xs font-mono bg-emerald-800/60 border border-emerald-600/40 px-2 py-0.5 rounded text-emerald-200">
+                    {identity.memberId}
+                  </span>
+                )}
+              </div>
 
             <div className="flex flex-wrap items-center gap-2 pt-0.5">
               <span className="font-medium text-emerald-200 text-sm sm:text-base">
@@ -84,6 +92,7 @@ export function CooperativeIdentityCard({ identity, isNameLoading }: Cooperative
               )}
             </div>
           </div>
+        </div>
 
           {/* Federation & Location Credential Box */}
           <div className="flex flex-col items-start md:items-end gap-2 bg-emerald-900/40 border border-emerald-700/30 rounded-lg px-3.5 py-2.5 backdrop-blur-sm shrink-0">

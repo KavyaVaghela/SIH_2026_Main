@@ -1,7 +1,7 @@
 "use client";
 
 import * as React from "react";
-import { Search, Filter, AlertCircle, RefreshCw, Sparkles, Building2, Users, Calendar, MapPin, CheckCircle2, XCircle, Clock } from "lucide-react";
+import { Search, Filter, AlertCircle, RefreshCw, Building2, Users, Calendar, MapPin, CheckCircle2, XCircle, Clock } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
@@ -71,10 +71,6 @@ export function JobRequestsTab({
   const [lpError, setLpError] = React.useState<string | null>(null);
   const [processingId, setProcessingId] = React.useState<string | null>(null);
   const [actionNotice, setActionNotice] = React.useState<string | null>(null);
-
-  const [isCreatingTest, setIsCreatingTest] = React.useState(false);
-  const [testSuccessMessage, setTestSuccessMessage] = React.useState<string | null>(null);
-
   const [selectedProjectForReview, setSelectedProjectForReview] = React.useState<LargeProjectOpportunity | null>(null);
 
   const loadLargeProjects = React.useCallback(async () => {
@@ -569,20 +565,6 @@ export function JobRequestsTab({
     }
   };
 
-  const handleCreateTestRequest = async () => {
-    setIsCreatingTest(true);
-    setTestSuccessMessage(null);
-    try {
-      const created = await workerJobService.createTestCustomerRequest("w-1");
-      setTestSuccessMessage(`Created test customer request #${created.bookingNumber} (${created.customerName} - ${created.serviceTitle}).`);
-      if (onRefresh) onRefresh();
-    } catch (err: any) {
-      console.error("Failed to create test request", err);
-    } finally {
-      setIsCreatingTest(false);
-    }
-  };
-
   return (
     <div className="space-y-4">
       {/* Category Type Filter Bar: ALL | REGULAR JOBS | LARGE PROJECTS */}
@@ -628,21 +610,6 @@ export function JobRequestsTab({
         </div>
 
         <div className="flex items-center space-x-2 shrink-0">
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={handleCreateTestRequest}
-            disabled={isCreatingTest}
-            className="h-7 text-xs border-dashed border-emerald-600/50 hover:bg-emerald-100/50 text-emerald-800 dark:text-emerald-300"
-          >
-            {isCreatingTest ? (
-              <RefreshCw className="h-3 w-3 mr-1 animate-spin" />
-            ) : (
-              <Sparkles className="h-3 w-3 mr-1 text-emerald-600" />
-            )}
-            + Test Request (Dev)
-          </Button>
-
           {onRefresh && (
             <Button
               variant="ghost"
@@ -663,16 +630,6 @@ export function JobRequestsTab({
           <span>{actionNotice}</span>
           <button onClick={() => setActionNotice(null)} className="font-bold text-emerald-700 hover:underline ml-2">Dismiss</button>
         </Card>
-      )}
-
-      {/* Test Creation Feedback */}
-      {testSuccessMessage && (
-        <div className="p-3 rounded-lg bg-emerald-100/80 dark:bg-emerald-950/60 border border-emerald-600 text-xs text-emerald-900 dark:text-emerald-200 flex items-center justify-between">
-          <span>✓ {testSuccessMessage}</span>
-          <button type="button" onClick={() => setTestSuccessMessage(null)} className="text-xs font-bold hover:underline ml-2">
-            Dismiss
-          </button>
-        </div>
       )}
 
       {/* Search Bar */}
