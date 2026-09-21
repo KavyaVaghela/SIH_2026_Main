@@ -1,7 +1,7 @@
 "use client";
 
 import * as React from "react";
-import { Users, ShieldCheck, RefreshCw, AlertCircle, Info } from "lucide-react";
+import { Users, RefreshCw, AlertCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 
@@ -54,13 +54,6 @@ export function WorkerInformationHeader({
               className="text-[11px] font-medium text-muted-foreground"
             >
               Total Members: {totalCount}
-            </Badge>
-            <Badge
-              variant="outline"
-              className="flex items-center space-x-1 text-[10px] text-muted-foreground font-mono"
-            >
-              <ShieldCheck className="h-3 w-3 text-emerald-600" />
-              <span>Read-Only Analysis Hub</span>
             </Badge>
           </div>
 

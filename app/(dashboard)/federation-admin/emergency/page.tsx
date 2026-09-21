@@ -84,7 +84,7 @@ export default function FederationEmergencyDashboardPage() {
     }
   }, [triggerDebouncedFetch]);
 
-  const { status: realtimeStatus } = useRealtimeSubscription({
+  useRealtimeSubscription({
     table: "emergency_incidents",
     onPayload: handleIncidentPayload,
   });
@@ -114,26 +114,6 @@ export default function FederationEmergencyDashboardPage() {
         </div>
 
         <div className="flex items-center gap-2.5 shrink-0 flex-wrap">
-          {/* Realtime Status Diagnostic Indicator */}
-          <div className="flex items-center gap-1.5 text-[11px] font-medium px-2.5 py-1 rounded-full border bg-muted/40">
-            <span
-              className={`h-2 w-2 rounded-full ${
-                realtimeStatus === "SUBSCRIBED"
-                  ? "bg-emerald-500 animate-pulse"
-                  : realtimeStatus === "CONNECTING"
-                  ? "bg-amber-500 animate-ping"
-                  : "bg-muted-foreground"
-              }`}
-            />
-            <span className="text-muted-foreground">
-              {realtimeStatus === "SUBSCRIBED"
-                ? "Realtime Live"
-                : realtimeStatus === "CONNECTING"
-                ? "Connecting Live Feed..."
-                : "Realtime Standby"}
-            </span>
-          </div>
-
           <Button
             size="sm"
             variant="outline"
