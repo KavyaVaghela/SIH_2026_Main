@@ -38,9 +38,11 @@ export function EmergencyTrackingView({ incidentId }: EmergencyTrackingViewProps
   const [copiedCode, setCopiedCode] = React.useState<boolean>(false);
   const [showQrModal, setShowQrModal] = React.useState<boolean>(false);
 
-  const fetchTracking = React.useCallback(async () => {
+  const debounceTimerRef = React.useRef<NodeJS.Timeout | null>(null);
+
+  const fetchTracking = React.useCallback(async (showLoading = true) => {
     try {
-      setIsLoading(true);
+      if (showLoading) setIsLoading(true);
       setError(null);
       const res = await fetch(`/api/emergency/incidents/${incidentId}`);
       if (!res.ok) {
@@ -60,37 +62,43 @@ export function EmergencyTrackingView({ incidentId }: EmergencyTrackingViewProps
     } catch (err) {
       setError((err as Error)?.message || "Failed to load tracking data.");
     } finally {
-      setIsLoading(false);
+      if (showLoading) setIsLoading(false);
     }
   }, [incidentId]);
 
   React.useEffect(() => {
-    fetchTracking();
+    fetchTracking(true);
+    return () => {
+      if (debounceTimerRef.current) clearTimeout(debounceTimerRef.current);
+    };
   }, [fetchTracking]);
 
-  // Realtime updates: Re-fetch on any WAL update to emergency_incidents or tasks
+  const handleRealtimeUpdate = React.useCallback(() => {
+    if (debounceTimerRef.current) {
+      clearTimeout(debounceTimerRef.current);
+    }
+    debounceTimerRef.current = setTimeout(() => {
+      fetchTracking(false);
+    }, 150);
+  }, [fetchTracking]);
+
+  // Realtime updates: debounced refresh on WAL updates to avoid redundant requests
   useRealtimeSubscription({
     table: "emergency_incidents",
     enabled: !!incidentId,
-    onPayload: () => {
-      fetchTracking();
-    },
+    onPayload: handleRealtimeUpdate,
   });
 
   useRealtimeSubscription({
     table: "emergency_incident_tasks",
     enabled: !!incidentId,
-    onPayload: () => {
-      fetchTracking();
-    },
+    onPayload: handleRealtimeUpdate,
   });
 
   useRealtimeSubscription({
     table: "emergency_response_teams",
     enabled: !!incidentId,
-    onPayload: () => {
-      fetchTracking();
-    },
+    onPayload: handleRealtimeUpdate,
   });
 
   const handleCopyCode = () => {
@@ -146,6 +154,12 @@ export function EmergencyTrackingView({ incidentId }: EmergencyTrackingViewProps
   else if (isVerified || team?.fieldStatus === "ON_SITE" || team?.fieldStatus === "WORK_IN_PROGRESS") activeStep = 3;
   else if (team || incident.status === "ACTIVE") activeStep = 2;
 
+  // Derivation of customer progress percentage: Closed = 100%
+  const progressPercentage =
+    incident.status === "CLOSED"
+      ? 100
+      : (tracking?.progressPercentage ?? (activeStep * 20));
+
   return (
     <div className="max-w-4xl mx-auto space-y-6 pb-20 px-4 md:px-0">
       {/* Top Header & Breadcrumb */}
@@ -183,7 +197,7 @@ export function EmergencyTrackingView({ incidentId }: EmergencyTrackingViewProps
           <Button
             variant="outline"
             size="sm"
-            onClick={() => fetchTracking()}
+            onClick={() => fetchTracking(true)}
             className="text-xs gap-1.5"
           >
             <RefreshCw className="w-3.5 h-3.5" />
@@ -199,10 +213,10 @@ export function EmergencyTrackingView({ incidentId }: EmergencyTrackingViewProps
             Emergency Response Pipeline
           </span>
           <span className="text-xs font-bold font-mono text-rose-600">
-            {tracking?.progressPercentage ?? 25}% Complete
+            {progressPercentage}% Complete
           </span>
         </div>
-        <Progress value={tracking?.progressPercentage ?? 25} className="h-2.5 bg-slate-100 dark:bg-slate-800" />
+        <Progress value={progressPercentage} className="h-2.5 bg-slate-100 dark:bg-slate-800" />
 
         <div className="grid grid-cols-5 gap-2 pt-2 text-center">
           <div className="space-y-1">

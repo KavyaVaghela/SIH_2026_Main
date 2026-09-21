@@ -19,6 +19,7 @@ import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
+import { useRealtimeSubscription } from "@/hooks/use-realtime-subscription";
 
 export interface EmergencyActiveResponseCardProps {
   workerId?: string;
@@ -53,18 +54,24 @@ export function EmergencyActiveResponseCard({
   // Feedback message
   const [feedback, setFeedback] = React.useState<{ type: "success" | "error"; text: string } | null>(null);
 
-  const fetchActiveAssignment = React.useCallback(async () => {
+  const debounceTimerRef = React.useRef<NodeJS.Timeout | null>(null);
+
+  const fetchActiveAssignment = React.useCallback(async (showLoading = true) => {
     if (!workerId) return;
     try {
-      setIsLoading(true);
+      if (showLoading) setIsLoading(true);
       const res = await fetch(`/api/emergency/teams?workerId=${workerId}`);
       if (!res.ok) return;
       const json = await res.json();
       if (json.success && json.team) {
         setTeam(json.team);
 
-        // Fetch incident details
-        const incRes = await fetch(`/api/emergency/incidents/${json.team.incident_id}`);
+        // Fetch incident details and check-in status in parallel
+        const [incRes, checkInRes] = await Promise.all([
+          fetch(`/api/emergency/incidents/${json.team.incident_id}`),
+          fetch(`/api/emergency/check-in?incidentId=${json.team.incident_id}`),
+        ]);
+
         if (incRes.ok) {
           const incJson = await incRes.json();
           if (incJson.success) {
@@ -73,8 +80,6 @@ export function EmergencyActiveResponseCard({
           }
         }
 
-        // Check if worker is checked in
-        const checkInRes = await fetch(`/api/emergency/check-in?incidentId=${json.team.incident_id}`);
         if (checkInRes.ok) {
           const cJson = await checkInRes.json();
           // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -88,13 +93,37 @@ export function EmergencyActiveResponseCard({
     } catch {
       // Quiet
     } finally {
-      setIsLoading(false);
+      if (showLoading) setIsLoading(false);
     }
   }, [workerId]);
 
   React.useEffect(() => {
-    fetchActiveAssignment();
+    fetchActiveAssignment(true);
+    return () => {
+      if (debounceTimerRef.current) clearTimeout(debounceTimerRef.current);
+    };
   }, [fetchActiveAssignment]);
+
+  const handleRealtimeUpdate = React.useCallback(() => {
+    if (debounceTimerRef.current) {
+      clearTimeout(debounceTimerRef.current);
+    }
+    debounceTimerRef.current = setTimeout(() => {
+      fetchActiveAssignment(false);
+    }, 150);
+  }, [fetchActiveAssignment]);
+
+  useRealtimeSubscription({
+    table: "emergency_response_teams",
+    enabled: !!workerId,
+    onPayload: handleRealtimeUpdate,
+  });
+
+  useRealtimeSubscription({
+    table: "emergency_incidents",
+    enabled: !!workerId,
+    onPayload: handleRealtimeUpdate,
+  });
 
   const handleVerify = async (e: React.FormEvent) => {
     e.preventDefault();

@@ -19,6 +19,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
 import { Input } from "@/components/ui/input";
+import { useRealtimeSubscription } from "@/hooks/use-realtime-subscription";
 
 export interface EmergencyTaskItem {
   id: string;
@@ -99,10 +100,12 @@ export function EmergencyTasksCard({ workerId, onRefresh }: EmergencyTasksCardPr
   const [reqReason, setReqReason] = React.useState<string>("");
   const [isSubmittingReq, setIsSubmittingReq] = React.useState<boolean>(false);
 
-  const fetchActiveTeamAndTasks = React.useCallback(async () => {
+  const debounceTimerRef = React.useRef<NodeJS.Timeout | null>(null);
+
+  const fetchActiveTeamAndTasks = React.useCallback(async (showLoading = true) => {
     if (!workerId) return;
     try {
-      setIsLoading(true);
+      if (showLoading) setIsLoading(true);
       // 1. Fetch active team for this worker
       const teamRes = await fetch(`/api/emergency/teams?workerId=${workerId}`);
       if (!teamRes.ok) return;
@@ -118,8 +121,13 @@ export function EmergencyTasksCard({ workerId, onRefresh }: EmergencyTasksCardPr
       const activeTeam = teamData.team;
       setTeam(activeTeam);
 
-      // 2. Fetch Incident Details
-      const incRes = await fetch(`/api/emergency/incidents/${activeTeam.incident_id}`);
+      // 2. Fetch Incident Details, Tasks, and Additional Worker Requests in parallel
+      const [incRes, tasksRes, reqRes] = await Promise.all([
+        fetch(`/api/emergency/incidents/${activeTeam.incident_id}`),
+        fetch(`/api/emergency/tasks?incidentId=${activeTeam.incident_id}`),
+        fetch(`/api/emergency/requests/additional-workers?incidentId=${activeTeam.incident_id}`),
+      ]);
+
       if (incRes.ok) {
         const incData = await incRes.json();
         if (incData.success && incData.incident) {
@@ -133,8 +141,6 @@ export function EmergencyTasksCard({ workerId, onRefresh }: EmergencyTasksCardPr
         }
       }
 
-      // 3. Fetch Tasks
-      const tasksRes = await fetch(`/api/emergency/tasks?incidentId=${activeTeam.incident_id}`);
       if (tasksRes.ok) {
         const taskData = await tasksRes.json();
         if (taskData.success) {
@@ -143,8 +149,6 @@ export function EmergencyTasksCard({ workerId, onRefresh }: EmergencyTasksCardPr
         }
       }
 
-      // 4. Fetch Additional Worker Requests
-      const reqRes = await fetch(`/api/emergency/requests/additional-workers?incidentId=${activeTeam.incident_id}`);
       if (reqRes.ok) {
         const reqData = await reqRes.json();
         if (reqData.success) {
@@ -154,13 +158,31 @@ export function EmergencyTasksCard({ workerId, onRefresh }: EmergencyTasksCardPr
     } catch (err) {
       console.warn("EmergencyTasksCard live sync note:", err);
     } finally {
-      setIsLoading(false);
+      if (showLoading) setIsLoading(false);
     }
   }, [workerId]);
 
   React.useEffect(() => {
-    fetchActiveTeamAndTasks();
+    fetchActiveTeamAndTasks(true);
+    return () => {
+      if (debounceTimerRef.current) clearTimeout(debounceTimerRef.current);
+    };
   }, [fetchActiveTeamAndTasks]);
+
+  const handleRealtimeUpdate = React.useCallback(() => {
+    if (debounceTimerRef.current) {
+      clearTimeout(debounceTimerRef.current);
+    }
+    debounceTimerRef.current = setTimeout(() => {
+      fetchActiveTeamAndTasks(false);
+    }, 150);
+  }, [fetchActiveTeamAndTasks]);
+
+  useRealtimeSubscription({
+    table: "emergency_incident_tasks",
+    enabled: !!workerId,
+    onPayload: handleRealtimeUpdate,
+  });
 
   // Determine if current worker is Team Lead
   const isTeamLead = team?.team_lead_worker_id === workerId;
