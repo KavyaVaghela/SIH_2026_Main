@@ -110,9 +110,15 @@ export async function signInWithEmail(email: string, password: string) {
       }
 
       // 4. ACTIVE + VERIFIED: allow normal worker dashboard access
+      const workerHome = getRoleHomeRoute(role);
+      if (process.env.NODE_ENV !== "production") {
+        console.log(
+          `[Auth:signInWithEmail] Worker verified. User ID: ${data.user.id}, redirecting to: ${workerHome}`
+        );
+      }
       return {
         success: true,
-        redirectUrl: "/worker/dashboard",
+        redirectUrl: workerHome,
         user: data.user,
         role,
       };
@@ -170,6 +176,12 @@ export async function signInWithEmail(email: string, password: string) {
     let redirectUrl = getRoleHomeRoute(role);
     if (!isActive && role !== "CUSTOMER") {
       redirectUrl = "/pending";
+    }
+
+    if (process.env.NODE_ENV !== "production") {
+      console.log(
+        `[Auth:signInWithEmail] Auth success. User ID: ${data.user.id}, Role: ${role}, redirecting to: ${redirectUrl}`
+      );
     }
 
     return { success: true, redirectUrl, user: data.user, role };
