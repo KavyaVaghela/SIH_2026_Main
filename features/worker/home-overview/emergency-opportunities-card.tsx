@@ -44,7 +44,7 @@ export function EmergencyOpportunitiesCard({
   const fetchOpportunities = React.useCallback(async (showLoading = true) => {
     if (!workerId) return;
     try {
-      if (showLoading) setIsLoading(true);
+      if (showLoading && opportunities.length === 0) setIsLoading(true);
       const res = await fetch(`/api/emergency/dispatch?workerId=${workerId}`);
       if (!res.ok) return;
       const data = await res.json();

@@ -105,7 +105,7 @@ export function EmergencyTasksCard({ workerId, onRefresh }: EmergencyTasksCardPr
   const fetchActiveTeamAndTasks = React.useCallback(async (showLoading = true) => {
     if (!workerId) return;
     try {
-      if (showLoading) setIsLoading(true);
+      if (showLoading && !team) setIsLoading(true);
       // 1. Fetch active team for this worker
       const teamRes = await fetch(`/api/emergency/teams?workerId=${workerId}`);
       if (!teamRes.ok) return;

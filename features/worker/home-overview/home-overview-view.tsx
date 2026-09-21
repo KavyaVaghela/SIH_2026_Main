@@ -140,6 +140,25 @@ export function HomeOverviewView() {
       setCachedProfileName("WORKER", fullName);
       setIsNameLoading(false);
 
+      // Query reviews for authentic worker rating
+      let workerRating = 0;
+      let revCount = 0;
+      if (wRec?.id) {
+        try {
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          const { data: revs } = await (supabase.from("reviews") as any)
+            .select("rating")
+            .eq("worker_id", wRec.id);
+          if (revs && revs.length > 0) {
+            const sum = revs.reduce((acc: number, r: any) => acc + Number(r.rating || 0), 0);
+            workerRating = Math.round((sum / revs.length) * 10) / 10;
+            revCount = revs.length;
+          }
+        } catch {
+          // Keep 0
+        }
+      }
+
       setWorkerIdentity({
         name: fullName,
         email: prof?.email || user.email || "",
@@ -151,8 +170,8 @@ export function HomeOverviewView() {
         cooperativeRole: wRec?.verification_status === "verified" ? "Verified Member" : "Registered Member",
         federationName: fedName,
         location: locationStr,
-        rating: 4.9,
-        reviewsCount: 12,
+        rating: workerRating,
+        reviewsCount: revCount,
         isVerified: wRec?.verification_status === "verified",
         avatarUrl: prof?.avatar_url || undefined,
         skills: skillsList,
@@ -160,6 +179,11 @@ export function HomeOverviewView() {
         accountStatus: wRec?.account_status || "ACTIVE",
         availabilityStatus: wRec?.availability_status || "AVAILABLE",
       });
+
+      setStats((prev) => ({
+        ...prev,
+        overallRating: workerRating,
+      }));
     } catch (err) {
       console.warn("Notice: Worker live overview fetch:", err);
     }
@@ -199,12 +223,14 @@ export function HomeOverviewView() {
         setScheduleItems(mapped);
 
         const jobsDone = Number(earnings?.summary?.completedJobsCount) || 0;
-        setStats({
+        const todays = Number(earnings?.summary?.todaysEarnings) || 0;
+
+        setStats((prev) => ({
           todaysJobs: schedule?.today?.length || 0,
-          todaysEarnings: Number(earnings?.summary?.todaysEarnings) || 0,
-          overallRating: jobsDone > 0 ? Number((earnings?.summary as unknown as { rating?: number })?.rating) || 0 : 0,
+          todaysEarnings: todays,
+          overallRating: prev.overallRating,
           completedJobs: jobsDone,
-        });
+        }));
       })
       .catch((err) => {
         console.warn("HomeOverview live data sync note:", err);
