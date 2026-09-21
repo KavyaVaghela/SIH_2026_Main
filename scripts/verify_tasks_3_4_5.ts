@@ -364,7 +364,7 @@ async function runVerification() {
     if (!approvedProfile?.is_active) {
       throw new Error("Expected approved worker profile to be active!");
     }
-    console.log(`✓ Worker profile is_active = ${approvedProfile.is_active} (eligible for /worker/dashboard)`);
+    console.log(`✓ Worker profile is_active = ${approvedProfile.is_active} (eligible for /worker)`);
 
     // -------------------------------------------------------------
     // TEST 6: Task 5 - Federation Admin Rejection (Existing Worker)
