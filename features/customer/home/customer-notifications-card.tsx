@@ -16,33 +16,46 @@ export interface CustomerNotificationItem {
 
 export const SAMPLE_CUSTOMER_NOTIFICATIONS: CustomerNotificationItem[] = [
   {
-    id: "notif-1",
-    title: "Worker Accepted Request",
-    message: "Chandu Patel from ABC Labour Cooperative accepted your electrical repair job.",
+    id: "cust-notif-01",
+    title: "New estimate received",
+    message: "A worker has submitted an estimate for your service request.",
+    type: "info",
+    timeAgo: "15 min ago",
+    isRead: false,
+  },
+  {
+    id: "cust-notif-02",
+    title: "Booking confirmed",
+    message: "Your booking with the selected worker has been confirmed.",
     type: "success",
-    timeAgo: "10 mins ago",
-    isRead: false,
-  },
-  {
-    id: "notif-2",
-    title: "OTP Verification Required",
-    message: "Share Service Start OTP 940218 with worker upon arrival at Satellite address.",
-    type: "info",
-    timeAgo: "25 mins ago",
-    isRead: false,
-  },
-  {
-    id: "notif-3",
-    title: "Payment Invoice Generated",
-    message: "Invoice INV-901823 of ₹350 for plumbing service is ready for review.",
-    type: "info",
     timeAgo: "1 hour ago",
+    isRead: false,
+  },
+  {
+    id: "cust-notif-03",
+    title: "Payment required",
+    message: "Your final service bill is ready. Please complete payment to continue.",
+    type: "warning",
+    timeAgo: "3 hours ago",
+    isRead: false,
+  },
+  {
+    id: "cust-notif-04",
+    title: "Complaint update",
+    message: "Your complaint has been reviewed by the federation. Open the complaint to view the latest update.",
+    type: "info",
+    timeAgo: "Yesterday",
+    isRead: true,
+  },
+  {
+    id: "cust-notif-05",
+    title: "Service completed",
+    message: "Your service has been marked as completed. Please review the final bill and payment details.",
+    type: "success",
+    timeAgo: "Yesterday",
     isRead: true,
   },
 ];
-
-import { notificationService } from "@/features/notifications/services/notification-service";
-import { useRealtimeSubscription } from "@/hooks/use-realtime-subscription";
 
 export interface CustomerNotificationsCardProps {
   notifications?: CustomerNotificationItem[];
@@ -53,38 +66,7 @@ export function CustomerNotificationsCard({
   notifications: initialNotifs,
   onViewAll,
 }: CustomerNotificationsCardProps) {
-  const [items, setItems] = React.useState<CustomerNotificationItem[]>(initialNotifs || SAMPLE_CUSTOMER_NOTIFICATIONS);
-
-  const fetchLiveNotifs = React.useCallback(async () => {
-    try {
-      const list = await notificationService.getUserNotifications("cust-1");
-      if (list && list.length > 0) {
-        const mapped: CustomerNotificationItem[] = list.map((n) => ({
-          id: n.id,
-          title: n.title,
-          message: n.message,
-          type: (n.type as any) || "info",
-          timeAgo: "Just now",
-          isRead: n.isRead,
-        }));
-        setItems(mapped);
-      }
-    } catch (err) {
-      console.warn("Live notifications fetch notice:", err);
-    }
-  }, []);
-
-  React.useEffect(() => {
-    fetchLiveNotifs();
-  }, [fetchLiveNotifs]);
-
-  // Subscribe to real-time notifications table changes for current profile
-  useRealtimeSubscription({
-    table: "notifications",
-    onPayload: () => {
-      fetchLiveNotifs();
-    },
-  });
+  const [items] = React.useState<CustomerNotificationItem[]>(initialNotifs || SAMPLE_CUSTOMER_NOTIFICATIONS);
 
   const notifications = items;
 

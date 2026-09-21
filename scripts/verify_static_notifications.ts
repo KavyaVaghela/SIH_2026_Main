@@ -4,6 +4,8 @@ import {
   getStaticNotificationsForRole,
   type RoleNotificationItem,
 } from "../constants/static-notifications";
+import { SAMPLE_CUSTOMER_NOTIFICATIONS } from "../features/customer/home/customer-notifications-card";
+import { MOCK_NOTIFICATIONS } from "../features/super-admin/notifications/data/mock-notifications";
 import type { PlatformRole } from "../config/navigation";
 
 console.log("==================================================");
@@ -42,54 +44,129 @@ roles.forEach((role) => {
   });
 });
 
-// 2. Exact Title Matches as per requirements
-const expectedCustomerTitles = [
-  "New estimate received",
-  "Booking confirmed",
-  "Payment required",
-  "Complaint update",
-  "Service completed",
+// 2. Exact Title & Message Matches as per requirements
+const expectedCustomer = [
+  {
+    title: "New estimate received",
+    message: "A worker has submitted an estimate for your service request.",
+  },
+  {
+    title: "Booking confirmed",
+    message: "Your booking with the selected worker has been confirmed.",
+  },
+  {
+    title: "Payment required",
+    message: "Your final service bill is ready. Please complete payment to continue.",
+  },
+  {
+    title: "Complaint update",
+    message: "Your complaint has been reviewed by the federation. Open the complaint to view the latest update.",
+  },
+  {
+    title: "Service completed",
+    message: "Your service has been marked as completed. Please review the final bill and payment details.",
+  },
 ];
 
-const customerTitles = STATIC_ROLE_NOTIFICATIONS.CUSTOMER.map((n) => n.title);
-expectedCustomerTitles.forEach((title) => {
-  assert(customerTitles.includes(title), `Customer includes notification title: "${title}"`);
+expectedCustomer.forEach((exp) => {
+  const match = STATIC_ROLE_NOTIFICATIONS.CUSTOMER.find((n) => n.title === exp.title);
+  assert(Boolean(match), `Customer includes notification title: "${exp.title}"`);
+  if (match) {
+    assert(match.message === exp.message, `Customer notification "${exp.title}" has exact message match`);
+  }
 });
 
-const expectedWorkerTitles = [
-  "New service request",
-  "Booking confirmed",
-  "Customer complaint",
-  "Complaint response required",
-  "Payment received",
+const expectedWorker = [
+  {
+    title: "New service request",
+    message: "A customer has requested your services for a new job.",
+  },
+  {
+    title: "Booking confirmed",
+    message: "Your service request has been accepted and the booking is confirmed.",
+  },
+  {
+    title: "Customer complaint",
+    message: "A customer has submitted a complaint regarding one of your completed services.",
+  },
+  {
+    title: "Complaint response required",
+    message: "The federation is waiting for your response regarding a customer complaint.",
+  },
+  {
+    title: "Payment received",
+    message: "Payment for your completed service has been recorded successfully.",
+  },
 ];
-const workerTitles = STATIC_ROLE_NOTIFICATIONS.WORKER.map((n) => n.title);
-expectedWorkerTitles.forEach((title) => {
-  assert(workerTitles.includes(title), `Worker includes notification title: "${title}"`);
+
+expectedWorker.forEach((exp) => {
+  const match = STATIC_ROLE_NOTIFICATIONS.WORKER.find((n) => n.title === exp.title);
+  assert(Boolean(match), `Worker includes notification title: "${exp.title}"`);
+  if (match) {
+    assert(match.message === exp.message, `Worker notification "${exp.title}" has exact message match`);
+  }
 });
 
-const expectedFedTitles = [
-  "Worker registration pending",
-  "New customer complaint",
-  "Worker complaint received",
-  "Worker response received",
-  "Escalated complaint",
+const expectedFed = [
+  {
+    title: "Worker registration pending",
+    message: "A new worker registration is waiting for federation review.",
+  },
+  {
+    title: "New customer complaint",
+    message: "A customer complaint regarding a worker is waiting for your review.",
+  },
+  {
+    title: "Worker complaint received",
+    message: "A worker has submitted a complaint that requires federation review.",
+  },
+  {
+    title: "Worker response received",
+    message: "A worker has submitted their response to a customer complaint.",
+  },
+  {
+    title: "Escalated complaint",
+    message: "A complaint has been escalated to the Super Admin and requires attention.",
+  },
 ];
-const fedTitles = STATIC_ROLE_NOTIFICATIONS.FEDERATION_ADMIN.map((n) => n.title);
-expectedFedTitles.forEach((title) => {
-  assert(fedTitles.includes(title), `Federation Admin includes notification title: "${title}"`);
+
+expectedFed.forEach((exp) => {
+  const match = STATIC_ROLE_NOTIFICATIONS.FEDERATION_ADMIN.find((n) => n.title === exp.title);
+  assert(Boolean(match), `Federation Admin includes notification title: "${exp.title}"`);
+  if (match) {
+    assert(match.message === exp.message, `Federation Admin notification "${exp.title}" has exact message match`);
+  }
 });
 
-const expectedSuperAdminTitles = [
-  "Federation complaint received",
-  "Escalated complaint",
-  "Federation performance alert",
-  "Federation review required",
-  "Complaint resolution update",
+const expectedSuperAdmin = [
+  {
+    title: "Federation complaint received",
+    message: "A federation has submitted a complaint that requires Super Admin review.",
+  },
+  {
+    title: "Escalated complaint",
+    message: "A federation has escalated a complaint for Super Admin intervention.",
+  },
+  {
+    title: "Federation performance alert",
+    message: "A federation currently has multiple pending complaints requiring attention.",
+  },
+  {
+    title: "Federation review required",
+    message: "A federation requires administrative review based on its current complaint activity.",
+  },
+  {
+    title: "Complaint resolution update",
+    message: "An escalated federation complaint has been updated and is ready for review.",
+  },
 ];
-const saTitles = STATIC_ROLE_NOTIFICATIONS.SUPER_ADMIN.map((n) => n.title);
-expectedSuperAdminTitles.forEach((title) => {
-  assert(saTitles.includes(title), `Super Admin includes notification title: "${title}"`);
+
+expectedSuperAdmin.forEach((exp) => {
+  const match = STATIC_ROLE_NOTIFICATIONS.SUPER_ADMIN.find((n) => n.title === exp.title);
+  assert(Boolean(match), `Super Admin includes notification title: "${exp.title}"`);
+  if (match) {
+    assert(match.message === exp.message, `Super Admin notification "${exp.title}" has exact message match`);
+  }
 });
 
 // 3. Strict Role Isolation: IDs across roles must be strictly distinct
@@ -118,6 +195,22 @@ custCopy[0].isRead = true;
 assert(
   STATIC_ROLE_NOTIFICATIONS.CUSTOMER[0].isRead === false,
   "Deep clone isolation: getStaticNotificationsForRole produces independent copy"
+);
+
+// 6. Verify CustomerNotificationsCard uses exact 5 static customer notifications
+assert(SAMPLE_CUSTOMER_NOTIFICATIONS.length === 5, `CustomerNotificationsCard: exactly 5 items (actual: ${SAMPLE_CUSTOMER_NOTIFICATIONS.length})`);
+assert(
+  SAMPLE_CUSTOMER_NOTIFICATIONS[0].title === "New estimate received" &&
+  SAMPLE_CUSTOMER_NOTIFICATIONS[0].message === "A worker has submitted an estimate for your service request.",
+  "CustomerNotificationsCard: item 1 matches exact spec"
+);
+
+// 7. Verify Super Admin MOCK_NOTIFICATIONS uses exact 5 static super admin notifications
+assert(MOCK_NOTIFICATIONS.length === 5, `MOCK_NOTIFICATIONS: exactly 5 items (actual: ${MOCK_NOTIFICATIONS.length})`);
+assert(
+  MOCK_NOTIFICATIONS[0].title === "Federation complaint received" &&
+  MOCK_NOTIFICATIONS[0].description === "A federation has submitted a complaint that requires Super Admin review.",
+  "MOCK_NOTIFICATIONS: item 1 matches exact spec"
 );
 
 console.log("==================================================");
