@@ -147,8 +147,19 @@ export class WorkerJobService implements IWorkerJobService {
       }
     }
 
-    const totalAmt = Number(b.total_amount || b.totalAmount) || 350;
-    const workerEarn = Number(b.worker_earnings || b.workerEarnings) || Math.round(totalAmt * 0.95);
+    const rawTotal = b.total_amount !== undefined && b.total_amount !== null ? Number(b.total_amount) : (b.totalAmount !== undefined && b.totalAmount !== null ? Number(b.totalAmount) : NaN);
+    const basePrice = b.services?.base_price !== undefined && b.services?.base_price !== null ? Number(b.services.base_price) : NaN;
+    let totalAmt = 0;
+    if (!isNaN(rawTotal) && rawTotal > 0) {
+      totalAmt = rawTotal;
+    } else if (!isNaN(basePrice) && basePrice > 0) {
+      totalAmt = basePrice;
+    } else if (isEmergency) {
+      totalAmt = !isNaN(rawTotal) ? rawTotal : 0;
+    } else {
+      totalAmt = !isNaN(rawTotal) ? rawTotal : 0;
+    }
+    const workerEarn = Number(b.worker_earnings || b.workerEarnings) || (totalAmt > 0 ? Math.round(totalAmt * 0.95) : 0);
 
     return {
       id: b.id,
@@ -166,6 +177,7 @@ export class WorkerJobService implements IWorkerJobService {
       problemDescription: probDesc || "Bathroom plumbing inspection and repair.",
       problemPhotoUrl: b.problem_photo_url || b.problemPhotoUrl || problemPhotoUrl || null,
       totalAmount: totalAmt,
+      estimatedPayout: workerEarn,
       workerEarnings: workerEarn,
       status: b.status,
       urgency: isEmergency ? "EMERGENCY" : "STANDARD",
@@ -238,7 +250,7 @@ export class WorkerJobService implements IWorkerJobService {
         if (res.ok) {
           const json = await res.json();
           if (Array.isArray(json.bookings)) {
-            return json.bookings;
+            return this.cleanAndOrderRequests(json.bookings);
           }
         }
       }
@@ -276,19 +288,39 @@ export class WorkerJobService implements IWorkerJobService {
         .order("created_at", { ascending: false });
 
       if (!mwErr && mwData && mwData.length > 0) {
+        const validMwData = mwData.filter((item: any) => {
+          if (!item.job_requests || !item.job_requests.id) return false;
+          const jrStatus = (item.job_requests.status || "").toUpperCase();
+          if (["CANCELLED", "EXPIRED", "COMPLETED", "CLOSED"].includes(jrStatus)) return false;
+          const estStatus = (item.status || "").toUpperCase();
+          if (["DECLINED", "NOT_SELECTED", "EXPIRED", "WORKER_UNAVAILABLE"].includes(estStatus)) {
+            return false;
+          }
+          return true;
+        });
+
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        mwJobItems = mwData.map((item: any) => {
+        mwJobItems = validMwData.map((item: any) => {
           const jr = item.job_requests;
           const srv = jr?.services;
           const cat = srv?.service_categories;
           const cust = jr?.profiles;
           const reqNum = `SR-${item.job_request_id.slice(0, 8).toUpperCase()}`;
           const { cleanDescription, problemPhotoUrl } = extractProblemEvidence(jr?.description);
+          const probDesc = cleanDescription || "";
+          const servTitle = srv?.title || "Service Request";
+          const isEmergency =
+            /emergency|rupture|burst|leakage|spark/i.test(probDesc) ||
+            /emergency/i.test(servTitle);
+          const estAmount = Number(item.estimated_amount) || 0;
+          const basePrice = Number(srv?.base_price) || 0;
+          const totalAmount = estAmount > 0 ? estAmount : (basePrice > 0 ? basePrice : 0);
+          const workerEarnings = totalAmount > 0 ? Math.round(totalAmount * 0.95) : 0;
 
           return {
             id: item.job_request_id,
             bookingNumber: reqNum,
-            serviceTitle: srv?.title || "Service Request",
+            serviceTitle: servTitle,
             categoryName: cat?.name || "Maintenance",
             customerName: cust?.full_name || "Verified Customer",
             customerPhone: cust?.phone || "+91 98250 11021",
@@ -306,12 +338,13 @@ export class WorkerJobService implements IWorkerJobService {
             scheduledStartAt: jr?.preferred_schedule || new Date().toISOString(),
             problemDescription: cleanDescription || "Service request details",
             problemPhotoUrl: problemPhotoUrl || null,
-            totalAmount: srv?.base_price || 350,
-            workerEarnings: Math.round((srv?.base_price || 350) * 0.95),
+            totalAmount,
+            estimatedPayout: workerEarnings,
+            workerEarnings,
             status: (item.status?.toUpperCase() || "PENDING") as any,
-            urgency: "STANDARD",
+            urgency: isEmergency ? "EMERGENCY" : "STANDARD",
             cooperativeName: "Ahmedabad Skilled Workers Federation",
-            workerEstimateAmount: Number(item.estimated_amount) > 0 ? Number(item.estimated_amount) : null,
+            workerEstimateAmount: estAmount > 0 ? estAmount : null,
             workerEstimateNotes: item.notes,
             minimumVisitCharge: srv?.minimum_visit_charge || 200,
             isMultiWorkerRequest: true,
@@ -332,7 +365,7 @@ export class WorkerJobService implements IWorkerJobService {
         .select(`
           *,
           customer:profiles!customer_id (full_name, phone, email),
-          services (title, service_categories (name)),
+          services (title, base_price, minimum_visit_charge, service_categories (name)),
           addresses (address_line1, city),
           federations (name)
         `)
@@ -349,7 +382,7 @@ export class WorkerJobService implements IWorkerJobService {
     }
 
     if (mwJobItems.length > 0 || canonicalItems.length > 0) {
-      return [...mwJobItems, ...canonicalItems];
+      return this.cleanAndOrderRequests([...canonicalItems, ...mwJobItems]);
     }
 
     // DB is unreachable — fall back to in-memory bookings as last resort
@@ -366,7 +399,67 @@ export class WorkerJobService implements IWorkerJobService {
         (b.workerId === targetWorkerId || (!b.workerId && b.status === "REQUEST_SENT"))
     );
 
-    return requests.map((b) => this.mapBookingToWorkerJobItem(b));
+    return this.cleanAndOrderRequests(requests.map((b) => this.mapBookingToWorkerJobItem(b)));
+  }
+
+  /**
+   * Filters out invalid/fake records, deduplicates, and sorts requests newest-first
+   */
+  private cleanAndOrderRequests(items: WorkerJobItem[]): WorkerJobItem[] {
+    const validStatuses = [
+      "REQUEST_SENT",
+      "WORKER_REVIEWING",
+      "WORKER_INTERESTED",
+      "INTERESTED",
+      "ESTIMATE_SUBMITTED",
+      "CUSTOMER_CONFIRMATION_PENDING",
+      "PENDING",
+    ];
+
+    const genuine = items.filter((r) => {
+      if (!validStatuses.includes(r.status)) return false;
+
+      const desc = (r.problemDescription || "").toLowerCase();
+      if (
+        desc.includes("realtime test booking") ||
+        desc.includes("browser simulation") ||
+        desc.includes("[test]") ||
+        desc.includes("test customer insert")
+      ) {
+        return false;
+      }
+
+      if (r.urgency === "EMERGENCY") {
+        // Genuine emergency requests must NOT be removed merely because emergency pricing/payment may be represented differently from standard jobs
+        return Boolean(r.id && (r.serviceTitle || r.problemDescription));
+      } else {
+        // Requests with an invalid ₹0 amount that are clearly generated/test/stale records must not appear as genuine job requests
+        if (!r.totalAmount || r.totalAmount <= 0) {
+          return false;
+        }
+        return Boolean(r.id && r.serviceTitle);
+      }
+    });
+
+    const seenIds = new Set<string>();
+    const seenBookingNumbers = new Set<string>();
+    const deduplicated: WorkerJobItem[] = [];
+
+    for (const item of genuine) {
+      if (!seenIds.has(item.id) && (!item.bookingNumber || !seenBookingNumbers.has(item.bookingNumber))) {
+        seenIds.add(item.id);
+        if (item.bookingNumber) seenBookingNumbers.add(item.bookingNumber);
+        deduplicated.push(item);
+      }
+    }
+
+    deduplicated.sort((a, b) => {
+      const timeA = new Date(a.createdAt || a.scheduledStartAt || 0).getTime();
+      const timeB = new Date(b.createdAt || b.scheduledStartAt || 0).getTime();
+      return timeB - timeA;
+    });
+
+    return deduplicated;
   }
 
   /**
@@ -1822,6 +1915,13 @@ export class WorkerJobService implements IWorkerJobService {
 
         const { cleanDescription, problemPhotoUrl } = extractProblemEvidence(jr.description);
 
+        const isEmergency =
+          /emergency|rupture|burst|leakage|spark/i.test(cleanDescription || "") ||
+          /emergency/i.test(srv?.title || "");
+        const basePrice = Number(srv?.base_price) || 0;
+        const totalAmount = estAmount > 0 ? estAmount : (basePrice > 0 ? basePrice : 0);
+        const workerEarnings = totalAmount > 0 ? Math.round(totalAmount * 0.95) : 0;
+
         return {
           id: jr.id,
           bookingNumber: `SR-${jr.id.slice(0, 8).toUpperCase()}`,
@@ -1843,10 +1943,10 @@ export class WorkerJobService implements IWorkerJobService {
           scheduledStartAt: jr.preferred_schedule || new Date().toISOString(),
           problemDescription: cleanDescription || "Service request details",
           problemPhotoUrl: problemPhotoUrl || null,
-          totalAmount: srv?.base_price || 350,
-          workerEarnings: Math.round((srv?.base_price || 350) * 0.95),
+          totalAmount,
+          workerEarnings,
           status: (mwEst?.status?.toUpperCase() || "PENDING") as any,
-          urgency: "STANDARD",
+          urgency: isEmergency ? "EMERGENCY" : "STANDARD",
           cooperativeName: "Ahmedabad Skilled Workers Federation",
           workerEstimateAmount: estAmount > 0 ? estAmount : null,
           workerEstimateLabor: laborAmount > 0 ? laborAmount : (estAmount > 0 ? Math.round(estAmount * 0.7) : undefined),

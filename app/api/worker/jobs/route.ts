@@ -17,7 +17,7 @@ export async function GET(request: NextRequest) {
       .select(`
         *,
         customer:profiles!customer_id (full_name, phone, email),
-        services (title, service_categories (name)),
+        services (title, base_price, minimum_visit_charge, service_categories (name)),
         addresses (address_line1, city),
         federations (name)
       `)
@@ -90,7 +90,18 @@ export async function GET(request: NextRequest) {
           .order("created_at", { ascending: false });
 
         if (!mwErr && mwData && mwData.length > 0) {
-          mwJobItems = mwData.map((item: any) => mapDbWorkerEstimate(item));
+          // Filter out orphaned estimates or those with cancelled/closed parent requests
+          const validMwData = mwData.filter((item: any) => {
+            if (!item.job_requests || !item.job_requests.id) return false;
+            const jrStatus = (item.job_requests.status || "").toUpperCase();
+            if (["CANCELLED", "EXPIRED", "COMPLETED", "CLOSED"].includes(jrStatus)) return false;
+            const estStatus = (item.status || "").toUpperCase();
+            if (scope === "requests" && ["DECLINED", "NOT_SELECTED", "EXPIRED", "WORKER_UNAVAILABLE"].includes(estStatus)) {
+              return false;
+            }
+            return true;
+          });
+          mwJobItems = validMwData.map((item: any) => mapDbWorkerEstimate(item));
         }
       } catch (mwCatch) {
         console.warn("Notice: mwData fetch error in /api/worker/jobs:", mwCatch);
@@ -98,8 +109,84 @@ export async function GET(request: NextRequest) {
     }
 
     const rawBookings = data || [];
+    const mappedBookings = rawBookings.map((b: any) => mapDbBooking(b));
+
+    if (scope === "requests") {
+      // 1. Filter canonical bookings: exclude invalid/fake ₹0 records and stale test artifacts
+      const genuineBookings = mappedBookings.filter((b: any) => {
+        const validStatuses = ["REQUEST_SENT", "WORKER_REVIEWING", "WORKER_INTERESTED", "CUSTOMER_CONFIRMATION_PENDING"];
+        if (!validStatuses.includes(b.status)) return false;
+
+        // Exclude explicit test generator records that flood the worker queue
+        const desc = (b.problemDescription || "").toLowerCase();
+        if (
+          desc.includes("realtime test booking") ||
+          desc.includes("browser simulation") ||
+          desc.includes("[test]") ||
+          desc.includes("test customer insert")
+        ) {
+          return false;
+        }
+
+        // Apply Genuine Request rule:
+        if (b.urgency === "EMERGENCY" || b.isEmergency) {
+          // Genuine emergency requests must NOT be removed merely because amount is ₹0 or represented differently
+          return Boolean(b.id && (b.serviceTitle || b.problemDescription));
+        } else {
+          // Genuine standard jobs must NOT have an invalid ₹0 amount from generated/test/stale records
+          if (!b.totalAmount || b.totalAmount <= 0) {
+            return false;
+          }
+          return Boolean(b.id && b.serviceTitle);
+        }
+      });
+
+      // 2. Filter multi-worker estimates: exclude non-actionable or invalid records
+      const genuineMwItems = mwJobItems.filter((item: any) => {
+        if (item.urgency === "EMERGENCY" || item.isEmergency) {
+          return Boolean(item.id);
+        } else {
+          if (!item.totalAmount || item.totalAmount <= 0) {
+            return false;
+          }
+          return Boolean(item.id);
+        }
+      });
+
+      // 3. Deduplicate across canonical bookings and multi-worker estimates using existing stable IDs
+      const seenIds = new Set<string>();
+      const seenBookingNumbers = new Set<string>();
+      const deduplicated: any[] = [];
+
+      // Canonical bookings take priority
+      for (const item of genuineBookings) {
+        if (!seenIds.has(item.id) && (!item.bookingNumber || !seenBookingNumbers.has(item.bookingNumber))) {
+          seenIds.add(item.id);
+          if (item.bookingNumber) seenBookingNumbers.add(item.bookingNumber);
+          deduplicated.push(item);
+        }
+      }
+
+      for (const item of genuineMwItems) {
+        if (!seenIds.has(item.id) && (!item.bookingNumber || !seenBookingNumbers.has(item.bookingNumber))) {
+          seenIds.add(item.id);
+          if (item.bookingNumber) seenBookingNumbers.add(item.bookingNumber);
+          deduplicated.push(item);
+        }
+      }
+
+      // 4. Order by newest genuine request first using existing request/creation timestamp
+      deduplicated.sort((a, b) => {
+        const timeA = new Date(a.createdAt || a.scheduledStartAt || 0).getTime();
+        const timeB = new Date(b.createdAt || b.scheduledStartAt || 0).getTime();
+        return timeB - timeA;
+      });
+
+      return NextResponse.json({ bookings: deduplicated, count: deduplicated.length });
+    }
+
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const mapped = [...mwJobItems, ...rawBookings.map((b: any) => mapDbBooking(b))];
+    const mapped = [...mwJobItems, ...mappedBookings];
 
     if (scope === "stats") {
       const todayStr = new Date().toISOString().split("T")[0];
@@ -312,7 +399,6 @@ function mapDbBooking(b: any) {
   }
 
   const isEmergency =
-    Boolean(priority) ||
     /emergency|rupture|burst|leakage|spark/i.test(probDesc) ||
     /emergency/i.test(servTitle);
 
@@ -333,6 +419,26 @@ function mapDbBooking(b: any) {
     } catch {
       // Keep defaults
     }
+  }
+
+  const rawTotal = b.total_amount !== undefined && b.total_amount !== null ? Number(b.total_amount) : NaN;
+  const basePrice = b.services?.base_price !== undefined && b.services?.base_price !== null ? Number(b.services.base_price) : NaN;
+
+  let totalAmount = 0;
+  if (!isNaN(rawTotal) && rawTotal > 0) {
+    totalAmount = rawTotal;
+  } else if (!isNaN(basePrice) && basePrice > 0) {
+    totalAmount = basePrice;
+  } else if (!isNaN(rawTotal)) {
+    totalAmount = rawTotal;
+  }
+
+  const rawEarnings = b.worker_earnings !== undefined && b.worker_earnings !== null ? Number(b.worker_earnings) : NaN;
+  let workerEarnings = 0;
+  if (!isNaN(rawEarnings) && rawEarnings > 0) {
+    workerEarnings = rawEarnings;
+  } else if (totalAmount > 0) {
+    workerEarnings = Math.round(totalAmount * 0.85);
   }
 
   return {
@@ -361,12 +467,14 @@ function mapDbBooking(b: any) {
     problemPhotoUrl: b.problem_photo_url || problemPhotoUrl || null,
     otpCode: b.otp_code || "940218",
     isEmergency,
-    estimatedAmount: Number(b.total_amount) || 500,
-    workerEstimateAmount: Number(b.total_amount) || 500,
-    workerEstimateLabor: Math.round((Number(b.total_amount) || 500) * 0.7),
-    workerEstimateMaterials: Math.round((Number(b.total_amount) || 500) * 0.3),
-    workerEarnings: Number(b.worker_earnings) || Math.round((Number(b.total_amount) || 500) * 0.85),
-    platformFee: Number(b.platform_fee) || 25,
+    totalAmount,
+    estimatedAmount: totalAmount > 0 ? totalAmount : (Number(basePrice) || 0),
+    workerEstimateAmount: totalAmount > 0 ? totalAmount : null,
+    workerEstimateLabor: totalAmount > 0 ? Math.round(totalAmount * 0.7) : null,
+    workerEstimateMaterials: totalAmount > 0 ? Math.round(totalAmount * 0.3) : null,
+    workerEarnings,
+    estimatedPayout: workerEarnings,
+    platformFee: Number(b.platform_fee) || (totalAmount > 0 ? Math.round(totalAmount * 0.05) : 0),
     actualStartAt: b.actual_start_at || null,
     actualEndAt: b.actual_end_at || null,
     createdAt: b.created_at,
@@ -402,6 +510,9 @@ function mapDbWorkerEstimate(item: any) {
     /emergency/i.test(servTitle);
 
   const estAmount = Number(item.estimated_amount) || 0;
+  const basePrice = Number(srv?.base_price) || 0;
+  const totalAmount = estAmount > 0 ? estAmount : (basePrice > 0 ? basePrice : 0);
+  const workerEarnings = totalAmount > 0 ? Math.round(totalAmount * 0.95) : 0;
 
   return {
     id: item.job_request_id,
@@ -426,14 +537,15 @@ function mapDbWorkerEstimate(item: any) {
     problemPhotoUrl: problemPhotoUrl || null,
     urgency: isEmergency ? "EMERGENCY" : "STANDARD",
     isEmergency,
-    totalAmount: srv?.base_price || 350,
-    estimatedAmount: estAmount > 0 ? estAmount : (srv?.base_price || 350),
+    totalAmount,
+    estimatedAmount: totalAmount,
     workerEstimateAmount: estAmount > 0 ? estAmount : null,
     workerEstimateLabor: estAmount > 0 ? Math.round(estAmount * 0.7) : null,
     workerEstimateMaterials: estAmount > 0 ? Math.round(estAmount * 0.3) : null,
     workerEstimateNotes: item.notes,
-    workerEarnings: Math.round((srv?.base_price || 350) * 0.95),
-    platformFee: Math.round((srv?.base_price || 350) * 0.05),
+    workerEarnings,
+    estimatedPayout: workerEarnings,
+    platformFee: Math.round(totalAmount * 0.05),
     minimumVisitCharge: srv?.minimum_visit_charge || 200,
     isMultiWorkerRequest: true,
     createdAt: item.created_at,

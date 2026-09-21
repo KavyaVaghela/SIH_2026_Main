@@ -14,7 +14,16 @@ export interface NewJobRequestsCardProps {
 }
 
 export function NewJobRequestsCard({ requests }: NewJobRequestsCardProps) {
-  const count = requests.length;
+  const genuineRequests = React.useMemo(() => {
+    return requests.filter((r) => {
+      if (r.urgency !== "EMERGENCY" && (!r.totalAmount || r.totalAmount <= 0)) {
+        return false;
+      }
+      return true;
+    });
+  }, [requests]);
+
+  const count = genuineRequests.length;
 
   return (
     <Card className="border-border shadow-sm">
@@ -42,7 +51,7 @@ export function NewJobRequestsCard({ requests }: NewJobRequestsCardProps) {
       </CardHeader>
 
       <CardContent className="p-4 sm:p-5 space-y-3">
-        {requests.map((req) => {
+        {genuineRequests.map((req) => {
           const isNew = req.status === "REQUEST_SENT" || req.status === "PENDING";
           return (
             <Link
@@ -95,7 +104,11 @@ export function NewJobRequestsCard({ requests }: NewJobRequestsCardProps) {
               <div className="flex sm:flex-col items-center sm:items-end justify-between sm:justify-center border-t sm:border-t-0 pt-2 sm:pt-0 shrink-0">
                 <span className="text-xs text-muted-foreground sm:text-[11px]">Est. Payout</span>
                 <span className="text-base font-bold text-emerald-700 dark:text-emerald-400">
-                  {formatINR(req.estimatedPayout || req.totalAmount)}
+                  {(req.estimatedPayout || req.totalAmount) > 0
+                    ? formatINR(req.estimatedPayout || req.totalAmount)
+                    : req.urgency === "EMERGENCY"
+                    ? "Emergency Relief"
+                    : formatINR(req.estimatedPayout || req.totalAmount)}
                 </span>
               </div>
             </Link>
