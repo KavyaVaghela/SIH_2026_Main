@@ -204,7 +204,7 @@ export function WelfareDashboardView() {
   };
 
   return (
-    <div className="space-y-6 pb-12 w-full">
+    <div className="space-y-6 pb-12 w-full max-w-full min-w-0 overflow-x-hidden">
       {/* Toast Notification Banner */}
       {toastMessage && (
         <div className="fixed top-4 right-4 z-50 p-3 px-4 bg-emerald-700 text-white text-xs font-semibold rounded-lg shadow-lg border border-emerald-500 animate-in fade-in-0 slide-in-from-top-2 flex items-center gap-2">
@@ -228,8 +228,8 @@ export function WelfareDashboardView() {
       <WelfareKpiGrid dateFilter={dateFilter} />
 
       {/* 3. Main Grid Row 1: Programs Table (Col 8) + Federation Coverage (Col 4) */}
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-5 items-start">
-        <div className="lg:col-span-8">
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-5 items-start min-w-0 max-w-full">
+        <div className="lg:col-span-8 min-w-0 max-w-full">
           <WelfareProgramsTable
             programs={filteredPrograms}
             onAddProgram={() => setIsAddProgramOpen(true)}
@@ -241,7 +241,7 @@ export function WelfareDashboardView() {
           />
         </div>
 
-        <div className="lg:col-span-4">
+        <div className="lg:col-span-4 min-w-0 max-w-full">
           <FederationCoverageList
             federations={filteredFederations}
             onViewFederation={(fed) => {
@@ -254,8 +254,8 @@ export function WelfareDashboardView() {
       </div>
 
       {/* 4. Main Grid Row 2: Training & Certification (Col 7) + Worker Assistance (Col 5) */}
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-5 items-start">
-        <div className="lg:col-span-7">
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-5 items-start min-w-0 max-w-full">
+        <div className="lg:col-span-7 min-w-0 max-w-full">
           <TrainingCertificationPanel
             stats={trainingStats}
             programs={trainingPrograms}
@@ -264,7 +264,7 @@ export function WelfareDashboardView() {
           />
         </div>
 
-        <div className="lg:col-span-5">
+        <div className="lg:col-span-5 min-w-0 max-w-full">
           <WorkerAssistancePanel
             stats={assistanceStats}
             requests={filteredAssistance}
@@ -278,7 +278,7 @@ export function WelfareDashboardView() {
       </div>
 
       {/* 5. Bottom Grid Row 3: 4 Analytics Cards */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 items-stretch">
+      <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4 items-stretch min-w-0 max-w-full">
         <WelfareCoverageDonutChart />
         <CoverageByCategoryCard />
         <SafetyWorkerSupportCard dateFilter={dateFilter} />

@@ -262,29 +262,29 @@ export function WelfareKpiGrid({ dateFilter = "30_DAYS" }: WelfareKpiGridProps) 
   }, [dateFilter, periodLabel]);
 
   return (
-    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-3.5">
+    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-3.5 min-w-0 max-w-full">
       {cards.map((card, idx) => (
         <Card
           key={idx}
-          className="p-4 border border-border/70 hover:border-emerald-500/30 transition-all duration-150 shadow-sm flex flex-col justify-between"
+          className="p-4 border border-border/70 hover:border-emerald-500/30 transition-all duration-150 shadow-sm flex flex-col justify-between min-w-0 overflow-hidden"
         >
-          <div>
-            <div className="flex items-center justify-between gap-2 mb-2">
+          <div className="min-w-0">
+            <div className="flex items-center justify-between gap-2 mb-2 min-w-0">
               <div className={`p-2 rounded-lg ${card.iconBg} shrink-0`}>
                 {card.icon}
               </div>
-              <div className="flex items-center gap-1 text-[11px] font-semibold text-emerald-800 dark:text-emerald-400">
-                <span>{card.trend}</span>
-                <span className="text-[10px] text-muted-foreground font-normal">
+              <div className="flex flex-wrap items-center justify-end gap-x-1 text-[11px] font-semibold text-emerald-800 dark:text-emerald-400 min-w-0 text-right">
+                <span className="shrink-0">{card.trend}</span>
+                <span className="text-[10px] text-muted-foreground font-normal truncate max-w-[85px] sm:max-w-none">
                   {card.trendLabel}
                 </span>
               </div>
             </div>
 
-            <div className="text-2xl font-bold text-foreground tracking-tight">
+            <div className="text-2xl font-bold text-foreground tracking-tight truncate">
               {card.value}
             </div>
-            <div className="text-xs font-semibold text-muted-foreground mt-0.5">
+            <div className="text-xs font-semibold text-muted-foreground mt-0.5 truncate">
               {card.title}
             </div>
           </div>
