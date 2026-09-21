@@ -1,0 +1,836 @@
+{
+  "updates": {
+    "4eae07aa-9c23-4a96-ad22-043d1dcd2b46": [
+      {
+        "id": "upd-1789890601396-dduq",
+        "project_request_id": "4eae07aa-9c23-4a96-ad22-043d1dcd2b46",
+        "worker_id": "59eca4ff-a589-4363-ad76-24a4ff5b6e2e",
+        "worker_name": "Ravi Patel",
+        "work_date": "2026-09-21",
+        "work_description": "Updated: Distribution board wiring complete with all MCB circuits labelled.",
+        "progress_percentage": 75,
+        "labor_charge": 900,
+        "media": [],
+        "expenses": [
+          {
+            "id": "exp-1789890601396-ekvo",
+            "project_request_id": "4eae07aa-9c23-4a96-ad22-043d1dcd2b46",
+            "daily_update_id": "upd-1789890601396-dduq",
+            "worker_id": "59eca4ff-a589-4363-ad76-24a4ff5b6e2e",
+            "worker_name": "Ravi Patel",
+            "expense_date": "2026-09-21",
+            "description": "Distribution Board enclosure & MCB switches",
+            "amount": 2000,
+            "status": "VERIFIED",
+            "verified_amount": 2000,
+            "created_at": "2026-09-20T07:50:01.395Z",
+            "updated_at": "2026-09-20T07:50:01.395Z",
+            "notes": null
+          }
+        ],
+        "created_at": "2026-09-20T07:50:01.395Z",
+        "updated_at": "2026-09-20T07:50:02.066Z"
+      },
+      {
+        "id": "upd-1789890599662-xdqb",
+        "project_request_id": "4eae07aa-9c23-4a96-ad22-043d1dcd2b46",
+        "worker_id": "59eca4ff-a589-4363-ad76-24a4ff5b6e2e",
+        "worker_name": "Ravi Patel",
+        "work_date": "2026-09-20",
+        "work_description": "completed flore 2 wiring",
+        "progress_percentage": 50,
+        "labor_charge": 900,
+        "media": [
+          {
+            "id": "media-1789890599662",
+            "storage_path": "proofs/test01/day1_conduit.jpg",
+            "file_name": "day1_conduit.jpg",
+            "mime_type": "image/jpeg",
+            "file_size": 0
+          }
+        ],
+        "expenses": [
+          {
+            "id": "exp-1789890747475-v58e",
+            "project_request_id": "4eae07aa-9c23-4a96-ad22-043d1dcd2b46",
+            "daily_update_id": "upd-1789890599662-xdqb",
+            "worker_id": "59eca4ff-a589-4363-ad76-24a4ff5b6e2e",
+            "worker_name": "Ravi Patel",
+            "expense_date": "2026-09-20",
+            "description": "100 meter phase 2 wire, 50 meter phase 3",
+            "amount": 1000,
+            "status": "VERIFIED",
+            "verified_amount": 1000,
+            "created_at": "2026-09-20T07:52:27.474Z",
+            "updated_at": "2026-09-20T07:52:27.474Z",
+            "notes": null
+          }
+        ],
+        "created_at": "2026-09-20T07:49:59.662Z",
+        "updated_at": "2026-09-20T07:52:27.474Z"
+      }
+    ],
+    "test-actual-cost-1789892514430": [
+      {
+        "id": "upd-1789892528625-r65l",
+        "project_request_id": "test-actual-cost-1789892514430",
+        "worker_id": "w-worker-01",
+        "worker_name": "Ravi Patel",
+        "work_date": "2026-09-25",
+        "work_description": "Foundation excavation and footing leveling",
+        "progress_percentage": 10,
+        "labor_charge": 900,
+        "media": [],
+        "expenses": [],
+        "created_at": "2026-09-20T08:22:08.624Z",
+        "updated_at": "2026-09-20T08:22:08.624Z"
+      }
+    ],
+    "test-actual-cost-1789892547075": [
+      {
+        "id": "upd-1789892548736-uerw",
+        "project_request_id": "test-actual-cost-1789892547075",
+        "worker_id": "w-worker-02",
+        "worker_name": "Ravi Patel",
+        "work_date": "2026-09-25",
+        "work_description": "Cement mixing and steel framing",
+        "progress_percentage": 20,
+        "labor_charge": 900,
+        "media": [],
+        "expenses": [
+          {
+            "id": "exp-1789892548736-x202",
+            "project_request_id": "test-actual-cost-1789892547075",
+            "daily_update_id": "upd-1789892548736-uerw",
+            "worker_id": "w-worker-02",
+            "worker_name": "Ravi Patel",
+            "expense_date": "2026-09-25",
+            "description": "Portland cement bags & binding wire",
+            "amount": 8500,
+            "status": "PENDING",
+            "verified_amount": 0,
+            "created_at": "2026-09-20T08:22:28.735Z",
+            "updated_at": "2026-09-20T08:22:28.735Z"
+          }
+        ],
+        "created_at": "2026-09-20T08:22:28.735Z",
+        "updated_at": "2026-09-20T08:22:28.735Z"
+      },
+      {
+        "id": "upd-1789892548356-8nmr",
+        "project_request_id": "test-actual-cost-1789892547075",
+        "worker_id": "w-worker-01",
+        "worker_name": "Ravi Patel",
+        "work_date": "2026-09-25",
+        "work_description": "Foundation excavation and footing leveling",
+        "progress_percentage": 10,
+        "labor_charge": 900,
+        "media": [],
+        "expenses": [],
+        "created_at": "2026-09-20T08:22:28.355Z",
+        "updated_at": "2026-09-20T08:22:28.355Z"
+      }
+    ],
+    "test-actual-cost-1789892571659": [
+      {
+        "id": "upd-1789892572824-x0ig",
+        "project_request_id": "test-actual-cost-1789892571659",
+        "worker_id": "w-worker-02",
+        "worker_name": "Ravi Patel",
+        "work_date": "2026-09-25",
+        "work_description": "Cement mixing and steel framing",
+        "progress_percentage": 20,
+        "labor_charge": 900,
+        "media": [],
+        "expenses": [
+          {
+            "id": "exp-1789892572824-sdc9",
+            "project_request_id": "test-actual-cost-1789892571659",
+            "daily_update_id": "upd-1789892572824-x0ig",
+            "worker_id": "w-worker-02",
+            "worker_name": "Ravi Patel",
+            "expense_date": "2026-09-25",
+            "description": "Portland cement bags & binding wire",
+            "amount": 8500,
+            "status": "PENDING",
+            "verified_amount": 0,
+            "created_at": "2026-09-20T08:22:52.822Z",
+            "updated_at": "2026-09-20T08:22:52.822Z"
+          }
+        ],
+        "created_at": "2026-09-20T08:22:52.822Z",
+        "updated_at": "2026-09-20T08:22:52.822Z"
+      },
+      {
+        "id": "upd-1789892572561-770u",
+        "project_request_id": "test-actual-cost-1789892571659",
+        "worker_id": "w-worker-01",
+        "worker_name": "Ravi Patel",
+        "work_date": "2026-09-25",
+        "work_description": "Foundation excavation and footing leveling",
+        "progress_percentage": 10,
+        "labor_charge": 900,
+        "media": [],
+        "expenses": [],
+        "created_at": "2026-09-20T08:22:52.559Z",
+        "updated_at": "2026-09-20T08:22:52.559Z"
+      }
+    ],
+    "test-actual-cost-1789892601968": [
+      {
+        "id": "upd-1789892603110-aln0",
+        "project_request_id": "test-actual-cost-1789892601968",
+        "worker_id": "w-worker-02",
+        "worker_name": "Ravi Patel",
+        "work_date": "2026-09-25",
+        "work_description": "Cement mixing and steel framing",
+        "progress_percentage": 20,
+        "labor_charge": 900,
+        "media": [],
+        "expenses": [
+          {
+            "id": "exp-1789892603110-jqx0",
+            "project_request_id": "test-actual-cost-1789892601968",
+            "daily_update_id": "upd-1789892603110-aln0",
+            "worker_id": "w-worker-02",
+            "worker_name": "Ravi Patel",
+            "expense_date": "2026-09-25",
+            "description": "Portland cement bags & binding wire",
+            "amount": 8500,
+            "status": "VERIFIED",
+            "verified_amount": 8000,
+            "created_at": "2026-09-20T08:23:23.109Z",
+            "updated_at": "2026-09-20T08:23:23.109Z",
+            "notes": "Approved ₹8,000 as per GST tax invoice"
+          }
+        ],
+        "created_at": "2026-09-20T08:23:23.109Z",
+        "updated_at": "2026-09-20T08:23:23.109Z"
+      },
+      {
+        "id": "upd-1789892602807-df0e",
+        "project_request_id": "test-actual-cost-1789892601968",
+        "worker_id": "w-worker-01",
+        "worker_name": "Ravi Patel",
+        "work_date": "2026-09-25",
+        "work_description": "Foundation excavation and footing leveling",
+        "progress_percentage": 10,
+        "labor_charge": 900,
+        "media": [],
+        "expenses": [],
+        "created_at": "2026-09-20T08:23:22.803Z",
+        "updated_at": "2026-09-20T08:23:22.803Z"
+      }
+    ],
+    "test-actual-cost-1789892638273": [
+      {
+        "id": "upd-1789892640373-tlw4",
+        "project_request_id": "test-actual-cost-1789892638273",
+        "worker_id": "w-worker-02",
+        "worker_name": "Ravi Patel",
+        "work_date": "2026-09-25",
+        "work_description": "Cement mixing and steel framing",
+        "progress_percentage": 20,
+        "labor_charge": 900,
+        "media": [],
+        "expenses": [
+          {
+            "id": "exp-1789892640373-ldap",
+            "project_request_id": "test-actual-cost-1789892638273",
+            "daily_update_id": "upd-1789892640373-tlw4",
+            "worker_id": "w-worker-02",
+            "worker_name": "Ravi Patel",
+            "expense_date": "2026-09-25",
+            "description": "Portland cement bags & binding wire",
+            "amount": 8500,
+            "status": "VERIFIED",
+            "verified_amount": 8000,
+            "created_at": "2026-09-20T08:24:00.371Z",
+            "updated_at": "2026-09-20T08:24:00.371Z",
+            "notes": "Approved ₹8,000 as per GST tax invoice"
+          }
+        ],
+        "created_at": "2026-09-20T08:24:00.371Z",
+        "updated_at": "2026-09-20T08:24:00.371Z"
+      },
+      {
+        "id": "upd-1789892640028-iccu",
+        "project_request_id": "test-actual-cost-1789892638273",
+        "worker_id": "w-worker-01",
+        "worker_name": "Ravi Patel",
+        "work_date": "2026-09-25",
+        "work_description": "Foundation excavation and footing leveling",
+        "progress_percentage": 10,
+        "labor_charge": 900,
+        "media": [],
+        "expenses": [],
+        "created_at": "2026-09-20T08:24:00.026Z",
+        "updated_at": "2026-09-20T08:24:00.026Z"
+      }
+    ],
+    "test-actual-cost-1789893271935": [
+      {
+        "id": "upd-1789893273309-2qvq",
+        "project_request_id": "test-actual-cost-1789893271935",
+        "worker_id": "w-worker-02",
+        "worker_name": "Ravi Patel",
+        "work_date": "2026-09-25",
+        "work_description": "Cement mixing and steel framing",
+        "progress_percentage": 20,
+        "labor_charge": 900,
+        "media": [],
+        "expenses": [
+          {
+            "id": "exp-1789893273309-dexd",
+            "project_request_id": "test-actual-cost-1789893271935",
+            "daily_update_id": "upd-1789893273309-2qvq",
+            "worker_id": "w-worker-02",
+            "worker_name": "Ravi Patel",
+            "expense_date": "2026-09-25",
+            "description": "Portland cement bags & binding wire",
+            "amount": 8500,
+            "status": "VERIFIED",
+            "verified_amount": 8000,
+            "created_at": "2026-09-20T08:34:33.309Z",
+            "updated_at": "2026-09-20T08:34:33.309Z",
+            "notes": "Approved ₹8,000 as per GST tax invoice"
+          }
+        ],
+        "created_at": "2026-09-20T08:34:33.309Z",
+        "updated_at": "2026-09-20T08:34:33.309Z"
+      },
+      {
+        "id": "upd-1789893272937-2ycr",
+        "project_request_id": "test-actual-cost-1789893271935",
+        "worker_id": "w-worker-01",
+        "worker_name": "Ravi Patel",
+        "work_date": "2026-09-25",
+        "work_description": "Foundation excavation and footing leveling",
+        "progress_percentage": 10,
+        "labor_charge": 900,
+        "media": [],
+        "expenses": [],
+        "created_at": "2026-09-20T08:34:32.935Z",
+        "updated_at": "2026-09-20T08:34:32.935Z"
+      }
+    ],
+    "test-actual-cost-1789894508253": [
+      {
+        "id": "upd-1789894509937-xu19",
+        "project_request_id": "test-actual-cost-1789894508253",
+        "worker_id": "w-worker-02",
+        "worker_name": "Ravi Patel",
+        "work_date": "2026-09-25",
+        "work_description": "Cement mixing and steel framing",
+        "progress_percentage": 20,
+        "labor_charge": 900,
+        "media": [],
+        "expenses": [
+          {
+            "id": "exp-1789894509937-0e52",
+            "project_request_id": "test-actual-cost-1789894508253",
+            "daily_update_id": "upd-1789894509937-xu19",
+            "worker_id": "w-worker-02",
+            "worker_name": "Ravi Patel",
+            "expense_date": "2026-09-25",
+            "description": "Portland cement bags & binding wire",
+            "amount": 8500,
+            "status": "VERIFIED",
+            "verified_amount": 8000,
+            "created_at": "2026-09-20T08:55:09.937Z",
+            "updated_at": "2026-09-20T08:55:09.937Z",
+            "notes": "Approved ₹8,000 as per GST tax invoice"
+          }
+        ],
+        "created_at": "2026-09-20T08:55:09.937Z",
+        "updated_at": "2026-09-20T08:55:09.937Z"
+      },
+      {
+        "id": "upd-1789894509513-ia7a",
+        "project_request_id": "test-actual-cost-1789894508253",
+        "worker_id": "w-worker-01",
+        "worker_name": "Ravi Patel",
+        "work_date": "2026-09-25",
+        "work_description": "Foundation excavation and footing leveling",
+        "progress_percentage": 10,
+        "labor_charge": 900,
+        "media": [],
+        "expenses": [],
+        "created_at": "2026-09-20T08:55:09.512Z",
+        "updated_at": "2026-09-20T08:55:09.512Z"
+      }
+    ]
+  },
+  "charges": {
+    "4eae07aa-9c23-4a96-ad22-043d1dcd2b46": [
+      {
+        "id": "chg-1789890601396-rz5h",
+        "project_request_id": "4eae07aa-9c23-4a96-ad22-043d1dcd2b46",
+        "daily_update_id": "upd-1789890601396-dduq",
+        "worker_id": "59eca4ff-a589-4363-ad76-24a4ff5b6e2e",
+        "charge_date": "2026-09-21",
+        "daily_rate": 900,
+        "charge_amount": 900,
+        "created_at": "2026-09-20T07:50:01.395Z"
+      },
+      {
+        "id": "chg-1789890599662-irp4",
+        "project_request_id": "4eae07aa-9c23-4a96-ad22-043d1dcd2b46",
+        "daily_update_id": "upd-1789890599662-xdqb",
+        "worker_id": "59eca4ff-a589-4363-ad76-24a4ff5b6e2e",
+        "charge_date": "2026-09-20",
+        "daily_rate": 900,
+        "charge_amount": 900,
+        "created_at": "2026-09-20T07:49:59.662Z"
+      }
+    ],
+    "test-actual-cost-1789892514430": [
+      {
+        "id": "chg-1789892528625-85pt",
+        "project_request_id": "test-actual-cost-1789892514430",
+        "daily_update_id": "upd-1789892528625-r65l",
+        "worker_id": "w-worker-01",
+        "charge_date": "2026-09-25",
+        "daily_rate": 900,
+        "charge_amount": 900,
+        "created_at": "2026-09-20T08:22:08.624Z"
+      }
+    ],
+    "test-actual-cost-1789892547075": [
+      {
+        "id": "chg-1789892548736-0wof",
+        "project_request_id": "test-actual-cost-1789892547075",
+        "daily_update_id": "upd-1789892548736-uerw",
+        "worker_id": "w-worker-02",
+        "charge_date": "2026-09-25",
+        "daily_rate": 900,
+        "charge_amount": 900,
+        "created_at": "2026-09-20T08:22:28.735Z"
+      },
+      {
+        "id": "chg-1789892548356-9khn",
+        "project_request_id": "test-actual-cost-1789892547075",
+        "daily_update_id": "upd-1789892548356-8nmr",
+        "worker_id": "w-worker-01",
+        "charge_date": "2026-09-25",
+        "daily_rate": 900,
+        "charge_amount": 900,
+        "created_at": "2026-09-20T08:22:28.355Z"
+      }
+    ],
+    "test-actual-cost-1789892571659": [
+      {
+        "id": "chg-1789892572824-azgj",
+        "project_request_id": "test-actual-cost-1789892571659",
+        "daily_update_id": "upd-1789892572824-x0ig",
+        "worker_id": "w-worker-02",
+        "charge_date": "2026-09-25",
+        "daily_rate": 900,
+        "charge_amount": 900,
+        "created_at": "2026-09-20T08:22:52.822Z"
+      },
+      {
+        "id": "chg-1789892572561-867l",
+        "project_request_id": "test-actual-cost-1789892571659",
+        "daily_update_id": "upd-1789892572561-770u",
+        "worker_id": "w-worker-01",
+        "charge_date": "2026-09-25",
+        "daily_rate": 900,
+        "charge_amount": 900,
+        "created_at": "2026-09-20T08:22:52.559Z"
+      }
+    ],
+    "test-actual-cost-1789892601968": [
+      {
+        "id": "chg-1789892603110-4boo",
+        "project_request_id": "test-actual-cost-1789892601968",
+        "daily_update_id": "upd-1789892603110-aln0",
+        "worker_id": "w-worker-02",
+        "charge_date": "2026-09-25",
+        "daily_rate": 900,
+        "charge_amount": 900,
+        "created_at": "2026-09-20T08:23:23.109Z"
+      },
+      {
+        "id": "chg-1789892602807-cmuh",
+        "project_request_id": "test-actual-cost-1789892601968",
+        "daily_update_id": "upd-1789892602807-df0e",
+        "worker_id": "w-worker-01",
+        "charge_date": "2026-09-25",
+        "daily_rate": 900,
+        "charge_amount": 900,
+        "created_at": "2026-09-20T08:23:22.803Z"
+      }
+    ],
+    "test-actual-cost-1789892638273": [
+      {
+        "id": "chg-1789892640373-bk1y",
+        "project_request_id": "test-actual-cost-1789892638273",
+        "daily_update_id": "upd-1789892640373-tlw4",
+        "worker_id": "w-worker-02",
+        "charge_date": "2026-09-25",
+        "daily_rate": 900,
+        "charge_amount": 900,
+        "created_at": "2026-09-20T08:24:00.371Z"
+      },
+      {
+        "id": "chg-1789892640028-om12",
+        "project_request_id": "test-actual-cost-1789892638273",
+        "daily_update_id": "upd-1789892640028-iccu",
+        "worker_id": "w-worker-01",
+        "charge_date": "2026-09-25",
+        "daily_rate": 900,
+        "charge_amount": 900,
+        "created_at": "2026-09-20T08:24:00.026Z"
+      }
+    ],
+    "test-actual-cost-1789893271935": [
+      {
+        "id": "chg-1789893273309-bgik",
+        "project_request_id": "test-actual-cost-1789893271935",
+        "daily_update_id": "upd-1789893273309-2qvq",
+        "worker_id": "w-worker-02",
+        "charge_date": "2026-09-25",
+        "daily_rate": 900,
+        "charge_amount": 900,
+        "created_at": "2026-09-20T08:34:33.309Z"
+      },
+      {
+        "id": "chg-1789893272937-jh75",
+        "project_request_id": "test-actual-cost-1789893271935",
+        "daily_update_id": "upd-1789893272937-2ycr",
+        "worker_id": "w-worker-01",
+        "charge_date": "2026-09-25",
+        "daily_rate": 900,
+        "charge_amount": 900,
+        "created_at": "2026-09-20T08:34:32.935Z"
+      }
+    ],
+    "test-actual-cost-1789894508253": [
+      {
+        "id": "chg-1789894509937-733c",
+        "project_request_id": "test-actual-cost-1789894508253",
+        "daily_update_id": "upd-1789894509937-xu19",
+        "worker_id": "w-worker-02",
+        "charge_date": "2026-09-25",
+        "daily_rate": 900,
+        "charge_amount": 900,
+        "created_at": "2026-09-20T08:55:09.937Z"
+      },
+      {
+        "id": "chg-1789894509513-flrv",
+        "project_request_id": "test-actual-cost-1789894508253",
+        "daily_update_id": "upd-1789894509513-ia7a",
+        "worker_id": "w-worker-01",
+        "charge_date": "2026-09-25",
+        "daily_rate": 900,
+        "charge_amount": 900,
+        "created_at": "2026-09-20T08:55:09.512Z"
+      }
+    ]
+  },
+  "expenses": {
+    "4eae07aa-9c23-4a96-ad22-043d1dcd2b46": [
+      {
+        "id": "exp-1789890747475-v58e",
+        "project_request_id": "4eae07aa-9c23-4a96-ad22-043d1dcd2b46",
+        "daily_update_id": "upd-1789890599662-xdqb",
+        "worker_id": "59eca4ff-a589-4363-ad76-24a4ff5b6e2e",
+        "worker_name": "Ravi Patel",
+        "expense_date": "2026-09-20",
+        "description": "100 meter phase 2 wire, 50 meter phase 3",
+        "amount": 1000,
+        "status": "VERIFIED",
+        "verified_amount": 1000,
+        "created_at": "2026-09-20T07:52:27.474Z",
+        "updated_at": "2026-09-20T07:53:34.849Z",
+        "verified_by": null,
+        "verified_at": "2026-09-20T07:53:34.849Z",
+        "notes": null
+      },
+      {
+        "id": "exp-1789890601396-ekvo",
+        "project_request_id": "4eae07aa-9c23-4a96-ad22-043d1dcd2b46",
+        "daily_update_id": "upd-1789890601396-dduq",
+        "worker_id": "59eca4ff-a589-4363-ad76-24a4ff5b6e2e",
+        "worker_name": "Ravi Patel",
+        "expense_date": "2026-09-21",
+        "description": "Distribution Board enclosure & MCB switches",
+        "amount": 2000,
+        "status": "VERIFIED",
+        "verified_amount": 2000,
+        "created_at": "2026-09-20T07:50:01.395Z",
+        "updated_at": "2026-09-20T07:50:01.518Z",
+        "verified_by": null,
+        "verified_at": "2026-09-20T07:50:01.518Z",
+        "notes": null
+      },
+      {
+        "id": "exp-1789890599662-4ti4",
+        "project_request_id": "4eae07aa-9c23-4a96-ad22-043d1dcd2b46",
+        "daily_update_id": "upd-1789890599662-xdqb",
+        "worker_id": "59eca4ff-a589-4363-ad76-24a4ff5b6e2e",
+        "worker_name": "Ravi Patel",
+        "expense_date": "2026-09-20",
+        "description": "Copper wire 2.5sqmm (3 coils) & PVC conduits",
+        "amount": 8500,
+        "status": "VERIFIED",
+        "verified_amount": 8500,
+        "created_at": "2026-09-20T07:49:59.662Z",
+        "updated_at": "2026-09-20T07:50:00.060Z",
+        "verified_by": null,
+        "verified_at": "2026-09-20T07:50:00.060Z",
+        "notes": "Verified against merchant bill copy"
+      }
+    ],
+    "test-actual-cost-1789892514430": [],
+    "test-actual-cost-1789892547075": [
+      {
+        "id": "exp-1789892548736-x202",
+        "project_request_id": "test-actual-cost-1789892547075",
+        "daily_update_id": "upd-1789892548736-uerw",
+        "worker_id": "w-worker-02",
+        "worker_name": "Ravi Patel",
+        "expense_date": "2026-09-25",
+        "description": "Portland cement bags & binding wire",
+        "amount": 8500,
+        "status": "PENDING",
+        "verified_amount": 0,
+        "created_at": "2026-09-20T08:22:28.735Z",
+        "updated_at": "2026-09-20T08:22:28.735Z"
+      }
+    ],
+    "test-actual-cost-1789892571659": [
+      {
+        "id": "exp-1789892572824-sdc9",
+        "project_request_id": "test-actual-cost-1789892571659",
+        "daily_update_id": "upd-1789892572824-x0ig",
+        "worker_id": "w-worker-02",
+        "worker_name": "Ravi Patel",
+        "expense_date": "2026-09-25",
+        "description": "Portland cement bags & binding wire",
+        "amount": 8500,
+        "status": "PENDING",
+        "verified_amount": 0,
+        "created_at": "2026-09-20T08:22:52.822Z",
+        "updated_at": "2026-09-20T08:22:52.822Z"
+      }
+    ],
+    "test-actual-cost-1789892601968": [
+      {
+        "id": "exp-1789892603110-jqx0",
+        "project_request_id": "test-actual-cost-1789892601968",
+        "daily_update_id": "upd-1789892603110-aln0",
+        "worker_id": "w-worker-02",
+        "worker_name": "Ravi Patel",
+        "expense_date": "2026-09-25",
+        "description": "Portland cement bags & binding wire",
+        "amount": 8500,
+        "status": "VERIFIED",
+        "verified_amount": 8000,
+        "created_at": "2026-09-20T08:23:23.109Z",
+        "updated_at": "2026-09-20T08:23:23.236Z",
+        "verified_by": "df5e2a43-c749-4cca-bd26-fe5826b1d1c3",
+        "verified_at": "2026-09-20T08:23:23.236Z",
+        "notes": "Approved ₹8,000 as per GST tax invoice"
+      }
+    ],
+    "test-actual-cost-1789892638273": [
+      {
+        "id": "exp-1789892640373-ldap",
+        "project_request_id": "test-actual-cost-1789892638273",
+        "daily_update_id": "upd-1789892640373-tlw4",
+        "worker_id": "w-worker-02",
+        "worker_name": "Ravi Patel",
+        "expense_date": "2026-09-25",
+        "description": "Portland cement bags & binding wire",
+        "amount": 8500,
+        "status": "VERIFIED",
+        "verified_amount": 8000,
+        "created_at": "2026-09-20T08:24:00.371Z",
+        "updated_at": "2026-09-20T08:24:00.516Z",
+        "verified_by": "df5e2a43-c749-4cca-bd26-fe5826b1d1c3",
+        "verified_at": "2026-09-20T08:24:00.516Z",
+        "notes": "Approved ₹8,000 as per GST tax invoice"
+      }
+    ],
+    "test-actual-cost-1789893271935": [
+      {
+        "id": "exp-1789893273309-dexd",
+        "project_request_id": "test-actual-cost-1789893271935",
+        "daily_update_id": "upd-1789893273309-2qvq",
+        "worker_id": "w-worker-02",
+        "worker_name": "Ravi Patel",
+        "expense_date": "2026-09-25",
+        "description": "Portland cement bags & binding wire",
+        "amount": 8500,
+        "status": "VERIFIED",
+        "verified_amount": 8000,
+        "created_at": "2026-09-20T08:34:33.309Z",
+        "updated_at": "2026-09-20T08:34:33.499Z",
+        "verified_by": "df5e2a43-c749-4cca-bd26-fe5826b1d1c3",
+        "verified_at": "2026-09-20T08:34:33.499Z",
+        "notes": "Approved ₹8,000 as per GST tax invoice"
+      }
+    ],
+    "test-actual-cost-1789894508253": [
+      {
+        "id": "exp-1789894509937-0e52",
+        "project_request_id": "test-actual-cost-1789894508253",
+        "daily_update_id": "upd-1789894509937-xu19",
+        "worker_id": "w-worker-02",
+        "worker_name": "Ravi Patel",
+        "expense_date": "2026-09-25",
+        "description": "Portland cement bags & binding wire",
+        "amount": 8500,
+        "status": "VERIFIED",
+        "verified_amount": 8000,
+        "created_at": "2026-09-20T08:55:09.937Z",
+        "updated_at": "2026-09-20T08:55:10.065Z",
+        "verified_by": "df5e2a43-c749-4cca-bd26-fe5826b1d1c3",
+        "verified_at": "2026-09-20T08:55:10.065Z",
+        "notes": "Approved ₹8,000 as per GST tax invoice"
+      }
+    ]
+  },
+  "queries": {
+    "4eae07aa-9c23-4a96-ad22-043d1dcd2b46": [
+      {
+        "id": "qry-1789891890383-0cg7",
+        "project_request_id": "4eae07aa-9c23-4a96-ad22-043d1dcd2b46",
+        "customer_id": "b0ef9604-54c8-4ad1-9a7a-c353cfd339ef",
+        "daily_update_id": "upd-1789890599662-xdqb",
+        "expense_id": "exp-1789890747475-v58e",
+        "message": "flore 2 is incomplete",
+        "status": "OPEN",
+        "created_at": "2026-09-20T08:11:30.383Z",
+        "updated_at": "2026-09-20T08:11:30.383Z"
+      },
+      {
+        "id": "qry-1789890876731-nybz",
+        "project_request_id": "4eae07aa-9c23-4a96-ad22-043d1dcd2b46",
+        "customer_id": "b0ef9604-54c8-4ad1-9a7a-c353cfd339ef",
+        "daily_update_id": "upd-1789890599662-xdqb",
+        "expense_id": "exp-1789890747475-v58e",
+        "message": "flore 2 wiring is still incomplete",
+        "status": "RESOLVED",
+        "created_at": "2026-09-20T07:54:36.731Z",
+        "updated_at": "2026-09-20T08:12:53.024Z",
+        "response": "sorry for the quiry we'll discuss it with worker and solve it as soon as possible.",
+        "responded_at": "2026-09-20T08:12:53.024Z"
+      },
+      {
+        "id": "qry-1789890600916-304t",
+        "project_request_id": "4eae07aa-9c23-4a96-ad22-043d1dcd2b46",
+        "customer_id": "b0ef9604-54c8-4ad1-9a7a-c353cfd339ef",
+        "daily_update_id": "upd-1789890599662-xdqb",
+        "expense_id": "exp-1789890599662-4ti4",
+        "message": "Why was ₹8,500 charged for copper wire? Please confirm brand.",
+        "status": "RESOLVED",
+        "created_at": "2026-09-20T07:50:00.916Z",
+        "updated_at": "2026-09-20T07:50:01.049Z",
+        "response": "Polycab FRLS 2.5 sqmm copper wire used as per approved quality standard.",
+        "responded_at": "2026-09-20T07:50:01.049Z"
+      }
+    ],
+    "test-monitoring-proj-1789891635218": [
+      {
+        "id": "qry-1789891635219-n8a1",
+        "project_request_id": "test-monitoring-proj-1789891635218",
+        "customer_id": "b0ef9604-54c8-4ad1-9a7a-c353cfd339ef",
+        "message": "Why is the material cost ₹12,500 on Day 3?",
+        "status": "RESOLVED",
+        "created_at": "2026-09-20T08:07:15.219Z",
+        "updated_at": "2026-09-20T08:07:22.355Z",
+        "response": "This covers the cement bags and structural steel reinforcement.",
+        "responded_by": "df5e2a43-c749-4cca-bd26-fe5826b1d1c3",
+        "responded_at": "2026-09-20T08:07:22.355Z"
+      }
+    ]
+  },
+  "revisions": {
+    "test-prj-rev-1789894489534": [
+      {
+        "id": "rev-1789894489635-xe3s",
+        "project_request_id": "test-prj-rev-1789894489534",
+        "version": 3,
+        "previous_amount": 52000,
+        "current_amount": 68000,
+        "difference_amount": 16000,
+        "revision_reason": "Critical safety panel upgrade required by municipal inspector",
+        "status": "APPROVED",
+        "customer_response": "APPROVED",
+        "created_by": "Federation Operations",
+        "created_at": "2026-09-20T08:54:49.635Z",
+        "updated_at": "2026-09-20T08:54:49.644Z",
+        "customer_responded_at": "2026-09-20T08:54:49.644Z"
+      },
+      {
+        "id": "rev-1789894489536-sp0m",
+        "project_request_id": "test-prj-rev-1789894489534",
+        "version": 2,
+        "previous_amount": 52000,
+        "current_amount": 68000,
+        "difference_amount": 16000,
+        "revision_reason": "Additional copper wiring and specialized electrical panels required",
+        "status": "DECLINED",
+        "customer_response": "DECLINED",
+        "created_by": "Federation Operations",
+        "created_at": "2026-09-20T08:54:49.535Z",
+        "updated_at": "2026-09-20T08:54:49.627Z",
+        "customer_responded_at": "2026-09-20T08:54:49.627Z",
+        "notes": "Budget constraints, please proceed with original scope"
+      }
+    ],
+    "f183d701-4eec-47ba-8204-2ac1bbb66931": [
+      {
+        "id": "rev-1789895035784-xke1",
+        "project_request_id": "f183d701-4eec-47ba-8204-2ac1bbb66931",
+        "version": 2,
+        "previous_amount": 100000,
+        "current_amount": 120001,
+        "difference_amount": 20001,
+        "revision_reason": "due to material expense",
+        "status": "APPROVED",
+        "customer_response": "APPROVED",
+        "created_by": "Federation Operations",
+        "created_at": "2026-09-20T09:03:55.784Z",
+        "updated_at": "2026-09-20T09:07:33.102Z",
+        "customer_responded_at": "2026-09-20T09:07:33.102Z"
+      }
+    ],
+    "test-prj-rev-1789895690979": [
+      {
+        "id": "rev-1789895691215-b7rr",
+        "project_request_id": "test-prj-rev-1789895690979",
+        "version": 3,
+        "previous_amount": 52000,
+        "current_amount": 68000,
+        "difference_amount": 16000,
+        "revision_reason": "Critical safety panel upgrade required by municipal inspector",
+        "status": "APPROVED",
+        "customer_response": "APPROVED",
+        "created_by": "Federation Operations",
+        "created_at": "2026-09-20T09:14:51.215Z",
+        "updated_at": "2026-09-20T09:14:51.225Z",
+        "customer_responded_at": "2026-09-20T09:14:51.225Z"
+      },
+      {
+        "id": "rev-1789895690981-nr8s",
+        "project_request_id": "test-prj-rev-1789895690979",
+        "version": 2,
+        "previous_amount": 52000,
+        "current_amount": 68000,
+        "difference_amount": 16000,
+        "revision_reason": "Additional copper wiring and specialized electrical panels required",
+        "status": "DECLINED",
+        "customer_response": "DECLINED",
+        "created_by": "Federation Operations",
+        "created_at": "2026-09-20T09:14:50.980Z",
+        "updated_at": "2026-09-20T09:14:51.093Z",
+        "customer_responded_at": "2026-09-20T09:14:51.093Z",
+        "notes": "Budget constraints, please proceed with original scope"
+      }
+    ]
+  }
+}

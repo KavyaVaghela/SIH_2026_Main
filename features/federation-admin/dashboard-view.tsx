@@ -17,6 +17,7 @@ import {
   Award,
   ShieldAlert,
   AlertCircle,
+  Zap,
 } from "lucide-react";
 import { useFederationDashboard } from "./hooks/use-federation-dashboard";
 import { DashboardHeader } from "./components/dashboard-header";
@@ -27,11 +28,10 @@ import { Button } from "@/components/ui/button";
 
 // Visualizations
 import { JobStatusChart } from "./components/charts/job-status-chart";
-import { JobsComparativeChart } from "./components/charts/jobs-comparative-chart";
+import { RecentActivityCard } from "./components/recent-activity-card";
 import { ProfessionDistributionChart } from "./components/charts/profession-distribution-chart";
 import { JobActivityChart } from "./components/charts/job-activity-chart";
 import { WorkerPerformanceChart } from "./components/charts/worker-performance-chart";
-import { DemandDistributionChart } from "./components/charts/demand-distribution-chart";
 import { createClient } from "@/lib/supabase/client";
 import { getCachedProfileName, setCachedProfileName } from "@/lib/auth/session-user";
 
@@ -86,6 +86,66 @@ export function FederationAdminDashboardView() {
     };
   }, []);
 
+  // Monitor active HIGH-priority emergency dispatches
+  const [activeHighEmergencies, setActiveHighEmergencies] = React.useState<Array<{
+    id: string;
+    bookingNumber: string;
+    serviceTitle: string;
+    createdAt: string;
+  }>>([]);
+
+  React.useEffect(() => {
+    let isMounted = true;
+    async function loadHighEmergencies() {
+      try {
+        const supabase = createClient();
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        const { data: emBookings } = await (supabase.from("bookings") as any)
+          .select("id, booking_number, created_at, status, priority, problem_description, services(title)")
+          .in("status", ["REQUEST_SENT", "WORKER_REVIEWING", "ESTIMATE_SUBMITTED", "PENDING"])
+          .order("created_at", { ascending: false })
+          .limit(5);
+
+        if (isMounted && emBookings) {
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          const highOnes = emBookings.filter((b: any) => {
+            return b.priority === "HIGH" || (b.problem_description && b.problem_description.includes("[PRIORITY: HIGH]"));
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          }).map((b: any) => ({
+            id: b.id,
+            bookingNumber: b.booking_number,
+            serviceTitle: b.services?.title || "Emergency Service",
+            createdAt: b.created_at,
+          }));
+          setActiveHighEmergencies(highOnes);
+        }
+      } catch {
+        // quiet fallback
+      }
+    }
+    loadHighEmergencies();
+
+    const supabase = createClient();
+    const channel = supabase.channel("emergency-dispatch").on("broadcast", { event: "high-emergency-created" }, (payload) => {
+      if (isMounted && payload?.payload) {
+        setActiveHighEmergencies((prev) => [
+          {
+            id: payload.payload.booking_id,
+            bookingNumber: payload.payload.booking_number || "EMG-REQ",
+            serviceTitle: payload.payload.service_title || "Rapid Response Service",
+            createdAt: new Date().toISOString(),
+          },
+          ...prev,
+        ]);
+      }
+    }).subscribe();
+
+    return () => {
+      isMounted = false;
+      supabase.removeChannel(channel);
+    };
+  }, []);
+
   return (
     <div className="space-y-8 pb-12">
       {/* 1. Header with Federation Context, Timeframe, Refresh & Dev Notice */}
@@ -101,6 +161,30 @@ export function FederationAdminDashboardView() {
         adminName={adminName || "Vikram Shah"}
         isLoadingAdminName={isLoadingAdminName}
       />
+
+      {/* Real-time High Emergency Rapid Dispatch Notice */}
+      {activeHighEmergencies.length > 0 && (
+        <div className="p-4 rounded-xl bg-gradient-to-r from-rose-500/15 via-red-500/10 to-rose-500/15 border border-rose-500/40 flex items-center justify-between gap-4 shadow-sm">
+          <div className="flex items-center space-x-3">
+            <div className="p-2.5 bg-rose-600 text-white rounded-lg animate-pulse shrink-0 shadow-sm shadow-rose-500/50">
+              <Zap className="h-5 w-5" />
+            </div>
+            <div>
+              <div className="flex items-center gap-2">
+                <span className="text-sm font-bold text-rose-700 dark:text-rose-400">
+                  RAPID RESPONSE EMERGENCY DISPATCH ENGAGED ({activeHighEmergencies.length})
+                </span>
+                <span className="px-2 py-0.5 rounded-full text-[10px] font-extrabold bg-rose-600 text-white uppercase tracking-wider animate-pulse">
+                  HIGH PRIORITY
+                </span>
+              </div>
+              <p className="text-xs text-muted-foreground mt-0.5">
+                Automated matching engine active for this cooperative jurisdiction. Craftsmen auto-assigned or monitoring dispatch.
+              </p>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Error state */}
       {error && (
@@ -309,14 +393,14 @@ export function FederationAdminDashboardView() {
           </div>
         </div>
 
-        {/* Visualizations Grid Row 1: Status Distribution & Comparative */}
+        {/* Visualizations Grid Row 1: Status Distribution & Recent Activity */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
           <JobStatusChart
             data={data?.charts.jobsByStatus}
             isLoading={isLoading}
           />
-          <JobsComparativeChart
-            data={data?.charts.completedVsRunning}
+          <RecentActivityCard
+            activities={data?.recentActivities ?? []}
             isLoading={isLoading}
           />
         </div>
@@ -340,12 +424,6 @@ export function FederationAdminDashboardView() {
             isLoading={isLoading}
           />
         </div>
-
-        {/* Visualizations Grid Row 4: Service Demand Distribution */}
-        <DemandDistributionChart
-          data={data?.charts.demandDistribution}
-          isLoading={isLoading}
-        />
       </div>
     </div>
   );

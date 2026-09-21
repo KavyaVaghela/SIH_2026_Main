@@ -35,10 +35,50 @@ export type InvoiceStatus = "draft" | "issued" | "paid" | "cancelled" | "overdue
 export type ComplaintStatus = "OPEN" | "IN_REVIEW" | "RESOLVED";
 export type ApplicationStatus = "PENDING" | "APPROVED" | "REJECTED";
 export type CertificationStatus = "VERIFIED" | "EXPIRING_SOON" | "EXPIRED";
+export type EmergencyPriority = "LOW" | "MODERATE" | "HIGH";
+
+export type EmergencyIncidentStatus =
+  | "AWAITING_RESPONSE"
+  | "DISPATCHING"
+  | "TEAM_FORMING"
+  | "ACTIVE"
+  | "STAFFING_SHORTAGE"
+  | "RESOLVED"
+  | "CLOSED";
+
+export type EmergencyIncidentSeverity = "LOW" | "MEDIUM" | "HIGH" | "CRITICAL";
 
 export interface Database {
   public: {
     Tables: {
+      emergency_incidents: {
+        Row: {
+          id: string;
+          emergency_id: string;
+          customer_id: string;
+          federation_id: string | null;
+          category_name: string;
+          emergency_type: string;
+          severity: EmergencyIncidentSeverity;
+          status: EmergencyIncidentStatus;
+          location: string;
+          address_details: Json;
+          description: string;
+          evidence_photos: string[];
+          approx_people_affected: number;
+          immediate_danger: boolean;
+          danger_details: string | null;
+          metadata: Json;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: Omit<Database["public"]["Tables"]["emergency_incidents"]["Row"], "id" | "created_at" | "updated_at"> & {
+          id?: string;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: Partial<Database["public"]["Tables"]["emergency_incidents"]["Insert"]>;
+      };
       federations: {
         Row: {
           id: string;
@@ -280,6 +320,7 @@ export interface Database {
           total_amount: number;
           platform_fee: number;
           worker_earnings: number;
+          priority?: EmergencyPriority | null;
           created_at: string;
           updated_at: string;
         };
@@ -501,9 +542,20 @@ export interface Database {
           id: string;
           customer_id: string;
           federation_id: string;
+          address_id: string | null;
+          category_id: string | null;
           project_name: string;
           description: string;
           total_budget: number | null;
+          desired_start_date: string | null;
+          desired_end_date: string | null;
+          site_photos: Json | null;
+          rejection_reason: string | null;
+          original_estimate_amount?: number;
+          current_estimated_total?: number;
+          actual_cost_to_date?: number;
+          payments_received?: number;
+          settled_amount?: number;
           status: string;
           created_at: string;
           updated_at: string;
@@ -520,8 +572,12 @@ export interface Database {
           id: string;
           project_request_id: string;
           skill_id: string;
+          title: string | null;
           required_workers_count: number;
+          daily_rate: number | null;
           estimated_duration_days: number | null;
+          estimated_days: number | null;
+          status: string;
           created_at: string;
         };
         Insert: Omit<Database["public"]["Tables"]["project_requirements"]["Row"], "id" | "created_at"> & {
@@ -536,7 +592,12 @@ export interface Database {
           project_request_id: string;
           requirement_id: string;
           worker_id: string;
+          daily_rate: number | null;
+          start_date: string | null;
+          end_date: string | null;
+          response_status: string;
           allocated_at: string;
+          responded_at: string | null;
           status: string;
           created_at: string;
         };
@@ -545,6 +606,124 @@ export interface Database {
           created_at?: string;
         };
         Update: Partial<Database["public"]["Tables"]["project_allocations"]["Insert"]>;
+      };
+      project_expenses: {
+        Row: {
+          id: string;
+          project_request_id: string;
+          submitted_by: string;
+          title: string;
+          description: string | null;
+          amount: number;
+          verified_amount: number | null;
+          receipt_url: string | null;
+          expense_date: string;
+          status: string;
+          approved_by: string | null;
+          customer_query_text: string | null;
+          customer_query_status: string | null;
+          query_reply: string | null;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: Omit<Database["public"]["Tables"]["project_expenses"]["Row"], "id" | "created_at" | "updated_at"> & {
+          id?: string;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: Partial<Database["public"]["Tables"]["project_expenses"]["Insert"]>;
+      };
+      project_milestones: {
+        Row: {
+          id: string;
+          project_request_id: string;
+          title: string;
+          description: string | null;
+          amount: number;
+          due_date: string | null;
+          status: string;
+          completed_at: string | null;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: Omit<Database["public"]["Tables"]["project_milestones"]["Row"], "id" | "created_at" | "updated_at"> & {
+          id?: string;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: Partial<Database["public"]["Tables"]["project_milestones"]["Insert"]>;
+      };
+      project_estimate_revisions: {
+        Row: {
+          id: string;
+          project_request_id: string;
+          version: number;
+          previous_amount: number;
+          current_amount: number;
+          difference_amount: number;
+          revision_reason: string | null;
+          created_by: string | null;
+          created_at: string;
+        };
+        Insert: Omit<Database["public"]["Tables"]["project_estimate_revisions"]["Row"], "id" | "created_at"> & {
+          id?: string;
+          created_at?: string;
+        };
+        Update: Partial<Database["public"]["Tables"]["project_estimate_revisions"]["Insert"]>;
+      };
+      project_payment_plans: {
+        Row: {
+          id: string;
+          project_request_id: string;
+          version: number;
+          plan_type: string;
+          total_amount: number;
+          status: string;
+          created_by: string | null;
+          created_at: string;
+        };
+        Insert: Omit<Database["public"]["Tables"]["project_payment_plans"]["Row"], "id" | "created_at"> & {
+          id?: string;
+          created_at?: string;
+        };
+        Update: Partial<Database["public"]["Tables"]["project_payment_plans"]["Insert"]>;
+      };
+      project_payment_installments: {
+        Row: {
+          id: string;
+          payment_plan_id: string;
+          project_request_id: string;
+          installment_number: number;
+          amount: number;
+          due_date: string | null;
+          status: string;
+          created_at: string;
+        };
+        Insert: Omit<Database["public"]["Tables"]["project_payment_installments"]["Row"], "id" | "created_at"> & {
+          id?: string;
+          created_at?: string;
+        };
+        Update: Partial<Database["public"]["Tables"]["project_payment_installments"]["Insert"]>;
+      };
+      project_payments: {
+        Row: {
+          id: string;
+          project_request_id: string;
+          installment_id: string | null;
+          customer_id: string;
+          amount: number;
+          payment_method: string;
+          transaction_reference: string | null;
+          status: string;
+          payment_date: string;
+          created_at: string;
+        };
+        Insert: Omit<Database["public"]["Tables"]["project_payments"]["Row"], "id" | "created_at" | "payment_date"> & {
+          id?: string;
+          created_at?: string;
+          payment_date?: string;
+        };
+        Update: Partial<Database["public"]["Tables"]["project_payments"]["Insert"]>;
       };
     };
   };

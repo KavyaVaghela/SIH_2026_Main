@@ -2,7 +2,8 @@
 
 import React, { useState, useEffect, useRef } from "react";
 import Link from "next/link";
-import { Building2, Menu, X, ArrowRight, ChevronDown, HelpCircle } from "lucide-react";
+import { Menu, X, ArrowRight, ChevronDown, HelpCircle } from "lucide-react";
+import { Logo } from "@/components/ui/logo";
 import { LandingFaqAccordion } from "./landing-faq";
 
 export function LandingNavbar() {
@@ -56,24 +57,7 @@ export function LandingNavbar() {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex h-16 items-center justify-between">
           {/* Logo & Brand */}
-          <Link
-            href="/"
-            className="flex items-center space-x-2.5 group"
-            id="landing-navbar-logo"
-            aria-label="KaushalyaSetu Home"
-          >
-            <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-[#135e38] text-white shadow-sm transition-transform group-hover:scale-105">
-              <Building2 className="h-5 w-5" />
-            </div>
-            <div className="flex flex-col">
-              <span className="font-bold text-lg leading-tight tracking-tight text-[#111827]">
-                KaushalyaSetu
-              </span>
-              <span className="text-[10px] font-semibold text-[#135e38] tracking-wide">
-                Cooperative Platform
-              </span>
-            </div>
-          </Link>
+          <Logo href="/" showTagline taglineText="Cooperative Platform" size="md" />
 
           {/* Desktop Navigation Links */}
           <nav

@@ -46,8 +46,8 @@ export function useWelfare() {
   const syncUrlParams = React.useCallback(
     (opts: WelfareFilterOptions) => {
       const params = new URLSearchParams();
-      if (opts.status !== "ALL") params.set("status", opts.status);
-      if (opts.society !== "ALL") params.set("society", opts.society);
+      if (opts.status && opts.status !== "ALL") params.set("status", opts.status);
+      if (opts.society && opts.society !== "ALL") params.set("society", opts.society);
       if (opts.searchQuery) params.set("q", opts.searchQuery);
       if (opts.page > 1) params.set("page", String(opts.page));
 

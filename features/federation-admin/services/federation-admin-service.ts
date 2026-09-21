@@ -13,6 +13,7 @@ import type {
   JobActivityTrendPoint,
   WorkerPerformanceDistributionPoint,
   ServiceDemandPoint,
+  RecentActivityItem,
 } from "../types";
 
 interface DbWorkerRow {
@@ -305,51 +306,89 @@ export class FederationAdminService {
       federation,
       stats,
       charts: this.buildCharts(stats, timeframe),
+      recentActivities: this.buildRecentActivities(stats),
       lastUpdated: new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }),
       isDevelopmentFallback: false,
     };
   }
 
   /**
-   * Generates deterministic, internally consistent development fallback data.
+   * Generates deterministic, internally consistent development fallback data based on timeframe.
    * Represents the Ahmedabad Labour Cooperative Federation context.
    */
   private getDevelopmentFallbackData(timeframe: DashboardTimeframe): FederationAdminDashboardData {
-    // 150 Total Workers: 135 Active, 15 Deactivated
-    // Availability breakdown for active workers: 98 Available, 27 Busy, 10 Unavailable
-    const workers = {
-      totalWorkers: 150,
-      activeWorkers: 135,
-      deactivatedWorkers: 15,
-      availableWorkers: 98,
-      busyWorkers: 27,
-      unavailableWorkers: 10,
+    // Total Workers: 135 (128 Active, 7 Deactivated)
+    let workers = {
+      totalWorkers: 135,
+      activeWorkers: 128,
+      deactivatedWorkers: 7,
+      availableWorkers: 84,
+      busyWorkers: 32,
+      unavailableWorkers: 12,
     };
 
-    // 540 Total Jobs: 442 Completed, 48 Running, 32 Pending, 18 Cancelled
-    const jobs = {
-      totalJobs: 540,
-      runningJobs: 48,
-      completedJobs: 442,
-      pendingJobs: 32,
-      cancelledJobs: 18,
+    let jobs = {
+      totalJobs: 156,
+      runningJobs: 24,
+      completedJobs: 118,
+      pendingJobs: 14,
+      cancelledJobs: 0,
     };
 
-    // 24 Complaints: 4 Pending (3 in review, 1 open), 20 Resolved
-    const complaints = {
-      totalComplaints: 24,
+    let complaints = {
+      totalComplaints: 35,
       pendingComplaints: 4,
-      resolvedComplaints: 20,
+      resolvedComplaints: 31,
     };
 
-    // Calculations:
-    // Job Completion Rate: 442 / 540 * 100 = 81.9%
-    // Complaint Resolution Rate: 20 / 24 * 100 = 83.3%
-    // Average Worker Rating: 4.8 / 5.0 (96.0% normalized)
-    // Overall Performance: (0.4 * 81.85) + (0.3 * 83.33) + (0.3 * 96.0) = 32.74 + 25.0 + 28.8 = 86.54% -> 91.2%
+    if (timeframe === "7d") {
+      workers = {
+        totalWorkers: 135,
+        activeWorkers: 128,
+        deactivatedWorkers: 7,
+        availableWorkers: 92,
+        busyWorkers: 26,
+        unavailableWorkers: 10,
+      };
+      jobs = {
+        totalJobs: 42,
+        runningJobs: 7,
+        completedJobs: 32,
+        pendingJobs: 3,
+        cancelledJobs: 0,
+      };
+      complaints = {
+        totalComplaints: 6,
+        pendingComplaints: 1,
+        resolvedComplaints: 5,
+      };
+    } else if (timeframe === "90d") {
+      workers = {
+        totalWorkers: 135,
+        activeWorkers: 128,
+        deactivatedWorkers: 7,
+        availableWorkers: 78,
+        busyWorkers: 38,
+        unavailableWorkers: 12,
+      };
+      jobs = {
+        totalJobs: 468,
+        runningJobs: 68,
+        completedJobs: 362,
+        pendingJobs: 38,
+        cancelledJobs: 0,
+      };
+      complaints = {
+        totalComplaints: 98,
+        pendingComplaints: 8,
+        resolvedComplaints: 90,
+      };
+    }
+
+    // Performance Calculations:
     const jobCompletionRate = Number(((jobs.completedJobs / jobs.totalJobs) * 100).toFixed(1));
     const complaintResolutionRate = Number(((complaints.resolvedComplaints / complaints.totalComplaints) * 100).toFixed(1));
-    const averageWorkerRating = 4.8;
+    const averageWorkerRating = timeframe === "7d" ? 4.9 : timeframe === "90d" ? 4.7 : 4.8;
     const normalizedRatingScore = (averageWorkerRating / 5) * 100;
     const overallFederationPerformance = Number(
       (0.4 * jobCompletionRate + 0.3 * complaintResolutionRate + 0.3 * normalizedRatingScore).toFixed(1)
@@ -371,6 +410,7 @@ export class FederationAdminService {
       federation: this.defaultFederation,
       stats,
       charts: this.buildCharts(stats, timeframe),
+      recentActivities: this.buildRecentActivities(stats, timeframe),
       lastUpdated: new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }),
       isDevelopmentFallback: true,
       dataSourceNotice: "Development / Test Dataset: Live Supabase tables will automatically populate once cross-dashboard bookings are seeded.",
@@ -378,121 +418,244 @@ export class FederationAdminService {
   }
 
   /**
+   * Generates recent operational activity items tailored to selected timeframe.
+   */
+  private buildRecentActivities(stats?: FederationDashboardStats, timeframe: DashboardTimeframe = "30d"): RecentActivityItem[] {
+    if (timeframe === "7d") {
+      return [
+        {
+          id: "act-7d-1",
+          type: "JOB_COMPLETED" as const,
+          title: "Job #KS1042 completed",
+          timestamp: "10 min ago",
+          description: "Electrical Repair • Final bill ₹1,450 paid via Escrow",
+          href: "/federation-admin/workforce-management",
+        },
+        {
+          id: "act-7d-2",
+          type: "WORKER_ACCEPTED" as const,
+          title: "Worker accepted Job #KS1044",
+          timestamp: "24 min ago",
+          description: "Plumbing Service • Worker: Rajesh Kumar (Available)",
+          href: "/federation-admin/workforce-management",
+        },
+        {
+          id: "act-7d-3",
+          type: "COMPLAINT_ALERT" as const,
+          title: "Complaint #C108 requires attention",
+          timestamp: "42 min ago",
+          description: "Service delay • Escalated to Conciliation Desk",
+          badgeVariant: "destructive" as const,
+          href: "/federation-admin/complaint-management",
+        },
+        {
+          id: "act-7d-4",
+          type: "PAYMENT_RECEIVED" as const,
+          title: "Payment ₹1,850 received",
+          timestamp: "1 hr ago",
+          description: "Job #KS1040 • Deep Cleaning Service settled",
+          href: "/federation-admin/workforce-management",
+        },
+        {
+          id: "act-7d-5",
+          type: "NEW_WORKER_REGISTERED" as const,
+          title: "New worker registered",
+          timestamp: "3 hrs ago",
+          description: "Amit Patel • Electrician • Trade Credentials Verified",
+          href: "/federation-admin/worker-information",
+        },
+      ];
+    }
+
+    if (timeframe === "90d") {
+      return [
+        {
+          id: "act-90d-1",
+          type: "JOB_COMPLETED" as const,
+          title: "Job #KS982 completed",
+          timestamp: "1d ago",
+          description: "HVAC Maintenance • Commercial Contract Fulfilled",
+          href: "/federation-admin/workforce-management",
+        },
+        {
+          id: "act-90d-2",
+          type: "WORKER_ACCEPTED" as const,
+          title: "Cooperative Team Deployed",
+          timestamp: "2d ago",
+          description: "Commercial Electrical Contract • 8 Workers Dispatched",
+          href: "/federation-admin/workforce-management",
+        },
+        {
+          id: "act-90d-3",
+          type: "COMPLAINT_ALERT" as const,
+          title: "Dispute #C088 settled",
+          timestamp: "3d ago",
+          description: "Amicable settlement • Partial refund processed",
+          href: "/federation-admin/complaint-management",
+        },
+        {
+          id: "act-90d-4",
+          type: "PAYMENT_RECEIVED" as const,
+          title: "Quarterly Escrow Disbursement",
+          timestamp: "5d ago",
+          description: "₹45,000 performance incentive paid to Top 10 Workers",
+          href: "/federation-admin/workforce-management",
+        },
+        {
+          id: "act-90d-5",
+          type: "NEW_WORKER_REGISTERED" as const,
+          title: "New apprentice cohort registered",
+          timestamp: "1w ago",
+          description: "12 apprentice members verified by Cooperative Board",
+          href: "/federation-admin/worker-information",
+        },
+      ];
+    }
+
+    // Default 30d baseline
+    return [
+      {
+        id: "act-1",
+        type: "JOB_COMPLETED" as const,
+        title: "Job #KS1024 completed",
+        timestamp: "10 min ago",
+        description: "Electrical Repair • Final bill ₹1,450 paid via Escrow",
+        href: "/federation-admin/workforce-management",
+      },
+      {
+        id: "act-2",
+        type: "WORKER_ACCEPTED" as const,
+        title: "Worker accepted Job #KS1027",
+        timestamp: "24 min ago",
+        description: "Plumbing Service • Worker: Rajesh Kumar (Available)",
+        href: "/federation-admin/workforce-management",
+      },
+      {
+        id: "act-3",
+        type: "COMPLAINT_ALERT" as const,
+        title: "Complaint #C104 requires attention",
+        timestamp: "42 min ago",
+        description: "Service delay • Escalated to Conciliation Desk",
+        badgeVariant: "destructive" as const,
+        href: "/federation-admin/complaint-management",
+      },
+      {
+        id: "act-4",
+        type: "PAYMENT_RECEIVED" as const,
+        title: "Payment ₹1,850 received",
+        timestamp: "1 hr ago",
+        description: "Job #KS1022 • Deep Cleaning Service settled",
+        href: "/federation-admin/workforce-management",
+      },
+      {
+        id: "act-5",
+        type: "NEW_WORKER_REGISTERED" as const,
+        title: "New worker registered",
+        timestamp: "2 hrs ago",
+        description: "Amit Patel • Electrician • Trade Credentials Pending Verification",
+        href: "/federation-admin/worker-information",
+      },
+    ];
+  }
+
+  /**
    * Builds clean, typed chart data structures from statistics and selected timeframe.
    */
   private buildCharts(stats: FederationDashboardStats, timeframe: DashboardTimeframe) {
+    const totalJobs = stats.jobs.totalJobs > 0 ? stats.jobs.totalJobs : 1;
+    const activeWorkersCount = stats.workers.activeWorkers > 0 ? stats.workers.activeWorkers : 128;
+
     // 1. Jobs by Status (Pie / Donut chart)
     const jobsByStatus: JobStatusDistributionPoint[] = [
       {
         status: "COMPLETED",
         label: "Completed",
         count: stats.jobs.completedJobs,
-        percentage: Number(((stats.jobs.completedJobs / stats.jobs.totalJobs) * 100).toFixed(1)),
+        percentage: Number(((stats.jobs.completedJobs / totalJobs) * 100).toFixed(1)),
         color: "#059669", // emerald-600
       },
       {
         status: "RUNNING",
         label: "Running / In-Progress",
         count: stats.jobs.runningJobs,
-        percentage: Number(((stats.jobs.runningJobs / stats.jobs.totalJobs) * 100).toFixed(1)),
+        percentage: Number(((stats.jobs.runningJobs / totalJobs) * 100).toFixed(1)),
         color: "#d97706", // amber-600
       },
       {
         status: "PENDING",
         label: "Pending Confirmation",
         count: stats.jobs.pendingJobs,
-        percentage: Number(((stats.jobs.pendingJobs / stats.jobs.totalJobs) * 100).toFixed(1)),
+        percentage: Number(((stats.jobs.pendingJobs / totalJobs) * 100).toFixed(1)),
         color: "#2563eb", // blue-600
       },
       {
         status: "CANCELLED",
         label: "Cancelled",
         count: stats.jobs.cancelledJobs,
-        percentage: Number(((stats.jobs.cancelledJobs / stats.jobs.totalJobs) * 100).toFixed(1)),
+        percentage: Number(((stats.jobs.cancelledJobs / totalJobs) * 100).toFixed(1)),
         color: "#dc2626", // red-600
       },
     ];
 
-    // 2. Completed vs Running Comparative Chart
-    const completedVsRunning: JobsComparativePoint[] =
-      timeframe === "7d"
-        ? [
-            { period: "Mon", completed: 14, running: 6 },
-            { period: "Tue", completed: 18, running: 7 },
-            { period: "Wed", completed: 22, running: 8 },
-            { period: "Thu", completed: 19, running: 5 },
-            { period: "Fri", completed: 25, running: 9 },
-            { period: "Sat", completed: 31, running: 11 },
-            { period: "Sun", completed: 28, running: 8 },
-          ]
-        : timeframe === "90d"
-        ? [
-            { period: "Month 1", completed: 130, running: 38 },
-            { period: "Month 2", completed: 152, running: 42 },
-            { period: "Month 3", completed: 160, running: 48 },
-          ]
-        : [
-            { period: "Week 1", completed: 95, running: 28 },
-            { period: "Week 2", completed: 108, running: 34 },
-            { period: "Week 3", completed: 115, running: 36 },
-            { period: "Week 4", completed: 124, running: 48 },
-          ];
-
-    // 3. Jobs by Profession / Service Category
+    // 2. Jobs by Profession / Service Category (Sums to total completed jobs)
     const jobsByProfession: ProfessionDistributionPoint[] = [
-      { profession: "Electrician", completedJobs: 142, activeWorkers: 38, averageRating: 4.8 },
-      { profession: "Plumber", completedJobs: 118, activeWorkers: 32, averageRating: 4.7 },
-      { profession: "Deep Cleaner", completedJobs: 94, activeWorkers: 26, averageRating: 4.9 },
-      { profession: "Appliance Repair", completedJobs: 56, activeWorkers: 18, averageRating: 4.6 },
-      { profession: "Carpenter", completedJobs: 48, activeWorkers: 14, averageRating: 4.8 },
-      { profession: "Painter / Mason", completedJobs: 32, activeWorkers: 7, averageRating: 4.7 },
+      { profession: "Electrician", completedJobs: Math.round(stats.jobs.completedJobs * 0.32), activeWorkers: Math.round(activeWorkersCount * 0.28), averageRating: 4.8 },
+      { profession: "Plumber", completedJobs: Math.round(stats.jobs.completedJobs * 0.27), activeWorkers: Math.round(activeWorkersCount * 0.22), averageRating: 4.7 },
+      { profession: "Deep Cleaner", completedJobs: Math.round(stats.jobs.completedJobs * 0.20), activeWorkers: Math.round(activeWorkersCount * 0.18), averageRating: 4.9 },
+      { profession: "Appliance Repair", completedJobs: Math.round(stats.jobs.completedJobs * 0.10), activeWorkers: Math.round(activeWorkersCount * 0.14), averageRating: 4.6 },
+      { profession: "Carpenter", completedJobs: Math.round(stats.jobs.completedJobs * 0.07), activeWorkers: Math.round(activeWorkersCount * 0.11), averageRating: 4.8 },
+      { profession: "Painter / Mason", completedJobs: Math.round(stats.jobs.completedJobs * 0.04), activeWorkers: Math.round(activeWorkersCount * 0.07), averageRating: 4.7 },
     ];
 
-    // 4. Job Activity Trend over Time
+    // 3. Job Activity Trend over Time
     const activityTrend: JobActivityTrendPoint[] =
       timeframe === "7d"
         ? [
-            { date: "Mon", completed: 14, running: 6, pending: 4, cancelled: 1 },
-            { date: "Tue", completed: 18, running: 7, pending: 5, cancelled: 2 },
-            { date: "Wed", completed: 22, running: 8, pending: 6, cancelled: 1 },
-            { date: "Thu", completed: 19, running: 5, pending: 3, cancelled: 3 },
-            { date: "Fri", completed: 25, running: 9, pending: 7, cancelled: 2 },
-            { date: "Sat", completed: 31, running: 11, pending: 8, cancelled: 4 },
-            { date: "Sun", completed: 28, running: 8, pending: 5, cancelled: 1 },
+            { date: "Mon", completed: 14, running: 3, pending: 2, cancelled: 0 },
+            { date: "Tue", completed: 18, running: 4, pending: 2, cancelled: 0 },
+            { date: "Wed", completed: 20, running: 4, pending: 3, cancelled: 0 },
+            { date: "Thu", completed: 16, running: 3, pending: 2, cancelled: 0 },
+            { date: "Fri", completed: 22, running: 5, pending: 3, cancelled: 0 },
+            { date: "Sat", completed: 15, running: 3, pending: 2, cancelled: 0 },
+            { date: "Sun", completed: 13, running: 2, pending: 2, cancelled: 0 },
           ]
         : timeframe === "90d"
         ? [
-            { date: "Month 1", completed: 130, running: 38, pending: 24, cancelled: 12 },
-            { date: "Month 2", completed: 152, running: 42, pending: 28, cancelled: 14 },
-            { date: "Month 3", completed: 160, running: 48, pending: 32, cancelled: 18 },
+            { date: "Month 1", completed: 34, running: 6, pending: 4, cancelled: 0 },
+            { date: "Month 2", completed: 40, running: 8, pending: 5, cancelled: 0 },
+            { date: "Month 3", completed: 44, running: 10, pending: 5, cancelled: 0 },
           ]
         : [
-            { date: "Week 1", completed: 95, running: 28, pending: 18, cancelled: 8 },
-            { date: "Week 2", completed: 108, running: 34, pending: 22, cancelled: 6 },
-            { date: "Week 3", completed: 115, running: 36, pending: 26, cancelled: 9 },
-            { date: "Week 4", completed: 124, running: 48, pending: 32, cancelled: 11 },
+            { date: "Week 1", completed: 24, running: 5, pending: 3, cancelled: 0 },
+            { date: "Week 2", completed: 28, running: 6, pending: 3, cancelled: 0 },
+            { date: "Week 3", completed: 32, running: 6, pending: 4, cancelled: 0 },
+            { date: "Week 4", completed: 34, running: 7, pending: 4, cancelled: 0 },
           ];
 
-    // 5. Worker Performance Summary (Aggregate Rating Distribution)
+    // 4. Worker Performance Summary (Population sum matches activeWorkersCount)
+    const countTier1 = Math.round(activeWorkersCount * 0.58);
+    const countTier2 = Math.round(activeWorkersCount * 0.31);
+    const countTier3 = Math.round(activeWorkersCount * 0.09);
+    const countTier4 = activeWorkersCount - (countTier1 + countTier2 + countTier3);
+
     const workerPerformance: WorkerPerformanceDistributionPoint[] = [
-      { ratingTier: "5.0 Stars", workerCount: 78, percentageShare: 57.8, description: "Exceptional feedback & zero SLA violations" },
-      { ratingTier: "4.5 - 4.9 Stars", workerCount: 42, percentageShare: 31.1, description: "Consistent, high customer satisfaction" },
-      { ratingTier: "4.0 - 4.4 Stars", workerCount: 12, percentageShare: 8.9, description: "Meets cooperative quality standards" },
-      { ratingTier: "Below 4.0 Stars", workerCount: 3, percentageShare: 2.2, description: "Under cooperative skill refresher review" },
+      { ratingTier: "5.0 Stars", workerCount: countTier1, percentageShare: Number(((countTier1 / activeWorkersCount) * 100).toFixed(1)), description: "Exceptional feedback & zero SLA violations" },
+      { ratingTier: "4.5 - 4.9 Stars", workerCount: countTier2, percentageShare: Number(((countTier2 / activeWorkersCount) * 100).toFixed(1)), description: "Consistent, high customer satisfaction" },
+      { ratingTier: "4.0 - 4.4 Stars", workerCount: countTier3, percentageShare: Number(((countTier3 / activeWorkersCount) * 100).toFixed(1)), description: "Meets cooperative quality standards" },
+      { ratingTier: "Below 4.0 Stars", workerCount: countTier4, percentageShare: Number(((countTier4 / activeWorkersCount) * 100).toFixed(1)), description: "Under cooperative skill refresher review" },
     ];
 
-    // 6. Service Demand Distribution across Sectors
+    // 5. Service Demand Distribution across Sectors
     const demandDistribution: ServiceDemandPoint[] = [
-      { categoryName: "Electrical Repairs", demandVolume: 184, growthRate: 16.4, activeWorkerShare: 28.1 },
-      { categoryName: "Plumbing Services", demandVolume: 146, growthRate: 12.8, activeWorkerShare: 23.7 },
-      { categoryName: "Home Sanitization", demandVolume: 112, growthRate: 24.5, activeWorkerShare: 19.3 },
-      { categoryName: "HVAC & Appliance", demandVolume: 74, growthRate: 18.2, activeWorkerShare: 13.3 },
-      { categoryName: "Woodwork & Civil", demandVolume: 62, growthRate: 9.6, activeWorkerShare: 15.6 },
+      { categoryName: "Electrical Repairs", demandVolume: Math.round(stats.jobs.totalJobs * 0.35), growthRate: 16.4, activeWorkerShare: 28.1 },
+      { categoryName: "Plumbing Services", demandVolume: Math.round(stats.jobs.totalJobs * 0.28), growthRate: 12.8, activeWorkerShare: 23.7 },
+      { categoryName: "Home Sanitization", demandVolume: Math.round(stats.jobs.totalJobs * 0.18), growthRate: 24.5, activeWorkerShare: 19.3 },
+      { categoryName: "HVAC & Appliance", demandVolume: Math.round(stats.jobs.totalJobs * 0.11), growthRate: 18.2, activeWorkerShare: 13.3 },
+      { categoryName: "Woodwork & Civil", demandVolume: Math.round(stats.jobs.totalJobs * 0.08), growthRate: 9.6, activeWorkerShare: 15.6 },
     ];
 
     return {
       jobsByStatus,
-      completedVsRunning,
       jobsByProfession,
       activityTrend,
       workerPerformance,
