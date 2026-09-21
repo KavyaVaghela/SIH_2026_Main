@@ -11,7 +11,7 @@ export default function WelfarePage() {
   return (
     <Suspense
       fallback={
-        <div className="space-y-6 pb-12">
+        <div className="space-y-6 pb-12 w-full max-w-full min-w-0 overflow-x-hidden">
           <div className="space-y-2">
             <Skeleton className="h-6 w-48" />
             <Skeleton className="h-8 w-80" />
