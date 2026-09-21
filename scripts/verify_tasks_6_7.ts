@@ -122,7 +122,7 @@ async function runVerification() {
     }
     console.log(`✓ Pending worker login correctly redirected to /pending`);
 
-    // 1c. Test Approved Worker Login -> Must redirect to /worker/dashboard
+    // 1c. Test Approved Worker Login -> Must redirect to /worker
     await adminClient
       .from("workers")
       .update({ verification_status: "verified", account_status: "ACTIVE" })
@@ -134,10 +134,10 @@ async function runVerification() {
       .eq("id", lifecycleUserId);
 
     const approvedLogin = await signInWithEmail(testWorkerEmail, testPassword);
-    if (!approvedLogin.success || approvedLogin.redirectUrl !== "/worker/dashboard") {
-      throw new Error(`Expected redirectUrl /worker/dashboard for approved worker, got: ${JSON.stringify(approvedLogin)}`);
+    if (!approvedLogin.success || approvedLogin.redirectUrl !== "/worker") {
+      throw new Error(`Expected redirectUrl /worker for approved worker, got: ${JSON.stringify(approvedLogin)}`);
     }
-    console.log(`✓ Approved active worker login correctly permitted to /worker/dashboard`);
+    console.log(`✓ Approved active worker login correctly permitted to /worker`);
 
     // 1d. Test Deactivation -> Login MUST be blocked
     console.log("\n--- TEST 2: Task 6 - Federation Admin Deactivation ---");
@@ -188,10 +188,10 @@ async function runVerification() {
     console.log(`✓ Reactivated worker account: account_status=${reactivatedWorker.account_status}, availability=${reactivatedWorker.availability_status}`);
 
     const reactivatedLogin = await signInWithEmail(testWorkerEmail, testPassword);
-    if (!reactivatedLogin.success || reactivatedLogin.redirectUrl !== "/worker/dashboard") {
+    if (!reactivatedLogin.success || reactivatedLogin.redirectUrl !== "/worker") {
       throw new Error(`Expected login to succeed after reactivation, got: ${JSON.stringify(reactivatedLogin)}`);
     }
-    console.log(`✓ Reactivated worker successfully signed in to /worker/dashboard`);
+    console.log(`✓ Reactivated worker successfully signed in to /worker`);
 
     // 1f. Test Rejected / Suspended Worker Login Block
     console.log("\n--- TEST 4: Task 6 - Rejection / Suspension Login Guard ---");
@@ -311,10 +311,10 @@ async function runVerification() {
     // 5. Test Worker Login with EXACT email and password
     console.log("\n--- TEST 6: Task 7 - New Worker Sign-In with Exact Credentials ---");
     const manualWorkerLogin = await signInWithEmail(manualWorkerEmail, manualWorkerPassword);
-    if (!manualWorkerLogin.success || manualWorkerLogin.redirectUrl !== "/worker/dashboard") {
-      throw new Error(`Expected successful login to /worker/dashboard for manually added worker, got: ${JSON.stringify(manualWorkerLogin)}`);
+    if (!manualWorkerLogin.success || manualWorkerLogin.redirectUrl !== "/worker") {
+      throw new Error(`Expected successful login to /worker for manually added worker, got: ${JSON.stringify(manualWorkerLogin)}`);
     }
-    console.log(`✓ Newly created worker signed in successfully with EXACT email & password to /worker/dashboard`);
+    console.log(`✓ Newly created worker signed in successfully with EXACT email & password to /worker`);
 
     // 6. Test Duplicate Email Prevention
     console.log("\n--- TEST 7: Task 7 - Duplicate Email Prevention ---");

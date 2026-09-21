@@ -12,10 +12,9 @@ import { Input } from "@/components/ui/input";
 import { Card, CardHeader, CardTitle, CardDescription, CardContent, CardFooter } from "@/components/ui/card";
 import { Alert, AlertTitle, AlertDescription } from "@/components/ui/alert";
 import { Dialog } from "@/components/ui/dialog";
-import { Badge } from "@/components/ui/badge";
 import { loginSchema, type LoginFormData } from "@/features/auth/schemas/login-schema";
 import { signInWithEmail } from "@/lib/auth/actions";
-import { isRouteAllowedForRole } from "@/lib/auth/rbac";
+import { isRouteAllowedForRole, getRoleHomeRoute } from "@/lib/auth/rbac";
 
 export function LoginView() {
   const router = useRouter();
@@ -62,11 +61,20 @@ export function LoginView() {
 
     // Determine safe redirect URL
     const userRole = res.role || "CUSTOMER";
-    let destination = res.redirectUrl || "/customer";
+    let destination = res.redirectUrl || getRoleHomeRoute(userRole);
     if (redirectTo && redirectTo.startsWith("/") && !redirectTo.startsWith("//") && !redirectTo.includes("://")) {
       if (isRouteAllowedForRole(redirectTo, userRole)) {
         destination = redirectTo;
       }
+    }
+
+    // Safety normalizer: guarantee worker dashboard route is always canonical /worker
+    if (destination === "/worker/dashboard" || destination === "/worker/dashboard/") {
+      destination = "/worker";
+    }
+
+    if (process.env.NODE_ENV !== "production") {
+      console.log(`[LoginView] Role: ${userRole}, navigating to: ${destination}`);
     }
 
     router.refresh();

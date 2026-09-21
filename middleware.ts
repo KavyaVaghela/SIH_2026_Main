@@ -82,6 +82,13 @@ export async function middleware(request: NextRequest) {
     return redirectRes;
   };
 
+  // Direct alias: redirect legacy or stale /worker/dashboard directly to canonical /worker
+  if (pathname === "/worker/dashboard" || pathname === "/worker/dashboard/") {
+    const canonicalUrl = new URL("/worker", request.url);
+    canonicalUrl.search = request.nextUrl.search;
+    return createRedirect(canonicalUrl);
+  }
+
   // Case 1: Unauthenticated user accessing a protected route
   if (!user && isProtectedPath) {
     // Development mode bypass for local prototyping/testing
@@ -190,6 +197,12 @@ export async function middleware(request: NextRequest) {
     }
 
     const homeRoute = getRoleHomeRoute(userRole);
+
+    if (process.env.NODE_ENV !== "production" && isProtectedPath) {
+      console.log(
+        `[Middleware] Path: ${pathname}, User: ${user.id}, Role: ${userRole}, Home: ${homeRoute}`
+      );
+    }
 
     // If user is accessing login/register while authenticated, redirect to their role home page
     if (isAuthPath) {

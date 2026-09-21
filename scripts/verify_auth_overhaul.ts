@@ -277,7 +277,7 @@ async function runTests() {
     // Evaluate our redirection logic from signInWithEmail and middleware:
     const isWorkerActive = wrkProfile?.is_active ?? false;
     const workerRole = wrkProfile?.role || "WORKER";
-    const redirectUrl = (!isWorkerActive && workerRole !== "CUSTOMER") ? "/pending" : "/worker/dashboard";
+    const redirectUrl = (!isWorkerActive && workerRole !== "CUSTOMER") ? "/pending" : "/worker";
 
     console.log(`✓ Inactive worker login evaluates redirectUrl: ${redirectUrl}`);
     if (redirectUrl !== "/pending") {
@@ -354,12 +354,12 @@ async function runTests() {
     // -------------------------------------------------------------
     console.log("\n--- TEST 7: Approved Worker Login ---");
     const approvedRedirectUrl = (verifiedProf?.is_active && verifiedProf?.role === "WORKER")
-      ? "/worker/dashboard"
+      ? "/worker"
       : "/pending";
 
     console.log(`✓ Approved worker login evaluates redirectUrl: ${approvedRedirectUrl}`);
-    if (approvedRedirectUrl !== "/worker/dashboard") {
-      throw new Error(`Expected redirect to /worker/dashboard for approved worker, got ${approvedRedirectUrl}`);
+    if (approvedRedirectUrl !== "/worker") {
+      throw new Error(`Expected redirect to /worker for approved worker, got ${approvedRedirectUrl}`);
     }
 
     // -------------------------------------------------------------
