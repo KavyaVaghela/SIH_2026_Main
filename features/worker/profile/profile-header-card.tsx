@@ -7,6 +7,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { createClient } from "@/lib/supabase/client";
+import { setCachedProfileAvatar } from "@/lib/auth/session-user";
 import type { WorkerProfileDetails } from "../types";
 
 export interface ProfileHeaderCardProps {
@@ -39,9 +40,17 @@ export function ProfileHeaderCard({
     setUploadError(null);
 
     try {
+      const supabase = createClient();
+      const {
+        data: { user },
+      } = await supabase.auth.getUser();
+
       const formData = new FormData();
       formData.append("file", file);
       formData.append("bucket", "avatars");
+      if (user?.id) {
+        formData.append("userId", user.id);
+      }
 
       const res = await fetch("/api/storage/upload", {
         method: "POST",
@@ -55,24 +64,13 @@ export function ProfileHeaderCard({
 
       const newAvatarUrl = data.url;
 
-      // Persist to public.profiles
-      const supabase = createClient();
-      const {
-        data: { user },
-      } = await supabase.auth.getUser();
-
-      if (user) {
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        const { error: updateErr } = await (supabase.from("profiles") as any)
-          .update({
-            avatar_url: newAvatarUrl,
-            updated_at: new Date().toISOString(),
+      setCachedProfileAvatar("WORKER", newAvatarUrl);
+      if (typeof window !== "undefined") {
+        window.dispatchEvent(
+          new CustomEvent("kaushalyasetu:avatar_updated", {
+            detail: { avatarUrl: newAvatarUrl },
           })
-          .eq("id", user.id);
-
-        if (updateErr) {
-          console.warn("Notice: Failed to sync avatar_url to profiles:", updateErr);
-        }
+        );
       }
 
       onUpdateAvatar?.(newAvatarUrl);

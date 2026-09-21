@@ -10,6 +10,34 @@ export interface CooperativeAffiliationCardProps {
   profile: WorkerProfileDetails;
 }
 
+function formatDisplayDate(dateStr?: string | null): string {
+  if (!dateStr) return "On Record";
+  try {
+    const parts = dateStr.split("T")[0].split("-");
+    if (parts.length === 3) {
+      const year = parseInt(parts[0], 10);
+      const month = parseInt(parts[1], 10) - 1;
+      const day = parseInt(parts[2], 10);
+      const date = new Date(Date.UTC(year, month, day));
+      return date.toLocaleDateString("en-GB", {
+        day: "numeric",
+        month: "short",
+        year: "numeric",
+        timeZone: "UTC",
+      });
+    }
+    const d = new Date(dateStr);
+    if (isNaN(d.getTime())) return dateStr;
+    return d.toLocaleDateString("en-GB", {
+      day: "numeric",
+      month: "short",
+      year: "numeric",
+    });
+  } catch {
+    return dateStr;
+  }
+}
+
 export function CooperativeAffiliationCard({ profile }: CooperativeAffiliationCardProps) {
   const displayMemberId = profile.memberId || profile.cooperativeId || "Pending Allocation";
   const displayRegistrationType =
@@ -85,7 +113,7 @@ export function CooperativeAffiliationCard({ profile }: CooperativeAffiliationCa
               <Calendar className="h-3 w-3 mr-1 text-emerald-600" />
               Date of Birth
             </span>
-            <p className="text-xs font-semibold text-foreground">{profile.dateOfBirth || "On Record"}</p>
+            <p className="text-xs font-semibold text-foreground">{formatDisplayDate(profile.dateOfBirth)}</p>
           </div>
 
           <div className="p-3 rounded-lg border bg-muted/10 space-y-0.5">

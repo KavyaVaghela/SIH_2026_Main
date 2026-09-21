@@ -80,7 +80,6 @@ export interface IWorkerJobService {
   getWorkerWelfareDetails(workerId?: string): Promise<WorkerWelfareDetails>;
   simulateCustomerConfirmation(bookingId: string): Promise<WorkerJobItem>;
   getJobCoordinates(addressText?: string): { origin: Coordinates; destination: Coordinates };
-  createTestCustomerRequest(workerId?: string, overrides?: Partial<CreateBookingRequestPayload>): Promise<WorkerJobItem>;
   getStatusHistory(jobId: string): Promise<BookingStatusHistory[]>;
   getSchedule(workerId?: string): Promise<{ today: WorkerJobItem[]; upcoming: WorkerJobItem[] }>;
   getActiveJobs(workerId?: string): Promise<WorkerJobItem[]>;
@@ -1666,43 +1665,6 @@ export class WorkerJobService implements IWorkerJobService {
 
     const updated = await bookingService.confirmBooking(bookingId, booking.customerId);
     return this.mapBookingToWorkerJobItem(updated);
-  }
-
-  /**
-   * Generates a real test customer request in bookingService for development testing (Part 10)
-   */
-  async createTestCustomerRequest(
-    workerId: string = "w-1",
-    overrides?: Partial<CreateBookingRequestPayload>
-  ): Promise<WorkerJobItem> {
-    const testCustomers = [
-      { name: "Anand Verma", area: "Navrangpura, Ahmedabad", dist: 2.4, problem: "Water purifier inlet valve leaking onto kitchen counter." },
-      { name: "Kavita Patel", area: "Satellite, Ahmedabad", dist: 1.6, problem: "Shower diverter knob jammed and leaking continuously." },
-      { name: "Mehul Shah", area: "Bodakdev, Ahmedabad", dist: 3.8, problem: "Bathroom drain pipe backup during heavy usage." },
-      { name: "Sunita Trivedi", area: "Vastrapur, Ahmedabad", dist: 2.1, problem: "Balcony bibcock tap broken and needs replacement." },
-    ];
-    const picked = testCustomers[Math.floor(Math.random() * testCustomers.length)];
-    const uniqueCustId = `cust-test-${Date.now()}`;
-    const uniqueSvcId = `srv-p${Math.floor(Math.random() * 9) + 1}`;
-
-    const newBooking = await bookingService.createRequest({
-      customerId: uniqueCustId,
-      workerId,
-      serviceId: overrides?.serviceId || uniqueSvcId,
-      federationId: "fed-1",
-      addressId: `addr-${Date.now()}`,
-      problemDescription: overrides?.problemDescription || `Customer: ${picked.name} • ${picked.problem}`,
-      scheduledStartAt: overrides?.scheduledStartAt || "TodayT17:00:00",
-      scheduledEndAt: overrides?.scheduledEndAt || "TodayT18:30:00",
-      totalAmount: overrides?.totalAmount || 550,
-      serviceTitle: overrides?.serviceTitle || "Plumbing Inspection & Repair",
-      categoryName: overrides?.categoryName || "Plumbing & Drainage",
-      workerName: "Ravi Patel",
-      cooperativeName: "ABC Labour Cooperative Society",
-      addressText: overrides?.addressText || picked.area,
-    });
-
-    return this.mapBookingToWorkerJobItem(newBooking);
   }
 
   /**
