@@ -5,6 +5,7 @@ import { AlertCircle, ShieldAlert, CheckCircle2, XCircle, MapPin, Clock, Wrench 
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { useRealtimeSubscription } from "@/hooks/use-realtime-subscription";
 
 export interface EmergencyOpportunity {
   id: string; // dispatch record id
@@ -38,10 +39,12 @@ export function EmergencyOpportunitiesCard({
     text: string;
   } | null>(null);
 
-  const fetchOpportunities = React.useCallback(async () => {
+  const debounceTimerRef = React.useRef<NodeJS.Timeout | null>(null);
+
+  const fetchOpportunities = React.useCallback(async (showLoading = true) => {
     if (!workerId) return;
     try {
-      setIsLoading(true);
+      if (showLoading) setIsLoading(true);
       const res = await fetch(`/api/emergency/dispatch?workerId=${workerId}`);
       if (!res.ok) return;
       const data = await res.json();
@@ -66,13 +69,32 @@ export function EmergencyOpportunitiesCard({
     } catch (err) {
       console.warn("Emergency opportunities fetch notice:", err);
     } finally {
-      setIsLoading(false);
+      if (showLoading) setIsLoading(false);
     }
   }, [workerId]);
 
   React.useEffect(() => {
-    fetchOpportunities();
+    fetchOpportunities(true);
+    return () => {
+      if (debounceTimerRef.current) clearTimeout(debounceTimerRef.current);
+    };
   }, [fetchOpportunities]);
+
+  const handleRealtimeDispatch = React.useCallback(() => {
+    if (debounceTimerRef.current) {
+      clearTimeout(debounceTimerRef.current);
+    }
+    debounceTimerRef.current = setTimeout(() => {
+      fetchOpportunities(false);
+    }, 150);
+  }, [fetchOpportunities]);
+
+  // Live real-time link: Worker receives dispatched opportunities immediately
+  useRealtimeSubscription({
+    table: "emergency_dispatch_pool",
+    enabled: !!workerId,
+    onPayload: handleRealtimeDispatch,
+  });
 
   const handleRespond = async (dispatchId: string, action: "ACCEPT" | "DECLINE") => {
     setActingDispatchId(dispatchId);

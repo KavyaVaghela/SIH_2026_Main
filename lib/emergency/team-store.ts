@@ -112,6 +112,25 @@ async function acquireIncidentLock(incidentId: string): Promise<() => void> {
   return unlock;
 }
 
+export function deduplicateMembers(members: EmergencyTeamMemberRecord[]): EmergencyTeamMemberRecord[] {
+  const map = new Map<string, EmergencyTeamMemberRecord>();
+  for (const m of members) {
+    if (!m.worker_id) continue;
+    const existing = map.get(m.worker_id);
+    if (!existing) {
+      map.set(m.worker_id, m);
+    } else {
+      // If existing is inactive/released, prefer an active or assigned record
+      if (existing.status === "RELEASED" || existing.status === "NO_SHOW") {
+        if (m.status !== "RELEASED" && m.status !== "NO_SHOW") {
+          map.set(m.worker_id, m);
+        }
+      }
+    }
+  }
+  return Array.from(map.values());
+}
+
 export class EmergencyTeamRepository {
   /**
    * Atomically processes a worker's ACCEPT or DECLINE response to an emergency dispatch
@@ -275,7 +294,16 @@ export class EmergencyTeamRepository {
       if (newAcceptedCount >= requiredCount) {
         // Fetch all dispatches for this incident including this newly accepted one
         const updatedDispatches = await EmergencyDispatchRepository.listDispatchesForIncident(incident.id);
-        const allAccepted = updatedDispatches.filter((d) => d.status === "ACCEPTED" || d.id === dispatchId);
+        const allAcceptedRaw = updatedDispatches.filter((d) => d.status === "ACCEPTED" || d.id === dispatchId);
+
+        // Deduplicate accepted dispatches by worker_id (ONE worker = ONE response-team membership)
+        const uniqueDispatchesByWorker = new Map<string, typeof allAcceptedRaw[0]>();
+        for (const d of allAcceptedRaw) {
+          if (!uniqueDispatchesByWorker.has(d.worker_id)) {
+            uniqueDispatchesByWorker.set(d.worker_id, d);
+          }
+        }
+        const allAccepted = Array.from(uniqueDispatchesByWorker.values());
 
         // Deterministic Team Lead Identification:
         // Find if any accepted worker was dispatched under Team Lead role
@@ -447,7 +475,7 @@ export class EmergencyTeamRepository {
 
       if (!error && data) {
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        const members = (data.emergency_response_team_members || []).map((m: any) => ({
+        const rawMembers = (data.emergency_response_team_members || []).map((m: any) => ({
           id: m.id,
           team_id: m.team_id,
           incident_id: m.incident_id,
@@ -465,7 +493,7 @@ export class EmergencyTeamRepository {
 
         return {
           ...data,
-          members,
+          members: deduplicateMembers(rawMembers),
         };
       }
     } catch {
@@ -474,7 +502,8 @@ export class EmergencyTeamRepository {
 
     const team = inMemoryTeams.get(incidentId) || getStoredTeam(incidentId) || null;
     if (team) {
-      team.members = inMemoryTeamMembers.get(team.id) || getStoredTeamMembers(team.id) || [];
+      const rawList = inMemoryTeamMembers.get(team.id) || getStoredTeamMembers(team.id) || [];
+      team.members = deduplicateMembers(rawList);
     }
     return team;
   }
@@ -513,7 +542,7 @@ export class EmergencyTeamRepository {
         return data.map((d: any) => ({
           ...d,
           // eslint-disable-next-line @typescript-eslint/no-explicit-any
-          members: (d.emergency_response_team_members || []).map((m: any) => ({
+          members: deduplicateMembers((d.emergency_response_team_members || []).map((m: any) => ({
             id: m.id,
             team_id: m.team_id,
             incident_id: m.incident_id,
@@ -527,7 +556,7 @@ export class EmergencyTeamRepository {
             worker_name: m.workers?.profiles?.full_name,
             worker_phone: m.workers?.profiles?.phone,
             profession: m.workers?.profession,
-          })),
+          }))),
         }));
       }
     } catch {
@@ -538,13 +567,13 @@ export class EmergencyTeamRepository {
     if (incTeams.length > 0) {
       return incTeams.map((t) => ({
         ...t,
-        members: inMemoryTeamMembers.get(t.id) || t.members || [],
+        members: deduplicateMembers(inMemoryTeamMembers.get(t.id) || t.members || []),
       }));
     }
 
     const primary = inMemoryTeams.get(incidentId);
     if (primary) {
-      primary.members = inMemoryTeamMembers.get(primary.id) || [];
+      primary.members = deduplicateMembers(inMemoryTeamMembers.get(primary.id) || []);
       return [primary];
     }
 
@@ -621,7 +650,8 @@ export class EmergencyTeamRepository {
    */
   static async listTeamMembers(teamId: string): Promise<EmergencyTeamMemberRecord[]> {
     const team = await this.getTeamById(teamId);
-    return team?.members || inMemoryTeamMembers.get(teamId) || [];
+    const raw = team?.members || inMemoryTeamMembers.get(teamId) || [];
+    return deduplicateMembers(raw);
   }
 
   /**
@@ -675,14 +705,19 @@ export class EmergencyTeamRepository {
     team: EmergencyResponseTeamRecord,
     members: EmergencyTeamMemberRecord[] = []
   ): Promise<EmergencyResponseTeamRecord> {
-    team.members = members;
+    const distinctMembers = deduplicateMembers(members);
+    team.members = distinctMembers;
+    const activeCount = distinctMembers.filter((m) => m.status !== "RELEASED" && m.status !== "NO_SHOW").length;
+    if (activeCount > 0) {
+      team.accepted_worker_count = activeCount;
+    }
     if (team.team_type === "PRIMARY" || !inMemoryTeams.has(team.incident_id)) {
       inMemoryTeams.set(team.incident_id, team);
     }
     inMemoryTeams.set(team.id, team);
-    inMemoryTeamMembers.set(team.id, members);
+    inMemoryTeamMembers.set(team.id, distinctMembers);
     setStoredTeam(team);
-    setStoredTeamMembers(team.id, members);
+    setStoredTeamMembers(team.id, distinctMembers);
 
     const incTeams = inMemoryIncidentTeams.get(team.incident_id) || [];
     const existingIdx = incTeams.findIndex((t) => t.id === team.id);
@@ -826,14 +861,20 @@ export class EmergencyTeamRepository {
    * Adds a member to an emergency response team
    */
   static async addMember(teamId: string, member: EmergencyTeamMemberRecord): Promise<void> {
-    const list = inMemoryTeamMembers.get(teamId) || getStoredTeamMembers(teamId);
-    list.push(member);
-    inMemoryTeamMembers.set(teamId, list);
-    setStoredTeamMembers(teamId, list);
+    const list = inMemoryTeamMembers.get(teamId) || getStoredTeamMembers(teamId) || [];
+    const existingIdx = list.findIndex((m) => m.worker_id === member.worker_id);
+    if (existingIdx >= 0) {
+      list[existingIdx] = { ...list[existingIdx], ...member };
+    } else {
+      list.push(member);
+    }
+    const distinct = deduplicateMembers(list);
+    inMemoryTeamMembers.set(teamId, distinct);
+    setStoredTeamMembers(teamId, distinct);
     const team = inMemoryTeams.get(teamId) || inMemoryTeams.get(member.incident_id) || getStoredTeam(teamId);
     if (team) {
-      team.members = list;
-      team.accepted_worker_count = (team.accepted_worker_count || 0) + 1;
+      team.members = distinct;
+      team.accepted_worker_count = distinct.filter((m) => m.status !== "RELEASED" && m.status !== "NO_SHOW").length;
       team.required_worker_count = Math.max(team.required_worker_count, team.accepted_worker_count);
       setStoredTeam(team);
     }

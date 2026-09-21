@@ -27,9 +27,11 @@ export default function FederationEmergencyDashboardPage() {
   const [shortageFilter, setShortageFilter] = React.useState<boolean>(false);
   const [liveAlert, setLiveAlert] = React.useState<LiveAlertInfo | null>(null);
 
-  const fetchIncidents = React.useCallback(async () => {
+  const debounceTimerRef = React.useRef<NodeJS.Timeout | null>(null);
+
+  const fetchIncidents = React.useCallback(async (showLoading = true) => {
     try {
-      setIsLoading(true);
+      if (showLoading) setIsLoading(true);
       const params = new URLSearchParams();
       if (statusFilter !== "ALL") params.append("status", statusFilter);
       if (severityFilter !== "ALL") params.append("severity", severityFilter);
@@ -45,18 +47,30 @@ export default function FederationEmergencyDashboardPage() {
     } catch (err) {
       console.warn("Notice: failed to load federation incidents", err);
     } finally {
-      setIsLoading(false);
+      if (showLoading) setIsLoading(false);
     }
   }, [statusFilter, severityFilter, searchValue, shortageFilter]);
 
   React.useEffect(() => {
-    fetchIncidents();
+    fetchIncidents(true);
+    return () => {
+      if (debounceTimerRef.current) clearTimeout(debounceTimerRef.current);
+    };
+  }, [fetchIncidents]);
+
+  const triggerDebouncedFetch = React.useCallback(() => {
+    if (debounceTimerRef.current) {
+      clearTimeout(debounceTimerRef.current);
+    }
+    debounceTimerRef.current = setTimeout(() => {
+      fetchIncidents(false);
+    }, 150);
   }, [fetchIncidents]);
 
   // Realtime updates & live alert handling
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const handleIncidentPayload = React.useCallback((payload: any) => {
-    fetchIncidents();
+    triggerDebouncedFetch();
 
     if (payload?.eventType === "INSERT" && payload?.new) {
       const row = payload.new;
@@ -68,7 +82,7 @@ export default function FederationEmergencyDashboardPage() {
         location: row.location || "Location provided",
       });
     }
-  }, [fetchIncidents]);
+  }, [triggerDebouncedFetch]);
 
   const { status: realtimeStatus } = useRealtimeSubscription({
     table: "emergency_incidents",
@@ -77,12 +91,12 @@ export default function FederationEmergencyDashboardPage() {
 
   useRealtimeSubscription({
     table: "emergency_response_teams",
-    onPayload: () => fetchIncidents(),
+    onPayload: triggerDebouncedFetch,
   });
 
   useRealtimeSubscription({
     table: "emergency_additional_worker_requests",
-    onPayload: () => fetchIncidents(),
+    onPayload: triggerDebouncedFetch,
   });
 
   return (

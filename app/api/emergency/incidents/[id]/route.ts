@@ -40,10 +40,12 @@ export async function GET(
       );
     }
 
-    const matrix = await EmergencyIncidentRepository.getIncidentResponseMatrix(incident.id);
-    const dispatches = await EmergencyDispatchRepository.listDispatchesForIncident(incident.id);
-    const team = await EmergencyTeamRepository.getTeamByIncidentId(incident.id);
-    const tasks = await EmergencyTaskRepository.listTasksForIncident(incident.id);
+    const [matrix, dispatches, team, tasks] = await Promise.all([
+      EmergencyIncidentRepository.getIncidentResponseMatrix(incident.id),
+      EmergencyDispatchRepository.listDispatchesForIncident(incident.id),
+      EmergencyTeamRepository.getTeamByIncidentId(incident.id),
+      EmergencyTaskRepository.listTasksForIncident(incident.id),
+    ]);
     const taskProgress = tasks.length > 0 ? await EmergencyTaskRepository.calculateProgress(incident.id) : null;
 
     // Task 8: Verification details
@@ -146,8 +148,15 @@ export async function GET(
         totalTasks: tasks.length,
         completedTasks: tasks.filter((t) => t.status === "COMPLETED").length,
         progressPercentage:
-          taskProgress?.progressPercentage ??
-          (incident.status === "CLOSED" ? 100 : incident.status === "RESOLVED" ? 90 : team ? 50 : 20),
+          incident.status === "CLOSED"
+            ? 100
+            : incident.status === "RESOLVED"
+            ? 80
+            : (incident.is_verified || verification?.status === "VERIFIED" || team?.field_status === "ON_SITE" || team?.field_status === "WORK_IN_PROGRESS")
+            ? 60
+            : (team || incident.status === "ACTIVE")
+            ? 40
+            : 20,
         paymentNotice: "Covered under Cooperative Emergency Assistance Protocol (₹0 Immediate Charge)",
       },
     });
