@@ -71,6 +71,7 @@ export const ROLE_NAVIGATION_CONFIGS: Record<PlatformRole, RoleNavigationConfig>
     displayName: "Federation Admin",
     navItems: [
       { title: "Federation Hub", href: "/federation-admin", icon: React.createElement(Building) },
+      { title: "Earnings & Revenue", href: "/federation-admin/earnings", icon: React.createElement(Wallet) },
       { title: "Federation Information", href: "/federation-admin/federation-information", icon: React.createElement(Building2) },
       { title: "Worker Information", href: "/federation-admin/worker-information", icon: React.createElement(Users) },
       { title: "Workforce Management", href: "/federation-admin/workforce-management", icon: React.createElement(Briefcase) },
@@ -81,6 +82,7 @@ export const ROLE_NAVIGATION_CONFIGS: Record<PlatformRole, RoleNavigationConfig>
     ],
     mobileNavItems: [
       { title: "Hub", href: "/federation-admin", icon: React.createElement(Building) },
+      { title: "Earnings", href: "/federation-admin/earnings", icon: React.createElement(Wallet) },
       { title: "Federation Info", href: "/federation-admin/federation-information", icon: React.createElement(Building2) },
       { title: "Worker Info", href: "/federation-admin/worker-information", icon: React.createElement(Users) },
       { title: "Workforce", href: "/federation-admin/workforce-management", icon: React.createElement(Briefcase) },
