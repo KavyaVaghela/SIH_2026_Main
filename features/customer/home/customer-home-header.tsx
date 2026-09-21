@@ -1,9 +1,8 @@
 "use client";
 
 import * as React from "react";
-import { Search, MapPin, SlidersHorizontal, ShieldCheck, X } from "lucide-react";
+import { Search, MapPin, SlidersHorizontal, X } from "lucide-react";
 import { Input } from "@/components/ui/input";
-import { Badge } from "@/components/ui/badge";
 
 export interface CustomerHomeHeaderProps {
   customerName?: string;
@@ -24,17 +23,12 @@ export function CustomerHomeHeader({
 
   return (
     <div className="relative bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100 rounded-2xl p-5 md:p-6 shadow-sm border border-slate-200/80 dark:border-slate-800 space-y-4">
-      {/* Top Bar: Location & Cooperative Trust Badge */}
+      {/* Top Bar: Location */}
       <div className="flex flex-wrap items-center justify-between gap-3 border-b border-slate-100 dark:border-slate-800 pb-3.5">
         <div className="flex items-center gap-2 bg-slate-100 dark:bg-slate-800 px-3 py-1 rounded-full text-xs text-slate-700 dark:text-slate-300 font-medium">
           <MapPin className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400 shrink-0" />
           <span>{locationArea}</span>
         </div>
-
-        <Badge variant="outline" className="bg-emerald-50 dark:bg-emerald-950/60 border-emerald-200 dark:border-emerald-800 text-emerald-700 dark:text-emerald-300 text-xs gap-1.5 py-1 px-3 font-semibold">
-          <ShieldCheck className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400 shrink-0" />
-          KaushalyaSetu Verified Worker Cooperative
-        </Badge>
       </div>
 
       {/* Hero Greeting & Headline */}

@@ -41,7 +41,6 @@ export function FederationOverviewCard({
                 <CardTitle className="text-base font-semibold text-foreground">
                   Federation Overview
                 </CardTitle>
-                <ProtectedFieldBadge label="Statutory Records Locked" />
               </div>
               <CardDescription className="text-xs text-muted-foreground">
                 Official statutory identity and legal contact parameters
