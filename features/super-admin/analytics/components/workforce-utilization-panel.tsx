@@ -19,7 +19,7 @@ export function WorkforceUtilizationPanel({
 }: WorkforceUtilizationPanelProps) {
   if (isLoading || !utilization) {
     return (
-      <Card className="border shadow-sm p-6">
+      <Card className="border bg-card shadow-xs p-6">
         <Skeleton className="h-6 w-48 mb-2" />
         <Skeleton className="h-64 w-full rounded-xl" />
       </Card>
@@ -27,7 +27,7 @@ export function WorkforceUtilizationPanel({
   }
 
   return (
-    <Card className="border shadow-sm">
+    <Card className="border bg-card shadow-xs">
       <CardHeader className="pb-3 border-b flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
         <div className="space-y-1">
           <div className="flex items-center space-x-2">

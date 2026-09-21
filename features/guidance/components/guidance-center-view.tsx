@@ -89,7 +89,7 @@ function GuidanceCenterViewContent({ role, userName }: GuidanceCenterViewProps) 
     return [
       { label: "Complaints Queue", href: "/super-admin/complaints", icon: <ShieldAlert className="h-4 w-4 text-emerald-600" /> },
       { label: "Cooperative Societies", href: "/super-admin/societies", icon: <ShieldCheck className="h-4 w-4 text-emerald-600" /> },
-      { label: "Demand Intelligence", href: "/super-admin/demand", icon: <Compass className="h-4 w-4 text-emerald-600" /> },
+      { label: "Demand & Analytics", href: "/super-admin/analytics", icon: <Compass className="h-4 w-4 text-emerald-600" /> },
     ];
   }, [role]);
 

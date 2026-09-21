@@ -1,31 +1,33 @@
-import { createClient } from "@/lib/supabase/client";
-import { INITIAL_PLATFORM_SETTINGS } from "../data/mock-settings";
 import type { PlatformSettings, ManagedServiceItem, NotificationPreferences } from "../types";
 
-const SETTINGS_STORAGE_KEY = "kaushalyasetu_super_admin_settings_v1";
+const NOTIFICATION_STORAGE_KEY = "kaushalyasetu_super_admin_notification_prefs";
 
-let inMemorySettings: PlatformSettings = { ...INITIAL_PLATFORM_SETTINGS };
+const DEFAULT_NOTIFICATION_PREFERENCES: NotificationPreferences = {
+  complaintAlertsEnabled: true,
+  workerShortageAlertsEnabled: true,
+  welfareAlertsEnabled: true,
+  registrationAlertsEnabled: true,
+};
 
 export class SettingsService {
-  private getStoredSettings(): PlatformSettings {
+  private getStoredNotificationPreferences(): NotificationPreferences {
     if (typeof window !== "undefined") {
       try {
-        const stored = localStorage.getItem(SETTINGS_STORAGE_KEY);
+        const stored = localStorage.getItem(NOTIFICATION_STORAGE_KEY);
         if (stored) {
-          return JSON.parse(stored);
+          return { ...DEFAULT_NOTIFICATION_PREFERENCES, ...JSON.parse(stored) };
         }
       } catch {
-        // Fallback to in-memory
+        // Fallback to defaults
       }
     }
-    return inMemorySettings;
+    return DEFAULT_NOTIFICATION_PREFERENCES;
   }
 
-  private saveSettings(settings: PlatformSettings) {
-    inMemorySettings = { ...settings };
+  private saveNotificationPreferences(prefs: NotificationPreferences) {
     if (typeof window !== "undefined") {
       try {
-        localStorage.setItem(SETTINGS_STORAGE_KEY, JSON.stringify(settings));
+        localStorage.setItem(NOTIFICATION_STORAGE_KEY, JSON.stringify(prefs));
       } catch {
         // Storage write failed
       }
@@ -33,107 +35,54 @@ export class SettingsService {
   }
 
   async getSettings(): Promise<PlatformSettings> {
-    const current = this.getStoredSettings();
+    const notificationPreferences = this.getStoredNotificationPreferences();
 
-    // Attempt to enrich services list with real Supabase 'services' data
-    try {
-      const supabase = createClient();
-      const { data } = await (supabase.from("services") as any)
-        .select(`
-          id,
-          title,
-          description,
-          base_price,
-          is_active,
-          service_categories (name)
-        `)
-        .limit(20);
+    // Fetch real services directly from database via secure API route
+    const res = await fetch("/api/super-admin/settings", {
+      cache: "no-store",
+    });
 
-      if (data && data.length > 0) {
-        const dbServices: ManagedServiceItem[] = data.map((s: any) => ({
-          id: s.id,
-          title: s.title,
-          category: s.service_categories?.name || "General Trades",
-          basePrice: Number(s.base_price) || 300,
-          isActive: Boolean(s.is_active),
-          description: s.description || undefined,
-        }));
-
-        if (dbServices.length >= 3) {
-          const updated = {
-            ...current,
-            services: dbServices,
-          };
-          this.saveSettings(updated);
-          return updated;
-        }
-      }
-    } catch {
-      // Fallback
+    if (!res.ok) {
+      throw new Error("Unable to load trade services catalog from database. Please try again.");
     }
 
-    return current;
+    const data = await res.json();
+    const services: ManagedServiceItem[] = data.services || [];
+
+    return {
+      services,
+      notificationPreferences,
+    };
   }
 
-  async updatePlatformControl(
-    key: "societyRegistrationEnabled" | "emergencyBookingEnabled",
+  async toggleService(serviceId: string, isActive: boolean): Promise<void> {
+    const res = await fetch("/api/super-admin/settings", {
+      method: "PATCH",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({ serviceId, isActive }),
+    });
+
+    if (!res.ok) {
+      const err = await res.json().catch(() => ({}));
+      throw new Error(err.error || "Failed to update service availability in database.");
+    }
+  }
+
+  updateNotificationPreference(
+    key: keyof NotificationPreferences,
     value: boolean
-  ): Promise<PlatformSettings> {
-    const current = this.getStoredSettings();
-    const updated: PlatformSettings = {
+  ): NotificationPreferences {
+    const current = this.getStoredNotificationPreferences();
+    const updated: NotificationPreferences = {
       ...current,
       [key]: value,
     };
-    this.saveSettings(updated);
+    this.saveNotificationPreferences(updated);
     return updated;
-  }
-
-  async toggleService(serviceId: string, isActive: boolean): Promise<PlatformSettings> {
-    const current = this.getStoredSettings();
-    const updatedServices = current.services.map((srv) =>
-      srv.id === serviceId ? { ...srv, isActive } : srv
-    );
-
-    const updated: PlatformSettings = {
-      ...current,
-      services: updatedServices,
-    };
-    this.saveSettings(updated);
-
-    // Attempt to persist to real database table 'services'
-    try {
-      const supabase = createClient();
-      await (supabase.from("services") as any)
-        .update({ is_active: isActive })
-        .eq("id", serviceId);
-    } catch {
-      // Offline fallback
-    }
-
-    return updated;
-  }
-
-  async updateNotificationPreference(
-    key: keyof NotificationPreferences,
-    value: boolean
-  ): Promise<PlatformSettings> {
-    const current = this.getStoredSettings();
-    const updated: PlatformSettings = {
-      ...current,
-      notificationPreferences: {
-        ...current.notificationPreferences,
-        [key]: value,
-      },
-    };
-    this.saveSettings(updated);
-    return updated;
-  }
-
-  async resetToDefaults(): Promise<PlatformSettings> {
-    const defaults = { ...INITIAL_PLATFORM_SETTINGS };
-    this.saveSettings(defaults);
-    return defaults;
   }
 }
 
 export const settingsService = new SettingsService();
+

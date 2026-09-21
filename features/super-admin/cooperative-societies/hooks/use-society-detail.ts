@@ -24,6 +24,16 @@ export function useSocietyDetail(id: string) {
     setIsLoading(true);
     setError(null);
     try {
+      const res = await fetch(`/api/super-admin/societies/${id}`);
+      if (res.ok) {
+        const json = await res.json();
+        setSociety(json.society);
+        setWorkers(json.workers || []);
+        setBookings(json.bookings || []);
+        setPerformance(json.performance || null);
+        return;
+      }
+
       const [detailsData, workersData, bookingsData, perfData] = await Promise.all([
         societiesService.getSocietyById(id),
         societiesService.getSocietyWorkers(id),

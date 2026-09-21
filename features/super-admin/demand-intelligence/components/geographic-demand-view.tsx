@@ -15,7 +15,7 @@ import {
   Activity,
   Layers,
 } from "lucide-react";
-import { Map } from "@/components/maps/map";
+import { Map, MapMarker } from "@/components/maps";
 import type { GeographicDemandCluster, LocationStatusCategory } from "../types";
 
 interface GeographicDemandViewProps {
@@ -33,7 +33,7 @@ export function GeographicDemandView({
 
   if (isLoading) {
     return (
-      <Card className="border shadow-sm p-6">
+      <Card className="border bg-card shadow-xs p-6">
         <div className="h-64 animate-pulse bg-muted/40 rounded-lg" />
       </Card>
     );
@@ -86,7 +86,7 @@ export function GeographicDemandView({
   };
 
   return (
-    <Card className="border shadow-sm">
+    <Card className="border bg-card shadow-xs">
       <CardHeader className="pb-3 border-b flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
         <div className="space-y-1">
           <div className="flex items-center space-x-2">
@@ -135,13 +135,31 @@ export function GeographicDemandView({
           <div className="space-y-3">
             <div className="rounded-xl overflow-hidden border">
               <Map
-                center={{ lat: 19.076, lng: 72.8777 }} // Mumbai Metropolitan Region default center
-                zoom={11}
+                center={
+                  clusters.length > 0 && clusters[0].coordinates?.lat
+                    ? { lat: 21.5, lng: 78.5 } // Pan-India center covering all cooperative clusters
+                    : { lat: 23.0225, lng: 72.5714 }
+                }
+                zoom={clusters.length > 1 ? 5 : 10}
                 className="w-full h-80 sm:h-96"
-              />
+              >
+                {clusters.map((cluster) => (
+                  <MapMarker
+                    key={cluster.id}
+                    position={cluster.coordinates}
+                    title={`${cluster.locationName} (${cluster.requestsCount} requests, ${cluster.availableWorkersCount} workers)`}
+                    popupContent={`<div style="min-width: 160px; padding: 2px;">
+                      <div style="font-weight: 700; font-size: 13px; color: #0f172a; margin-bottom: 4px;">${cluster.locationName}</div>
+                      <div style="font-size: 11px; color: #047857; font-weight: 600;">Demand Requests: ${cluster.requestsCount}</div>
+                      <div style="font-size: 11px; color: #0284c7; font-weight: 600;">Available Workers: ${cluster.availableWorkersCount}</div>
+                      <div style="font-size: 11px; color: #64748b; margin-top: 4px;">${cluster.societyName || cluster.district}</div>
+                    </div>`}
+                  />
+                ))}
+              </Map>
             </div>
             <p className="text-[11px] text-muted-foreground text-center">
-              Coordinates pinned to active cooperative districts in Mumbai, Thane, Navi Mumbai, and Pune.
+              Locations derived from active cooperative regions and real service activity.
             </p>
           </div>
         ) : (

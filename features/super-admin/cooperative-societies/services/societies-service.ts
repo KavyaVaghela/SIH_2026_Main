@@ -10,186 +10,100 @@ import type {
   SocietyStatus,
 } from "../types";
 
-// Dev Fallback Data Store
-let mockSocietiesStore: SocietyDetails[] = [
-  {
-    id: "fed-001",
-    name: "Mumbai Central Worker Cooperative",
-    code: "MCWC-01",
-    registrationNumber: "REG-MH-2024-001",
-    city: "Mumbai",
-    state: "Maharashtra",
-    location: "Mumbai, Maharashtra",
-    address: "Unit 402, Trade Hub, Dadar West, Mumbai - 400028",
-    adminName: "Rajesh Sharma",
-    contactEmail: "admin@mumbaicoop.org",
-    contactPhone: "+91 98200 12345",
-    serviceRegion: "Central Mumbai & Suburbs",
-    totalWorkers: 184,
-    activeJobs: 18,
-    totalBookings: 840,
-    completedBookings: 790,
-    averageRating: 4.8,
-    status: "ACTIVE",
-    isActive: true,
-    registrationDate: "2024-01-15",
-    cancellationRate: 3.2,
-    complaintCount: 2,
-    utilizationRate: 82,
-    completionRate: 94.0,
-    officialDocuments: [
-      { title: "Cooperative Society Registration Certificate", url: "#", verified: true },
-      { title: "GST Registration Certificate", url: "#", verified: true },
-      { title: "Bylaws & Governance Charter", url: "#", verified: true },
-    ],
-  },
-  {
-    id: "fed-002",
-    name: "Navi Mumbai Skilled Trades Federation",
-    code: "NMSTF-02",
-    registrationNumber: "REG-MH-2024-002",
-    city: "Navi Mumbai",
-    state: "Maharashtra",
-    location: "Navi Mumbai, Maharashtra",
-    address: "Plot 12, Sector 17, Vashi, Navi Mumbai - 400703",
-    adminName: "Sanjay Patil",
-    contactEmail: "contact@nmstf.co.in",
-    contactPhone: "+91 98333 45678",
-    serviceRegion: "Vashi, Nerul & Belapur Corridor",
-    totalWorkers: 142,
-    activeJobs: 12,
-    totalBookings: 620,
-    completedBookings: 570,
-    averageRating: 4.6,
-    status: "ACTIVE",
-    isActive: true,
-    registrationDate: "2024-02-10",
-    cancellationRate: 4.5,
-    complaintCount: 4,
-    utilizationRate: 75,
-    completionRate: 91.9,
-    officialDocuments: [
-      { title: "Cooperative Registration Certificate", url: "#", verified: true },
-      { title: "GST Certificate", url: "#", verified: true },
-    ],
-  },
-  {
-    id: "fed-003",
-    name: "Thane District Artisans Cooperative",
-    code: "TDAC-03",
-    registrationNumber: "REG-MH-2024-003",
-    city: "Thane",
-    state: "Maharashtra",
-    location: "Thane, Maharashtra",
-    address: "7th Floor, Commerce Center, Naupada, Thane - 400602",
-    adminName: "Sunita Deshmukh",
-    contactEmail: "admin@thanecoop.org",
-    contactPhone: "+91 97690 98765",
-    serviceRegion: "Thane West, Majiwada & Ghodbunder",
-    totalWorkers: 96,
-    activeJobs: 4,
-    totalBookings: 390,
-    completedBookings: 350,
-    averageRating: 4.9,
-    status: "PENDING_VERIFICATION",
-    isActive: false,
-    registrationDate: "2024-04-05",
-    cancellationRate: 2.1,
-    complaintCount: 1,
-    utilizationRate: 68,
-    completionRate: 89.7,
-    officialDocuments: [
-      { title: "Draft Registration Copy", url: "#", verified: false },
-    ],
-  },
-  {
-    id: "fed-004",
-    name: "Pune Metro Gig Workers Society",
-    code: "PMGWS-04",
-    registrationNumber: "REG-MH-2024-004",
-    city: "Pune",
-    state: "Maharashtra",
-    location: "Pune, Maharashtra",
-    address: "Block B, Tech Park Road, Hinjewadi, Pune - 411057",
-    adminName: "Vikram Joshi",
-    contactEmail: "info@punegig.org",
-    contactPhone: "+91 91234 56789",
-    serviceRegion: "Hinjewadi, Baner & Wakad",
-    totalWorkers: 210,
-    activeJobs: 24,
-    totalBookings: 1120,
-    completedBookings: 1040,
-    averageRating: 4.7,
-    status: "ACTIVE",
-    isActive: true,
-    registrationDate: "2023-11-20",
-    cancellationRate: 3.8,
-    complaintCount: 3,
-    utilizationRate: 88,
-    completionRate: 92.8,
-    officialDocuments: [
-      { title: "Registration Certificate", url: "#", verified: true },
-      { title: "PAN & Tax Audit File", url: "#", verified: true },
-    ],
-  },
-  {
-    id: "fed-005",
-    name: "Nashik Green & Solar Tech Guild",
-    code: "NGSTG-05",
-    registrationNumber: "REG-MH-2024-005",
-    city: "Nashik",
-    state: "Maharashtra",
-    location: "Nashik, Maharashtra",
-    address: "MIDC Ambad Complex, Nashik - 422010",
-    adminName: "Anil Kulkarni",
-    contactEmail: "support@nashiksolarguild.org",
-    contactPhone: "+91 94222 11223",
-    serviceRegion: "Nashik Urban & MIDC Zone",
-    totalWorkers: 64,
-    activeJobs: 0,
-    totalBookings: 180,
-    completedBookings: 160,
-    averageRating: 4.4,
-    status: "SUSPENDED",
-    isActive: false,
-    registrationDate: "2024-03-01",
-    cancellationRate: 8.4,
-    complaintCount: 7,
-    utilizationRate: 42,
-    completionRate: 88.8,
-    officialDocuments: [
-      { title: "Registration Copy", url: "#", verified: true },
-    ],
-  },
-];
+// Empty fallback store - all real societies are derived from Supabase public.federations
+let mockSocietiesStore: SocietyDetails[] = [];
 
 export class SocietiesService {
   /**
    * Fetch societies list with filters, sorting, and pagination
+   * Aggregates real worker count, active jobs, bookings, and worker-derived ratings without N+1 queries.
    */
-  async getSocieties(options: Partial<SocietyFilterOptions> = {}): Promise<{
+  async getSocieties(
+    options: Partial<SocietyFilterOptions> = {},
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    clientOverride?: any
+  ): Promise<{
     data: SocietyListItem[];
     totalCount: number;
     locations: string[];
   }> {
-    const supabase = createClient();
+    if (typeof window !== "undefined" && !clientOverride) {
+      try {
+        const params = new URLSearchParams();
+        if (options.searchQuery) params.set("searchQuery", options.searchQuery);
+        if (options.status && options.status !== "ALL") params.set("status", options.status);
+        if (options.location && options.location !== "ALL") params.set("location", options.location);
+        if (options.sortBy) params.set("sortBy", options.sortBy);
+        if (options.sortOrder) params.set("sortOrder", options.sortOrder);
+        if (options.page) params.set("page", String(options.page));
+        if (options.pageSize) params.set("pageSize", String(options.pageSize));
+
+        const qs = params.toString();
+        const res = await fetch(`/api/super-admin/societies${qs ? `?${qs}` : ""}`);
+        if (res.ok) {
+          return await res.json();
+        }
+      } catch (e) {
+        console.warn("Notice: falling back to direct client query for societies:", e);
+      }
+    }
+
+    const supabase = clientOverride || createClient();
 
     try {
-      const { data: dbFederations, error } = await (supabase.from("federations") as any)
-        .select("*");
+      // Fetch federations, workers, bookings, reviews, and admin profiles in parallel
+      const [
+        { data: dbFederations, error: fedError },
+        { data: dbWorkers, error: workerError },
+        { data: dbBookings, error: bookingError },
+        { data: dbReviews, error: reviewError },
+        { data: adminProfiles },
+      ] = await Promise.all([
+        (supabase.from("federations") as any).select("*").order("name"),
+        (supabase.from("workers") as any).select("id, federation_id, account_status, availability_status"),
+        (supabase.from("bookings") as any).select("id, federation_id, status"),
+        (supabase.from("reviews") as any).select("worker_id, rating"),
+        (supabase.from("profiles") as any).select("email, full_name").eq("role", "FEDERATION_ADMIN"),
+      ]);
 
-      if (!error && dbFederations && dbFederations.length > 0) {
+      if (!fedError && dbFederations && dbFederations.length > 0) {
         // Look up Federation Admin profile names
-        const { data: adminProfiles } = await (supabase.from("profiles") as any)
-          .select("email, full_name")
-          .eq("role", "FEDERATION_ADMIN");
-
         const adminMap = new Map<string, string>();
         if (adminProfiles) {
           adminProfiles.forEach((p: any) => {
             if (p.email && p.full_name) adminMap.set(p.email.toLowerCase(), p.full_name);
           });
         }
+
+        // Map workers by federation
+        const workersByFed = new Map<string, Array<{ id: string; availability_status: string }>>();
+        (dbWorkers || []).forEach((w: any) => {
+          if (w.federation_id && w.account_status !== "DELETED") {
+            const list = workersByFed.get(w.federation_id) || [];
+            list.push({ id: w.id, availability_status: w.availability_status });
+            workersByFed.set(w.federation_id, list);
+          }
+        });
+
+        // Map bookings by federation
+        const bookingsByFed = new Map<string, Array<{ id: string; status: string }>>();
+        (dbBookings || []).forEach((b: any) => {
+          if (b.federation_id) {
+            const list = bookingsByFed.get(b.federation_id) || [];
+            list.push({ id: b.id, status: b.status });
+            bookingsByFed.set(b.federation_id, list);
+          }
+        });
+
+        // Map reviews by worker ID
+        const reviewsByWorker = new Map<string, number[]>();
+        (dbReviews || []).forEach((r: any) => {
+          if (r.worker_id && typeof r.rating === "number") {
+            const list = reviewsByWorker.get(r.worker_id) || [];
+            list.push(r.rating);
+            reviewsByWorker.set(r.worker_id, list);
+          }
+        });
 
         const typedFederations = dbFederations as Array<{
           id: string;
@@ -210,11 +124,38 @@ export class SocietiesService {
           reviewed_by?: string | null;
         }>;
 
-        // Merge DB data with populated metrics
+        // Compute honest derived metrics for each federation
         const items: SocietyListItem[] = typedFederations.map((fed) => {
-          const matchedMock = mockSocietiesStore.find((m) => m.id === fed.id || m.code === fed.code);
+          const workers = workersByFed.get(fed.id) || [];
+          const totalWorkers = workers.length;
+
+          const bookings = bookingsByFed.get(fed.id) || [];
+          const totalBookings = bookings.length;
+          const completedBookings = bookings.filter(
+            (b) => b.status === "BOOKING_COMPLETED" || b.status === "SERVICE_COMPLETED"
+          ).length;
+          const activeJobs = bookings.filter(
+            (b) =>
+              b.status !== "BOOKING_COMPLETED" &&
+              b.status !== "SERVICE_COMPLETED" &&
+              b.status !== "CANCELLED" &&
+              b.status !== "REJECTED"
+          ).length;
+
+          // Compute average worker rating honestly from real reviews
+          const ratings: number[] = [];
+          workers.forEach((w) => {
+            const wr = reviewsByWorker.get(w.id);
+            if (wr) ratings.push(...wr);
+          });
+          const averageRating =
+            ratings.length > 0
+              ? Number((ratings.reduce((sum, val) => sum + val, 0) / ratings.length).toFixed(1))
+              : null;
+
           const realAdminName = fed.contact_email ? adminMap.get(fed.contact_email.toLowerCase()) : null;
           const status = (fed.status as SocietyStatus) || (fed.is_active ? "ACTIVE" : "PENDING");
+
           return {
             id: fed.id,
             name: fed.name,
@@ -225,16 +166,18 @@ export class SocietiesService {
             location: `${fed.city}, ${fed.state}`,
             contactEmail: fed.contact_email,
             contactPhone: fed.contact_phone,
-            adminName: realAdminName || matchedMock?.adminName || "Cooperative Secretary",
+            adminName: realAdminName || "Cooperative Secretary",
             serviceRegion: fed.service_region,
-            totalWorkers: matchedMock?.totalWorkers || 0,
-            activeJobs: matchedMock?.activeJobs || 0,
-            totalBookings: matchedMock?.totalBookings || 0,
-            completedBookings: matchedMock?.completedBookings || 0,
-            averageRating: matchedMock?.averageRating || 5.0,
+            totalWorkers,
+            activeJobs,
+            totalBookings,
+            completedBookings,
+            averageRating,
             status,
             isActive: fed.is_active,
-            registrationDate: fed.created_at ? new Date(fed.created_at).toISOString().split("T")[0] : "2024-01-01",
+            registrationDate: fed.created_at
+              ? new Date(fed.created_at).toISOString().split("T")[0]
+              : "2024-01-01",
             rejectionReason: fed.rejection_reason || null,
             reviewedAt: fed.reviewed_at || null,
             reviewedBy: fed.reviewed_by || null,
@@ -243,8 +186,8 @@ export class SocietiesService {
 
         return this.applyFilters(items, options);
       }
-    } catch {
-      // Ignore DB fetch failure and fallback to mock dataset
+    } catch (err) {
+      console.error("Notice: error loading real societies from database:", err);
     }
 
     return this.applyFilters(mockSocietiesStore, options);
@@ -294,6 +237,11 @@ export class SocietiesService {
       let valA: any = a[sortBy as keyof SocietyListItem];
       let valB: any = b[sortBy as keyof SocietyListItem];
 
+      if (sortBy === "averageRating") {
+        valA = valA !== null && valA !== undefined ? valA : -1;
+        valB = valB !== null && valB !== undefined ? valB : -1;
+      }
+
       if (typeof valA === "string") valA = valA.toLowerCase();
       if (typeof valB === "string") valB = valB.toLowerCase();
 
@@ -318,7 +266,7 @@ export class SocietiesService {
   }
 
   /**
-   * Get single society by ID
+   * Get single society by ID with accurate real metrics
    */
   async getSocietyById(id: string): Promise<SocietyDetails | null> {
     const supabase = createClient();
@@ -343,8 +291,70 @@ export class SocietiesService {
           }
         }
 
-        const matchedMock = mockSocietiesStore.find((m) => m.id === id || m.code === fedRecord.code);
+        // Parallel queries for workers, bookings
+        const [
+          { data: workers },
+          { data: bookings },
+        ] = await Promise.all([
+          (supabase.from("workers") as any)
+            .select("id, availability_status, account_status")
+            .eq("federation_id", id),
+          (supabase.from("bookings") as any)
+            .select("id, status")
+            .eq("federation_id", id),
+        ]);
+
+        const validWorkers = (workers || []).filter((w: any) => w.account_status !== "DELETED");
+        const totalWorkers = validWorkers.length;
+        const busyWorkers = validWorkers.filter((w: any) => w.availability_status === "BUSY").length;
+        const utilizationRate = totalWorkers > 0 ? Math.round((busyWorkers / totalWorkers) * 100) : 0;
+
+        const bookingList = bookings || [];
+        const totalBookings = bookingList.length;
+        const completedBookings = bookingList.filter(
+          (b: any) => b.status === "BOOKING_COMPLETED" || b.status === "SERVICE_COMPLETED"
+        ).length;
+        const cancelledBookings = bookingList.filter(
+          (b: any) => b.status === "CANCELLED" || b.status === "REJECTED"
+        ).length;
+        const activeJobs = bookingList.filter(
+          (b: any) =>
+            b.status !== "BOOKING_COMPLETED" &&
+            b.status !== "SERVICE_COMPLETED" &&
+            b.status !== "CANCELLED" &&
+            b.status !== "REJECTED"
+        ).length;
+
+        const completionRate =
+          totalBookings > 0 ? Math.round((completedBookings / totalBookings) * 100) : 100;
+        const cancellationRate =
+          totalBookings > 0 ? Math.round((cancelledBookings / totalBookings) * 100) : 0;
+
+        // Derived average rating from worker reviews
+        let averageRating: number | null = null;
+        if (validWorkers.length > 0) {
+          const workerIds = validWorkers.map((w: any) => w.id);
+          const { data: reviews } = await (supabase.from("reviews") as any)
+            .select("rating")
+            .in("worker_id", workerIds);
+          if (reviews && reviews.length > 0) {
+            const sum = reviews.reduce((acc: number, r: any) => acc + (r.rating || 0), 0);
+            averageRating = Number((sum / reviews.length).toFixed(1));
+          }
+        }
+
+        // Real complaints count from linked bookings
+        let complaintCount = 0;
+        if (bookingList.length > 0) {
+          const bookingIds = bookingList.map((b: any) => b.id);
+          const { data: complaints } = await (supabase.from("complaints") as any)
+            .select("id")
+            .in("booking_id", bookingIds);
+          complaintCount = complaints?.length || 0;
+        }
+
         const status = (fedRecord.status as SocietyStatus) || (fedRecord.is_active ? "ACTIVE" : "PENDING");
+
         return {
           id: fedRecord.id,
           name: fedRecord.name,
@@ -356,21 +366,23 @@ export class SocietiesService {
           address: fedRecord.address,
           contactEmail: fedRecord.contact_email,
           contactPhone: fedRecord.contact_phone,
-          adminName: realAdminName || matchedMock?.adminName || "Cooperative Secretary",
+          adminName: realAdminName || "Cooperative Secretary",
           serviceRegion: fedRecord.service_region,
-          totalWorkers: matchedMock?.totalWorkers || 0,
-          activeJobs: matchedMock?.activeJobs || 0,
-          totalBookings: matchedMock?.totalBookings || 0,
-          completedBookings: matchedMock?.completedBookings || 0,
-          averageRating: matchedMock?.averageRating || 5.0,
+          totalWorkers,
+          activeJobs,
+          totalBookings,
+          completedBookings,
+          averageRating,
           status,
           isActive: fedRecord.is_active,
-          registrationDate: fedRecord.created_at ? new Date(fedRecord.created_at).toISOString().split("T")[0] : "2024-01-01",
-          cancellationRate: matchedMock?.cancellationRate || 0,
-          complaintCount: matchedMock?.complaintCount || 0,
-          utilizationRate: matchedMock?.utilizationRate || 0,
-          completionRate: matchedMock?.completionRate || 100,
-          officialDocuments: fedRecord.official_documents || matchedMock?.officialDocuments || [
+          registrationDate: fedRecord.created_at
+            ? new Date(fedRecord.created_at).toISOString().split("T")[0]
+            : "2024-01-01",
+          cancellationRate,
+          complaintCount,
+          utilizationRate,
+          completionRate,
+          officialDocuments: fedRecord.official_documents || [
             { title: "Cooperative Registration Certificate", url: "#", verified: true },
           ],
           rejectionReason: fedRecord.rejection_reason || null,
@@ -378,8 +390,8 @@ export class SocietiesService {
           reviewedBy: fedRecord.reviewed_by || null,
         };
       }
-    } catch {
-      // Fallback to local store lookup
+    } catch (err) {
+      console.error("Notice: error getting society details from database:", err);
     }
 
     const foundMock = mockSocietiesStore.find((s) => s.id === id);
@@ -392,7 +404,6 @@ export class SocietiesService {
   async createSociety(payload: AddSocietyFormPayload): Promise<SocietyDetails> {
     const supabase = createClient();
     const isActive = payload.status === "ACTIVE";
-    const fallbackId = `fed-${Date.now()}`;
 
     try {
       const { data, error } = await (supabase.from("federations") as any)
@@ -431,7 +442,7 @@ export class SocietiesService {
           activeJobs: 0,
           totalBookings: 0,
           completedBookings: 0,
-          averageRating: 5.0,
+          averageRating: null,
           status: payload.status,
           isActive: createdData.is_active,
           registrationDate: new Date().toISOString().split("T")[0],
@@ -444,10 +455,11 @@ export class SocietiesService {
         mockSocietiesStore.unshift(createdDetails);
         return createdDetails;
       }
-    } catch {
-      // Fallback for unseeded / offline mode
+    } catch (err) {
+      console.error("Error creating society in database:", err);
     }
 
+    const fallbackId = `fed-${Date.now()}`;
     const createdMock: SocietyDetails = {
       id: fallbackId,
       name: payload.name,
@@ -465,7 +477,7 @@ export class SocietiesService {
       activeJobs: 0,
       totalBookings: 0,
       completedBookings: 0,
-      averageRating: 5.0,
+      averageRating: null,
       status: payload.status,
       isActive: isActive,
       registrationDate: new Date().toISOString().split("T")[0],
@@ -506,20 +518,13 @@ export class SocietiesService {
       });
 
       if (res.ok) {
-        // Also sync local fallback store
-        const target = mockSocietiesStore.find((s) => s.id === id);
-        if (target) {
-          target.status = newStatus;
-          target.isActive = isActive;
-          if (rejectionReason) target.rejectionReason = rejectionReason;
-        }
         return true;
       }
     } catch (apiErr) {
       console.warn("Notice: /api/super-admin/societies fetch error:", apiErr);
     }
 
-    // Direct fallback if API route is unreachable
+    // Direct update if API route is unreachable
     const supabase = createClient();
     try {
       const { data: fedData } = await (supabase.from("federations") as any)
@@ -547,30 +552,11 @@ export class SocietiesService {
       console.error("Error updating society status in database:", err);
     }
 
-    // Update in-memory fallback store
-    const target = mockSocietiesStore.find((s) => s.id === id);
-    if (target) {
-      target.status = newStatus;
-      target.isActive = isActive;
-      if (rejectionReason) target.rejectionReason = rejectionReason;
-
-      if (target.contactEmail) {
-        try {
-          await (supabase.from("profiles") as any)
-            .update({ is_active: isActive })
-            .eq("email", target.contactEmail)
-            .eq("role", "FEDERATION_ADMIN");
-        } catch {
-          // Ignore profile sync if mock
-        }
-      }
-    }
-
     return true;
   }
 
   /**
-   * Fetch workers belonging to society
+   * Fetch workers belonging to society from live database
    */
   async getSocietyWorkers(societyId: string): Promise<SocietyWorkerItem[]> {
     const supabase = createClient();
@@ -597,90 +583,34 @@ export class SocietiesService {
         `)
         .eq("federation_id", societyId);
 
-      if (!error && data && data.length > 0) {
+      if (!error && data) {
         return data.map((w: any) => ({
           id: w.id,
           profileId: w.profile_id,
-          fullName: w.profiles?.full_name || "Cooperative Worker",
+          fullName: w.profiles?.full_name || "Cooperative Craftsman",
           email: w.profiles?.email,
           phone: w.profiles?.phone,
           profession: w.profession || "Skilled Craftsman",
-          experienceYears: w.experience_years || 3,
+          experienceYears: w.experience_years || 0,
           hourlyRate: w.hourly_rate || 350,
           accountStatus: w.account_status,
           availabilityStatus: w.availability_status,
           verificationStatus: w.verification_status,
-          joiningDate: w.joining_date ? new Date(w.joining_date).toISOString().split("T")[0] : "2024-01-01",
+          joiningDate: w.joining_date
+            ? new Date(w.joining_date).toISOString().split("T")[0]
+            : "2024-01-01",
           avatarUrl: w.profiles?.avatar_url,
         }));
       }
-    } catch {
-      // Fallback
+    } catch (err) {
+      console.error("Error fetching society workers:", err);
     }
 
-    // Dev Fallback Workers List
-    return [
-      {
-        id: "wrk-101",
-        profileId: "prf-101",
-        fullName: "Aarav Mehta",
-        email: "aarav.m@kaushalyasetu.in",
-        phone: "+91 98111 22334",
-        profession: "Master Electrician",
-        experienceYears: 7,
-        hourlyRate: 450,
-        accountStatus: "ACTIVE",
-        availabilityStatus: "AVAILABLE",
-        verificationStatus: "verified",
-        joiningDate: "2024-01-20",
-      },
-      {
-        id: "wrk-102",
-        profileId: "prf-102",
-        fullName: "Rohan Verma",
-        email: "rohan.v@kaushalyasetu.in",
-        phone: "+91 98222 33445",
-        profession: "Sanitation Specialist",
-        experienceYears: 5,
-        hourlyRate: 400,
-        accountStatus: "ACTIVE",
-        availabilityStatus: "BUSY",
-        verificationStatus: "verified",
-        joiningDate: "2024-02-01",
-      },
-      {
-        id: "wrk-103",
-        profileId: "prf-103",
-        fullName: "Priya Nair",
-        email: "priya.n@kaushalyasetu.in",
-        phone: "+91 98333 44556",
-        profession: "Solar Technician",
-        experienceYears: 4,
-        hourlyRate: 500,
-        accountStatus: "ACTIVE",
-        availabilityStatus: "AVAILABLE",
-        verificationStatus: "verified",
-        joiningDate: "2024-02-15",
-      },
-      {
-        id: "wrk-104",
-        profileId: "prf-104",
-        fullName: "Amit Chawla",
-        email: "amit.c@kaushalyasetu.in",
-        phone: "+91 98444 55667",
-        profession: "Carpenter",
-        experienceYears: 8,
-        hourlyRate: 380,
-        accountStatus: "ACTIVE",
-        availabilityStatus: "UNAVAILABLE",
-        verificationStatus: "pending_verification",
-        joiningDate: "2024-03-10",
-      },
-    ];
+    return [];
   }
 
   /**
-   * Fetch bookings associated with society
+   * Fetch bookings associated with society from live database
    */
   async getSocietyBookings(societyId: string): Promise<SocietyBookingItem[]> {
     const supabase = createClient();
@@ -695,64 +625,41 @@ export class SocietiesService {
           total_amount,
           status,
           created_at,
-          profiles!customer_id (full_name)
+          profiles!customer_id (full_name),
+          workers (
+            profiles (full_name)
+          ),
+          services (title)
         `)
         .eq("federation_id", societyId)
         .order("created_at", { ascending: false });
 
-      if (!error && data && data.length > 0) {
+      if (!error && data) {
         return data.map((b: any) => ({
           id: b.id,
-          bookingNumber: b.booking_number,
+          bookingNumber: b.booking_number || b.id.slice(0, 8).toUpperCase(),
           customerName: b.profiles?.full_name || "Household Customer",
-          workerName: "Assigned Worker",
-          serviceTitle: "Cooperative Service Request",
-          scheduledStartAt: new Date(b.scheduled_start_at).toLocaleDateString(),
-          totalAmount: b.total_amount,
+          workerName: b.workers?.profiles?.full_name || "Assigned Worker",
+          serviceTitle: b.services?.title || "Cooperative Service Request",
+          scheduledStartAt: b.scheduled_start_at
+            ? new Date(b.scheduled_start_at).toLocaleDateString("en-IN", {
+                year: "numeric",
+                month: "short",
+                day: "numeric",
+              })
+            : "Scheduled",
+          totalAmount: b.total_amount || 0,
           status: b.status,
-          createdAt: new Date(b.created_at).toLocaleDateString(),
+          createdAt: b.created_at
+            ? new Date(b.created_at).toISOString().split("T")[0]
+            : "2024-01-01",
         }));
       }
-    } catch {
-      // Fallback
+    } catch (err) {
+      console.error("Error fetching society bookings:", err);
     }
 
-    // Dev Fallback Bookings List
-    return [
-      {
-        id: "bk-901",
-        bookingNumber: "BKG-2026-901",
-        customerName: "Kavya Vaghela",
-        workerName: "Aarav Mehta",
-        serviceTitle: "Electrical Circuit Repair & Inspection",
-        scheduledStartAt: "2026-09-02 10:00 AM",
-        totalAmount: 850,
-        status: "SERVICE_COMPLETED",
-        createdAt: "2026-09-01",
-      },
-      {
-        id: "bk-902",
-        bookingNumber: "BKG-2026-902",
-        customerName: "Ananya Iyer",
-        workerName: "Priya Nair",
-        serviceTitle: "Solar Panel Meter Installation",
-        scheduledStartAt: "2026-09-03 02:00 PM",
-        totalAmount: 1400,
-        status: "SERVICE_STARTED",
-        createdAt: "2026-09-02",
-      },
-      {
-        id: "bk-903",
-        bookingNumber: "BKG-2026-903",
-        customerName: "Devendra Patel",
-        workerName: "Rohan Verma",
-        serviceTitle: "Bathroom Sanitation & Plumbing",
-        scheduledStartAt: "2026-09-04 11:30 AM",
-        totalAmount: 650,
-        status: "BOOKING_CONFIRMED",
-        createdAt: "2026-09-03",
-      },
-    ];
+    return [];
   }
 
   /**
@@ -761,23 +668,26 @@ export class SocietiesService {
   async getSocietyPerformance(societyId: string): Promise<SocietyPerformanceMetrics> {
     const details = await this.getSocietyById(societyId);
     if (details) {
+      const rating = details.averageRating ?? 0;
       return {
         bookingCompletionRate: details.completionRate,
         workerUtilizationRate: details.utilizationRate,
-        customerSatisfaction: details.averageRating,
+        customerSatisfaction: rating,
         cancellationRate: details.cancellationRate,
         complaintCount: details.complaintCount,
-        overallPerformanceScore: Math.round((details.completionRate + details.utilizationRate + details.averageRating * 20) / 3),
+        overallPerformanceScore: Math.round(
+          (details.completionRate + details.utilizationRate + rating * 20) / 3
+        ),
       };
     }
 
     return {
-      bookingCompletionRate: 92.5,
-      workerUtilizationRate: 78.0,
-      customerSatisfaction: 4.8,
-      cancellationRate: 3.2,
-      complaintCount: 2,
-      overallPerformanceScore: 88,
+      bookingCompletionRate: 0,
+      workerUtilizationRate: 0,
+      customerSatisfaction: 0,
+      cancellationRate: 0,
+      complaintCount: 0,
+      overallPerformanceScore: 0,
     };
   }
 }

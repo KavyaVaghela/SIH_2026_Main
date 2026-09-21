@@ -20,7 +20,7 @@ export function CriticalAlertsPanel({ alerts, isLoading }: CriticalAlertsPanelPr
 
   if (isLoading || !alerts) {
     return (
-      <Card className="border shadow-sm p-4 space-y-3">
+      <Card className="border bg-card shadow-xs p-4 space-y-3">
         <Skeleton className="h-5 w-40" />
         <Skeleton className="h-20 w-full" />
       </Card>
@@ -34,7 +34,7 @@ export function CriticalAlertsPanel({ alerts, isLoading }: CriticalAlertsPanelPr
   };
 
   return (
-    <Card className="border shadow-sm">
+    <Card className="border bg-card shadow-xs">
       <CardHeader className="pb-3 border-b flex flex-row items-center justify-between">
         <div>
           <div className="flex items-center space-x-2">

@@ -177,6 +177,7 @@ export function ServiceManagementTable({
                       checked={srv.isActive}
                       onCheckedChange={(val) => onToggleService(srv.id, val)}
                       disabled={isSaving}
+                      aria-label={`Toggle marketplace availability for ${srv.title}`}
                     />
                   </TableCell>
                 </TableRow>

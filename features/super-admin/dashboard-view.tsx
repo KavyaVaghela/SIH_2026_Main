@@ -10,7 +10,6 @@ import { KPIGrid } from "./components/kpi-grid";
 import { BookingActivityChart } from "./components/booking-activity-chart";
 import { DemandSummaryPanel } from "./components/demand-summary-panel";
 import { CriticalAlertsPanel } from "./components/critical-alerts-panel";
-import { SmartInsightsPanel } from "./components/smart-insights-panel";
 import { createClient } from "@/lib/supabase/client";
 import { getCachedProfileName, setCachedProfileName } from "@/lib/auth/session-user";
 
@@ -24,14 +23,23 @@ function getGreeting(): string {
 export function SuperAdminDashboardView() {
   const { data, isLoading, timeframe, setTimeframe, refresh } = useSuperAdminOverview();
 
-  const [adminName, setAdminName] = React.useState<string>(
-    () => getCachedProfileName("SUPER_ADMIN") || ""
-  );
-  const [isLoadingAdminName, setIsLoadingAdminName] = React.useState<boolean>(
-    () => !getCachedProfileName("SUPER_ADMIN")
-  );
+  // Deterministic initial state for SSR and client first render to avoid hydration mismatches
+  const [adminName, setAdminName] = React.useState<string>("");
+  const [isLoadingAdminName, setIsLoadingAdminName] = React.useState<boolean>(true);
+  const [greeting, setGreeting] = React.useState<string>("Good Morning");
 
   React.useEffect(() => {
+    // 1. Sync time-based greeting post-hydration to prevent timezone/daypart mismatches
+    setGreeting(getGreeting());
+
+    // 2. Read cached profile name post-hydration for instantaneous UI update without hydration mismatch
+    const cached = getCachedProfileName("SUPER_ADMIN");
+    if (cached) {
+      setAdminName(cached);
+      setIsLoadingAdminName(false);
+    }
+
+    // 3. Authoritative profile fetch from Supabase
     let isMounted = true;
     async function fetchAdminProfile() {
       try {
@@ -44,13 +52,19 @@ export function SuperAdminDashboardView() {
             .eq("id", user.id)
             .maybeSingle();
 
-          if (isMounted && profile?.full_name) {
-            setCachedProfileName("SUPER_ADMIN", profile.full_name);
-            setAdminName(profile.full_name);
+          if (isMounted) {
+            const resolvedName = profile?.full_name || "System Administrator";
+            setCachedProfileName("SUPER_ADMIN", resolvedName);
+            setAdminName(resolvedName);
           }
+        } else if (isMounted && !cached) {
+          setAdminName("System Administrator");
         }
       } catch (err) {
         console.error("Error loading super admin profile", err);
+        if (isMounted && !cached) {
+          setAdminName("System Administrator");
+        }
       } finally {
         if (isMounted) setIsLoadingAdminName(false);
       }
@@ -68,7 +82,7 @@ export function SuperAdminDashboardView() {
       <PageHeader
         title={
           <span className="flex items-center gap-2">
-            {getGreeting()},{" "}
+            {greeting},{" "}
             {isLoadingAdminName || !adminName ? (
               <span className="inline-block h-8 w-44 sm:w-56 bg-slate-200 dark:bg-slate-800 animate-pulse rounded-md align-middle" />
             ) : (
@@ -124,15 +138,10 @@ export function SuperAdminDashboardView() {
         <div>
           <DemandSummaryPanel
             categories={data?.topDemandCategories}
-            clusters={data?.districtClusters}
-            peakHours={data?.peakHours}
             isLoading={isLoading}
           />
         </div>
       </div>
-
-      {/* Smart Analytical Insights */}
-      <SmartInsightsPanel insights={data?.insights} isLoading={isLoading} />
     </div>
   );
 }
