@@ -21,13 +21,13 @@ interface JobStatusChartProps {
 export function JobStatusChart({ data, isLoading }: JobStatusChartProps) {
   if (isLoading || !data) {
     return (
-      <Card className="border bg-card shadow-xs">
+      <Card className="border bg-card shadow-xs h-full flex flex-col">
         <CardHeader className="pb-2">
           <Skeleton className="h-5 w-40" />
           <Skeleton className="h-4 w-60" />
         </CardHeader>
-        <CardContent className="h-64 flex items-center justify-center">
-          <Skeleton className="h-48 w-48 rounded-full" />
+        <CardContent className="flex-1 min-h-[220px] flex items-center justify-center">
+          <Skeleton className="h-44 w-44 rounded-full" />
         </CardContent>
       </Card>
     );
@@ -36,7 +36,7 @@ export function JobStatusChart({ data, isLoading }: JobStatusChartProps) {
   const totalJobs = data.reduce((acc, curr) => acc + curr.count, 0);
 
   return (
-    <Card className="border bg-card shadow-xs flex flex-col justify-between">
+    <Card className="border bg-card shadow-xs flex flex-col h-full">
       <CardHeader className="pb-2">
         <div className="flex items-center justify-between">
           <div>
@@ -53,8 +53,8 @@ export function JobStatusChart({ data, isLoading }: JobStatusChartProps) {
         </div>
       </CardHeader>
 
-      <CardContent className="pt-2">
-        <div className="h-64 w-full">
+      <CardContent className="pt-0 flex-1 flex flex-col justify-center items-center pb-4">
+        <div className="h-56 w-full">
           <ResponsiveContainer width="100%" height="100%">
             <PieChart>
               <Tooltip
@@ -81,16 +81,16 @@ export function JobStatusChart({ data, isLoading }: JobStatusChartProps) {
               />
               <Legend
                 verticalAlign="bottom"
-                height={36}
+                height={32}
                 iconType="circle"
-                wrapperStyle={{ fontSize: "11px", paddingTop: "8px" }}
+                wrapperStyle={{ fontSize: "11px", paddingTop: "4px" }}
               />
               <Pie
                 data={data}
                 cx="50%"
-                cy="45%"
-                innerRadius={52}
-                outerRadius={80}
+                cy="42%"
+                innerRadius={50}
+                outerRadius={78}
                 paddingAngle={4}
                 dataKey="count"
                 nameKey="label"

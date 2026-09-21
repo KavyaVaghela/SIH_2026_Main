@@ -1,7 +1,7 @@
 "use client";
 
 import * as React from "react";
-import { Scale, RefreshCw, AlertCircle, Users, HardHat, ShieldAlert, Plus, Clock, CheckCircle2, XCircle, AlertTriangle } from "lucide-react";
+import { RefreshCw, AlertCircle, Users, HardHat, ShieldAlert, Plus, Clock, CheckCircle2, XCircle, AlertTriangle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import type { ComplaintSubsection, SubsectionMetrics } from "../types";
@@ -64,10 +64,6 @@ export function ComplaintManagementHeader({
       {/* Header Title and Actions */}
       <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
         <div className="space-y-1">
-          <div className="flex items-center space-x-1.5 text-xs font-semibold text-rose-800 dark:text-rose-400 bg-rose-50 dark:bg-rose-950/60 px-2.5 py-0.5 rounded-md border border-rose-200 dark:border-rose-800/40 w-fit">
-            <Scale className="h-3.5 w-3.5" />
-            <span>Grievance Conciliation Hub</span>
-          </div>
           <h1 className="text-2xl font-bold tracking-tight text-foreground">
             Federation Grievance Center
           </h1>
