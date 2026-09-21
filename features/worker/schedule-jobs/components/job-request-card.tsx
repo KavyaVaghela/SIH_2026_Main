@@ -77,7 +77,11 @@ export function JobRequestCard({ request }: JobRequestCardProps) {
         <div className="text-right shrink-0">
           <span className="text-xs text-muted-foreground block">Platform Estimate</span>
           <span className="text-lg font-bold text-emerald-700 dark:text-emerald-400">
-            {formatINR(request.totalAmount)}
+            {request.totalAmount > 0
+              ? formatINR(request.totalAmount)
+              : request.urgency === "EMERGENCY"
+              ? "Emergency Support"
+              : formatINR(request.totalAmount)}
           </span>
         </div>
       </CardHeader>
