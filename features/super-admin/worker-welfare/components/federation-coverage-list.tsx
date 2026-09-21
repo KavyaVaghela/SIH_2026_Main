@@ -18,13 +18,13 @@ export function FederationCoverageList({
   onViewAll,
 }: FederationCoverageListProps) {
   return (
-    <Card className="border border-border/80 shadow-sm flex flex-col h-full">
+    <Card className="border border-border/80 shadow-sm flex flex-col h-full min-w-0 max-w-full overflow-hidden">
       <CardHeader className="pb-3 border-b border-border/60">
-        <div className="flex items-center justify-between gap-2">
-          <div>
-            <div className="flex items-center gap-2">
-              <Users2 className="h-5 w-5 text-emerald-600" />
-              <CardTitle className="text-base font-bold text-foreground">
+        <div className="flex items-center justify-between gap-2 min-w-0">
+          <div className="min-w-0">
+            <div className="flex items-center gap-2 min-w-0">
+              <Users2 className="h-5 w-5 text-emerald-600 shrink-0" />
+              <CardTitle className="text-base font-bold text-foreground truncate">
                 Federation Welfare Coverage
               </CardTitle>
             </div>
@@ -44,15 +44,15 @@ export function FederationCoverageList({
         </div>
       </CardHeader>
 
-      <CardContent className="p-4 space-y-4">
+      <CardContent className="p-4 space-y-4 min-w-0 max-w-full">
         {federations.map((fed) => (
           <div
             key={fed.id}
             onClick={() => onViewFederation(fed)}
-            className="group p-2.5 rounded-lg border border-transparent hover:border-emerald-200 hover:bg-emerald-50/40 dark:hover:bg-emerald-950/20 transition-all cursor-pointer"
+            className="group p-2.5 rounded-lg border border-transparent hover:border-emerald-200 hover:bg-emerald-50/40 dark:hover:bg-emerald-950/20 transition-all cursor-pointer min-w-0"
           >
-            <div className="flex items-center justify-between text-xs font-semibold mb-1.5">
-              <span className="text-foreground group-hover:text-emerald-600 transition-colors truncate max-w-[180px] sm:max-w-xs">
+            <div className="flex items-center justify-between text-xs font-semibold mb-1.5 min-w-0">
+              <span className="text-foreground group-hover:text-emerald-600 transition-colors truncate min-w-0 flex-1 mr-2">
                 {fed.name}
               </span>
               <div className="flex items-center gap-2 text-muted-foreground shrink-0">

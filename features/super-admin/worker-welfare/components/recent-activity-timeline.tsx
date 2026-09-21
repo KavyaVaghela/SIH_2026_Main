@@ -5,7 +5,6 @@ import { Clock, PlusCircle, RefreshCw, CheckCircle, Award, ShieldCheck } from "l
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { RECENT_WELFARE_ACTIVITIES } from "../data/welfare-mock-data";
-import type { RecentWelfareActivityItem } from "../types";
 
 function getActivityIcon(type: string) {
   switch (type) {
@@ -30,12 +29,12 @@ export interface RecentActivityTimelineProps {
 
 export function RecentActivityTimeline({ onViewAll }: RecentActivityTimelineProps) {
   return (
-    <Card className="border border-border/80 shadow-sm flex flex-col justify-between h-full">
+    <Card className="border border-border/80 shadow-sm flex flex-col justify-between h-full min-w-0 max-w-full overflow-hidden">
       <CardHeader className="pb-2 border-b border-border/60">
-        <div className="flex items-center justify-between gap-2">
-          <div className="flex items-center gap-2">
-            <Clock className="h-5 w-5 text-emerald-600" />
-            <CardTitle className="text-base font-bold text-foreground">
+        <div className="flex items-center justify-between gap-2 min-w-0">
+          <div className="flex items-center gap-2 min-w-0">
+            <Clock className="h-5 w-5 text-emerald-600 shrink-0" />
+            <CardTitle className="text-base font-bold text-foreground truncate">
               Recent Activity
             </CardTitle>
           </div>
@@ -51,7 +50,7 @@ export function RecentActivityTimeline({ onViewAll }: RecentActivityTimelineProp
         </div>
       </CardHeader>
 
-      <CardContent className="p-4 space-y-3 flex-1 flex flex-col justify-between">
+      <CardContent className="p-4 space-y-3 flex-1 flex flex-col justify-between min-w-0 max-w-full">
         {RECENT_WELFARE_ACTIVITIES.map((item) => (
           <div key={item.id} className="flex items-start gap-2.5 text-xs">
             <div className="p-1.5 rounded-full bg-muted border border-border/60 shrink-0 mt-0.5">

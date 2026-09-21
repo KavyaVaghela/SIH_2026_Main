@@ -40,13 +40,13 @@ export function WelfareProgramsTable({
   onViewAll,
 }: WelfareProgramsTableProps) {
   return (
-    <Card className="border border-border/80 shadow-sm flex flex-col h-full">
+    <Card className="border border-border/80 shadow-sm flex flex-col h-full min-w-0 max-w-full overflow-hidden">
       <CardHeader className="pb-3 border-b border-border/60">
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-          <div>
+          <div className="min-w-0">
             <div className="flex items-center gap-2">
-              <Building2 className="h-5 w-5 text-emerald-600" />
-              <CardTitle className="text-base font-bold text-foreground">
+              <Building2 className="h-5 w-5 text-emerald-600 shrink-0" />
+              <CardTitle className="text-base font-bold text-foreground truncate">
                 Welfare Programs & Schemes
               </CardTitle>
             </div>
@@ -55,7 +55,7 @@ export function WelfareProgramsTable({
             </p>
           </div>
 
-          <div className="flex items-center gap-2 shrink-0">
+          <div className="flex flex-wrap items-center gap-2 shrink-0">
             <Button
               onClick={onAddProgram}
               size="sm"
@@ -86,8 +86,8 @@ export function WelfareProgramsTable({
         </div>
       </CardHeader>
 
-      <CardContent className="p-0 overflow-x-auto">
-        <table className="w-full text-left text-xs">
+      <CardContent className="p-0 overflow-x-auto max-w-full">
+        <table className="w-full min-w-[700px] text-left text-xs">
           <thead className="bg-muted/50 text-muted-foreground font-semibold border-b border-border/60">
             <tr>
               <th className="py-2.5 px-4 font-semibold">Program / Scheme</th>
@@ -107,11 +107,11 @@ export function WelfareProgramsTable({
                 onClick={() => onViewProgram(item)}
               >
                 <td className="py-3 px-4 font-medium text-foreground">
-                  <div className="flex items-center gap-2.5">
+                  <div className="flex items-center gap-2.5 min-w-0">
                     <div className="w-7 h-7 rounded-md bg-emerald-50 dark:bg-emerald-950/60 border border-emerald-200/50 dark:border-emerald-800/40 flex items-center justify-center shrink-0 text-emerald-600 dark:text-emerald-400 font-bold text-xs">
                       {item.name.charAt(0)}
                     </div>
-                    <span className="font-semibold text-foreground group-hover:text-emerald-600 transition-colors">
+                    <span className="font-semibold text-foreground group-hover:text-emerald-600 transition-colors truncate max-w-[220px] sm:max-w-xs md:max-w-sm block">
                       {item.name}
                     </span>
                   </div>

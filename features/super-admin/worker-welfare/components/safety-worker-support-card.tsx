@@ -48,63 +48,63 @@ export function SafetyWorkerSupportCard({ dateFilter = "30_DAYS" }: SafetyWorker
   }, [dateFilter]);
 
   return (
-    <Card className="border border-border/80 shadow-sm flex flex-col justify-between h-full">
+    <Card className="border border-border/80 shadow-sm flex flex-col justify-between h-full min-w-0 max-w-full overflow-hidden">
       <CardHeader className="pb-2 border-b border-border/60">
-        <div className="flex items-center gap-2">
-          <ShieldCheck className="h-5 w-5 text-emerald-600" />
-          <div>
-            <CardTitle className="text-base font-bold text-foreground">
+        <div className="flex items-center gap-2 min-w-0">
+          <ShieldCheck className="h-5 w-5 text-emerald-600 shrink-0" />
+          <div className="min-w-0">
+            <CardTitle className="text-base font-bold text-foreground truncate">
               Safety & Worker Support
             </CardTitle>
-            <p className="text-xs text-muted-foreground mt-0.5">
+            <p className="text-xs text-muted-foreground mt-0.5 truncate">
               Monitor safety initiatives and emergency support
             </p>
           </div>
         </div>
       </CardHeader>
 
-      <CardContent className="p-4 grid grid-cols-2 gap-3 flex-1">
-        <div className="p-3 rounded-lg bg-emerald-50/70 dark:bg-emerald-950/40 border border-emerald-200/50 dark:border-emerald-900/40 flex flex-col justify-between">
-          <div className="flex items-center justify-between">
-            <ShieldCheck className="h-4 w-4 text-emerald-600" />
-            <span className="text-[10px] text-muted-foreground font-medium">{stats.label}</span>
+      <CardContent className="p-4 grid grid-cols-2 gap-2.5 flex-1 min-w-0 max-w-full">
+        <div className="p-3 rounded-lg bg-emerald-50/70 dark:bg-emerald-950/40 border border-emerald-200/50 dark:border-emerald-900/40 flex flex-col justify-between min-w-0">
+          <div className="flex items-center justify-between gap-1 min-w-0">
+            <ShieldCheck className="h-4 w-4 text-emerald-600 shrink-0" />
+            <span className="text-[10px] text-muted-foreground font-medium truncate">{stats.label}</span>
           </div>
-          <div className="mt-2">
-            <div className="text-xl font-bold text-foreground">{stats.safetyTrainings}</div>
-            <div className="text-xs font-semibold text-muted-foreground mt-0.5">Safety Trainings</div>
-          </div>
-        </div>
-
-        <div className="p-3 rounded-lg bg-rose-50/70 dark:bg-rose-950/40 border border-rose-200/50 dark:border-rose-900/40 flex flex-col justify-between">
-          <div className="flex items-center justify-between">
-            <AlertTriangle className="h-4 w-4 text-rose-600" />
-            <span className="text-[10px] text-muted-foreground font-medium">{stats.label}</span>
-          </div>
-          <div className="mt-2">
-            <div className="text-xl font-bold text-rose-600 dark:text-rose-400">{stats.emergencyAssistance}</div>
-            <div className="text-xs font-semibold text-muted-foreground mt-0.5">Emergency Assistance</div>
+          <div className="mt-2 min-w-0">
+            <div className="text-xl font-bold text-foreground truncate">{stats.safetyTrainings}</div>
+            <div className="text-xs font-semibold text-muted-foreground mt-0.5 truncate">Safety Trainings</div>
           </div>
         </div>
 
-        <div className="p-3 rounded-lg bg-blue-50/70 dark:bg-blue-950/40 border border-blue-200/50 dark:border-blue-900/40 flex flex-col justify-between">
-          <div className="flex items-center justify-between">
-            <LifeBuoy className="h-4 w-4 text-blue-600" />
-            <span className="text-[10px] text-muted-foreground font-medium">{stats.label}</span>
+        <div className="p-3 rounded-lg bg-rose-50/70 dark:bg-rose-950/40 border border-rose-200/50 dark:border-rose-900/40 flex flex-col justify-between min-w-0">
+          <div className="flex items-center justify-between gap-1 min-w-0">
+            <AlertTriangle className="h-4 w-4 text-rose-600 shrink-0" />
+            <span className="text-[10px] text-muted-foreground font-medium truncate">{stats.label}</span>
           </div>
-          <div className="mt-2">
-            <div className="text-xl font-bold text-foreground">{stats.welfareRequests}</div>
-            <div className="text-xs font-semibold text-muted-foreground mt-0.5">Welfare Requests</div>
+          <div className="mt-2 min-w-0">
+            <div className="text-xl font-bold text-rose-600 dark:text-rose-400 truncate">{stats.emergencyAssistance}</div>
+            <div className="text-xs font-semibold text-muted-foreground mt-0.5 truncate">Emergency Assistance</div>
           </div>
         </div>
 
-        <div className="p-3 rounded-lg bg-amber-50/70 dark:bg-amber-950/40 border border-amber-200/50 dark:border-amber-900/40 flex flex-col justify-between">
-          <div className="flex items-center justify-between">
-            <Clock className="h-4 w-4 text-amber-600" />
-            <span className="text-[10px] text-muted-foreground font-medium">Requires action</span>
+        <div className="p-3 rounded-lg bg-blue-50/70 dark:bg-blue-950/40 border border-blue-200/50 dark:border-blue-900/40 flex flex-col justify-between min-w-0">
+          <div className="flex items-center justify-between gap-1 min-w-0">
+            <LifeBuoy className="h-4 w-4 text-blue-600 shrink-0" />
+            <span className="text-[10px] text-muted-foreground font-medium truncate">{stats.label}</span>
           </div>
-          <div className="mt-2">
-            <div className="text-xl font-bold text-amber-600 dark:text-amber-400">{stats.pendingAssistance}</div>
-            <div className="text-xs font-semibold text-muted-foreground mt-0.5">Pending Assistance</div>
+          <div className="mt-2 min-w-0">
+            <div className="text-xl font-bold text-foreground truncate">{stats.welfareRequests}</div>
+            <div className="text-xs font-semibold text-muted-foreground mt-0.5 truncate">Welfare Requests</div>
+          </div>
+        </div>
+
+        <div className="p-3 rounded-lg bg-amber-50/70 dark:bg-amber-950/40 border border-amber-200/50 dark:border-amber-900/40 flex flex-col justify-between min-w-0">
+          <div className="flex items-center justify-between gap-1 min-w-0">
+            <Clock className="h-4 w-4 text-amber-600 shrink-0" />
+            <span className="text-[10px] text-muted-foreground font-medium truncate">Action needed</span>
+          </div>
+          <div className="mt-2 min-w-0">
+            <div className="text-xl font-bold text-amber-600 dark:text-amber-400 truncate">{stats.pendingAssistance}</div>
+            <div className="text-xs font-semibold text-muted-foreground mt-0.5 truncate">Pending Assistance</div>
           </div>
         </div>
       </CardContent>

@@ -1,7 +1,7 @@
 "use client";
 
 import * as React from "react";
-import { HeartHandshake, Download, Filter, Calendar } from "lucide-react";
+import { HeartHandshake, Download } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
 export interface WelfareHeaderProps {
@@ -26,15 +26,15 @@ export function WelfareHeader({
   federationOptions,
 }: WelfareHeaderProps) {
   return (
-    <div className="space-y-4">
+    <div className="space-y-4 min-w-0 max-w-full">
       {/* Top Banner Row */}
-      <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
-        <div className="flex items-start gap-3">
+      <div className="flex flex-col xl:flex-row xl:items-center justify-between gap-4 min-w-0">
+        <div className="flex items-start gap-3 min-w-0">
           <div className="p-2.5 rounded-xl bg-emerald-600 text-white shadow-md shadow-emerald-600/20 shrink-0 mt-0.5">
             <HeartHandshake className="h-6 w-6" />
           </div>
-          <div>
-            <h1 className="text-2xl sm:text-3xl font-bold tracking-tight text-foreground">
+          <div className="min-w-0">
+            <h1 className="text-2xl sm:text-3xl font-bold tracking-tight text-foreground truncate">
               Welfare Management
             </h1>
             <p className="text-xs sm:text-sm text-muted-foreground mt-0.5 max-w-3xl">
@@ -44,8 +44,8 @@ export function WelfareHeader({
         </div>
 
         {/* Quote Badge & Controls */}
-        <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3 shrink-0">
-          <div className="hidden xl:block text-right pr-2">
+        <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3 min-w-0">
+          <div className="hidden xl:block text-right pr-2 shrink-0">
             <p className="text-xs italic font-semibold text-emerald-800 dark:text-emerald-400">
               &quot;Empowered Workers
             </p>
@@ -57,7 +57,7 @@ export function WelfareHeader({
             </p>
           </div>
 
-          <div className="flex flex-wrap items-center gap-2">
+          <div className="flex flex-wrap items-center gap-2 min-w-0">
             {/* Federation Dropdown Filter */}
             <div className="relative">
               <select
