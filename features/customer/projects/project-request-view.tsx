@@ -36,6 +36,8 @@ import { LargeProjectTimeline } from "@/features/projects/components/large-proje
 import { CustomerProjectConfirmationModal } from "./components/customer-project-confirmation-modal";
 import { CustomerActualCostBreakdownModal } from "./components/customer-actual-cost-breakdown-modal";
 import { CustomerFinalSettlementModal } from "./components/customer-final-settlement-modal";
+import { cleanProjectDescription } from "@/lib/financials/project-description-parser";
+import { ProjectPaymentScheduleUI } from "@/components/projects/project-payment-schedule-ui";
 
 export interface ProjectMilestone {
   id: string;
@@ -1222,7 +1224,7 @@ export function ProjectRequestView() {
 
               <div className="space-y-2 bg-slate-50 dark:bg-slate-950 p-3.5 rounded-xl border border-slate-200/80">
                 <span className="font-bold text-slate-900 dark:text-white text-xs uppercase block tracking-wider">Detailed Scope</span>
-                <p className="text-slate-700 dark:text-slate-300 whitespace-pre-wrap leading-relaxed">{viewingProject.description}</p>
+                <p className="text-slate-700 dark:text-slate-300 whitespace-pre-wrap leading-relaxed break-words">{cleanProjectDescription(viewingProject.description)}</p>
               </div>
             </div>
 
@@ -1512,80 +1514,17 @@ export function ProjectRequestView() {
                   </div>
                 </div>
 
-                {/* CUSTOMER PAYMENT SCHEDULE & DEADLINES CARD (Phase 3 Update) */}
-                {viewingFinancials?.activePaymentPlan && (
-                  <div className="space-y-3 pt-3 border-t border-slate-100 dark:border-slate-800 text-xs">
-                    <div className="flex items-center justify-between">
-                      <h4 className="font-bold text-slate-900 dark:text-white uppercase tracking-wider flex items-center gap-1.5">
-                        <Receipt className="w-4 h-4 text-emerald-600" /> Active Payment Schedule &amp; Deadlines
-                      </h4>
-                      <Badge variant="outline" className="bg-emerald-50 text-emerald-800 border-emerald-300 font-bold">
-                        {viewingFinancials.activePaymentPlan.plan_type || viewingFinancials.activePaymentPlan.planType}
-                      </Badge>
-                    </div>
-
-                    {/* Overdue Warning Banner if any installment is OVERDUE */}
-                    {viewingFinancials.activePaymentPlan.installments?.some((i: any) => i.isOverdue || i.paymentStatus === "OVERDUE") && (
-                      <div className="p-3 bg-amber-50 dark:bg-amber-950/40 border border-amber-300 rounded-lg flex items-center gap-2 text-xs text-amber-900 dark:text-amber-200">
-                        <AlertTriangle className="w-4 h-4 text-amber-600 shrink-0" />
-                        <span>
-                          Payment Overdue Notice: One or more installments are past their deadline. Project execution remains active. Please make your payment.
-                        </span>
-                      </div>
-                    )}
-
-                    <div className="space-y-2">
-                      {viewingFinancials.activePaymentPlan.installments?.map((inst: any) => {
-                        const isPaid = inst.paymentStatus === "PAID" || inst.paidAtIso;
-                        const isOverdue = inst.isOverdue || inst.paymentStatus === "OVERDUE";
-                        const instId = inst.id || String(inst.installmentNumber || inst.installment_number || 1);
-
-                        return (
-                          <div key={inst.installmentNumber || instId} className="flex flex-wrap items-center justify-between p-3 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950 gap-2">
-                            <div>
-                              <div className="flex items-center gap-2">
-                                <span className="font-bold text-slate-900 dark:text-white">{inst.label || `Installment #${inst.installmentNumber}`}</span>
-                                <Badge
-                                  variant="outline"
-                                  className={`text-[10px] font-bold ${
-                                    isPaid
-                                      ? "bg-emerald-100 text-emerald-800 border-emerald-300"
-                                      : isOverdue
-                                      ? "bg-rose-100 text-rose-800 border-rose-300"
-                                      : inst.paymentStatus === "DUE"
-                                      ? "bg-amber-100 text-amber-800 border-amber-300"
-                                      : "bg-slate-100 text-slate-700 border-slate-300"
-                                  }`}
-                                >
-                                  {isPaid ? "PAID" : isOverdue ? `OVERDUE (${inst.overdueDays || 1}d)` : inst.paymentStatus || "DUE"}
-                                </Badge>
-                              </div>
-                              <span className="text-[11px] text-slate-500 block pt-0.5">
-                                {inst.dueDateText || `Due ${inst.dueAtIso ? new Date(inst.dueAtIso).toLocaleDateString() : ""}`}
-                                {inst.daysRemaining !== undefined && !isPaid && !isOverdue && inst.daysRemaining > 0 && (
-                                  <span className="text-emerald-600 font-bold ml-1.5">({inst.daysRemaining} days remaining)</span>
-                                )}
-                              </span>
-                            </div>
-
-                            <div className="flex items-center gap-3">
-                              <span className="font-extrabold text-slate-900 dark:text-white text-sm">{formatINR(inst.amount)}</span>
-                              {!isPaid && (
-                                <Button
-                                  size="sm"
-                                  onClick={() => router.push(`/customer/projects/${viewingProject.id}/payment/${instId}`)}
-                                  className="bg-emerald-700 hover:bg-emerald-800 text-white font-bold text-xs px-3 py-1 gap-1 shadow-xs"
-                                >
-                                  <CreditCard className="w-3.5 h-3.5" /> Pay Now
-                                </Button>
-                              )}
-                            </div>
-                          </div>
-                        );
-                      })}
-                    </div>
-                  </div>
-                )}
+                {/* CUSTOMER PAYMENT SCHEDULE & DEADLINES CARD */}
+                <ProjectPaymentScheduleUI
+                  description={viewingProject.description}
+                  activePaymentPlan={viewingFinancials?.activePaymentPlan}
+                  totalBudget={viewingProject.currentEstimatedTotal}
+                  paymentsReceived={viewingProject.paymentsReceived}
+                  viewMode="customer"
+                  onPayInstallment={(instId) => {
+                    router.push(`/customer/projects/${viewingProject.id}/payment/${instId}`);
+                  }}
+                />
               </div>
             )}
 
