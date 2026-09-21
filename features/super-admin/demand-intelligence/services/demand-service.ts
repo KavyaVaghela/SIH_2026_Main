@@ -27,6 +27,7 @@ const CITY_COORDINATES: Record<string, { lat: number; lng: number; district: str
   Rajkot: { lat: 22.3039, lng: 70.8022, district: "Gujarat Saurashtra" },
   Vadodara: { lat: 22.3072, lng: 73.1812, district: "Gujarat Central" },
   Surat: { lat: 21.1702, lng: 72.8311, district: "Gujarat South" },
+  Kapodra: { lat: 21.223, lng: 72.863, district: "Gujarat Surat" },
 };
 
 function normalizeCity(rawCity?: string | null): string {
@@ -47,6 +48,7 @@ function normalizeCity(rawCity?: string | null): string {
   if (lower === "rajkot") return "Rajkot";
   if (lower === "vadodara") return "Vadodara";
   if (lower === "surat") return "Surat";
+  if (lower === "kapodra") return "Kapodra";
   return trimmed;
 }
 
@@ -245,52 +247,80 @@ export class DemandService {
         catMap.set(svcCat, (catMap.get(svcCat) || 0) + 1);
       });
 
-      // Count available workers by city
+      // Count available workers by federation and by city
+      const fedAvailableWorkers = new Map<string, number>();
       const cityAvailableWorkers = new Map<string, number>();
       validWorkers.forEach((w: any) => {
-        if (w.availability_status === "AVAILABLE" && w.federation_id) {
-          const fedCity = fedMap.get(w.federation_id)?.city || "Ahmedabad";
-          cityAvailableWorkers.set(fedCity, (cityAvailableWorkers.get(fedCity) || 0) + 1);
+        if (w.availability_status === "AVAILABLE") {
+          if (w.federation_id) {
+            fedAvailableWorkers.set(w.federation_id, (fedAvailableWorkers.get(w.federation_id) || 0) + 1);
+            const fedCity = fedMap.get(w.federation_id)?.city || "Ahmedabad";
+            cityAvailableWorkers.set(fedCity, (cityAvailableWorkers.get(fedCity) || 0) + 1);
+          }
         }
       });
 
-      // Find primary federation per city
-      const cityPrimaryFed = new Map<string, { id: string; name: string }>();
-      federations.forEach((f) => {
+      // Count scoped bookings by federation
+      const fedBookingCount = new Map<string, number>();
+      scopedBookings.forEach((b: any) => {
+        if (b.federation_id) {
+          fedBookingCount.set(b.federation_id, (fedBookingCount.get(b.federation_id) || 0) + 1);
+        }
+      });
+
+      // Filter to legitimate federations with valid geographic cities
+      const validFederations = federations.filter((f: any) => {
         const c = normalizeCity(f.city);
-        if (!cityPrimaryFed.has(c) || f.name.includes("Skilled") || f.name.includes("Artisan")) {
-          cityPrimaryFed.set(c, { id: f.id, name: f.name });
-        }
+        return f.name && f.name.length >= 3 && isValidGeographicCity(c);
       });
 
-      // Build real geographic clusters, excluding malformed keyboard mash locations
-      const allCities = Array.from(
-        new Set([
-          ...Array.from(cityBookingCount.keys()),
-          ...federations.map((f) => normalizeCity(f.city)),
-        ])
-      ).filter((c) => Boolean(c) && isValidGeographicCity(c));
+      // Track how many federations exist per city to apply clean spatial offsets
+      const cityFedCountMap = new Map<string, number>();
+      validFederations.forEach((f: any) => {
+        const c = normalizeCity(f.city);
+        cityFedCountMap.set(c, (cityFedCountMap.get(c) || 0) + 1);
+      });
 
-      locationList = [...allCities].sort();
+      const cityFedIndexTracker = new Map<string, number>();
+      const offsets = [
+        { dlat: 0, dlng: 0 },
+        { dlat: 0.022, dlng: 0.018 },
+        { dlat: -0.021, dlng: -0.016 },
+        { dlat: 0.018, dlng: -0.022 },
+        { dlat: -0.019, dlng: 0.024 },
+      ];
 
       const totalScoped = Math.max(scopedBookings.length, 1);
 
-      rawClusters = allCities
-        .map((cityName, idx) => {
-          const requestsCount = cityBookingCount.get(cityName) || 0;
-          const availableWorkersCount = cityAvailableWorkers.get(cityName) || 0;
-          const fed = cityPrimaryFed.get(cityName) || {
-            id: `fed-cluster-${idx}`,
-            name: `${cityName} Regional Cooperative Guild`,
-          };
+      rawClusters = validFederations
+        .map((f: any) => {
+          const cityName = normalizeCity(f.city);
+          const cityFedCount = cityFedCountMap.get(cityName) || 1;
+          const currentIdx = cityFedIndexTracker.get(cityName) || 0;
+          cityFedIndexTracker.set(cityName, currentIdx + 1);
+          const offset = offsets[currentIdx % offsets.length];
 
           const coords = CITY_COORDINATES[cityName] || {
-            lat: 23.0225 + (idx * 0.1),
-            lng: 72.5714 + (idx * 0.1),
-            district: `${cityName} District`,
+            lat: 23.0225,
+            lng: 72.5714,
+            district: `${f.state || "Gujarat"} District`,
           };
 
-          // Find top category
+          // If direct federation count is 0, distribute city bookings/workers proportionally
+          const directRequests = fedBookingCount.get(f.id) || 0;
+          const cityRequests = cityBookingCount.get(cityName) || 0;
+          const requestsCount =
+            directRequests > 0
+              ? directRequests
+              : Math.max(1, Math.round(cityRequests / cityFedCount));
+
+          const directWorkers = fedAvailableWorkers.get(f.id) || 0;
+          const cityWorkers = cityAvailableWorkers.get(cityName) || 0;
+          const availableWorkersCount =
+            directWorkers > 0
+              ? directWorkers
+              : Math.max(1, Math.round(cityWorkers / cityFedCount));
+
           let topCat = "General Skilled Craft";
           const catMap = cityPrimaryService.get(cityName);
           if (catMap && catMap.size > 0) {
@@ -298,9 +328,9 @@ export class DemandService {
           }
 
           let status: LocationStatusCategory = "BALANCED";
-          if (requestsCount > availableWorkersCount + 10) {
+          if (requestsCount > availableWorkersCount + 8) {
             status = "HIGH_DEMAND";
-          } else if (requestsCount > availableWorkersCount + 20) {
+          } else if (requestsCount > availableWorkersCount + 16) {
             status = "WORKER_SHORTAGE";
           } else if (availableWorkersCount > requestsCount + 5) {
             status = "WORKFORCE_SURPLUS";
@@ -308,24 +338,33 @@ export class DemandService {
 
           const demandScore = Math.min(
             100,
-            Math.max(20, Math.round((requestsCount / totalScoped) * 100 * 2 + 30))
+            Math.max(25, Math.round((requestsCount / totalScoped) * 100 * 2 + 35))
           );
 
           return {
-            id: `geo-${cityName.toLowerCase()}`,
-            locationName: cityName,
-            district: coords.district,
-            coordinates: { lat: coords.lat, lng: coords.lng },
+            id: `geo-fed-${f.id}`,
+            locationName: f.name,
+            district: `${cityName}, ${f.state || coords.district}`,
+            coordinates: {
+              lat: Number((coords.lat + (currentIdx > 0 ? offset.dlat : 0)).toFixed(6)),
+              lng: Number((coords.lng + (currentIdx > 0 ? offset.dlng : 0)).toFixed(6)),
+            },
             status,
             requestsCount,
             availableWorkersCount,
             primarySkillNeeded: topCat,
-            societyName: fed.name,
-            societyId: fed.id,
+            societyName: f.name,
+            societyId: f.id,
             demandScore,
           };
         })
         .sort((a, b) => b.requestsCount - a.requestsCount);
+
+      // Unique location names for filters
+      const allFedCities = Array.from(
+        new Set(validFederations.map((f: any) => normalizeCity(f.city)))
+      );
+      locationList = [...allFedCities].sort();
 
       // 3. Honest Shortage Alerts (derived only if real requests significantly outpace workers)
       rawAlerts = rawClusters
