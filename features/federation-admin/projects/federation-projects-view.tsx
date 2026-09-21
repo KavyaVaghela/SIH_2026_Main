@@ -30,6 +30,8 @@ import { formatINR } from "@/lib/formatters/currency";
 import { resolveProjectFinancialEstimates } from "@/lib/financials/large-project-financials";
 import { createClient } from "@/lib/supabase/client";
 import { LargeProjectTimeline } from "@/features/projects/components/large-project-timeline";
+import { cleanProjectDescription } from "@/lib/financials/project-description-parser";
+import { ProjectPaymentScheduleUI } from "@/components/projects/project-payment-schedule-ui";
 
 export interface FederationProject {
   id: string;
@@ -958,8 +960,8 @@ export function FederationProjectsView() {
 
               <div>
                 <span className="text-[10px] text-slate-400 font-bold uppercase block mb-1">Detailed Description / Scope</span>
-                <div className="p-3 bg-slate-50 dark:bg-slate-950 rounded-xl border border-border text-slate-700 dark:text-slate-300 font-medium whitespace-pre-wrap leading-relaxed">
-                  {selectedProject.description}
+                <div className="p-3 bg-slate-50 dark:bg-slate-950 rounded-xl border border-border text-slate-700 dark:text-slate-300 font-medium whitespace-pre-wrap leading-relaxed break-words">
+                  {cleanProjectDescription(selectedProject.description)}
                 </div>
               </div>
 
@@ -1080,56 +1082,14 @@ export function FederationProjectsView() {
                     </div>
                   </div>
 
-                  {/* FEDERATION PAYMENT SCHEDULE VISIBILITY CARD (Phase 3 Update) */}
-                  {selectedFinancials?.activePaymentPlan && (
-                    <div className="space-y-2 pt-2 border-t border-slate-200 dark:border-slate-800 text-xs">
-                      <div className="flex items-center justify-between">
-                        <span className="font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider text-[11px] flex items-center gap-1.5">
-                          <CreditCard className="w-3.5 h-3.5 text-emerald-600" /> Customer Payment Plan &amp; Schedule
-                        </span>
-                        <Badge variant="outline" className="bg-emerald-50 text-emerald-800 border-emerald-300 font-bold text-[10px]">
-                          {selectedFinancials.activePaymentPlan.plan_type || selectedFinancials.activePaymentPlan.planType}
-                        </Badge>
-                      </div>
-
-                      {selectedFinancials.activePaymentPlan.installments?.some((i: any) => i.isOverdue || i.paymentStatus === "OVERDUE") && (
-                        <div className="p-2.5 bg-amber-50 dark:bg-amber-950/40 border border-amber-300 rounded-lg flex items-center gap-2 text-[11px] text-amber-900 dark:text-amber-200">
-                          <AlertTriangle className="w-4 h-4 text-amber-600 shrink-0" />
-                          <span>Overdue Installment Notice: Customer has an overdue payment. Project execution continues uninterrupted.</span>
-                        </div>
-                      )}
-
-                      <div className="space-y-1.5">
-                        {selectedFinancials.activePaymentPlan.installments?.map((inst: any) => {
-                          const isPaid = inst.paymentStatus === "PAID" || inst.paidAtIso;
-                          const isOverdue = inst.isOverdue || inst.paymentStatus === "OVERDUE";
-                          return (
-                            <div key={inst.installmentNumber} className="flex items-center justify-between p-2 rounded-lg bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-[11px]">
-                              <div>
-                                <span className="font-bold text-slate-800 dark:text-slate-200">{inst.label || `Installment #${inst.installmentNumber}`}</span>
-                                <span className="text-[10px] text-slate-400 block">{inst.dueDateText || inst.dueAtIso}</span>
-                              </div>
-                              <div className="flex items-center gap-2">
-                                <span className="font-mono font-bold text-slate-900 dark:text-white">{formatINR(inst.amount)}</span>
-                                <Badge
-                                  variant="outline"
-                                  className={`text-[9px] font-bold ${
-                                    isPaid
-                                      ? "bg-emerald-100 text-emerald-800 border-emerald-300"
-                                      : isOverdue
-                                      ? "bg-rose-100 text-rose-800 border-rose-300"
-                                      : "bg-amber-50 text-amber-800 border-amber-300"
-                                  }`}
-                                >
-                                  {isPaid ? "PAID" : isOverdue ? `OVERDUE (${inst.overdueDays || 1}d)` : inst.paymentStatus || "DUE"}
-                                </Badge>
-                              </div>
-                            </div>
-                          );
-                        })}
-                      </div>
-                    </div>
-                  )}
+                  {/* FEDERATION PAYMENT SCHEDULE VISIBILITY CARD */}
+                  <ProjectPaymentScheduleUI
+                    description={selectedProject.description}
+                    activePaymentPlan={selectedFinancials?.activePaymentPlan}
+                    totalBudget={selectedProject.currentEstimatedTotal}
+                    paymentsReceived={selectedProject.paymentsReceived}
+                    viewMode="federation"
+                  />
                 </div>
               )}
 

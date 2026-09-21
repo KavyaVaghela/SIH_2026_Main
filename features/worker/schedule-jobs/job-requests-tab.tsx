@@ -10,6 +10,8 @@ import { JobRequestCard } from "./components/job-request-card";
 import { workerJobService } from "../services/worker-job-service";
 import type { WorkerJobItem, JobRequestFilterOption } from "../types";
 import { formatINR } from "@/lib/formatters/currency";
+import { cleanProjectDescription } from "@/lib/financials/project-description-parser";
+import { ProjectPaymentScheduleUI } from "@/components/projects/project-payment-schedule-ui";
 
 export interface LargeProjectOpportunity {
   id: string;
@@ -739,7 +741,7 @@ export function JobRequestsTab({
                 </div>
 
                 <p className="text-xs text-slate-600 dark:text-slate-300 line-clamp-2">
-                  {opp.description}
+                  {cleanProjectDescription(opp.description)}
                 </p>
 
                 <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 text-xs bg-slate-50 dark:bg-slate-950 p-3 rounded-lg border border-slate-200/80">
@@ -850,8 +852,8 @@ export function JobRequestsTab({
             {/* Scope / Description */}
             <div className="space-y-1.5">
               <h3 className="text-xs font-bold uppercase text-slate-400 tracking-wider">Project Scope & Description</h3>
-              <div className="p-3 bg-slate-50 dark:bg-slate-950 rounded-xl border border-slate-200/80 text-xs text-slate-700 dark:text-slate-300 whitespace-pre-line leading-relaxed">
-                {selectedProjectForReview.description}
+              <div className="p-3 bg-slate-50 dark:bg-slate-950 rounded-xl border border-slate-200/80 text-xs text-slate-700 dark:text-slate-300 whitespace-pre-line leading-relaxed break-words">
+                {cleanProjectDescription(selectedProjectForReview.description)}
               </div>
             </div>
 
@@ -905,6 +907,12 @@ export function JobRequestsTab({
                 </span>
               </div>
             </div>
+
+            {/* Project Payment Schedule & Plan Overview */}
+            <ProjectPaymentScheduleUI
+              description={selectedProjectForReview.description}
+              viewMode="worker"
+            />
 
             {/* Decision Actions Only: Reject / Accept */}
             <div className="pt-4 border-t border-slate-100 dark:border-slate-800 flex items-center justify-end gap-3">
