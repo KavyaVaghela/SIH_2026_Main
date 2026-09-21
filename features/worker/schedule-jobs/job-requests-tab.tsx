@@ -274,31 +274,89 @@ export function JobRequestsTab({
     };
   }, [loadLargeProjects]);
 
-  // Stage counts for regular jobs
-  const newCount = requests.filter(
+  // Stage counts & filtering for regular jobs with genuine request validation
+  const cleanRequests = React.useMemo(() => {
+    const validStatuses = [
+      "REQUEST_SENT",
+      "WORKER_REVIEWING",
+      "WORKER_INTERESTED",
+      "INTERESTED",
+      "ESTIMATE_SUBMITTED",
+      "CUSTOMER_CONFIRMATION_PENDING",
+      "PENDING",
+      "SELECTED",
+      "BOOKING_CONFIRMED",
+      "WORKER_ACCEPTED",
+      "DECLINED",
+    ];
+
+    const seenIds = new Set<string>();
+    const seenBookingNumbers = new Set<string>();
+    const filtered: WorkerJobItem[] = [];
+
+    for (const r of requests) {
+      if (!validStatuses.includes(r.status)) continue;
+
+      const desc = (r.problemDescription || "").toLowerCase();
+      if (
+        desc.includes("realtime test booking") ||
+        desc.includes("browser simulation") ||
+        desc.includes("[test]") ||
+        desc.includes("test customer insert")
+      ) {
+        continue;
+      }
+
+      // Distinguish STANDARD vs EMERGENCY:
+      if (r.urgency === "EMERGENCY") {
+        // Genuine emergency requests must NOT be removed merely because emergency pricing/payment may be represented differently
+        if (!r.id || (!r.serviceTitle && !r.problemDescription)) continue;
+      } else {
+        // Requests with an invalid ₹0 amount that are clearly generated/test/stale records must not appear
+        if (!r.totalAmount || r.totalAmount <= 0) continue;
+        if (!r.id || !r.serviceTitle) continue;
+      }
+
+      if (!seenIds.has(r.id) && (!r.bookingNumber || !seenBookingNumbers.has(r.bookingNumber))) {
+        seenIds.add(r.id);
+        if (r.bookingNumber) seenBookingNumbers.add(r.bookingNumber);
+        filtered.push(r);
+      }
+    }
+
+    filtered.sort((a, b) => {
+      const timeA = new Date(a.createdAt || a.scheduledStartAt || 0).getTime();
+      const timeB = new Date(b.createdAt || b.scheduledStartAt || 0).getTime();
+      return timeB - timeA;
+    });
+
+    return filtered;
+  }, [requests]);
+
+  const newCount = cleanRequests.filter(
     (r) => r.status === "REQUEST_SENT" || r.status === "PENDING"
   ).length;
-  const activeCount = requests.filter(
+  const activeCount = cleanRequests.filter(
     (r) =>
       r.status === "WORKER_REVIEWING" ||
       r.status === "WORKER_INTERESTED" ||
       r.status === "INTERESTED"
   ).length;
-  const estimatesCount = requests.filter(
+  const estimatesCount = cleanRequests.filter(
     (r) =>
       r.status === "ESTIMATE_SUBMITTED" ||
       r.status === "CUSTOMER_CONFIRMATION_PENDING"
   ).length;
-  const selectedCount = requests.filter(
+  const selectedCount = cleanRequests.filter(
     (r) =>
       r.status === "SELECTED" ||
       r.status === "BOOKING_CONFIRMED" ||
       r.status === "WORKER_ACCEPTED"
   ).length;
-  const declinedCount = requests.filter((r) => r.status === "DECLINED").length;
+  const declinedCount = cleanRequests.filter((r) => r.status === "DECLINED").length;
 
   const filteredRequests = React.useMemo(() => {
-    return requests.filter((req) => {
+    return cleanRequests.filter((req) => {
       if (jobTypeFilter === "LARGE_PROJECT") return false;
 
       if (filterOption === "NEW" && req.status !== "REQUEST_SENT" && req.status !== "PENDING") {
