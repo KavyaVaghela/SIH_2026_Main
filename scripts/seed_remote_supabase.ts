@@ -37,7 +37,13 @@ async function main() {
   
   const devUsers = [
     { email: 'customer@example.com', full_name: 'Prince Patel', role: 'CUSTOMER', phone: '+919876543210' },
-    { email: 'worker@example.com', full_name: 'Ravi Patel', role: 'WORKER', phone: '+919876543211' },
+    {
+      email: 'worker@example.com',
+      full_name: 'Ravi Patel',
+      role: 'WORKER',
+      phone: '+919876543211',
+      avatar_url: 'https://dxvnwbmxeubpbunwlmnd.supabase.co/storage/v1/object/public/avatars/avatar-1790013278075-xqmjxn1.png',
+    },
     { email: 'hitesh.solanki@example.com', full_name: 'Hitesh Solanki', role: 'WORKER', phone: '+919876543212' },
     { email: 'sanjay.parmar@example.com', full_name: 'Sanjay Parmar', role: 'WORKER', phone: '+919876543213' },
     { email: 'sunita.sharma@example.com', full_name: 'Sunita Sharma', role: 'WORKER', phone: '+919876543214' },
@@ -90,6 +96,7 @@ async function main() {
       email: userSpec.email,
       phone: userSpec.phone,
       role: userSpec.role,
+      avatar_url: (userSpec as any).avatar_url || null,
       is_active: true
     }, { onConflict: 'id' });
 
@@ -349,6 +356,12 @@ async function main() {
       federation_id: fedAmdId,
       lat: 23.0225,
       lng: 72.5714,
+      date_of_birth: '1998-08-15',
+      gender: 'Male',
+      bank_name: 'Gujarat State Cooperative Bank',
+      bank_account_holder: 'Ravi Patel',
+      bank_account_number: '987654324321',
+      bank_ifsc_code: 'GSCB0001024',
       skills: ['Plumbing', 'Tap Repair', 'Pipe Leakage', 'Drainage Blockage']
     },
     {
@@ -360,6 +373,12 @@ async function main() {
       federation_id: fedAmdId,
       lat: 23.0300,
       lng: 72.5800,
+      date_of_birth: '1990-04-12',
+      gender: 'Male',
+      bank_name: 'State Bank of India',
+      bank_account_holder: 'Hitesh Solanki',
+      bank_account_number: '987654321122',
+      bank_ifsc_code: 'SBIN0001234',
       skills: ['Plumbing', 'Pipe Leakage']
     },
     {
@@ -371,6 +390,12 @@ async function main() {
       federation_id: fedGujId,
       lat: 23.0400,
       lng: 72.5500,
+      date_of_birth: '1993-11-20',
+      gender: 'Male',
+      bank_name: 'Bank of Baroda',
+      bank_account_holder: 'Sanjay Parmar',
+      bank_account_number: '987654323344',
+      bank_ifsc_code: 'BARB0SATELL',
       skills: ['Painting']
     },
     {
@@ -382,6 +407,12 @@ async function main() {
       federation_id: fedGujId,
       lat: 23.0100,
       lng: 72.5600,
+      date_of_birth: '1996-02-14',
+      gender: 'Female',
+      bank_name: 'HDFC Bank',
+      bank_account_holder: 'Sunita Sharma',
+      bank_account_number: '987654325566',
+      bank_ifsc_code: 'HDFC0000123',
       skills: ['Cleaning']
     }
   ];
@@ -411,6 +442,12 @@ async function main() {
         federation_id: wSpec.federation_id,
         current_latitude: wSpec.lat,
         current_longitude: wSpec.lng,
+        date_of_birth: (wSpec as any).date_of_birth || null,
+        gender: (wSpec as any).gender || null,
+        bank_name: (wSpec as any).bank_name || null,
+        bank_account_holder: (wSpec as any).bank_account_holder || null,
+        bank_account_number: (wSpec as any).bank_account_number || null,
+        bank_ifsc_code: (wSpec as any).bank_ifsc_code || null,
         last_active_at: new Date().toISOString()
       }).eq('id', workerId);
       console.log(`Updated existing worker record for ${wSpec.email}`);
@@ -427,6 +464,12 @@ async function main() {
         service_radius_km: wSpec.service_radius_km,
         current_latitude: wSpec.lat,
         current_longitude: wSpec.lng,
+        date_of_birth: (wSpec as any).date_of_birth || null,
+        gender: (wSpec as any).gender || null,
+        bank_name: (wSpec as any).bank_name || null,
+        bank_account_holder: (wSpec as any).bank_account_holder || null,
+        bank_account_number: (wSpec as any).bank_account_number || null,
+        bank_ifsc_code: (wSpec as any).bank_ifsc_code || null,
         last_active_at: new Date().toISOString()
       }).select('id').single();
 

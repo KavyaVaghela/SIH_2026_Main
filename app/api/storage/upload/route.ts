@@ -60,6 +60,18 @@ export async function POST(request: NextRequest) {
         data: { publicUrl },
       } = admin.storage.from("avatars").getPublicUrl(filePath);
 
+      const userId = (formData.get("userId") as string) || null;
+      if (userId) {
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        const { error: profileUpdateErr } = await (admin.from("profiles") as any)
+          .update({ avatar_url: publicUrl, updated_at: new Date().toISOString() })
+          .eq("id", userId);
+
+        if (profileUpdateErr) {
+          console.error("Failed to update profile avatar_url in upload route:", profileUpdateErr);
+        }
+      }
+
       return NextResponse.json({
         success: true,
         bucket,

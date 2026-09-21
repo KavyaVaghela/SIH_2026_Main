@@ -237,20 +237,21 @@ ON CONFLICT (id) DO UPDATE SET
 -- --------------------------------------------------------------------
 -- 7. SEED PROFILES
 -- --------------------------------------------------------------------
-INSERT INTO profiles (id, role, full_name, phone, email, is_active)
+INSERT INTO profiles (id, role, full_name, phone, email, avatar_url, is_active)
 VALUES
-  ('a0000000-0000-0000-0000-000000000001', 'CUSTOMER', 'Prince Patel', '+919876543210', 'customer@example.com', true),
-  ('b0000000-0000-0000-0000-000000000001', 'WORKER', 'Ravi Patel', '+919825011021', 'worker@example.com', true),
-  ('b0000000-0000-0000-0000-000000000002', 'WORKER', 'Hitesh Solanki', '+919898044512', 'hitesh.solanki@example.com', true),
-  ('b0000000-0000-0000-0000-000000000003', 'WORKER', 'Sanjay Parmar', '+919898177632', 'sanjay.parmar@example.com', true),
-  ('b0000000-0000-0000-0000-000000000004', 'WORKER', 'Sunita Sharma', '+919723011988', 'sunita.sharma@example.com', true),
-  ('f0000000-0000-0000-0000-000000000001', 'FEDERATION_ADMIN', 'Vikram Shah', '+919825000001', 'federation@example.com', true),
-  ('s0000000-0000-0000-0000-000000000001', 'SUPER_ADMIN', 'System Administrator', '+919800000000', 'admin@example.com', true)
+  ('a0000000-0000-0000-0000-000000000001', 'CUSTOMER', 'Prince Patel', '+919876543210', 'customer@example.com', null, true),
+  ('b0000000-0000-0000-0000-000000000001', 'WORKER', 'Ravi Patel', '+919825011021', 'worker@example.com', 'https://dxvnwbmxeubpbunwlmnd.supabase.co/storage/v1/object/public/avatars/avatar-1790013278075-xqmjxn1.png', true),
+  ('b0000000-0000-0000-0000-000000000002', 'WORKER', 'Hitesh Solanki', '+919898044512', 'hitesh.solanki@example.com', null, true),
+  ('b0000000-0000-0000-0000-000000000003', 'WORKER', 'Sanjay Parmar', '+919898177632', 'sanjay.parmar@example.com', null, true),
+  ('b0000000-0000-0000-0000-000000000004', 'WORKER', 'Sunita Sharma', '+919723011988', 'sunita.sharma@example.com', null, true),
+  ('f0000000-0000-0000-0000-000000000001', 'FEDERATION_ADMIN', 'Vikram Shah', '+919825000001', 'federation@example.com', null, true),
+  ('s0000000-0000-0000-0000-000000000001', 'SUPER_ADMIN', 'System Administrator', '+919800000000', 'admin@example.com', null, true)
 ON CONFLICT (id) DO UPDATE SET
   full_name = EXCLUDED.full_name,
   role = EXCLUDED.role,
   phone = EXCLUDED.phone,
   email = EXCLUDED.email,
+  avatar_url = EXCLUDED.avatar_url,
   is_active = EXCLUDED.is_active;
 
 -- --------------------------------------------------------------------
@@ -299,7 +300,8 @@ ON CONFLICT (id) DO UPDATE SET
 -- --------------------------------------------------------------------
 INSERT INTO workers (
   id, profile_id, federation_id, account_status, availability_status, verification_status,
-  profession, hourly_rate, experience_years, service_radius_km, current_latitude, current_longitude
+  profession, hourly_rate, experience_years, service_radius_km, current_latitude, current_longitude,
+  date_of_birth, gender, bank_name, bank_account_holder, bank_account_number, bank_ifsc_code
 )
 VALUES
   -- 1. Ravi Patel (Plumbing)
@@ -315,7 +317,13 @@ VALUES
     7,
     15.00,
     23.0325,
-    72.5205
+    72.5205,
+    '1998-08-15',
+    'Male',
+    'Gujarat State Cooperative Bank',
+    'Ravi Patel',
+    '987654324321',
+    'GSCB0001024'
   ),
   -- 2. Hitesh Solanki (Plumbing Senior)
   (
@@ -330,7 +338,13 @@ VALUES
     12,
     15.00,
     23.0380,
-    72.5590
+    72.5590,
+    '1990-04-12',
+    'Male',
+    'State Bank of India',
+    'Hitesh Solanki',
+    '987654321122',
+    'SBIN0001234'
   ),
   -- 3. Sanjay Parmar (Painting)
   (
@@ -345,7 +359,13 @@ VALUES
     9,
     15.00,
     23.0340,
-    72.4640
+    72.4640,
+    '1993-11-20',
+    'Male',
+    'Bank of Baroda',
+    'Sanjay Parmar',
+    '987654323344',
+    'BARB0SATELL'
   ),
   -- 4. Sunita Sharma (Cleaning)
   (
@@ -360,7 +380,13 @@ VALUES
     6,
     15.00,
     23.0300,
-    72.5180
+    72.5180,
+    '1996-02-14',
+    'Female',
+    'HDFC Bank',
+    'Sunita Sharma',
+    '987654325566',
+    'HDFC0000123'
   )
 ON CONFLICT (id) DO UPDATE SET
   profile_id = EXCLUDED.profile_id,
@@ -372,7 +398,13 @@ ON CONFLICT (id) DO UPDATE SET
   hourly_rate = EXCLUDED.hourly_rate,
   experience_years = EXCLUDED.experience_years,
   current_latitude = EXCLUDED.current_latitude,
-  current_longitude = EXCLUDED.current_longitude;
+  current_longitude = EXCLUDED.current_longitude,
+  date_of_birth = EXCLUDED.date_of_birth,
+  gender = EXCLUDED.gender,
+  bank_name = EXCLUDED.bank_name,
+  bank_account_holder = EXCLUDED.bank_account_holder,
+  bank_account_number = EXCLUDED.bank_account_number,
+  bank_ifsc_code = EXCLUDED.bank_ifsc_code;
 
 -- --------------------------------------------------------------------
 -- 10. SEED WORKER SKILLS (Bridge Relationships)

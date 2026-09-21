@@ -5,6 +5,7 @@ import { PageHeader } from "@/components/layout/page-header";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { Avatar } from "@/components/ui/avatar";
 import {
   Phone,
   Mail,
@@ -42,6 +43,7 @@ export function ProfileView() {
     email: string;
     phone: string;
     preferredLanguage?: string;
+    avatarUrl?: string;
   }>({
     fullName: "Customer",
     email: "customer@example.com",
@@ -80,7 +82,7 @@ export function ProfileView() {
         // Fetch Profile from real Supabase DB
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         const { data: profile } = await (supabase.from("profiles") as any)
-          .select("full_name, email, phone, role")
+          .select("full_name, email, phone, role, avatar_url")
           .eq("id", user.id)
           .maybeSingle();
 
@@ -94,6 +96,7 @@ export function ProfileView() {
           email,
           phone,
           preferredLanguage: lang,
+          avatarUrl: profile?.avatar_url || undefined,
         });
         setEditFullName(name);
         setEditPhone(phone);
@@ -371,9 +374,12 @@ export function ProfileView() {
       <Card className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-sm rounded-xl p-5 space-y-5">
         <div className="flex flex-wrap items-center justify-between gap-4 border-b border-slate-100 dark:border-slate-800 pb-4">
           <div className="flex items-center gap-3">
-            <div className="w-12 h-12 rounded-full bg-emerald-700 text-white font-extrabold text-lg flex items-center justify-center shadow-md">
-              {initials || "C"}
-            </div>
+            <Avatar
+              src={userProfile.avatarUrl}
+              fallback={userProfile.fullName}
+              size="lg"
+              className="shadow-md"
+            />
             <div>
               <h3 className="font-bold text-base text-slate-900 dark:text-slate-100 flex items-center gap-1.5">
                 {userProfile.fullName}

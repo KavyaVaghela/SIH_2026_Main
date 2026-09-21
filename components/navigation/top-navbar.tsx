@@ -13,6 +13,7 @@ export interface TopNavbarProps {
   userName?: string;
   userRole?: string;
   role?: PlatformRole;
+  avatarUrl?: string;
   onToggleMobileMenu?: () => void;
   className?: string;
 }
@@ -21,6 +22,7 @@ export function TopNavbar({
   userName,
   userRole,
   role,
+  avatarUrl,
   onToggleMobileMenu,
   className,
 }: TopNavbarProps) {
@@ -43,7 +45,7 @@ export function TopNavbar({
 
         <div className="flex items-center space-x-2 sm:space-x-3">
           <NotificationCenter role={role} />
-          <UserMenu userName={userName} userRole={userRole} />
+          <UserMenu userName={userName} userRole={userRole} avatarUrl={avatarUrl} />
         </div>
       </div>
     </header>
