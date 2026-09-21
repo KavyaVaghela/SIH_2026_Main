@@ -1103,7 +1103,7 @@
         "sourceUserAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/153.0.0.0 Safari/537.36 Edg/153.0.0.0"
       },
       "created_at": "2026-09-21T05:34:24.407+00:00",
-      "updated_at": "2026-09-21T05:43:02.526+00:00",
+      "updated_at": "2026-09-21T10:20:53.537+00:00",
       "response_matrix_code": "wat-tank-burst",
       "is_verified": true,
       "verified_at": "2026-09-21T05:40:29.721+00:00",
@@ -1117,9 +1117,9 @@
       "remaining_concerns": null,
       "resolution_evidence_photos": [],
       "resolved_at": "2026-09-21T05:41:11.388+00:00",
-      "closed_at": "2026-09-21T05:43:02.526+00:00",
+      "closed_at": "2026-09-21T10:20:53.537+00:00",
       "closed_by_admin_id": "096b0708-3193-41a6-9f49-03ff8903a0ed",
-      "closure_notes": "abcdef"
+      "closure_notes": "Incident resolution verified and closed by Federation Admin."
     },
     "EMG-2026-88599": {
       "id": "efeefb1a-6354-4792-87b7-b1548b6eca88",
@@ -1142,7 +1142,7 @@
         "sourceUserAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/153.0.0.0 Safari/537.36 Edg/153.0.0.0"
       },
       "created_at": "2026-09-21T05:34:24.407+00:00",
-      "updated_at": "2026-09-21T05:43:02.526+00:00",
+      "updated_at": "2026-09-21T10:20:53.537+00:00",
       "response_matrix_code": "wat-tank-burst",
       "is_verified": true,
       "verified_at": "2026-09-21T05:40:29.721+00:00",
@@ -1156,9 +1156,9 @@
       "remaining_concerns": null,
       "resolution_evidence_photos": [],
       "resolved_at": "2026-09-21T05:41:11.388+00:00",
-      "closed_at": "2026-09-21T05:43:02.526+00:00",
+      "closed_at": "2026-09-21T10:20:53.537+00:00",
       "closed_by_admin_id": "096b0708-3193-41a6-9f49-03ff8903a0ed",
-      "closure_notes": "abcdef"
+      "closure_notes": "Incident resolution verified and closed by Federation Admin."
     },
     "225c5477-78db-45b0-903b-b7f1dbbb534d": {
       "id": "225c5477-78db-45b0-903b-b7f1dbbb534d",
@@ -1300,6 +1300,416 @@
       "created_at": "2026-09-21T08:30:14.019+00:00",
       "updated_at": "2026-09-21T08:30:14.019+00:00",
       "response_matrix_code": "wat-tank-burst",
+      "is_verified": false,
+      "verified_at": null,
+      "verified_by_worker_id": null,
+      "verification_code": null,
+      "verification_token": null,
+      "resolution_requested_at": null,
+      "resolution_requested_by_worker_id": null,
+      "resolution_summary": null,
+      "completed_work": null,
+      "remaining_concerns": null,
+      "resolution_evidence_photos": [],
+      "resolved_at": null,
+      "closed_at": null,
+      "closed_by_admin_id": null,
+      "closure_notes": null
+    },
+    "9b6795f2-c63b-4a56-8c27-93bcef94cf58": {
+      "id": "9b6795f2-c63b-4a56-8c27-93bcef94cf58",
+      "emergency_id": "EMG-2026-73739",
+      "customer_id": "b0ef9604-54c8-4ad1-9a7a-c353cfd339ef",
+      "federation_id": "b765df3b-c418-4a15-b79f-3cbc09e475dc",
+      "category_name": "Electrical Systems",
+      "emergency_type": "Electrical Short Circuit & Sparking",
+      "severity": "CRITICAL",
+      "status": "AWAITING_RESPONSE",
+      "location": "Block C, Shivalik Residency, Satellite, Ahmedabad, Gujarat",
+      "address_details": {},
+      "description": ".dfnps;otjgn, of;osbpuf igjnv, s  l",
+      "evidence_photos": [],
+      "approx_people_affected": 5,
+      "immediate_danger": false,
+      "danger_details": null,
+      "metadata": {
+        "createdVia": "CUSTOMER_PORTAL_EMERGENCY_FLOW",
+        "sourceUserAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/153.0.0.0 Safari/537.36"
+      },
+      "created_at": "2026-09-21T09:15:20.46+00:00",
+      "updated_at": "2026-09-21T09:15:20.46+00:00",
+      "response_matrix_code": "elec-short-spark",
+      "is_verified": false,
+      "verified_at": null,
+      "verified_by_worker_id": null,
+      "verification_code": null,
+      "verification_token": null,
+      "resolution_requested_at": null,
+      "resolution_requested_by_worker_id": null,
+      "resolution_summary": null,
+      "completed_work": null,
+      "remaining_concerns": null,
+      "resolution_evidence_photos": [],
+      "resolved_at": null,
+      "closed_at": null,
+      "closed_by_admin_id": null,
+      "closure_notes": null
+    },
+    "EMG-2026-73739": {
+      "id": "9b6795f2-c63b-4a56-8c27-93bcef94cf58",
+      "emergency_id": "EMG-2026-73739",
+      "customer_id": "b0ef9604-54c8-4ad1-9a7a-c353cfd339ef",
+      "federation_id": "b765df3b-c418-4a15-b79f-3cbc09e475dc",
+      "category_name": "Electrical Systems",
+      "emergency_type": "Electrical Short Circuit & Sparking",
+      "severity": "CRITICAL",
+      "status": "AWAITING_RESPONSE",
+      "location": "Block C, Shivalik Residency, Satellite, Ahmedabad, Gujarat",
+      "address_details": {},
+      "description": ".dfnps;otjgn, of;osbpuf igjnv, s  l",
+      "evidence_photos": [],
+      "approx_people_affected": 5,
+      "immediate_danger": false,
+      "danger_details": null,
+      "metadata": {
+        "createdVia": "CUSTOMER_PORTAL_EMERGENCY_FLOW",
+        "sourceUserAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/153.0.0.0 Safari/537.36"
+      },
+      "created_at": "2026-09-21T09:15:20.46+00:00",
+      "updated_at": "2026-09-21T09:15:20.46+00:00",
+      "response_matrix_code": "elec-short-spark",
+      "is_verified": false,
+      "verified_at": null,
+      "verified_by_worker_id": null,
+      "verification_code": null,
+      "verification_token": null,
+      "resolution_requested_at": null,
+      "resolution_requested_by_worker_id": null,
+      "resolution_summary": null,
+      "completed_work": null,
+      "remaining_concerns": null,
+      "resolution_evidence_photos": [],
+      "resolved_at": null,
+      "closed_at": null,
+      "closed_by_admin_id": null,
+      "closure_notes": null
+    },
+    "a8213b9e-b744-4feb-ac5b-e9858222b9fc": {
+      "id": "a8213b9e-b744-4feb-ac5b-e9858222b9fc",
+      "emergency_id": "EMG-2026-91231",
+      "customer_id": "b0ef9604-54c8-4ad1-9a7a-c353cfd339ef",
+      "federation_id": "b765df3b-c418-4a15-b79f-3cbc09e475dc",
+      "category_name": "Gas & Fire Hazard",
+      "emergency_type": "Piped Gas Leakage",
+      "severity": "CRITICAL",
+      "status": "AWAITING_RESPONSE",
+      "location": "Block C, Shivalik Residency, Satellite, Ahmedabad, Gujarat",
+      "address_details": {},
+      "description": "fire attack on peoples",
+      "evidence_photos": [],
+      "approx_people_affected": 5,
+      "immediate_danger": true,
+      "danger_details": "Water cascading rapidly down common elevator shaft and main electrical riser panel.",
+      "metadata": {
+        "createdVia": "CUSTOMER_PORTAL_EMERGENCY_FLOW",
+        "sourceUserAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/153.0.0.0 Safari/537.36"
+      },
+      "created_at": "2026-09-21T09:13:04.639+00:00",
+      "updated_at": "2026-09-21T09:13:04.639+00:00",
+      "response_matrix_code": "gas-piped-leak",
+      "is_verified": false,
+      "verified_at": null,
+      "verified_by_worker_id": null,
+      "verification_code": null,
+      "verification_token": null,
+      "resolution_requested_at": null,
+      "resolution_requested_by_worker_id": null,
+      "resolution_summary": null,
+      "completed_work": null,
+      "remaining_concerns": null,
+      "resolution_evidence_photos": [],
+      "resolved_at": null,
+      "closed_at": null,
+      "closed_by_admin_id": null,
+      "closure_notes": null
+    },
+    "EMG-2026-91231": {
+      "id": "a8213b9e-b744-4feb-ac5b-e9858222b9fc",
+      "emergency_id": "EMG-2026-91231",
+      "customer_id": "b0ef9604-54c8-4ad1-9a7a-c353cfd339ef",
+      "federation_id": "b765df3b-c418-4a15-b79f-3cbc09e475dc",
+      "category_name": "Gas & Fire Hazard",
+      "emergency_type": "Piped Gas Leakage",
+      "severity": "CRITICAL",
+      "status": "AWAITING_RESPONSE",
+      "location": "Block C, Shivalik Residency, Satellite, Ahmedabad, Gujarat",
+      "address_details": {},
+      "description": "fire attack on peoples",
+      "evidence_photos": [],
+      "approx_people_affected": 5,
+      "immediate_danger": true,
+      "danger_details": "Water cascading rapidly down common elevator shaft and main electrical riser panel.",
+      "metadata": {
+        "createdVia": "CUSTOMER_PORTAL_EMERGENCY_FLOW",
+        "sourceUserAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/153.0.0.0 Safari/537.36"
+      },
+      "created_at": "2026-09-21T09:13:04.639+00:00",
+      "updated_at": "2026-09-21T09:13:04.639+00:00",
+      "response_matrix_code": "gas-piped-leak",
+      "is_verified": false,
+      "verified_at": null,
+      "verified_by_worker_id": null,
+      "verification_code": null,
+      "verification_token": null,
+      "resolution_requested_at": null,
+      "resolution_requested_by_worker_id": null,
+      "resolution_summary": null,
+      "completed_work": null,
+      "remaining_concerns": null,
+      "resolution_evidence_photos": [],
+      "resolved_at": null,
+      "closed_at": null,
+      "closed_by_admin_id": null,
+      "closure_notes": null
+    },
+    "0be3e56b-d290-40f8-95e2-80be86a196d4": {
+      "id": "0be3e56b-d290-40f8-95e2-80be86a196d4",
+      "emergency_id": "EMG-2026-32841",
+      "customer_id": "b0ef9604-54c8-4ad1-9a7a-c353cfd339ef",
+      "federation_id": "b765df3b-c418-4a15-b79f-3cbc09e475dc",
+      "category_name": "Water Infrastructure",
+      "emergency_type": "Main Water Supply Line Rupture",
+      "severity": "HIGH",
+      "status": "AWAITING_RESPONSE",
+      "location": "Block C, Shivalik Residency, Satellite, Ahmedabad, Gujarat",
+      "address_details": {},
+      "description": "nclofjnxerlkvm/;dfx",
+      "evidence_photos": [],
+      "approx_people_affected": 5,
+      "immediate_danger": true,
+      "danger_details": "Water cascading rapidly down common elevator shaft and main electrical riser panel.",
+      "metadata": {
+        "createdVia": "CUSTOMER_PORTAL_EMERGENCY_FLOW",
+        "sourceUserAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/153.0.0.0 Safari/537.36"
+      },
+      "created_at": "2026-09-21T09:02:10.728+00:00",
+      "updated_at": "2026-09-21T09:02:10.728+00:00",
+      "response_matrix_code": "wat-pipe-rupture",
+      "is_verified": false,
+      "verified_at": null,
+      "verified_by_worker_id": null,
+      "verification_code": null,
+      "verification_token": null,
+      "resolution_requested_at": null,
+      "resolution_requested_by_worker_id": null,
+      "resolution_summary": null,
+      "completed_work": null,
+      "remaining_concerns": null,
+      "resolution_evidence_photos": [],
+      "resolved_at": null,
+      "closed_at": null,
+      "closed_by_admin_id": null,
+      "closure_notes": null
+    },
+    "EMG-2026-32841": {
+      "id": "0be3e56b-d290-40f8-95e2-80be86a196d4",
+      "emergency_id": "EMG-2026-32841",
+      "customer_id": "b0ef9604-54c8-4ad1-9a7a-c353cfd339ef",
+      "federation_id": "b765df3b-c418-4a15-b79f-3cbc09e475dc",
+      "category_name": "Water Infrastructure",
+      "emergency_type": "Main Water Supply Line Rupture",
+      "severity": "HIGH",
+      "status": "AWAITING_RESPONSE",
+      "location": "Block C, Shivalik Residency, Satellite, Ahmedabad, Gujarat",
+      "address_details": {},
+      "description": "nclofjnxerlkvm/;dfx",
+      "evidence_photos": [],
+      "approx_people_affected": 5,
+      "immediate_danger": true,
+      "danger_details": "Water cascading rapidly down common elevator shaft and main electrical riser panel.",
+      "metadata": {
+        "createdVia": "CUSTOMER_PORTAL_EMERGENCY_FLOW",
+        "sourceUserAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/153.0.0.0 Safari/537.36"
+      },
+      "created_at": "2026-09-21T09:02:10.728+00:00",
+      "updated_at": "2026-09-21T09:02:10.728+00:00",
+      "response_matrix_code": "wat-pipe-rupture",
+      "is_verified": false,
+      "verified_at": null,
+      "verified_by_worker_id": null,
+      "verification_code": null,
+      "verification_token": null,
+      "resolution_requested_at": null,
+      "resolution_requested_by_worker_id": null,
+      "resolution_summary": null,
+      "completed_work": null,
+      "remaining_concerns": null,
+      "resolution_evidence_photos": [],
+      "resolved_at": null,
+      "closed_at": null,
+      "closed_by_admin_id": null,
+      "closure_notes": null
+    },
+    "502b6825-bf71-42fe-b189-fcd49bfc68a1": {
+      "id": "502b6825-bf71-42fe-b189-fcd49bfc68a1",
+      "emergency_id": "EMG-2026-94177",
+      "customer_id": "b0ef9604-54c8-4ad1-9a7a-c353cfd339ef",
+      "federation_id": "b765df3b-c418-4a15-b79f-3cbc09e475dc",
+      "category_name": "Water Infrastructure",
+      "emergency_type": "Main Water Supply Line Rupture",
+      "severity": "HIGH",
+      "status": "AWAITING_RESPONSE",
+      "location": "Navrangpura, Ahmedabad",
+      "address_details": {
+        "city": "Ahmedabad",
+        "latitude": 23.0365,
+        "longitude": 72.5611,
+        "addressLine": "101 Ashram Road"
+      },
+      "description": "Severe basement pipe burst flooding rapidly",
+      "evidence_photos": [],
+      "approx_people_affected": 15,
+      "immediate_danger": true,
+      "danger_details": "Water approaching electrical meter box",
+      "metadata": {
+        "createdVia": "CUSTOMER_PORTAL_EMERGENCY_FLOW",
+        "sourceUserAgent": "node"
+      },
+      "created_at": "2026-09-21T10:14:45.34+00:00",
+      "updated_at": "2026-09-21T10:14:45.34+00:00",
+      "response_matrix_code": "wat-pipe-rupture",
+      "is_verified": false,
+      "verified_at": null,
+      "verified_by_worker_id": null,
+      "verification_code": null,
+      "verification_token": null,
+      "resolution_requested_at": null,
+      "resolution_requested_by_worker_id": null,
+      "resolution_summary": null,
+      "completed_work": null,
+      "remaining_concerns": null,
+      "resolution_evidence_photos": [],
+      "resolved_at": null,
+      "closed_at": null,
+      "closed_by_admin_id": null,
+      "closure_notes": null
+    },
+    "EMG-2026-94177": {
+      "id": "502b6825-bf71-42fe-b189-fcd49bfc68a1",
+      "emergency_id": "EMG-2026-94177",
+      "customer_id": "b0ef9604-54c8-4ad1-9a7a-c353cfd339ef",
+      "federation_id": "b765df3b-c418-4a15-b79f-3cbc09e475dc",
+      "category_name": "Water Infrastructure",
+      "emergency_type": "Main Water Supply Line Rupture",
+      "severity": "HIGH",
+      "status": "AWAITING_RESPONSE",
+      "location": "Navrangpura, Ahmedabad",
+      "address_details": {
+        "city": "Ahmedabad",
+        "latitude": 23.0365,
+        "longitude": 72.5611,
+        "addressLine": "101 Ashram Road"
+      },
+      "description": "Severe basement pipe burst flooding rapidly",
+      "evidence_photos": [],
+      "approx_people_affected": 15,
+      "immediate_danger": true,
+      "danger_details": "Water approaching electrical meter box",
+      "metadata": {
+        "createdVia": "CUSTOMER_PORTAL_EMERGENCY_FLOW",
+        "sourceUserAgent": "node"
+      },
+      "created_at": "2026-09-21T10:14:45.34+00:00",
+      "updated_at": "2026-09-21T10:14:45.34+00:00",
+      "response_matrix_code": "wat-pipe-rupture",
+      "is_verified": false,
+      "verified_at": null,
+      "verified_by_worker_id": null,
+      "verification_code": null,
+      "verification_token": null,
+      "resolution_requested_at": null,
+      "resolution_requested_by_worker_id": null,
+      "resolution_summary": null,
+      "completed_work": null,
+      "remaining_concerns": null,
+      "resolution_evidence_photos": [],
+      "resolved_at": null,
+      "closed_at": null,
+      "closed_by_admin_id": null,
+      "closure_notes": null
+    },
+    "0d96d725-8b18-46f0-bab4-22e985cfd199": {
+      "id": "0d96d725-8b18-46f0-bab4-22e985cfd199",
+      "emergency_id": "EMG-2026-23509",
+      "customer_id": "b0ef9604-54c8-4ad1-9a7a-c353cfd339ef",
+      "federation_id": "b765df3b-c418-4a15-b79f-3cbc09e475dc",
+      "category_name": "Electrical Systems",
+      "emergency_type": "Electrical Short Circuit & Sparking",
+      "severity": "CRITICAL",
+      "status": "AWAITING_RESPONSE",
+      "location": "Navrangpura, Ahmedabad",
+      "address_details": {
+        "city": "Ahmedabad",
+        "latitude": 23.0365,
+        "longitude": 72.5611,
+        "addressLine": "101 Ashram Road"
+      },
+      "description": "Sparks flying from main distribution panel",
+      "evidence_photos": [],
+      "approx_people_affected": 25,
+      "immediate_danger": true,
+      "danger_details": "Active arcing near flammable materials",
+      "metadata": {
+        "createdVia": "CUSTOMER_PORTAL_EMERGENCY_FLOW",
+        "sourceUserAgent": "node"
+      },
+      "created_at": "2026-09-21T10:15:49.796+00:00",
+      "updated_at": "2026-09-21T10:15:49.796+00:00",
+      "response_matrix_code": "elec-short-spark",
+      "is_verified": false,
+      "verified_at": null,
+      "verified_by_worker_id": null,
+      "verification_code": null,
+      "verification_token": null,
+      "resolution_requested_at": null,
+      "resolution_requested_by_worker_id": null,
+      "resolution_summary": null,
+      "completed_work": null,
+      "remaining_concerns": null,
+      "resolution_evidence_photos": [],
+      "resolved_at": null,
+      "closed_at": null,
+      "closed_by_admin_id": null,
+      "closure_notes": null
+    },
+    "EMG-2026-23509": {
+      "id": "0d96d725-8b18-46f0-bab4-22e985cfd199",
+      "emergency_id": "EMG-2026-23509",
+      "customer_id": "b0ef9604-54c8-4ad1-9a7a-c353cfd339ef",
+      "federation_id": "b765df3b-c418-4a15-b79f-3cbc09e475dc",
+      "category_name": "Electrical Systems",
+      "emergency_type": "Electrical Short Circuit & Sparking",
+      "severity": "CRITICAL",
+      "status": "AWAITING_RESPONSE",
+      "location": "Navrangpura, Ahmedabad",
+      "address_details": {
+        "city": "Ahmedabad",
+        "latitude": 23.0365,
+        "longitude": 72.5611,
+        "addressLine": "101 Ashram Road"
+      },
+      "description": "Sparks flying from main distribution panel",
+      "evidence_photos": [],
+      "approx_people_affected": 25,
+      "immediate_danger": true,
+      "danger_details": "Active arcing near flammable materials",
+      "metadata": {
+        "createdVia": "CUSTOMER_PORTAL_EMERGENCY_FLOW",
+        "sourceUserAgent": "node"
+      },
+      "created_at": "2026-09-21T10:15:49.796+00:00",
+      "updated_at": "2026-09-21T10:15:49.796+00:00",
+      "response_matrix_code": "elec-short-spark",
       "is_verified": false,
       "verified_at": null,
       "verified_by_worker_id": null,
@@ -1837,6 +2247,258 @@
           "worker_name": "Hitesh Solanki"
         }
       ]
+    },
+    "187030f7-1a35-49b5-a2cc-4c754072e284": {
+      "id": "187030f7-1a35-49b5-a2cc-4c754072e284",
+      "incident_id": "efeefb1a-6354-4792-87b7-b1548b6eca88",
+      "federation_id": "b765df3b-c418-4a15-b79f-3cbc09e475dc",
+      "status": "FORMED",
+      "team_lead_worker_id": "59eca4ff-a589-4363-ad76-24a4ff5b6e2e",
+      "requires_team_lead": true,
+      "required_worker_count": 6,
+      "accepted_worker_count": 6,
+      "created_at": "2026-09-21T05:35:01.138+00:00",
+      "updated_at": "2026-09-21T10:20:54.090Z",
+      "team_type": "PRIMARY",
+      "parent_team_id": null,
+      "field_status": "RESOLVED",
+      "emergency_response_team_members": [
+        {
+          "id": "03e53891-dd23-4a7e-a255-81bb10960cd1",
+          "role": "Plumber",
+          "status": "ACTIVE",
+          "team_id": "187030f7-1a35-49b5-a2cc-4c754072e284",
+          "workers": {
+            "id": "59eca4ff-a589-4363-ad76-24a4ff5b6e2e",
+            "profiles": {
+              "phone": "+91 98250 11021",
+              "full_name": "Ravi Patel"
+            },
+            "profession": "Plumber"
+          },
+          "worker_id": "59eca4ff-a589-4363-ad76-24a4ff5b6e2e",
+          "accepted_at": "2026-09-21T05:35:04.295+00:00",
+          "incident_id": "efeefb1a-6354-4792-87b7-b1548b6eca88",
+          "is_team_lead": true
+        },
+        {
+          "id": "ae70259f-ef07-41ab-a29b-27ff81ad2e5e",
+          "role": "Electrician",
+          "status": "ACTIVE",
+          "team_id": "187030f7-1a35-49b5-a2cc-4c754072e284",
+          "workers": {
+            "id": "a9052cdb-e7cf-458e-8835-6c61bef6cd88",
+            "profiles": {
+              "phone": "+91 98250 33003",
+              "full_name": "Sanjay Varma"
+            },
+            "profession": "Electrician"
+          },
+          "worker_id": "a9052cdb-e7cf-458e-8835-6c61bef6cd88",
+          "accepted_at": "2026-09-21T05:35:53.279+00:00",
+          "incident_id": "efeefb1a-6354-4792-87b7-b1548b6eca88",
+          "is_team_lead": false
+        },
+        {
+          "id": "3317a8fe-ebd1-4c3f-a32d-dc6c76498422",
+          "role": "Electrician",
+          "status": "ACTIVE",
+          "team_id": "187030f7-1a35-49b5-a2cc-4c754072e284",
+          "workers": {
+            "id": "011635a9-5d9a-4310-9d13-81d506e3dc29",
+            "profiles": {
+              "phone": "+91 98250 33002",
+              "full_name": "Kiran Patel"
+            },
+            "profession": "Electrician"
+          },
+          "worker_id": "011635a9-5d9a-4310-9d13-81d506e3dc29",
+          "accepted_at": "2026-09-21T05:37:07.147+00:00",
+          "incident_id": "efeefb1a-6354-4792-87b7-b1548b6eca88",
+          "is_team_lead": false
+        },
+        {
+          "id": "1e3cbc2f-f8af-4e25-8fc5-244c99bdfa2f",
+          "role": "Plumber",
+          "status": "ACTIVE",
+          "team_id": "187030f7-1a35-49b5-a2cc-4c754072e284",
+          "workers": {
+            "id": "b9bc4bd6-1fc9-4df9-85d4-294e396116e8",
+            "profiles": {
+              "phone": "+91 98250 22002",
+              "full_name": "Hitesh Solanki"
+            },
+            "profession": "Plumber"
+          },
+          "worker_id": "b9bc4bd6-1fc9-4df9-85d4-294e396116e8",
+          "accepted_at": "2026-09-21T09:06:58.472+00:00",
+          "incident_id": "efeefb1a-6354-4792-87b7-b1548b6eca88",
+          "is_team_lead": false
+        },
+        {
+          "id": "954804c7-e8b3-4385-966b-0df190d2432c",
+          "role": "Plumber",
+          "status": "ACTIVE",
+          "team_id": "187030f7-1a35-49b5-a2cc-4c754072e284",
+          "workers": {
+            "id": "377f8e4a-01ba-4a55-b709-729433b835e5",
+            "profiles": {
+              "phone": "+91 98250 22003",
+              "full_name": "Dinesh Parmar"
+            },
+            "profession": "Plumber"
+          },
+          "worker_id": "377f8e4a-01ba-4a55-b709-729433b835e5",
+          "accepted_at": "2026-09-21T09:08:13.659+00:00",
+          "incident_id": "efeefb1a-6354-4792-87b7-b1548b6eca88",
+          "is_team_lead": false
+        },
+        {
+          "id": "0bfbe249-a9bb-4773-ace0-6c58d0944e75",
+          "role": "Plumber",
+          "status": "ACTIVE",
+          "team_id": "187030f7-1a35-49b5-a2cc-4c754072e284",
+          "workers": {
+            "id": "57be1094-69bf-46fe-b6c6-8c9a50afb767",
+            "profiles": {
+              "phone": "+91 98250 22005",
+              "full_name": "Mahesh Vaghela"
+            },
+            "profession": "Plumber"
+          },
+          "worker_id": "57be1094-69bf-46fe-b6c6-8c9a50afb767",
+          "accepted_at": "2026-09-21T09:08:46.174+00:00",
+          "incident_id": "efeefb1a-6354-4792-87b7-b1548b6eca88",
+          "is_team_lead": false
+        }
+      ],
+      "members": []
+    },
+    "efeefb1a-6354-4792-87b7-b1548b6eca88": {
+      "id": "187030f7-1a35-49b5-a2cc-4c754072e284",
+      "incident_id": "efeefb1a-6354-4792-87b7-b1548b6eca88",
+      "federation_id": "b765df3b-c418-4a15-b79f-3cbc09e475dc",
+      "status": "FORMED",
+      "team_lead_worker_id": "59eca4ff-a589-4363-ad76-24a4ff5b6e2e",
+      "requires_team_lead": true,
+      "required_worker_count": 6,
+      "accepted_worker_count": 6,
+      "created_at": "2026-09-21T05:35:01.138+00:00",
+      "updated_at": "2026-09-21T10:20:54.090Z",
+      "team_type": "PRIMARY",
+      "parent_team_id": null,
+      "field_status": "RESOLVED",
+      "emergency_response_team_members": [
+        {
+          "id": "03e53891-dd23-4a7e-a255-81bb10960cd1",
+          "role": "Plumber",
+          "status": "ACTIVE",
+          "team_id": "187030f7-1a35-49b5-a2cc-4c754072e284",
+          "workers": {
+            "id": "59eca4ff-a589-4363-ad76-24a4ff5b6e2e",
+            "profiles": {
+              "phone": "+91 98250 11021",
+              "full_name": "Ravi Patel"
+            },
+            "profession": "Plumber"
+          },
+          "worker_id": "59eca4ff-a589-4363-ad76-24a4ff5b6e2e",
+          "accepted_at": "2026-09-21T05:35:04.295+00:00",
+          "incident_id": "efeefb1a-6354-4792-87b7-b1548b6eca88",
+          "is_team_lead": true
+        },
+        {
+          "id": "ae70259f-ef07-41ab-a29b-27ff81ad2e5e",
+          "role": "Electrician",
+          "status": "ACTIVE",
+          "team_id": "187030f7-1a35-49b5-a2cc-4c754072e284",
+          "workers": {
+            "id": "a9052cdb-e7cf-458e-8835-6c61bef6cd88",
+            "profiles": {
+              "phone": "+91 98250 33003",
+              "full_name": "Sanjay Varma"
+            },
+            "profession": "Electrician"
+          },
+          "worker_id": "a9052cdb-e7cf-458e-8835-6c61bef6cd88",
+          "accepted_at": "2026-09-21T05:35:53.279+00:00",
+          "incident_id": "efeefb1a-6354-4792-87b7-b1548b6eca88",
+          "is_team_lead": false
+        },
+        {
+          "id": "3317a8fe-ebd1-4c3f-a32d-dc6c76498422",
+          "role": "Electrician",
+          "status": "ACTIVE",
+          "team_id": "187030f7-1a35-49b5-a2cc-4c754072e284",
+          "workers": {
+            "id": "011635a9-5d9a-4310-9d13-81d506e3dc29",
+            "profiles": {
+              "phone": "+91 98250 33002",
+              "full_name": "Kiran Patel"
+            },
+            "profession": "Electrician"
+          },
+          "worker_id": "011635a9-5d9a-4310-9d13-81d506e3dc29",
+          "accepted_at": "2026-09-21T05:37:07.147+00:00",
+          "incident_id": "efeefb1a-6354-4792-87b7-b1548b6eca88",
+          "is_team_lead": false
+        },
+        {
+          "id": "1e3cbc2f-f8af-4e25-8fc5-244c99bdfa2f",
+          "role": "Plumber",
+          "status": "ACTIVE",
+          "team_id": "187030f7-1a35-49b5-a2cc-4c754072e284",
+          "workers": {
+            "id": "b9bc4bd6-1fc9-4df9-85d4-294e396116e8",
+            "profiles": {
+              "phone": "+91 98250 22002",
+              "full_name": "Hitesh Solanki"
+            },
+            "profession": "Plumber"
+          },
+          "worker_id": "b9bc4bd6-1fc9-4df9-85d4-294e396116e8",
+          "accepted_at": "2026-09-21T09:06:58.472+00:00",
+          "incident_id": "efeefb1a-6354-4792-87b7-b1548b6eca88",
+          "is_team_lead": false
+        },
+        {
+          "id": "954804c7-e8b3-4385-966b-0df190d2432c",
+          "role": "Plumber",
+          "status": "ACTIVE",
+          "team_id": "187030f7-1a35-49b5-a2cc-4c754072e284",
+          "workers": {
+            "id": "377f8e4a-01ba-4a55-b709-729433b835e5",
+            "profiles": {
+              "phone": "+91 98250 22003",
+              "full_name": "Dinesh Parmar"
+            },
+            "profession": "Plumber"
+          },
+          "worker_id": "377f8e4a-01ba-4a55-b709-729433b835e5",
+          "accepted_at": "2026-09-21T09:08:13.659+00:00",
+          "incident_id": "efeefb1a-6354-4792-87b7-b1548b6eca88",
+          "is_team_lead": false
+        },
+        {
+          "id": "0bfbe249-a9bb-4773-ace0-6c58d0944e75",
+          "role": "Plumber",
+          "status": "ACTIVE",
+          "team_id": "187030f7-1a35-49b5-a2cc-4c754072e284",
+          "workers": {
+            "id": "57be1094-69bf-46fe-b6c6-8c9a50afb767",
+            "profiles": {
+              "phone": "+91 98250 22005",
+              "full_name": "Mahesh Vaghela"
+            },
+            "profession": "Plumber"
+          },
+          "worker_id": "57be1094-69bf-46fe-b6c6-8c9a50afb767",
+          "accepted_at": "2026-09-21T09:08:46.174+00:00",
+          "incident_id": "efeefb1a-6354-4792-87b7-b1548b6eca88",
+          "is_team_lead": false
+        }
+      ],
+      "members": []
     }
   },
   "teamMembers": {
@@ -3411,6 +4073,102 @@
       "team_id": null,
       "expires_at": "2026-09-22T08:30:14.299Z",
       "created_at": "2026-09-21T08:30:14.299Z"
+    },
+    "f287708b-536a-442d-ade3-a0f53cbc599c": {
+      "id": "f287708b-536a-442d-ade3-a0f53cbc599c",
+      "incident_id": "502b6825-bf71-42fe-b189-fcd49bfc68a1",
+      "verification_token": "195c1f3a5c5eaf0c2027c4dedbae12cc2f57eccace9d9f0e70d7258afe00aa07",
+      "verification_code": "EMG-E271",
+      "status": "PENDING",
+      "verified_at": null,
+      "verified_by_worker_id": null,
+      "team_id": null,
+      "expires_at": "2026-09-22T10:14:45.584Z",
+      "created_at": "2026-09-21T10:14:45.584Z"
+    },
+    "502b6825-bf71-42fe-b189-fcd49bfc68a1": {
+      "id": "f287708b-536a-442d-ade3-a0f53cbc599c",
+      "incident_id": "502b6825-bf71-42fe-b189-fcd49bfc68a1",
+      "verification_token": "195c1f3a5c5eaf0c2027c4dedbae12cc2f57eccace9d9f0e70d7258afe00aa07",
+      "verification_code": "EMG-E271",
+      "status": "PENDING",
+      "verified_at": null,
+      "verified_by_worker_id": null,
+      "team_id": null,
+      "expires_at": "2026-09-22T10:14:45.584Z",
+      "created_at": "2026-09-21T10:14:45.584Z"
+    },
+    "EMG-E271": {
+      "id": "f287708b-536a-442d-ade3-a0f53cbc599c",
+      "incident_id": "502b6825-bf71-42fe-b189-fcd49bfc68a1",
+      "verification_token": "195c1f3a5c5eaf0c2027c4dedbae12cc2f57eccace9d9f0e70d7258afe00aa07",
+      "verification_code": "EMG-E271",
+      "status": "PENDING",
+      "verified_at": null,
+      "verified_by_worker_id": null,
+      "team_id": null,
+      "expires_at": "2026-09-22T10:14:45.584Z",
+      "created_at": "2026-09-21T10:14:45.584Z"
+    },
+    "195c1f3a5c5eaf0c2027c4dedbae12cc2f57eccace9d9f0e70d7258afe00aa07": {
+      "id": "f287708b-536a-442d-ade3-a0f53cbc599c",
+      "incident_id": "502b6825-bf71-42fe-b189-fcd49bfc68a1",
+      "verification_token": "195c1f3a5c5eaf0c2027c4dedbae12cc2f57eccace9d9f0e70d7258afe00aa07",
+      "verification_code": "EMG-E271",
+      "status": "PENDING",
+      "verified_at": null,
+      "verified_by_worker_id": null,
+      "team_id": null,
+      "expires_at": "2026-09-22T10:14:45.584Z",
+      "created_at": "2026-09-21T10:14:45.584Z"
+    },
+    "96c35767-0608-4607-86d4-2063c4da9cda": {
+      "id": "96c35767-0608-4607-86d4-2063c4da9cda",
+      "incident_id": "0d96d725-8b18-46f0-bab4-22e985cfd199",
+      "verification_token": "4769c69a99595bf5bed2dcd2a7d8d6ddfa1668057aaeb90902ac2dd6ba97b16f",
+      "verification_code": "EMG-B32E",
+      "status": "PENDING",
+      "verified_at": null,
+      "verified_by_worker_id": null,
+      "team_id": null,
+      "expires_at": "2026-09-22T10:15:49.994Z",
+      "created_at": "2026-09-21T10:15:49.994Z"
+    },
+    "0d96d725-8b18-46f0-bab4-22e985cfd199": {
+      "id": "96c35767-0608-4607-86d4-2063c4da9cda",
+      "incident_id": "0d96d725-8b18-46f0-bab4-22e985cfd199",
+      "verification_token": "4769c69a99595bf5bed2dcd2a7d8d6ddfa1668057aaeb90902ac2dd6ba97b16f",
+      "verification_code": "EMG-B32E",
+      "status": "PENDING",
+      "verified_at": null,
+      "verified_by_worker_id": null,
+      "team_id": null,
+      "expires_at": "2026-09-22T10:15:49.994Z",
+      "created_at": "2026-09-21T10:15:49.994Z"
+    },
+    "EMG-B32E": {
+      "id": "96c35767-0608-4607-86d4-2063c4da9cda",
+      "incident_id": "0d96d725-8b18-46f0-bab4-22e985cfd199",
+      "verification_token": "4769c69a99595bf5bed2dcd2a7d8d6ddfa1668057aaeb90902ac2dd6ba97b16f",
+      "verification_code": "EMG-B32E",
+      "status": "PENDING",
+      "verified_at": null,
+      "verified_by_worker_id": null,
+      "team_id": null,
+      "expires_at": "2026-09-22T10:15:49.994Z",
+      "created_at": "2026-09-21T10:15:49.994Z"
+    },
+    "4769c69a99595bf5bed2dcd2a7d8d6ddfa1668057aaeb90902ac2dd6ba97b16f": {
+      "id": "96c35767-0608-4607-86d4-2063c4da9cda",
+      "incident_id": "0d96d725-8b18-46f0-bab4-22e985cfd199",
+      "verification_token": "4769c69a99595bf5bed2dcd2a7d8d6ddfa1668057aaeb90902ac2dd6ba97b16f",
+      "verification_code": "EMG-B32E",
+      "status": "PENDING",
+      "verified_at": null,
+      "verified_by_worker_id": null,
+      "team_id": null,
+      "expires_at": "2026-09-22T10:15:49.994Z",
+      "created_at": "2026-09-21T10:15:49.994Z"
     }
   },
   "checkIns": {
@@ -4376,6 +5134,24 @@
         },
         "notes": "Worker Ravi Patel (Team Lead) checked in on scene.",
         "created_at": "2026-09-20T11:38:33.635Z"
+      }
+    ],
+    "efeefb1a-6354-4792-87b7-b1548b6eca88": [
+      {
+        "id": "fc954a2c-c73a-4aea-a875-153dcd416033",
+        "incident_id": "efeefb1a-6354-4792-87b7-b1548b6eca88",
+        "federation_id": "b765df3b-c418-4a15-b79f-3cbc09e475dc",
+        "actor_id": "096b0708-3193-41a6-9f49-03ff8903a0ed",
+        "action_type": "EMERGENCY_CLOSED",
+        "previous_state": {
+          "status": "ACTIVE"
+        },
+        "new_state": {
+          "status": "CLOSED",
+          "closure_notes": "Incident resolution verified and closed by Federation Admin."
+        },
+        "notes": "Emergency resolution approved and closed.",
+        "created_at": "2026-09-21T10:20:55.472Z"
       }
     ]
   },
