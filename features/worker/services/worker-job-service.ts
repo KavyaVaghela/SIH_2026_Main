@@ -1449,8 +1449,9 @@ export class WorkerJobService implements IWorkerJobService {
     await this.ensureSeedData(resolvedWorkerId);
     const allBookings = await bookingService.getWorkerBookings(resolvedWorkerId);
 
-    // Only BOOKING_COMPLETED bookings count toward earnings
-    const completedBookings = allBookings.filter((b) => b.status === "BOOKING_COMPLETED");
+    // Only completed bookings count toward earnings
+    const completedStatuses = ["BOOKING_COMPLETED", "SERVICE_COMPLETED", "PAYMENT_RECEIVED"];
+    const completedBookings = allBookings.filter((b) => completedStatuses.includes(b.status));
 
     const now = new Date();
     const todayStr = now.toISOString().split("T")[0];
@@ -1820,7 +1821,8 @@ export class WorkerJobService implements IWorkerJobService {
     await this.ensureSeedData(resolvedWorkerId);
 
     const bookings = await bookingService.getWorkerBookings(resolvedWorkerId);
-    const completed = bookings.filter((b) => b.status === "BOOKING_COMPLETED");
+    const completedStatuses = ["BOOKING_COMPLETED", "SERVICE_COMPLETED", "PAYMENT_RECEIVED"];
+    const completed = bookings.filter((b) => completedStatuses.includes(b.status));
 
     return completed.map((b) => this.mapBookingToWorkerJobItem(b));
   }

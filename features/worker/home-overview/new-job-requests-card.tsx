@@ -24,6 +24,9 @@ export function NewJobRequestsCard({ requests }: NewJobRequestsCardProps) {
   }, [requests]);
 
   const count = genuineRequests.length;
+  const displayedRequests = React.useMemo(() => {
+    return genuineRequests.slice(0, 5);
+  }, [genuineRequests]);
 
   return (
     <Card className="border-border shadow-sm">
@@ -51,7 +54,10 @@ export function NewJobRequestsCard({ requests }: NewJobRequestsCardProps) {
       </CardHeader>
 
       <CardContent className="p-4 sm:p-5 space-y-3">
-        {genuineRequests.map((req) => {
+        {displayedRequests.length === 0 ? (
+          <p className="text-xs text-muted-foreground py-4 text-center">No new job requests at this moment.</p>
+        ) : (
+          displayedRequests.map((req) => {
           const isNew = req.status === "REQUEST_SENT" || req.status === "PENDING";
           return (
             <Link
@@ -113,7 +119,18 @@ export function NewJobRequestsCard({ requests }: NewJobRequestsCardProps) {
               </div>
             </Link>
           );
-        })}
+        }))}
+        {genuineRequests.length > 5 && (
+          <div className="pt-2 text-center border-t border-border/40">
+            <Link
+              href="/worker/schedule?tab=requests"
+              className="text-xs font-semibold text-emerald-700 dark:text-emerald-400 hover:underline inline-flex items-center"
+            >
+              View all {genuineRequests.length} requests in My Schedule
+              <ArrowRight className="ml-1 h-3 w-3" />
+            </Link>
+          </div>
+        )}
       </CardContent>
 
       <CardFooter className="p-4 pt-0 sm:hidden">

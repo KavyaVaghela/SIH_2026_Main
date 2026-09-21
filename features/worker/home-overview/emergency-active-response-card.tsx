@@ -59,7 +59,7 @@ export function EmergencyActiveResponseCard({
   const fetchActiveAssignment = React.useCallback(async (showLoading = true) => {
     if (!workerId) return;
     try {
-      if (showLoading) setIsLoading(true);
+      if (showLoading && !team) setIsLoading(true);
       const res = await fetch(`/api/emergency/teams?workerId=${workerId}`);
       if (!res.ok) return;
       const json = await res.json();
@@ -256,7 +256,7 @@ export function EmergencyActiveResponseCard({
     }
   };
 
-  if (isLoading || !team || !incident) {
+  if ((isLoading && !team) || !team || !incident) {
     return null;
   }
 
