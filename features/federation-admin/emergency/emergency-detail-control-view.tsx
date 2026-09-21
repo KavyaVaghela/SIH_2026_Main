@@ -105,10 +105,12 @@ export function EmergencyDetailControlView({ incidentId }: EmergencyDetailContro
     }
   };
 
+  const debounceTimerRef = React.useRef<NodeJS.Timeout | null>(null);
+
   // Fetch Incident Control Packet
-  const fetchDetail = React.useCallback(async () => {
+  const fetchDetail = React.useCallback(async (showLoading = true) => {
     try {
-      setIsLoading(true);
+      if (showLoading) setIsLoading(true);
       const res = await fetch(`/api/emergency/federation/incidents/${incidentId}`);
       if (!res.ok) {
         setFeedback({ type: "error", text: "Failed to load incident detail. Verify administrative authority." });
@@ -122,43 +124,55 @@ export function EmergencyDetailControlView({ incidentId }: EmergencyDetailContro
     } catch (err) {
       setFeedback({ type: "error", text: (err as Error)?.message || "Failed to load incident." });
     } finally {
-      setIsLoading(false);
+      if (showLoading) setIsLoading(false);
     }
   }, [incidentId]);
 
   React.useEffect(() => {
-    fetchDetail();
+    fetchDetail(true);
+    return () => {
+      if (debounceTimerRef.current) clearTimeout(debounceTimerRef.current);
+    };
   }, [fetchDetail]);
 
-  // Realtime updates on all relevant emergency tables
+  const handleRealtimeUpdate = React.useCallback(() => {
+    if (debounceTimerRef.current) {
+      clearTimeout(debounceTimerRef.current);
+    }
+    debounceTimerRef.current = setTimeout(() => {
+      fetchDetail(false);
+    }, 150);
+  }, [fetchDetail]);
+
+  // Realtime updates on all relevant emergency tables (debounced to avoid duplicate round trips)
   useRealtimeSubscription({
     table: "emergency_incidents",
     enabled: !!incidentId,
-    onPayload: () => fetchDetail(),
+    onPayload: handleRealtimeUpdate,
   });
 
   useRealtimeSubscription({
     table: "emergency_response_teams",
     enabled: !!incidentId,
-    onPayload: () => fetchDetail(),
+    onPayload: handleRealtimeUpdate,
   });
 
   useRealtimeSubscription({
     table: "emergency_incident_tasks",
     enabled: !!incidentId,
-    onPayload: () => fetchDetail(),
+    onPayload: handleRealtimeUpdate,
   });
 
   useRealtimeSubscription({
     table: "emergency_additional_worker_requests",
     enabled: !!incidentId,
-    onPayload: () => fetchDetail(),
+    onPayload: handleRealtimeUpdate,
   });
 
   useRealtimeSubscription({
     table: "emergency_audit_logs",
     enabled: !!incidentId,
-    onPayload: () => fetchDetail(),
+    onPayload: handleRealtimeUpdate,
   });
 
   // Action: Change Severity

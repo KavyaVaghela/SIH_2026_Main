@@ -238,61 +238,66 @@ export class EmergencyControlCenterRepository {
       );
     }
 
-    // Enrich each incident with operational team, tasks, and shortage metrics
-    const summaries: FederationIncidentSummary[] = [];
+    // Enrich each incident in parallel with operational team, tasks, and shortage metrics
+    const rawSummaries = await Promise.all(
+      incidents.map(async (inc) => {
+        const [team, progress, additionalRequests] = await Promise.all([
+          EmergencyTeamRepository.getTeamByIncidentId(inc.id),
+          EmergencyTaskRepository.calculateProgress(inc.id),
+          EmergencyTaskRepository.listAdditionalWorkerRequests(inc.id),
+        ]);
 
-    for (const inc of incidents) {
-      const team = await EmergencyTeamRepository.getTeamByIncidentId(inc.id);
-      const progress = await EmergencyTaskRepository.calculateProgress(inc.id);
-      const additionalRequests = await EmergencyTaskRepository.listAdditionalWorkerRequests(inc.id);
-      const pendingReqs = additionalRequests.filter((r) => r.status === "PENDING_FEDERATION_REVIEW");
+        const pendingReqs = additionalRequests.filter((r) => r.status === "PENDING_FEDERATION_REVIEW");
 
-      // Matrix lookup for baseline staffing requirement
-      let requiredCount = team?.required_worker_count || 0;
-      if (!requiredCount && inc.emergency_type) {
-        const matrix = await EmergencyResponseMatrixRepository.findByEmergencyType(inc.emergency_type);
-        requiredCount = matrix?.recommended_worker_count || 1;
-      }
+        // Matrix lookup for baseline staffing requirement
+        let requiredCount = team?.required_worker_count || 0;
+        if (!requiredCount && inc.emergency_type) {
+          const matrix = await EmergencyResponseMatrixRepository.findByEmergencyType(inc.emergency_type);
+          requiredCount = matrix?.recommended_worker_count || 1;
+        }
 
-      const acceptedCount = team?.accepted_worker_count || 0;
-      const shortageCount = Math.max(0, requiredCount - acceptedCount);
-      const hasShortage = shortageCount > 0 && inc.status !== "RESOLVED" && inc.status !== "CLOSED";
+        const acceptedCount = team?.accepted_worker_count || 0;
+        const shortageCount = Math.max(0, requiredCount - acceptedCount);
+        const hasShortage = shortageCount > 0 && inc.status !== "RESOLVED" && inc.status !== "CLOSED";
 
-      if (filters?.hasShortage !== undefined) {
-        if (filters.hasShortage && !hasShortage) continue;
-        if (!filters.hasShortage && hasShortage) continue;
-      }
+        if (filters?.hasShortage !== undefined) {
+          if (filters.hasShortage && !hasShortage) return null;
+          if (!filters.hasShortage && hasShortage) return null;
+        }
 
-      // Team Lead lookup
-      let teamLeadName: string | null = null;
-      if (team?.team_lead_worker_id && team.members) {
-        const leadMember = team.members.find((m) => m.worker_id === team.team_lead_worker_id);
-        teamLeadName = leadMember?.worker_name || null;
-      }
+        // Team Lead lookup
+        let teamLeadName: string | null = null;
+        if (team?.team_lead_worker_id && team.members) {
+          const leadMember = team.members.find((m) => m.worker_id === team.team_lead_worker_id);
+          teamLeadName = leadMember?.worker_name || null;
+        }
 
-      summaries.push({
-        id: inc.id,
-        emergency_id: inc.emergency_id,
-        category_name: inc.category_name,
-        emergency_type: inc.emergency_type,
-        response_matrix_code: inc.response_matrix_code,
-        severity: inc.severity,
-        status: inc.status,
-        location: inc.location,
-        created_at: inc.created_at,
-        updated_at: inc.updated_at,
-        description: inc.description,
-        team_status: team?.status || null,
-        required_worker_count: requiredCount,
-        accepted_worker_count: acceptedCount,
-        shortage_count: shortageCount,
-        has_shortage: hasShortage,
-        team_lead_worker_id: team?.team_lead_worker_id || null,
-        team_lead_name: teamLeadName,
-        task_progress: progress.total > 0 ? progress : null,
-        pending_requests_count: pendingReqs.length,
-      });
-    }
+        return {
+          id: inc.id,
+          emergency_id: inc.emergency_id,
+          category_name: inc.category_name,
+          emergency_type: inc.emergency_type,
+          response_matrix_code: inc.response_matrix_code,
+          severity: inc.severity,
+          status: inc.status,
+          location: inc.location,
+          created_at: inc.created_at,
+          updated_at: inc.updated_at,
+          description: inc.description,
+          team_status: team?.status || null,
+          required_worker_count: requiredCount,
+          accepted_worker_count: acceptedCount,
+          shortage_count: shortageCount,
+          has_shortage: hasShortage,
+          team_lead_worker_id: team?.team_lead_worker_id || null,
+          team_lead_name: teamLeadName,
+          task_progress: progress.total > 0 ? progress : null,
+          pending_requests_count: pendingReqs.length,
+        };
+      })
+    );
+
+    const summaries = rawSummaries.filter(Boolean) as FederationIncidentSummary[];
 
     return summaries;
   }
@@ -335,36 +340,51 @@ export class EmergencyControlCenterRepository {
       return null;
     }
 
-    // Customer profile info
-    let customerInfo: { fullName?: string; phone?: string; email?: string } = {};
-    try {
-      const supabase = createAdminClient();
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      const { data: custProf } = await (supabase.from("profiles") as any)
-        .select("full_name, phone, email")
-        .eq("id", incident.customer_id)
-        .maybeSingle();
+    // Fetch customer info and independent emergency repositories in parallel
+    const [
+      custProfRes,
+      responseMatrix,
+      team,
+      teams,
+      tasks,
+      additionalRequests,
+      supportRequests,
+      auditLogs,
+    ] = await Promise.all([
+      (async () => {
+        try {
+          const supabase = createAdminClient();
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          const { data } = await (supabase.from("profiles") as any)
+            .select("full_name, phone, email")
+            .eq("id", incident.customer_id)
+            .maybeSingle();
+          return data;
+        } catch {
+          return null;
+        }
+      })(),
+      EmergencyResponseMatrixRepository.findByEmergencyType(incident.emergency_type),
+      EmergencyTeamRepository.getTeamByIncidentId(incidentId),
+      EmergencyTeamRepository.listTeamsForIncident(incidentId),
+      EmergencyTaskRepository.listTasksForIncident(incidentId),
+      EmergencyTaskRepository.listAdditionalWorkerRequests(incidentId),
+      this.listSupportRequestsForIncident(incidentId),
+      this.listAuditLogs(incidentId),
+    ]);
 
-      if (custProf) {
-        customerInfo = {
-          fullName: custProf.full_name,
-          phone: custProf.phone,
-          email: custProf.email,
-        };
-      }
-    } catch {
-      // Quiet fallback
-    }
+    const customerInfo = custProfRes
+      ? {
+          fullName: custProfRes.full_name,
+          phone: custProfRes.phone,
+          email: custProfRes.email,
+        }
+      : {};
 
-    const responseMatrix = await EmergencyResponseMatrixRepository.findByEmergencyType(incident.emergency_type);
-    const team = await EmergencyTeamRepository.getTeamByIncidentId(incidentId);
-    const teams = await EmergencyTeamRepository.listTeamsForIncident(incidentId);
-    const tasks = await EmergencyTaskRepository.listTasksForIncident(incidentId);
-    const taskProgress = tasks.length > 0 ? await EmergencyTaskRepository.calculateProgress(incidentId) : null;
-    const additionalRequests = await EmergencyTaskRepository.listAdditionalWorkerRequests(incidentId);
-    const supportRequests = await this.listSupportRequestsForIncident(incidentId);
-    const auditLogs = await this.listAuditLogs(incidentId);
-    const teamMembers = team ? await EmergencyTeamRepository.listTeamMembers(team.id) : [];
+    const [taskProgress, teamMembers] = await Promise.all([
+      tasks.length > 0 ? EmergencyTaskRepository.calculateProgress(incidentId) : null,
+      team ? EmergencyTeamRepository.listTeamMembers(team.id) : [],
+    ]);
     const excludedWorkerIds = teamMembers.filter((m) => m.status !== "RELEASED").map((m) => m.worker_id);
     const eligibleWorkers = await this.getFederationEligibleWorkers({
       federationId,
@@ -661,8 +681,11 @@ export class EmergencyControlCenterRepository {
     // Update in-memory team store
     await EmergencyTeamRepository.addMember(team.id, newMember);
 
+    // List authoritative deduplicated members
+    const currentMembers = await EmergencyTeamRepository.listTeamMembers(team.id);
+
     // Increment accepted worker count on team
-    const newAcceptedCount = members.filter((m) => m.status !== "RELEASED").length + 1;
+    const newAcceptedCount = currentMembers.filter((m) => m.status !== "RELEASED" && m.status !== "NO_SHOW").length;
     const newRequiredCount = Math.max(team.required_worker_count, newAcceptedCount);
     const isTeamFormed = newAcceptedCount >= newRequiredCount;
 
@@ -671,7 +694,7 @@ export class EmergencyControlCenterRepository {
     team.status = isTeamFormed ? "FORMED" : "FORMING";
     team.updated_at = now;
 
-    await EmergencyTeamRepository.registerTeam(team, [...members, newMember]);
+    await EmergencyTeamRepository.registerTeam(team, currentMembers);
 
     try {
       // eslint-disable-next-line @typescript-eslint/no-explicit-any

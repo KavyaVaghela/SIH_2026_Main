@@ -58,12 +58,29 @@ function initStore(): EmergencyDataStore {
       }
       if (parsed.teams) {
         for (const [k, v] of Object.entries(parsed.teams)) {
-          store.teams.set(k, v);
+          const t = v as any;
+          if (t && Array.isArray(t.members)) {
+            const seen = new Set<string>();
+            t.members = t.members.filter((m: any) => {
+              if (!m.worker_id || seen.has(m.worker_id)) return false;
+              seen.add(m.worker_id);
+              return true;
+            });
+            t.accepted_worker_count = t.members.filter((m: any) => m.status !== "RELEASED" && m.status !== "NO_SHOW").length;
+          }
+          store.teams.set(k, t);
         }
       }
       if (parsed.teamMembers) {
         for (const [k, v] of Object.entries(parsed.teamMembers)) {
-          store.teamMembers.set(k, v as any[]);
+          const raw = v as any[];
+          const seen = new Set<string>();
+          const deduped = raw.filter((m: any) => {
+            if (!m.worker_id || seen.has(m.worker_id)) return false;
+            seen.add(m.worker_id);
+            return true;
+          });
+          store.teamMembers.set(k, deduped);
         }
       }
       if (parsed.tasks) {
