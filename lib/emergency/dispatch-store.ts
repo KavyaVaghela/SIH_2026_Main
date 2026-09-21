@@ -8,7 +8,8 @@ import {
   type WorkerRoleRequirement,
 } from "@/lib/emergency/response-matrix-store";
 
-export type DispatchPoolStatus = "CANDIDATE" | "DISPATCHED" | "ACCEPTED" | "DECLINED" | "EXPIRED" | "WITHDRAWN";
+export type DispatchPoolStatus =
+  "CANDIDATE" | "DISPATCHED" | "ACCEPTED" | "DECLINED" | "EXPIRED" | "WITHDRAWN";
 
 export interface EmergencyDispatchPoolRecord {
   id: string;
@@ -115,17 +116,24 @@ export class EmergencyDispatchRepository {
     // 1. Resolve Response Matrix deterministically
     const matrix = await EmergencyIncidentRepository.getIncidentResponseMatrix(incident.id);
     if (!matrix) {
-      throw new Error(`Response matrix could not be resolved for emergency type: ${incident.emergency_type}`);
+      throw new Error(
+        `Response matrix could not be resolved for emergency type: ${incident.emergency_type}`
+      );
     }
 
     const requiredCount = options?.targetCount || matrix.recommended_worker_count || 1;
 
     // Resolve time rules configuration dynamically if multipliers are not explicitly overridden
     const resolvedOptions: WorkerEligibilityEvaluationOptions = { ...options };
-    if (resolvedOptions.radiusMultiplier === undefined || resolvedOptions.maxRadiusKm === undefined) {
+    if (
+      resolvedOptions.radiusMultiplier === undefined ||
+      resolvedOptions.maxRadiusKm === undefined
+    ) {
       try {
         const { EmergencyScalingRepository } = await import("@/lib/emergency/scaling-store");
-        const timeConfig = await EmergencyScalingRepository.getTimeRulesConfig(incident.federation_id || undefined);
+        const timeConfig = await EmergencyScalingRepository.getTimeRulesConfig(
+          incident.federation_id || undefined
+        );
         const timeEval = EmergencyScalingRepository.evaluateTimeRules(new Date(), timeConfig);
         if (resolvedOptions.radiusMultiplier === undefined) {
           resolvedOptions.radiusMultiplier = timeEval.radiusMultiplier;
@@ -145,7 +153,12 @@ export class EmergencyDispatchRepository {
     // 3. Evaluate each worker against deterministic eligibility rules
     const evaluations: WorkerEligibilityEvaluation[] = [];
     for (const rawW of rawWorkers) {
-      const evalResult = await this.evaluateWorkerEligibility(rawW, incident, matrix, resolvedOptions);
+      const evalResult = await this.evaluateWorkerEligibility(
+        rawW,
+        incident,
+        matrix,
+        resolvedOptions
+      );
       evaluations.push(evalResult);
     }
 
@@ -163,7 +176,11 @@ export class EmergencyDispatchRepository {
 
     // 5. Select workers to fulfill the required roles and worker count from Response Matrix
     const rolesToAssign = options?.roleRequirements || matrix.worker_roles;
-    const selectedWorkers = this.assignRolesToCandidates(eligibleWorkers, rolesToAssign, requiredCount);
+    const selectedWorkers = this.assignRolesToCandidates(
+      eligibleWorkers,
+      rolesToAssign,
+      requiredCount
+    );
 
     const now = new Date().toISOString();
     const createdDispatches: EmergencyDispatchPoolRecord[] = [];
@@ -251,7 +268,11 @@ export class EmergencyDispatchRepository {
     // 8. Update Incident status based on staffing outcome (unless preserveStatus is requested)
     if (!options?.preserveStatus) {
       const newStatus = isStaffingShortage ? "STAFFING_SHORTAGE" : "DISPATCHING";
-      await EmergencyIncidentRepository.updateIncidentStatus(incident.id, newStatus, "SERVICE_ROLE");
+      await EmergencyIncidentRepository.updateIncidentStatus(
+        incident.id,
+        newStatus,
+        "SERVICE_ROLE"
+      );
     }
 
     return {
@@ -291,7 +312,9 @@ export class EmergencyDispatchRepository {
 
     // Target federation check (for cross-federation or scoped dispatch)
     if (options?.targetFederationId && workerData.federation_id !== options.targetFederationId) {
-      exclusionReasons.push(`Worker belongs to federation ${workerData.federation_id}, required: ${options.targetFederationId}`);
+      exclusionReasons.push(
+        `Worker belongs to federation ${workerData.federation_id}, required: ${options.targetFederationId}`
+      );
     }
 
     // Rule 1: Verification Status
@@ -306,7 +329,9 @@ export class EmergencyDispatchRepository {
 
     // Rule 3: Availability Status
     if (workerData.availability_status !== "AVAILABLE") {
-      exclusionReasons.push(`Worker availability status is not AVAILABLE (status: ${workerData.availability_status})`);
+      exclusionReasons.push(
+        `Worker availability status is not AVAILABLE (status: ${workerData.availability_status})`
+      );
     }
 
     // Rule 4: Required Skills Match
@@ -321,16 +346,34 @@ export class EmergencyDispatchRepository {
       workerSkillsList.push(profession);
     }
 
-    const skillsToMatch = (options?.requiredSkillsOverride && options.requiredSkillsOverride.length > 0)
-      ? options.requiredSkillsOverride
-      : matrix.required_skills;
+    const skillsToMatch =
+      options?.requiredSkillsOverride && options.requiredSkillsOverride.length > 0
+        ? options.requiredSkillsOverride
+        : matrix.required_skills;
 
     // Compare worker skills against required skills
     for (const reqSkill of skillsToMatch) {
       const normalizedReq = reqSkill.toLowerCase().trim();
       const hasSkill = workerSkillsList.some((ws) => {
         const normWs = ws.toLowerCase().trim();
-        return normWs === normalizedReq || normWs.includes(normalizedReq) || normalizedReq.includes(normWs);
+        return (
+          normWs === normalizedReq ||
+          normWs.includes(normalizedReq) ||
+          normalizedReq.includes(normWs) ||
+          (normWs === "plumber" &&
+            (normalizedReq.includes("plumb") ||
+              normalizedReq.includes("pipe") ||
+              normalizedReq.includes("water") ||
+              normalizedReq.includes("drain"))) ||
+          (normWs === "electrician" &&
+            (normalizedReq.includes("electr") ||
+              normalizedReq.includes("power") ||
+              normalizedReq.includes("wire") ||
+              normalizedReq.includes("circuit") ||
+              normalizedReq.includes("volt"))) ||
+          (normWs.includes("plumb") && normalizedReq.includes("plumb")) ||
+          (normWs.includes("electr") && normalizedReq.includes("electr"))
+        );
       });
       if (hasSkill) {
         matchedSkills.push(reqSkill);
@@ -380,7 +423,8 @@ export class EmergencyDispatchRepository {
           code.includes(title) ||
           certNum === code ||
           certId === code ||
-          (code === "CRITICAL_SAFETY_QUALIFIED" && (title.includes("SAFETY") || title.includes("CRITICAL")))
+          (code === "CRITICAL_SAFETY_QUALIFIED" &&
+            (title.includes("SAFETY") || title.includes("CRITICAL")))
         );
       });
 
@@ -395,7 +439,11 @@ export class EmergencyDispatchRepository {
           matchingCert.status === "VERIFIED" ||
           matchingCert.status === "EXPIRING_SOON";
 
-        if (!isVerified || matchingCert.status === "PENDING" || matchingCert.status === "UNVERIFIED") {
+        if (
+          !isVerified ||
+          matchingCert.status === "PENDING" ||
+          matchingCert.status === "UNVERIFIED"
+        ) {
           exclusionReasons.push(
             `Worker excluded by Critical Safety Protocol: Required critical qualification (${requiredQualCode}) is unverified or inactive (status: ${matchingCert.status || "UNVERIFIED"})`
           );
@@ -416,10 +464,10 @@ export class EmergencyDispatchRepository {
 
     // Rule 5: Location / Service Radius (Haversine calculation)
     const incidentDetails = incident.address_details || {};
-    const incidentLat = Number(incidentDetails.latitude) || 23.0300;
+    const incidentLat = Number(incidentDetails.latitude) || 23.03;
     const incidentLon = Number(incidentDetails.longitude) || 72.5178;
 
-    const workerLat = workerData.current_latitude || 23.0300;
+    const workerLat = workerData.current_latitude || 23.03;
     const workerLon = workerData.current_longitude || 72.5178;
     const baseServiceRadius = Number(workerData.service_radius_km) || 25.0;
     const radiusMultiplier = options?.radiusMultiplier || 1.0;
@@ -429,7 +477,9 @@ export class EmergencyDispatchRepository {
     const distanceKm = calculateHaversineKm(incidentLat, incidentLon, workerLat, workerLon);
 
     if (distanceKm > effectiveServiceRadius) {
-      exclusionReasons.push(`Worker is outside service radius: ${distanceKm} km > ${effectiveServiceRadius} km (base: ${baseServiceRadius} km, mult: ${radiusMultiplier})`);
+      exclusionReasons.push(
+        `Worker is outside service radius: ${distanceKm} km > ${effectiveServiceRadius} km (base: ${baseServiceRadius} km, mult: ${radiusMultiplier})`
+      );
     }
 
     // Rule 6: Current Emergency Capacity (Not already dispatched to another open emergency)
@@ -513,11 +563,14 @@ export class EmergencyDispatchRepository {
     workerId: string,
     excludeIncidentId?: string
   ): Promise<boolean> {
+    const now = Date.now();
+    const DISPATCH_EXPIRY_MS = 5 * 60 * 1000; // 5-minute standard dispatch offer window
+
     try {
       const supabase = createAdminClient();
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       let query = (supabase.from("emergency_dispatch_pool") as any)
-        .select("id, incident_id, status")
+        .select("id, incident_id, status, offered_at, emergency_incidents(status)")
         .eq("worker_id", workerId)
         .in("status", ["DISPATCHED", "ACCEPTED"]);
 
@@ -525,21 +578,38 @@ export class EmergencyDispatchRepository {
         query = query.neq("incident_id", excludeIncidentId);
       }
 
-      const { data, error } = await query.limit(1);
+      const { data, error } = await query;
 
       if (!error && data && data.length > 0) {
-        return true;
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        const hasActive = data.some((d: any) => {
+          const incStatus = d.emergency_incidents?.status;
+          if (incStatus === "RESOLVED" || incStatus === "CLOSED" || incStatus === "CANCELLED") {
+            return false;
+          }
+          if (d.status === "DISPATCHED") {
+            // Unaccepted offer: only active if offered within the valid dispatch window (5 minutes)
+            const offeredTime = d.offered_at ? new Date(d.offered_at).getTime() : 0;
+            return now - offeredTime < DISPATCH_EXPIRY_MS;
+          }
+          return d.status === "ACCEPTED";
+        });
+        if (hasActive) return true;
       }
     } catch {
       // Memory check
     }
 
-    return Array.from(inMemoryDispatchPool.values()).some(
-      (d) =>
-        d.worker_id === workerId &&
-        (d.status === "DISPATCHED" || d.status === "ACCEPTED") &&
-        (!excludeIncidentId || d.incident_id !== excludeIncidentId)
-    );
+    return Array.from(inMemoryDispatchPool.values()).some((d) => {
+      if (d.worker_id !== workerId) return false;
+      if (excludeIncidentId && d.incident_id === excludeIncidentId) return false;
+      if (d.status !== "DISPATCHED" && d.status !== "ACCEPTED") return false;
+      if (d.status === "DISPATCHED") {
+        const offeredTime = d.offered_at ? new Date(d.offered_at).getTime() : 0;
+        return now - offeredTime < DISPATCH_EXPIRY_MS;
+      }
+      return d.status === "ACCEPTED";
+    });
   }
 
   /**
@@ -571,9 +641,7 @@ export class EmergencyDispatchRepository {
   /**
    * Retrieves single dispatch record by dispatch ID
    */
-  static async findDispatchById(
-    dispatchId: string
-  ): Promise<EmergencyDispatchPoolRecord | null> {
+  static async findDispatchById(dispatchId: string): Promise<EmergencyDispatchPoolRecord | null> {
     try {
       const supabase = createAdminClient();
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -627,7 +695,9 @@ export class EmergencyDispatchRepository {
   /**
    * Records or updates a direct assignment in the dispatch pool
    */
-  static async recordDirectAssignment(record: EmergencyDispatchPoolRecord): Promise<EmergencyDispatchPoolRecord> {
+  static async recordDirectAssignment(
+    record: EmergencyDispatchPoolRecord
+  ): Promise<EmergencyDispatchPoolRecord> {
     inMemoryDispatchPool.set(record.id, record);
     inMemoryDispatchPool.set(`${record.incident_id}:${record.worker_id}`, record);
 
@@ -660,19 +730,23 @@ export class EmergencyDispatchRepository {
   /**
    * Lists all dispatch records for an incident
    */
-  static async listDispatchesForIncident(incidentId: string): Promise<EmergencyDispatchPoolRecord[]> {
+  static async listDispatchesForIncident(
+    incidentId: string
+  ): Promise<EmergencyDispatchPoolRecord[]> {
     try {
       const supabase = createAdminClient();
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const { data, error } = await (supabase.from("emergency_dispatch_pool") as any)
-        .select(`
+        .select(
+          `
           *,
           workers (
             id,
             profession,
             profiles ( full_name, phone )
           )
-        `)
+        `
+        )
         .eq("incident_id", incidentId)
         .order("offered_at", { ascending: true });
 
@@ -700,7 +774,8 @@ export class EmergencyDispatchRepository {
       const supabase = createAdminClient();
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const { data, error } = await (supabase.from("emergency_dispatch_pool") as any)
-        .select(`
+        .select(
+          `
           *,
           emergency_incidents (
             id,
@@ -711,7 +786,8 @@ export class EmergencyDispatchRepository {
             location,
             description
           )
-        `)
+        `
+        )
         .eq("worker_id", workerId)
         .order("offered_at", { ascending: false });
 
