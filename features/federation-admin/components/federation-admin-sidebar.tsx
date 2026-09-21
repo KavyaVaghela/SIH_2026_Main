@@ -5,6 +5,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import {
   LayoutDashboard,
+  Wallet,
   Building2,
   Users,
   Briefcase,
@@ -78,6 +79,11 @@ export function FederationAdminSidebar({
       title: "Dashboard",
       href: "/federation-admin",
       icon: <LayoutDashboard className="h-4 w-4 shrink-0" />,
+    },
+    {
+      title: "Earnings & Revenue",
+      href: "/federation-admin/earnings",
+      icon: <Wallet className="h-4 w-4 shrink-0" />,
     },
     {
       title: "Federation Information",
