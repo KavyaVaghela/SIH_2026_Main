@@ -96,7 +96,7 @@ export const ROLE_NAVIGATION_CONFIGS: Record<PlatformRole, RoleNavigationConfig>
     role: "WORKER",
     displayName: "Cooperative Worker",
     navItems: [
-      { title: "Home / Overview", href: "/worker", icon: React.createElement(Home) },
+      { title: "Home", href: "/worker", icon: React.createElement(Home) },
       { title: "My Profile", href: "/worker/profile", icon: React.createElement(User) },
       { title: "My Schedule & Jobs", href: "/worker/schedule", icon: React.createElement(Calendar) },
       { title: "Earnings", href: "/worker/earnings", icon: React.createElement(Wallet) },

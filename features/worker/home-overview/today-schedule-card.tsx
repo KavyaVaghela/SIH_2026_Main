@@ -12,6 +12,10 @@ export interface TodayScheduleCardProps {
 }
 
 export function TodayScheduleCard({ scheduleItems }: TodayScheduleCardProps) {
+  const displayedItems = React.useMemo(() => {
+    return scheduleItems.slice(0, 5);
+  }, [scheduleItems]);
+
   return (
     <Card className="border-border shadow-sm">
       <CardHeader className="p-4 sm:p-5 border-b pb-3 flex flex-row items-center justify-between space-y-0">
@@ -39,8 +43,11 @@ export function TodayScheduleCard({ scheduleItems }: TodayScheduleCardProps) {
       </CardHeader>
 
       <CardContent className="p-4 sm:p-5 space-y-4">
-        <div className="relative pl-6 space-y-4 before:absolute before:left-2.5 before:top-2 before:bottom-2 before:w-0.5 before:bg-muted">
-          {scheduleItems.map((item) => {
+        {displayedItems.length === 0 ? (
+          <p className="text-xs text-muted-foreground py-4 text-center">No jobs scheduled for today.</p>
+        ) : (
+          <div className="relative pl-6 space-y-4 before:absolute before:left-2.5 before:top-2 before:bottom-2 before:w-0.5 before:bg-muted">
+            {displayedItems.map((item) => {
             const isConfirmed = item.status === "Confirmed";
 
             return (
@@ -91,7 +98,19 @@ export function TodayScheduleCard({ scheduleItems }: TodayScheduleCardProps) {
               </div>
             );
           })}
-        </div>
+          </div>
+        )}
+        {scheduleItems.length > 5 && (
+          <div className="pt-2 text-center border-t border-border/40">
+            <Link
+              href="/worker/schedule?tab=schedule"
+              className="text-xs font-semibold text-emerald-700 dark:text-emerald-400 hover:underline inline-flex items-center"
+            >
+              View all {scheduleItems.length} jobs in My Schedule
+              <ArrowRight className="ml-1 h-3 w-3" />
+            </Link>
+          </div>
+        )}
       </CardContent>
     </Card>
   );
