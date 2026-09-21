@@ -1,6 +1,8 @@
-import type { BookingStatus, UserRole } from "../../../supabase/types/database.types";
+import type { BookingStatus, UserRole, EmergencyPriority } from "../../../supabase/types/database.types";
 import { validateBookingTransition } from "../utils/booking-state-machine";
 import { AppError } from "../../../lib/errors";
+
+export type { EmergencyPriority };
 
 export interface Booking {
   id: string;
@@ -11,6 +13,7 @@ export interface Booking {
   federationId: string;
   addressId: string;
   status: BookingStatus;
+  priority?: EmergencyPriority | null;
   problemDescription?: string | null;
   problemPhotoUrl?: string | null;
   otpCode?: string | null;
@@ -66,6 +69,7 @@ export interface CreateBookingRequestPayload {
   serviceId: string;
   federationId: string;
   addressId: string;
+  priority?: EmergencyPriority;
   problemDescription?: string;
   problemPhotoUrl?: string;
   scheduledStartAt: string;
@@ -109,6 +113,7 @@ export interface IBookingService {
   verifyOtp(bookingId: string, enteredOtp: string, changedById: string): Promise<Booking>;
   cancelBooking(bookingId: string, cancelledById: string, actorRole: UserRole, reason?: string): Promise<Booking>;
   getStatusHistory(bookingId: string): Promise<BookingStatusHistory[]>;
+  allocateWorker(bookingId: string, workerId: string, adminId?: string, reason?: string): Promise<Booking>;
 }
 
 const LOCAL_STORAGE_BOOKINGS_KEY = "kaushalyasetu_bookings_db";
@@ -191,27 +196,47 @@ export class BookingService implements IBookingService {
     let dbBooking: Booking | null = null;
     try {
       const supabase = await getSupabase();
+      const problemDesc = payload.priority
+        ? `[PRIORITY: ${payload.priority}] ${payload.problemDescription || ""}`.trim()
+        : (payload.problemDescription || null);
+
+      const insertPayload: Record<string, any> = {
+        booking_number: bookingNumber,
+        customer_id: targetCustomerId,
+        worker_id: targetWorkerId,
+        service_id: targetServiceId,
+        federation_id: targetFederationId,
+        address_id: targetAddressId,
+        status: "REQUEST_SENT",
+        problem_description: problemDesc,
+        problem_photo_url: payload.problemPhotoUrl || null,
+        otp_code: otpCode,
+        scheduled_start_at: payload.scheduledStartAt,
+        scheduled_end_at: payload.scheduledEndAt,
+        total_amount: payload.totalAmount,
+        platform_fee: platformFee,
+        worker_earnings: workerEarnings,
+      };
+
+      if (payload.priority) {
+        insertPayload.priority = payload.priority;
+      }
+
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      const { data, error } = await (supabase.from("bookings") as any)
-        .insert({
-          booking_number: bookingNumber,
-          customer_id: targetCustomerId,
-          worker_id: targetWorkerId,
-          service_id: targetServiceId,
-          federation_id: targetFederationId,
-          address_id: targetAddressId,
-          status: "REQUEST_SENT",
-          problem_description: payload.problemDescription || null,
-          problem_photo_url: payload.problemPhotoUrl || null,
-          otp_code: otpCode,
-          scheduled_start_at: payload.scheduledStartAt,
-          scheduled_end_at: payload.scheduledEndAt,
-          total_amount: payload.totalAmount,
-          platform_fee: platformFee,
-          worker_earnings: workerEarnings,
-        })
+      let { data, error } = await (supabase.from("bookings") as any)
+        .insert(insertPayload)
         .select()
         .single();
+
+      if (error && payload.priority && error.message?.includes("priority")) {
+        delete insertPayload.priority;
+        const retry = await (supabase.from("bookings") as any)
+          .insert(insertPayload)
+          .select()
+          .single();
+        data = retry.data;
+        error = retry.error;
+      }
 
       if (!error && data) {
         dbBooking = {
@@ -223,6 +248,7 @@ export class BookingService implements IBookingService {
           federationId: data.federation_id,
           addressId: data.address_id,
           status: data.status,
+          priority: (data.priority as EmergencyPriority) || payload.priority || null,
           problemDescription: data.problem_description,
           problemPhotoUrl: data.problem_photo_url,
           otpCode: data.otp_code,
@@ -265,6 +291,7 @@ export class BookingService implements IBookingService {
       federationId: payload.federationId,
       addressId: payload.addressId,
       status: "REQUEST_SENT",
+      priority: payload.priority || null,
       problemDescription: payload.problemDescription,
       problemPhotoUrl: payload.problemPhotoUrl,
       otpCode,
@@ -945,6 +972,56 @@ export class BookingService implements IBookingService {
       console.warn("DB getStatusHistory query notice:", err);
     }
     return this.mockHistory.get(bookingId) || [];
+  }
+
+  async allocateWorker(
+    bookingId: string,
+    workerId: string,
+    adminId?: string,
+    reason?: string
+  ): Promise<Booking> {
+    try {
+      if (typeof window !== "undefined") {
+        const res = await fetch("/api/bookings", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            action: "allocate_worker",
+            bookingId,
+            workerId,
+            adminId,
+            reason,
+          }),
+        });
+        if (res.ok) {
+          const json = await res.json();
+          if (json.booking) {
+            this.mockBookings.set(json.booking.id, json.booking);
+            return json.booking;
+          }
+        } else {
+          const errJson = await res.json().catch(() => ({}));
+          throw new AppError(errJson.error || "Failed to allocate worker", "BUSINESS_RULE_VIOLATION", res.status);
+        }
+      }
+    } catch (err) {
+      if (err instanceof AppError) throw err;
+      console.warn("API allocateWorker notice:", err);
+    }
+
+    const existing = await this.getBooking(bookingId);
+    if (!existing) {
+      throw new AppError("Booking not found", "NOT_FOUND", 404);
+    }
+
+    const updated: Booking = {
+      ...existing,
+      workerId,
+      status: "BOOKING_CONFIRMED",
+      updatedAt: new Date().toISOString(),
+    };
+    this.mockBookings.set(bookingId, updated);
+    return updated;
   }
 }
 

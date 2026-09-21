@@ -10,6 +10,7 @@ import {
   Users,
   Briefcase,
   AlertTriangle,
+  ShieldAlert,
   Building,
   HeartHandshake,
   HelpCircle,
@@ -86,6 +87,11 @@ export function FederationAdminSidebar({
       icon: <Wallet className="h-4 w-4 shrink-0" />,
     },
     {
+      title: "Emergency Control",
+      href: "/federation-admin/emergency",
+      icon: <ShieldAlert className="h-4 w-4 shrink-0 text-red-500" />,
+    },
+    {
       title: "Federation Information",
       href: "/federation-admin/federation-information",
       icon: <Building2 className="h-4 w-4 shrink-0" />,
@@ -99,6 +105,11 @@ export function FederationAdminSidebar({
       title: "Workforce Management",
       href: "/federation-admin/workforce-management",
       icon: <Briefcase className="h-4 w-4 shrink-0" />,
+    },
+    {
+      title: "Large Projects",
+      href: "/federation-admin/projects",
+      icon: <Building2 className="h-4 w-4 shrink-0" />,
     },
     {
       title: "Welfare & Development",

@@ -192,6 +192,7 @@ export function ScheduleJobsView() {
           activeJobs={activeJobs}
           loading={loading}
           error={error}
+          onRefresh={fetchAllData}
         />
       ),
     },
@@ -211,6 +212,7 @@ export function ScheduleJobsView() {
           completedJobs={completedJobs}
           loading={loading}
           error={error}
+          onRefresh={fetchAllData}
         />
       ),
     },

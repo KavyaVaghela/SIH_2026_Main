@@ -16,7 +16,7 @@ export interface SocietyListItem {
   activeJobs: number;
   totalBookings: number;
   completedBookings: number;
-  averageRating: number;
+  averageRating: number | null;
   status: SocietyStatus;
   isActive: boolean;
   registrationDate: string;

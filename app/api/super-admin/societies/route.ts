@@ -1,6 +1,34 @@
 import { NextResponse } from "next/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { createClient as createServerClient } from "@/lib/supabase/server";
+import { societiesService } from "@/features/super-admin/cooperative-societies/services/societies-service";
+
+export const dynamic = "force-dynamic";
+
+export async function GET(request: Request) {
+  try {
+    const { searchParams } = new URL(request.url);
+    const searchQuery = searchParams.get("searchQuery") || searchParams.get("search") || undefined;
+    const status = searchParams.get("status") || undefined;
+    const location = searchParams.get("location") || searchParams.get("state") || undefined;
+    const sortBy = (searchParams.get("sortBy") as "name" | "registrationDate" | "totalWorkers" | "totalBookings" | "averageRating") || undefined;
+    const sortOrder = (searchParams.get("sortOrder") as "asc" | "desc") || undefined;
+    const page = searchParams.get("page") ? parseInt(searchParams.get("page")!, 10) : undefined;
+    const pageSize = searchParams.get("pageSize") ? parseInt(searchParams.get("pageSize")!, 10) : undefined;
+
+    const adminClient = createAdminClient();
+    const result = await societiesService.getSocieties(
+      { searchQuery, status, location, sortBy, sortOrder, page, pageSize },
+      adminClient
+    );
+
+    return NextResponse.json(result);
+  } catch (err: unknown) {
+    console.error("Super Admin societies GET API error:", err);
+    const msg = err instanceof Error ? err.message : "Internal server error";
+    return NextResponse.json({ error: msg }, { status: 500 });
+  }
+}
 
 export async function POST(request: Request) {
   try {

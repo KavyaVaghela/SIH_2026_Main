@@ -87,6 +87,7 @@ export function NotificationPreferencesSection({
                 checked={preferences[item.key]}
                 onCheckedChange={(val) => onTogglePreference(item.key, val)}
                 disabled={isSaving}
+                aria-label={`Toggle ${item.title}`}
               />
             </div>
           </div>

@@ -33,7 +33,7 @@ export function UserMenu({
   const isCustomer = pathname?.startsWith("/customer") || userRole?.toLowerCase().includes("customer");
 
   const defaultRoleName = isSuperAdmin
-    ? "System Administrator"
+    ? "Super Administrator"
     : isFederationAdmin
     ? "Federation Admin"
     : isWorker

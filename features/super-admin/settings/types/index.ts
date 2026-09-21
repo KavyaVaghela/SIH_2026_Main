@@ -15,15 +15,6 @@ export interface NotificationPreferences {
 }
 
 export interface PlatformSettings {
-  societyRegistrationEnabled: boolean;
-  emergencyBookingEnabled: boolean;
   services: ManagedServiceItem[];
   notificationPreferences: NotificationPreferences;
-}
-
-export interface PendingConfirmation {
-  type: "DISABLE_REGISTRATIONS" | "DISABLE_EMERGENCY";
-  title: string;
-  description: string;
-  consequenceText: string;
 }
