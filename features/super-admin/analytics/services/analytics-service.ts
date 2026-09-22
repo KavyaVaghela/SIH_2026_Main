@@ -445,7 +445,9 @@ export class AnalyticsService {
         }
       });
 
-      societyPerformance = allFederations.map((fed) => {
+      societyPerformance = allFederations
+        .filter((fed) => fed.is_active !== false)
+        .map((fed) => {
         const fBookings = fedBookingsMap.get(fed.id) || [];
         const fWorkers = fedWorkersMap.get(fed.id) || [];
 
@@ -509,8 +511,13 @@ export class AnalyticsService {
           highlightBadge,
         };
       }).sort((a, b) => {
-        if (b.totalBookings !== a.totalBookings) return b.totalBookings - a.totalBookings;
-        return b.benchmarkScore - a.benchmarkScore;
+        // Active societies with real platform activity rank first
+        const aActive = a.totalBookings > 0 ? 1 : 0;
+        const bActive = b.totalBookings > 0 ? 1 : 0;
+        if (bActive !== aActive) return bActive - aActive;
+
+        if (b.benchmarkScore !== a.benchmarkScore) return b.benchmarkScore - a.benchmarkScore;
+        return b.totalBookings - a.totalBookings;
       });
 
       // 6. Real Cumulative Platform Growth

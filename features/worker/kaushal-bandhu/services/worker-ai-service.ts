@@ -125,7 +125,7 @@ export async function buildWorkerAiContext(
     const { count: totalCompleted } = await (adminClient.from("bookings") as any)
       .select("id", { count: "exact", head: true })
       .eq("worker_id", workerId)
-      .eq("status", "COMPLETED");
+      .eq("status", "BOOKING_COMPLETED");
 
     completedBookingsCount = totalCompleted || 0;
 
@@ -133,7 +133,7 @@ export async function buildWorkerAiContext(
     const { count: last30 } = await (adminClient.from("bookings") as any)
       .select("id", { count: "exact", head: true })
       .eq("worker_id", workerId)
-      .eq("status", "COMPLETED")
+      .eq("status", "BOOKING_COMPLETED")
       .gte("created_at", thirtyDaysAgoIso);
 
     bookingsLast30Days = last30 || 0;
