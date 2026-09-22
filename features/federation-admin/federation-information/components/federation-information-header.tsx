@@ -52,7 +52,7 @@ export function FederationInformationHeader({
           <div className="flex flex-wrap items-center gap-2">
             <div className="flex items-center space-x-1.5 text-xs font-semibold text-emerald-800 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-950/60 px-2.5 py-0.5 rounded-md border border-emerald-200 dark:border-emerald-800/40">
               <Building2 className="h-3.5 w-3.5" />
-              <span>{officialDetails?.name || "ABC Labour Cooperative Federation"}</span>
+              <span>{officialDetails?.name || "Ahmedabad Skilled Workers Federation"}</span>
             </div>
             <Badge
               variant="secondary"

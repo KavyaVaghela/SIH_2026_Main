@@ -38,3 +38,6 @@ export * from "./projects/federation-projects-view";
 
 // Phase 4B: Federation AI Intelligence
 export * from "./ai-intelligence";
+
+// Federation Context & Identity Resolution
+export * from "./utils/federation-context";

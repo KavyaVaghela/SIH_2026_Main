@@ -8,6 +8,7 @@ import { X } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { createClient } from "@/lib/supabase/client";
 import { getCachedProfileName, setCachedProfileName } from "@/lib/auth/session-user";
+import { useFederationContext } from "../utils/federation-context";
 
 interface FederationAdminShellProps {
   children: React.ReactNode;
@@ -19,14 +20,17 @@ interface FederationAdminShellProps {
 export function FederationAdminShell({
   children,
   userName = "Federation Administrator",
-  userRole = "ABC Labour Cooperative Federation",
+  userRole,
   className,
 }: FederationAdminShellProps) {
   const [mobileDrawerOpen, setMobileDrawerOpen] = React.useState(false);
   const pathname = usePathname();
+  const { federation } = useFederationContext();
   const [displayName, setDisplayName] = React.useState<string>(
     userName !== "Federation Administrator" ? userName : "Vikram Shah"
   );
+
+  const displayRole = federation?.name || (userRole && userRole !== "ABC Labour Cooperative Federation" ? userRole : "Federation Administrator");
 
   React.useEffect(() => {
     const cached = getCachedProfileName("FEDERATION_ADMIN");
@@ -97,7 +101,7 @@ export function FederationAdminShell({
       <TopNavbar
         platformTitle="KaushalyaSetu"
         userName={displayName}
-        userRole={userRole}
+        userRole={displayRole}
         role="FEDERATION_ADMIN"
         onToggleMobileMenu={() => setMobileDrawerOpen(!mobileDrawerOpen)}
       />

@@ -34,6 +34,7 @@ import {
   DialogDescription,
   DialogFooter,
 } from "@/components/ui/dialog";
+import { useFederationContext } from "../utils/federation-context";
 
 export interface FederationNavItem {
   title: string;
@@ -56,6 +57,7 @@ export function FederationAdminSidebar({
   onNavigate,
 }: FederationAdminSidebarProps) {
   const pathname = usePathname();
+  const { federation } = useFederationContext();
 
   // Modal State
   const [isSettingsOpen, setIsSettingsOpen] = React.useState<boolean>(false);
@@ -157,19 +159,19 @@ export function FederationAdminSidebar({
                 <Building className="h-4 w-4" />
               </div>
               <div className="flex flex-col min-w-0">
-                <span className="text-xs font-bold text-foreground truncate">
-                  ABC Labour Coop
+                <span className="text-xs font-bold text-foreground truncate" title={federation?.name || "Ahmedabad Skilled Workers Federation"}>
+                  {federation?.name || "Ahmedabad Skilled Workers Federation"}
                 </span>
                 <span className="text-[10px] text-muted-foreground truncate">
-                  Ahmedabad Federation
+                  {federation?.code ? `${federation.code} • ` : ""}Cooperative Federation
                 </span>
               </div>
             </div>
 
             <div className="pt-1 flex items-center justify-between text-[10px] border-t border-border/60">
               <span className="text-muted-foreground">Jurisdiction</span>
-              <Badge variant="outline" className="text-[9px] px-1.5 py-0 h-4 border-emerald-600/30 text-emerald-800 dark:text-emerald-300 font-medium">
-                Ahmedabad Urban
+              <Badge variant="outline" className="text-[9px] px-1.5 py-0 h-4 border-emerald-600/30 text-emerald-800 dark:text-emerald-300 font-medium truncate max-w-[130px]" title={federation?.serviceRegion || "Ahmedabad Urban & Suburban District"}>
+                {federation?.serviceRegion ? federation.serviceRegion.split("&")[0].trim() : "Ahmedabad Urban"}
               </Badge>
             </div>
           </div>

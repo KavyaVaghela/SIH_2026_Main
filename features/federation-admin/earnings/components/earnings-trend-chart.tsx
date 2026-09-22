@@ -46,14 +46,14 @@ export function EarningsTrendChart({ data, isLoading }: EarningsTrendChartProps)
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
           <div>
             <CardTitle className="text-base font-bold text-foreground">
-              Earnings Trend
+              Federation Economics Trend
             </CardTitle>
             <CardDescription className="text-xs text-muted-foreground">
-              Monthly comparative gross revenue and platform commission split (Apr – Sep)
+              Monthly cooperative economics comparison: Total Service Value, Worker Payouts, and Federation Service Share
             </CardDescription>
           </div>
           <span className="text-[11px] font-medium text-muted-foreground bg-muted px-2.5 py-1 rounded-md self-start sm:self-auto">
-            Cycle: April 2025 – September 2025
+            Cycle: April 2026 – September 2026
           </span>
         </div>
       </CardHeader>
@@ -66,7 +66,7 @@ export function EarningsTrendChart({ data, isLoading }: EarningsTrendChartProps)
               <XAxis dataKey="month" tickLine={false} axisLine={false} tick={{ fontSize: 11, fill: "#6b7280" }} />
               <YAxis tickLine={false} axisLine={false} tick={{ fontSize: 11, fill: "#6b7280" }} tickFormatter={formatYAxis} />
               <Tooltip
-                formatter={(value: number) => [`₹${value.toLocaleString("en-IN")}`, undefined]}
+                formatter={(value: number, name: string) => [`₹${value.toLocaleString("en-IN")}`, name]}
                 contentStyle={{
                   backgroundColor: "rgba(255, 255, 255, 0.95)",
                   borderRadius: "8px",
@@ -77,18 +77,25 @@ export function EarningsTrendChart({ data, isLoading }: EarningsTrendChartProps)
               />
               <Legend verticalAlign="top" height={36} iconType="circle" wrapperStyle={{ fontSize: "11px", paddingTop: "0px" }} />
               <Bar
-                dataKey="grossEarnings"
-                name="Total Earnings"
+                dataKey="serviceValue"
+                name="Total Service Value"
                 fill="#059669"
                 radius={[4, 4, 0, 0]}
-                barSize={20}
+                barSize={16}
               />
               <Bar
-                dataKey="platformCommission"
-                name="Platform Commission"
-                fill="#0284c7"
+                dataKey="workerPayout"
+                name="Worker Payouts"
+                fill="#2563eb"
                 radius={[4, 4, 0, 0]}
-                barSize={20}
+                barSize={16}
+              />
+              <Bar
+                dataKey="federationShare"
+                name="Federation Service Share"
+                fill="#d97706"
+                radius={[4, 4, 0, 0]}
+                barSize={16}
               />
             </BarChart>
           </ResponsiveContainer>

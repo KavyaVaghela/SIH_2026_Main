@@ -22,13 +22,41 @@ export class ComplaintManagementService {
     let dataSourceNotice: string | undefined = undefined;
 
     try {
-      const { cases } = await complaintService.listGrievances({
-        role: "FEDERATION_ADMIN",
-        federationId,
-        searchQuery: searchQuery || undefined,
-        status: statusFilter !== "ALL" ? statusFilter : undefined,
-        priority: priorityFilter !== "ALL" ? priorityFilter : undefined,
-      });
+      let cases: GrievanceCase[] = [];
+
+      // If running in browser, fetch through secure server API route to ensure federation scoping
+      if (typeof window !== "undefined") {
+        try {
+          const params = new URLSearchParams();
+          params.set("role", "FEDERATION_ADMIN");
+          if (federationId) params.set("federationId", federationId);
+          if (searchQuery) params.set("search", searchQuery);
+          if (statusFilter !== "ALL") params.set("status", statusFilter);
+          if (priorityFilter !== "ALL") params.set("priority", priorityFilter);
+          params.set("pageSize", "200");
+
+          const res = await fetch(`/api/complaints?${params.toString()}`);
+          if (res.ok) {
+            const json = await res.json();
+            if (json.success && Array.isArray(json.complaints)) {
+              cases = json.complaints;
+            }
+          }
+        } catch (apiErr) {
+          console.warn("Notice: /api/complaints fetch failed, falling back to direct service:", apiErr);
+        }
+      }
+
+      if (cases.length === 0) {
+        const direct = await complaintService.listGrievances({
+          role: "FEDERATION_ADMIN",
+          federationId,
+          searchQuery: searchQuery || undefined,
+          status: statusFilter !== "ALL" ? statusFilter : undefined,
+          priority: priorityFilter !== "ALL" ? priorityFilter : undefined,
+        });
+        cases = direct.cases;
+      }
 
       if (cases && cases.length > 0) {
         complaintsList = cases.map((c: GrievanceCase) => {
