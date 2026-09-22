@@ -277,32 +277,7 @@ export function HomeOverviewView() {
     },
   });
 
-  // Subscribe to real-time changes on emergency_dispatch_pool for worker opportunities
-  useRealtimeSubscription({
-    table: "emergency_dispatch_pool",
-    enabled: !!workerDbId,
-    onPayload: () => {
-      refreshData();
-    },
-  });
 
-  // Subscribe to real-time changes on emergency_response_teams for team formation events
-  useRealtimeSubscription({
-    table: "emergency_response_teams",
-    enabled: !!workerDbId,
-    onPayload: () => {
-      refreshData();
-    },
-  });
-
-  // Subscribe to real-time changes on emergency_incident_tasks for live task assignment & status changes
-  useRealtimeSubscription({
-    table: "emergency_incident_tasks",
-    enabled: !!workerDbId,
-    onPayload: () => {
-      refreshData();
-    },
-  });
 
   return (
     <div className="space-y-5 sm:space-y-6 pb-12">

@@ -17,6 +17,7 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
+import { Archive, Loader2 } from "lucide-react";
 import { FederationIncidentSummary } from "@/lib/emergency/control-center-store";
 
 interface EmergencyIncidentTableProps {
@@ -25,6 +26,7 @@ interface EmergencyIncidentTableProps {
   onStatusChange: (val: string) => void;
   onSeverityChange: (val: string) => void;
   onShortageToggle: (val: boolean) => void;
+  onIncidentArchived?: () => void;
   searchValue: string;
   statusFilter: string;
   severityFilter: string;
@@ -37,11 +39,37 @@ export function EmergencyIncidentTable({
   onStatusChange,
   onSeverityChange,
   onShortageToggle,
+  onIncidentArchived,
   searchValue,
   statusFilter,
   severityFilter,
   shortageFilter,
 }: EmergencyIncidentTableProps) {
+  const [archivingId, setArchivingId] = React.useState<string | null>(null);
+
+  const handleArchive = async (incidentId: string) => {
+    const confirmed = window.confirm(
+      "Archive this completed incident? It will be removed from the active control center list while preserving all historical audit information."
+    );
+    if (!confirmed) return;
+
+    try {
+      setArchivingId(incidentId);
+      const res = await fetch(`/api/emergency/incidents/${incidentId}/archive`, {
+        method: "POST",
+      });
+      if (res.ok) {
+        if (onIncidentArchived) onIncidentArchived();
+      } else {
+        const json = await res.json();
+        alert(json.error || "Failed to archive incident.");
+      }
+    } catch {
+      alert("Network error archiving incident.");
+    } finally {
+      setArchivingId(null);
+    }
+  };
   return (
     <Card className="border-border bg-card">
       <CardHeader className="pb-3 border-b border-border/60">
@@ -80,6 +108,8 @@ export function EmergencyIncidentTable({
               <option value="ACTIVE">Active Operation</option>
               <option value="RESOLVED">Resolved</option>
               <option value="CLOSED">Closed</option>
+              <option value="CANCELLED">Cancelled</option>
+              <option value="ARCHIVED">Archived Incidents</option>
             </select>
 
             <select
@@ -172,11 +202,21 @@ export function EmergencyIncidentTable({
                             ? "bg-amber-500/15 text-amber-500 border-amber-500/40 font-bold"
                             : inc.status === "STAFFING_SHORTAGE"
                             ? "bg-red-500/10 text-red-400 border-red-500/30"
+                            : inc.status === "CANCELLED"
+                            ? "bg-rose-500/15 text-rose-500 border-rose-500/40 font-bold"
                             : "text-muted-foreground"
                         }`}
                       >
                         {inc.status.replace(/_/g, " ")}
                       </Badge>
+                      {inc.is_archived && (
+                        <Badge
+                          variant="outline"
+                          className="text-[10px] font-mono uppercase bg-slate-500/10 text-slate-400 border-slate-500/30 py-0"
+                        >
+                          Archived
+                        </Badge>
+                      )}
                     </div>
 
                     <div className="flex items-center gap-2">
@@ -236,13 +276,33 @@ export function EmergencyIncidentTable({
                       </div>
                     )}
 
-                    {/* Action Button */}
-                    <Link href={`/federation-admin/emergency/${inc.id}`}>
-                      <Button size="sm" className="h-8 gap-1 font-semibold text-xs ml-2">
-                        Inspect & Control
-                        <ChevronRight className="h-3.5 w-3.5" />
-                      </Button>
-                    </Link>
+                    {/* Action Buttons */}
+                    <div className="flex items-center gap-1.5">
+                      {(inc.status === "CLOSED" || inc.status === "RESOLVED" || inc.status === "CANCELLED") && !inc.is_archived && (
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          disabled={archivingId === inc.id}
+                          onClick={() => handleArchive(inc.id)}
+                          className="h-8 gap-1 font-semibold text-xs border-border text-muted-foreground hover:text-foreground"
+                          title="Archive completed emergency and remove from active list"
+                        >
+                          {archivingId === inc.id ? (
+                            <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                          ) : (
+                            <Archive className="h-3.5 w-3.5" />
+                          )}
+                          Archive
+                        </Button>
+                      )}
+
+                      <Link href={`/federation-admin/emergency/${inc.id}`}>
+                        <Button size="sm" className="h-8 gap-1 font-semibold text-xs ml-1">
+                          Inspect & Control
+                          <ChevronRight className="h-3.5 w-3.5" />
+                        </Button>
+                      </Link>
+                    </div>
                   </div>
                 </div>
               );

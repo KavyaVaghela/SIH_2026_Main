@@ -76,6 +76,7 @@ export function EmergencyTasksCard({ workerId, onRefresh }: EmergencyTasksCardPr
     category: string;
     severity: string;
     location: string;
+    status: string;
   } | null>(null);
   const [tasks, setTasks] = React.useState<EmergencyTaskItem[]>([]);
   const [progress, setProgress] = React.useState<{
@@ -111,15 +112,24 @@ export function EmergencyTasksCard({ workerId, onRefresh }: EmergencyTasksCardPr
       if (!teamRes.ok) return;
       const teamData = await teamRes.json();
 
-      if (!teamData.success || !teamData.team) {
+      if (!teamData.success || !teamData.team || teamData.team.status === "DISBANDED") {
         setTeam(null);
         setTasks([]);
         setProgress(null);
+        setIncidentInfo(null);
         return;
       }
 
       const activeTeam = teamData.team;
-      setTeam(activeTeam);
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const member = (activeTeam.members || []).find((m: any) => m.worker_id === workerId);
+      if (!member || member.status === "RELEASED" || member.status === "NO_SHOW") {
+        setTeam(null);
+        setTasks([]);
+        setProgress(null);
+        setIncidentInfo(null);
+        return;
+      }
 
       // 2. Fetch Incident Details, Tasks, and Additional Worker Requests in parallel
       const [incRes, tasksRes, reqRes] = await Promise.all([
@@ -131,15 +141,25 @@ export function EmergencyTasksCard({ workerId, onRefresh }: EmergencyTasksCardPr
       if (incRes.ok) {
         const incData = await incRes.json();
         if (incData.success && incData.incident) {
+          if (["CLOSED", "RESOLVED", "CANCELLED"].includes(incData.incident.status)) {
+            setTeam(null);
+            setTasks([]);
+            setProgress(null);
+            setIncidentInfo(null);
+            return;
+          }
           setIncidentInfo({
             emergencyId: incData.incident.emergencyId,
             type: incData.incident.emergencyType,
             category: incData.incident.categoryName,
             severity: incData.incident.severity,
             location: incData.incident.location,
+            status: incData.incident.status,
           });
         }
       }
+
+      setTeam(activeTeam);
 
       if (tasksRes.ok) {
         const taskData = await tasksRes.json();
@@ -180,6 +200,18 @@ export function EmergencyTasksCard({ workerId, onRefresh }: EmergencyTasksCardPr
 
   useRealtimeSubscription({
     table: "emergency_incident_tasks",
+    enabled: !!workerId,
+    onPayload: handleRealtimeUpdate,
+  });
+
+  useRealtimeSubscription({
+    table: "emergency_response_teams",
+    enabled: !!workerId,
+    onPayload: handleRealtimeUpdate,
+  });
+
+  useRealtimeSubscription({
+    table: "emergency_incidents",
     enabled: !!workerId,
     onPayload: handleRealtimeUpdate,
   });
@@ -281,8 +313,12 @@ export function EmergencyTasksCard({ workerId, onRefresh }: EmergencyTasksCardPr
     }
   };
 
-  // If no active team assignment, don't show card
-  if (!isLoading && (!team || tasks.length === 0)) {
+  // If no active team assignment or incident is terminal, don't show card
+  if (
+    (!isLoading && (!team || tasks.length === 0)) ||
+    team?.status === "DISBANDED" ||
+    (incidentInfo && ["CLOSED", "RESOLVED", "CANCELLED"].includes(incidentInfo.status))
+  ) {
     return null;
   }
 

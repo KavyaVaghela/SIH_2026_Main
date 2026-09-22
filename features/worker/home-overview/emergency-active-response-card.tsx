@@ -64,7 +64,11 @@ export function EmergencyActiveResponseCard({
       if (!res.ok) return;
       const json = await res.json();
       if (json.success && json.team) {
-        setTeam(json.team);
+        if (json.team.status === "DISBANDED") {
+          setTeam(null);
+          setIncident(null);
+          return;
+        }
 
         // Fetch incident details and check-in status in parallel
         const [incRes, checkInRes] = await Promise.all([
@@ -75,10 +79,24 @@ export function EmergencyActiveResponseCard({
         if (incRes.ok) {
           const incJson = await incRes.json();
           if (incJson.success) {
+            if (["CLOSED", "RESOLVED", "CANCELLED"].includes(incJson.incident?.status)) {
+              setTeam(null);
+              setIncident(null);
+              return;
+            }
             setIncident(incJson.incident);
             setTasks(incJson.tasks || []);
           }
         }
+
+        const member = (json.team.members || []).find((m: any) => m.worker_id === workerId);
+        if (!member || member.status === "RELEASED" || member.status === "NO_SHOW") {
+          setTeam(null);
+          setIncident(null);
+          return;
+        }
+
+        setTeam(json.team);
 
         if (checkInRes.ok) {
           const cJson = await checkInRes.json();
@@ -256,12 +274,22 @@ export function EmergencyActiveResponseCard({
     }
   };
 
-  if ((isLoading && !team) || !team || !incident) {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const currentMember = team ? (team.members || []).find((m: any) => m.worker_id === workerId) : null;
+
+  if (
+    (isLoading && !team) ||
+    !team ||
+    !incident ||
+    ["CLOSED", "RESOLVED", "CANCELLED"].includes(incident.status) ||
+    team.status === "DISBANDED" ||
+    !currentMember ||
+    currentMember.status === "RELEASED" ||
+    currentMember.status === "NO_SHOW"
+  ) {
     return null;
   }
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const currentMember = (team.members || []).find((m: any) => m.worker_id === workerId);
   const isTeamLead = team.team_lead_worker_id === workerId || currentMember?.is_team_lead;
   const isVerified = incident.isVerified;
 

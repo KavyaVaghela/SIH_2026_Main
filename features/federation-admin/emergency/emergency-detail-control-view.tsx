@@ -21,6 +21,7 @@ import {
   UserCheck,
   Send,
   Building,
+  Archive,
 } from "lucide-react";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -72,6 +73,11 @@ export function EmergencyDetailControlView({ incidentId }: EmergencyDetailContro
   const [closureAction, setClosureAction] = React.useState<"APPROVE" | "REOPEN">("APPROVE");
   const [closureNotes, setClosureNotes] = React.useState<string>("");
 
+  // Incident Cancellation & Archive States
+  const [isCancellingIncident, setIsCancellingIncident] = React.useState<boolean>(false);
+  const [cancellationReason, setCancellationReason] = React.useState<string>("");
+  const [isArchivingIncident, setIsArchivingIncident] = React.useState<boolean>(false);
+
   const [isSubmitting, setIsSubmitting] = React.useState<boolean>(false);
 
   const handleReviewClosure = async (action: "APPROVE" | "REOPEN") => {
@@ -105,12 +111,73 @@ export function EmergencyDetailControlView({ incidentId }: EmergencyDetailContro
     }
   };
 
+  const handleCancelEmergency = async () => {
+    if (!cancellationReason.trim()) {
+      setFeedback({ type: "error", text: "Cancellation reason is required." });
+      return;
+    }
+    try {
+      setIsSubmitting(true);
+      setFeedback(null);
+      const res = await fetch(`/api/emergency/incidents/${incidentId}/cancel`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ reason: cancellationReason.trim() }),
+      });
+      const resJson = await res.json();
+      if (res.ok && resJson.success) {
+        setFeedback({
+          type: "success",
+          text: "Emergency incident cancelled successfully. Responders and customer notified.",
+        });
+        setIsCancellingIncident(false);
+        setCancellationReason("");
+        await fetchDetail();
+      } else {
+        setFeedback({ type: "error", text: resJson.error || "Failed to cancel incident." });
+      }
+    } catch (err) {
+      setFeedback({ type: "error", text: (err as Error)?.message || "Action failed." });
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  const handleArchiveEmergency = async () => {
+    const confirmed = window.confirm(
+      "Archive this incident? It will be removed from the active control center list while preserving all historical audit information."
+    );
+    if (!confirmed) return;
+
+    try {
+      setIsArchivingIncident(true);
+      setFeedback(null);
+      const res = await fetch(`/api/emergency/incidents/${incidentId}/archive`, {
+        method: "POST",
+      });
+      const resJson = await res.json();
+      if (res.ok && resJson.success) {
+        setFeedback({
+          type: "success",
+          text: "Emergency incident archived and removed from active control center list.",
+        });
+        await fetchDetail();
+      } else {
+        setFeedback({ type: "error", text: resJson.error || "Failed to archive incident." });
+      }
+    } catch (err) {
+      setFeedback({ type: "error", text: (err as Error)?.message || "Action failed." });
+    } finally {
+      setIsArchivingIncident(false);
+    }
+  };
+
   const debounceTimerRef = React.useRef<NodeJS.Timeout | null>(null);
 
   // Fetch Incident Control Packet
   const fetchDetail = React.useCallback(async (showLoading = true) => {
     try {
-      if (showLoading) setIsLoading(true);
+      if (showLoading && !data) setIsLoading(true);
       const res = await fetch(`/api/emergency/federation/incidents/${incidentId}`);
       if (!res.ok) {
         setFeedback({ type: "error", text: "Failed to load incident detail. Verify administrative authority." });
@@ -124,9 +191,9 @@ export function EmergencyDetailControlView({ incidentId }: EmergencyDetailContro
     } catch (err) {
       setFeedback({ type: "error", text: (err as Error)?.message || "Failed to load incident." });
     } finally {
-      if (showLoading) setIsLoading(false);
+      if (showLoading && !data) setIsLoading(false);
     }
-  }, [incidentId]);
+  }, [incidentId, data]);
 
   React.useEffect(() => {
     fetchDetail(true);
@@ -144,33 +211,38 @@ export function EmergencyDetailControlView({ incidentId }: EmergencyDetailContro
     }, 150);
   }, [fetchDetail]);
 
-  // Realtime updates on all relevant emergency tables (debounced to avoid duplicate round trips)
+  // Realtime updates with targeted incident filters (debounced to avoid duplicate round trips)
   useRealtimeSubscription({
     table: "emergency_incidents",
+    filter: `id=eq.${incidentId}`,
     enabled: !!incidentId,
     onPayload: handleRealtimeUpdate,
   });
 
   useRealtimeSubscription({
     table: "emergency_response_teams",
+    filter: `incident_id=eq.${incidentId}`,
     enabled: !!incidentId,
     onPayload: handleRealtimeUpdate,
   });
 
   useRealtimeSubscription({
     table: "emergency_incident_tasks",
+    filter: `incident_id=eq.${incidentId}`,
     enabled: !!incidentId,
     onPayload: handleRealtimeUpdate,
   });
 
   useRealtimeSubscription({
     table: "emergency_additional_worker_requests",
+    filter: `incident_id=eq.${incidentId}`,
     enabled: !!incidentId,
     onPayload: handleRealtimeUpdate,
   });
 
   useRealtimeSubscription({
     table: "emergency_audit_logs",
+    filter: `incident_id=eq.${incidentId}`,
     enabled: !!incidentId,
     onPayload: handleRealtimeUpdate,
   });
@@ -434,7 +506,7 @@ export function EmergencyDetailControlView({ incidentId }: EmergencyDetailContro
           </h1>
         </div>
 
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-2 flex-wrap">
           <Button
             size="sm"
             variant="outline"
@@ -443,14 +515,45 @@ export function EmergencyDetailControlView({ incidentId }: EmergencyDetailContro
           >
             <RefreshCw className="h-3 w-3" /> Refresh
           </Button>
-          <Button
-            size="sm"
-            variant="outline"
-            className="h-8 text-xs gap-1 border-amber-500/40 text-amber-500 hover:bg-amber-500/10"
-            onClick={() => setIsChangingSeverity(true)}
-          >
-            <Edit3 className="h-3 w-3" /> Modify Severity
-          </Button>
+
+          {incident.status !== "CLOSED" && incident.status !== "CANCELLED" && (
+            <Button
+              size="sm"
+              variant="outline"
+              className="h-8 text-xs gap-1 border-amber-500/40 text-amber-500 hover:bg-amber-500/10"
+              onClick={() => setIsChangingSeverity(true)}
+            >
+              <Edit3 className="h-3 w-3" /> Modify Severity
+            </Button>
+          )}
+
+          {incident.status !== "CLOSED" && incident.status !== "CANCELLED" && (
+            <Button
+              size="sm"
+              variant="destructive"
+              className="h-8 text-xs gap-1 font-bold shadow-xs"
+              onClick={() => setIsCancellingIncident(true)}
+            >
+              <XCircle className="h-3.5 w-3.5" /> Cancel Emergency
+            </Button>
+          )}
+
+          {(incident.status === "CLOSED" || incident.status === "RESOLVED" || incident.status === "CANCELLED") && !incident.metadata?.is_archived && (
+            <Button
+              size="sm"
+              variant="outline"
+              disabled={isArchivingIncident}
+              className="h-8 text-xs gap-1 border-border text-muted-foreground hover:text-foreground"
+              onClick={handleArchiveEmergency}
+            >
+              {isArchivingIncident ? (
+                <Loader2 className="h-3.5 w-3.5 animate-spin" />
+              ) : (
+                <Archive className="h-3.5 w-3.5" />
+              )}
+              Archive Incident
+            </Button>
+          )}
         </div>
       </div>
 
@@ -574,6 +677,29 @@ export function EmergencyDetailControlView({ incidentId }: EmergencyDetailContro
               {incident.closure_notes && (
                 <span className="text-foreground font-medium">— {incident.closure_notes}</span>
               )}
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* Cancelled Incident Alert Banner */}
+      {incident.status === "CANCELLED" && (
+        <div className="p-5 rounded-xl bg-rose-950/40 border-2 border-rose-500 flex flex-col gap-2 text-rose-300 animate-in fade-in">
+          <div className="flex items-center gap-2.5">
+            <XCircle className="h-6 w-6 text-rose-500 shrink-0" />
+            <div>
+              <h4 className="text-base font-bold text-foreground">
+                Emergency Incident Cancelled
+              </h4>
+              <p className="text-xs text-muted-foreground">
+                This emergency incident was cancelled by Federation Administration. Operational dispatch and field tasks have been halted.
+              </p>
+            </div>
+          </div>
+          {incident.metadata?.cancellation_reason && (
+            <div className="mt-2 p-3 bg-background/80 rounded-lg border border-border text-xs text-foreground">
+              <span className="font-semibold text-rose-400 block mb-1">Reason for Cancellation:</span>
+              <p>{String(incident.metadata.cancellation_reason)}</p>
             </div>
           )}
         </div>
@@ -1345,6 +1471,60 @@ export function EmergencyDetailControlView({ incidentId }: EmergencyDetailContro
                   ) : (
                     "Reopen Incident"
                   )}
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+      )}
+
+      {/* Cancellation Confirmation Modal */}
+      {isCancellingIncident && (
+        <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4">
+          <Card className="w-full max-w-md border-rose-500/40 bg-card shadow-2xl">
+            <CardHeader className="pb-3 border-b border-border/50">
+              <CardTitle className="text-sm font-bold text-rose-500 flex items-center gap-2">
+                <AlertTriangle className="h-4 w-4" /> Cancel Emergency Incident
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="pt-4 space-y-4 text-xs">
+              <p className="text-muted-foreground">
+                Confirming cancellation will immediately update this emergency incident to <strong>CANCELLED</strong>. Any active response teams will be disbanded, assigned workers released, pending dispatches withdrawn, and tasks cancelled. The customer and workers will receive this status update in real time.
+              </p>
+              <div>
+                <label className="font-medium text-foreground block mb-1">
+                  Cancellation Justification <span className="text-rose-500">*</span>
+                </label>
+                <textarea
+                  rows={3}
+                  className="w-full p-2.5 rounded border border-border text-xs bg-background text-foreground"
+                  placeholder="e.g. False alarm reported by customer, situation de-escalated safely, or duplicate incident report."
+                  value={cancellationReason}
+                  onChange={(e) => setCancellationReason(e.target.value)}
+                />
+              </div>
+              <div className="flex justify-end gap-2 pt-2 border-t border-border/50">
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className="h-8 text-xs"
+                  onClick={() => setIsCancellingIncident(false)}
+                >
+                  Abort / Keep Incident
+                </Button>
+                <Button
+                  size="sm"
+                  variant="destructive"
+                  className="h-8 text-xs font-bold gap-1"
+                  disabled={isSubmitting || !cancellationReason.trim()}
+                  onClick={handleCancelEmergency}
+                >
+                  {isSubmitting ? (
+                    <Loader2 className="h-3 w-3 animate-spin" />
+                  ) : (
+                    <XCircle className="h-3.5 w-3.5" />
+                  )}
+                  Confirm Cancellation
                 </Button>
               </div>
             </CardContent>

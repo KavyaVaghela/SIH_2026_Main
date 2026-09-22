@@ -44,7 +44,8 @@ export type EmergencyIncidentStatus =
   | "ACTIVE"
   | "STAFFING_SHORTAGE"
   | "RESOLVED"
-  | "CLOSED";
+  | "CLOSED"
+  | "CANCELLED";
 
 export type EmergencyIncidentSeverity = "LOW" | "MEDIUM" | "HIGH" | "CRITICAL";
 
