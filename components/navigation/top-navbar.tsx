@@ -5,14 +5,17 @@ import { Menu } from "lucide-react";
 import { Logo } from "@/components/ui/logo";
 import { NotificationCenter } from "./notification-center";
 import { UserMenu } from "./user-menu";
+import { LanguageSelector } from "./language-selector";
 import type { PlatformRole } from "@/config/navigation";
 import { cn } from "@/lib/utils";
+
 
 export interface TopNavbarProps {
   platformTitle?: string;
   userName?: string;
   userRole?: string;
   role?: PlatformRole;
+  avatarUrl?: string;
   onToggleMobileMenu?: () => void;
   className?: string;
 }
@@ -21,6 +24,7 @@ export function TopNavbar({
   userName,
   userRole,
   role,
+  avatarUrl,
   onToggleMobileMenu,
   className,
 }: TopNavbarProps) {
@@ -42,9 +46,11 @@ export function TopNavbar({
         </div>
 
         <div className="flex items-center space-x-2 sm:space-x-3">
+          <LanguageSelector />
           <NotificationCenter role={role} />
-          <UserMenu userName={userName} userRole={userRole} />
+          <UserMenu userName={userName} userRole={userRole} avatarUrl={avatarUrl} />
         </div>
+
       </div>
     </header>
   );

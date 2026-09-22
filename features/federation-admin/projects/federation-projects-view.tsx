@@ -1656,7 +1656,7 @@ export function FederationProjectsView() {
                   type="number"
                   required
                   min={1}
-                  step={100}
+                  step={1}
                   value={proposedEstimateAmount || ""}
                   onChange={(e) => setProposedEstimateAmount(Number(e.target.value))}
                   className="w-full p-2.5 rounded-lg border border-border bg-background text-foreground text-xs font-mono font-bold outline-none"

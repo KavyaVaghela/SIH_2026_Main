@@ -31,9 +31,10 @@ export default function FederationEmergencyDashboardPage() {
 
   const fetchIncidents = React.useCallback(async (showLoading = true) => {
     try {
-      if (showLoading) setIsLoading(true);
+      if (showLoading && incidents.length === 0) setIsLoading(true);
       const params = new URLSearchParams();
       if (statusFilter !== "ALL") params.append("status", statusFilter);
+      if (statusFilter === "ARCHIVED") params.append("includeArchived", "true");
       if (severityFilter !== "ALL") params.append("severity", severityFilter);
       if (searchValue) params.append("search", searchValue);
       if (shortageFilter) params.append("hasShortage", "true");
@@ -49,7 +50,7 @@ export default function FederationEmergencyDashboardPage() {
     } finally {
       if (showLoading) setIsLoading(false);
     }
-  }, [statusFilter, severityFilter, searchValue, shortageFilter]);
+  }, [statusFilter, severityFilter, searchValue, shortageFilter, incidents.length]);
 
   React.useEffect(() => {
     fetchIncidents(true);
@@ -188,6 +189,7 @@ export default function FederationEmergencyDashboardPage() {
           onStatusChange={setStatusFilter}
           onSeverityChange={setSeverityFilter}
           onShortageToggle={setShortageFilter}
+          onIncidentArchived={() => fetchIncidents(false)}
         />
       )}
     </div>

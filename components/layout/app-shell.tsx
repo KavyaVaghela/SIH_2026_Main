@@ -9,6 +9,8 @@ import { DesktopSidebar, type NavItem } from "@/components/navigation/desktop-si
 import type { MobileNavItem } from "@/components/navigation/mobile-navigation";
 import type { PlatformRole } from "@/config/navigation";
 import { cn } from "@/lib/utils";
+import { useTranslation, getTranslatedNavTitle } from "@/lib/i18n";
+
 
 export interface AppShellProps {
   children: React.ReactNode;
@@ -17,6 +19,7 @@ export interface AppShellProps {
   userName?: string;
   userRole?: string;
   role?: PlatformRole;
+  avatarUrl?: string;
   className?: string;
 }
 
@@ -34,8 +37,10 @@ export function AppShell({
   userName = "Cooperative Member",
   userRole = "Platform Admin",
   role,
+  avatarUrl,
   className,
 }: AppShellProps) {
+  const { t } = useTranslation();
   const [mobileSidebarOpen, setMobileSidebarOpen] = React.useState(false);
   const pathname = usePathname();
 
@@ -73,6 +78,7 @@ export function AppShell({
         userName={userName}
         userRole={userRole}
         role={role}
+        avatarUrl={avatarUrl}
         onToggleMobileMenu={() => setMobileSidebarOpen(!mobileSidebarOpen)}
       />
 
@@ -124,7 +130,7 @@ export function AppShell({
         {/* Drawer Navigation Links */}
         <div className="flex-1 overflow-y-auto p-4 space-y-1">
           <p className="px-3 text-[10px] font-bold uppercase tracking-wider text-muted-foreground mb-2">
-            Platform Navigation
+            {t("nav.platformNavigation", "Platform Navigation")}
           </p>
           <nav className="space-y-1">
             {navItems.map((item) => {
@@ -136,6 +142,8 @@ export function AppShell({
                   item.href !== "/super-admin" &&
                   item.href !== "/federation-admin" &&
                   pathname.startsWith(`${item.href}/`));
+
+              const displayTitle = getTranslatedNavTitle(item.title, t);
 
               return (
                 <Link
@@ -151,7 +159,7 @@ export function AppShell({
                 >
                   <div className="flex items-center space-x-2.5 min-w-0">
                     <span className="h-4 w-4 shrink-0">{item.icon}</span>
-                    <span className="truncate">{item.title}</span>
+                    <span className="truncate">{displayTitle}</span>
                   </div>
                   {item.badge && (
                     <span
@@ -171,6 +179,7 @@ export function AppShell({
           </nav>
         </div>
       </div>
+
 
       <div className="flex-1 flex min-w-0">
         <DesktopSidebar items={navItems} />

@@ -8,6 +8,8 @@ import type {
   WorkerAiContext,
   WorkerAiAdviceResponse,
   WorkerAiLanguage,
+  WorkerAiPriority,
+  WorkerLearningSuggestion,
 } from "./ai-types";
 
 const GROQ_API_URL = "https://api.groq.com/openai/v1/chat/completions";
@@ -307,11 +309,16 @@ Respond strictly with a JSON object adhering to this exact schema:
 }
 
 /**
- * Server-side Groq Client for Worker AI Assistant (Kaushal Bandhu)
+ * Server-side Groq Client for Worker AI Assistant (Kaushal Bandhu 2.0)
  *
- * Dedicated digital companion for blue-collar craftsmen.
- * Speaks simple, respectful language in Hindi, Gujarati, or English.
- * Strictly advisory - NEVER promises jobs, wages, or alters system state.
+ * Dedicated digital companion for blue-collar craftsmen on KaushalyaSetu.
+ * Production rules:
+ * 1. Speaks clear, simple, respectful everyday language in Hindi, Gujarati, or English.
+ * 2. 100% of generated content in the requested language (no mixed Hindi/English/Gujarati).
+ * 3. Never makes unrealistic earnings guarantees or promises job counts.
+ * 4. Grounded strictly in factual context (rating, reviews, completed jobs, demand, utilization).
+ * 5. Trade Safety Rule: ONLY allowed_courses are sent to Groq. Post-AI validation strictly
+ *    verifies and rejects any course outside allowed_courses.
  */
 export async function callGroqWorkerAssistant(
   apiKey: string,
@@ -324,53 +331,68 @@ export async function callGroqWorkerAssistant(
   try {
     const languageDirective =
       language === "hi"
-        ? "CRITICAL: You MUST respond in clear, simple HINDI using standard Devanagari script (हिंदी लिपि). Avoid complicated words."
+        ? `CRITICAL MULTILINGUAL RULE (HINDI):
+- The ENTIRE JSON response (greeting, summary, priorities titles, priorities messages, actions, learning reason, important note, disclaimer) MUST be in pure, simple, everyday HINDI in standard Devanagari script (हिंदी लिपि).
+- Do NOT mix English sentences or Gujarati words.
+- Short sentences (1-2 sentences per point). Easy words suitable for workers with basic education.`
         : language === "gu"
-        ? "CRITICAL: You MUST respond in clear, simple GUJARATI using standard Gujarati script (ગુજરાતી લિપિ). Avoid complicated words."
-        : "CRITICAL: You MUST respond in very simple, plain ENGLISH. Short sentences, easy words.";
+        ? `CRITICAL MULTILINGUAL RULE (GUJARATI):
+- The ENTIRE JSON response (greeting, summary, priorities titles, priorities messages, actions, learning reason, important note, disclaimer) MUST be in pure, simple, everyday GUJARATI in standard Gujarati script (ગુજરાતી લિપિ).
+- Do NOT mix English sentences or Hindi words.
+- Short sentences (1-2 sentences per point). Easy words suitable for workers with basic education.`
+        : `CRITICAL MULTILINGUAL RULE (ENGLISH):
+- The ENTIRE JSON response MUST be in very simple, plain ENGLISH.
+- Short sentences (1-2 sentences per point), zero corporate or technical jargon.`;
 
-    const systemPrompt = `You are "Kaushal Bandhu" (कौशल बंधु / કૌશલ બંધુ), a warm, supportive, and respectful digital companion for service workers and craftsmen on the KaushalyaSetu cooperative platform.
+    const systemPrompt = `You are "Kaushal Bandhu" (कौशल बंधु / કૌશલ બંધુ), the worker care, performance, and skill development assistant on KaushalyaSetu, a cooperative-owned service platform.
 
 ${languageDirective}
 
-PRODUCT & COMMUNICATION PRINCIPLES:
-1. Tone: Respectful, polite, friendly, encouraging, and dignified. Address the craftsman with respect (e.g. "साथी", "कारीगर भाई", "કારીગર મિત્ર", "craftsman partner").
-2. Language: Very simple vocabulary, short sentences, zero corporate jargon, zero complex technical or AI terms.
-3. ADVISORY ONLY - ZERO PROMISES:
-   - NEVER guarantee jobs or bookings (e.g., NEVER say "You will receive 5 bookings tomorrow" or "Work is guaranteed").
-   - NEVER guarantee income or earnings (e.g., NEVER say "You will earn ₹5,000 this week").
-   - INSTEAD say: "Bookings depend on customer needs in your locality", "Keeping your profile active helps when requests arrive".
-4. TRUTHFUL DATA:
-   - If the worker has 0 or low bookings, honestly and gently acknowledge it. Never pretend they completed 50 jobs.
-   - Mention the regional trade demand as general market activity, not as guaranteed personal leads.
-   - Mention the recommended learning course from KaushalGrow if provided, explaining simply how new skills help career growth.
-5. NO PLATFORM ACTIONS:
-   - You CANNOT book jobs, assign work, toggle availability, change rates, or accept projects.
-   - If they need to update skills or schedule, politely guide them to the relevant section on their app.
+PRODUCT PRINCIPLES & GUIDELINES:
+1. WHAT YOU DO: Answer "What can I practically do today to improve my work opportunities, service quality and earning potential on KaushalyaSetu?"
+2. DO NOT GIVE GENERIC MOTIVATIONAL ADVICE. Ground every recommendation in the worker's real profile, recent jobs, rating, local demand, and utilization.
+3. NEVER GUARANTEE EARNINGS OR WORK:
+   - NEVER say "You will earn ₹25,000" or "You will get 10 jobs".
+   - Grounded wording: "Keeping your availability updated helps customers find you", "High local demand may create more opportunities", "Completing this relevant course can help you qualify for more jobs".
+4. PERFORMANCE & UTILIZATION CONTEXT:
+   - Low utilization (<4 jobs recently): Remind them to keep availability ON when ready, check contact details, and review core skills.
+   - High utilization (>12 jobs recently): Encourage keeping time between jobs to maintain service quality, polite communication, and resting.
+   - New worker (0 reviews / 0 jobs): Encourage completing skills, adding experience, and taking the first trade safety course.
+   - Rating: If rating > 4.5, congratulate and encourage maintaining quality; if lower, suggest punctuality and clear customer communication.
+5. ABSOLUTE TRADE SAFETY RULE:
+   - Worker trade is: "${context.worker_trade}".
+   - You MUST ONLY recommend a course from the "allowed_courses" list provided in the prompt.
+   - NEVER recommend an electrical course to a plumber, or a plumbing course to an electrician, or an unrelated course to a painter.
+   - If "allowed_courses" is empty, set learning_suggestion to null or explain simply in the requested language that no new course is available for their trade right now.
 
 Respond strictly with a JSON object adhering to this exact schema:
 {
-  "greeting": "Warm greeting addressing the worker respectfully in the requested language",
-  "summary": "1 to 2 very simple sentences on their status and trade activity in their area",
-  "tips": [
-    "Simple practical tip 1 (e.g., keeping phone charged and profile active)",
-    "Simple practical tip 2 (e.g., maintaining clean tools and punctuality)",
-    "Simple practical tip 3 (e.g., polite communication with customers)"
+  "greeting": "Warm, respectful greeting addressing the worker by name or partner in requested language",
+  "summary": "1 to 2 very simple sentences on their current status, recent activity, and local demand",
+  "priorities": [
+    {
+      "type": "WORK_OPPORTUNITY" | "PERFORMANCE" | "AVAILABILITY" | "PROFILE" | "SKILL" | "SAFETY" | "EARNINGS",
+      "title": "Short title in requested language (3-4 words)",
+      "message": "1 to 2 short, simple sentences with practical actionable advice",
+      "action": "Optional concise button label (e.g. 'उपलब्धता जांचें' / 'ઉપલબ્ધતા ચકાસો' / 'Check Availability')"
+    }
   ],
   "learning_suggestion": {
-    "title": "Course title from context",
-    "reason": "1 simple sentence on why this skill is useful",
-    "course_id": "course id from context"
+    "course_id": "course_id from allowed_courses",
+    "title": "course title exactly as listed in allowed_courses",
+    "reason": "1 short sentence in requested language on why this course is helpful for their trade"
   },
-  "important_note": "A respectful reminder that work depends on customer requests in the area",
+  "important_note": "A respectful reminder in requested language (e.g., check availability before taking more work / new work depends on local customer requests)",
   "confidence": "LOW" | "MEDIUM" | "HIGH",
-  "disclaimer": "Respectful note that this is friendly guidance to help your work"
+  "disclaimer": "Respectful advisory note in requested language explaining that guidance is based on real cooperative platform data"
 }`;
 
+    const safeAllowedCourses = context.allowed_courses || (context.recommended_course ? [context.recommended_course] : []);
+
     const userPrompt = JSON.stringify({
-      language,
+      target_language: language,
       worker_name: context.worker_name,
-      trade: context.trade,
+      worker_trade: context.worker_trade,
       experience_level: context.experience_level,
       verification_status: context.verification_status,
       availability_status: context.availability_status,
@@ -379,8 +401,12 @@ Respond strictly with a JSON object adhering to this exact schema:
       completed_bookings_count: context.completed_bookings_count,
       bookings_last_30_days: context.bookings_last_30_days,
       rating: context.rating,
+      reviews_count: context.reviews_count || 0,
+      is_new_worker: context.is_new_worker || false,
+      utilization_level: context.utilization_level,
       regional_trade_demand: context.regional_trade_demand,
-      recommended_course: context.recommended_course,
+      region_name: context.regional_trade_demand_info?.region || "Local Area",
+      allowed_courses: safeAllowedCourses,
     });
 
     const response = await fetch(GROQ_API_URL, {
@@ -396,7 +422,7 @@ Respond strictly with a JSON object adhering to this exact schema:
           { role: "user", content: userPrompt },
         ],
         response_format: { type: "json_object" },
-        temperature: 0.3,
+        temperature: 0.25,
       }),
       signal: controller.signal,
     });
@@ -421,65 +447,114 @@ Respond strictly with a JSON object adhering to this exact schema:
 
     const parsed = JSON.parse(rawContent);
 
+    // 1. GREETING
     const greeting: string =
       typeof parsed.greeting === "string" && parsed.greeting.trim()
         ? parsed.greeting.trim()
         : language === "hi"
-        ? `नमस्ते ${context.worker_name || "साथी"}, कौशल बंधु में आपका स्वागत है।`
+        ? `नमस्ते ${context.worker_name || "साथी"} 👋`
         : language === "gu"
-        ? `નમસ્તે ${context.worker_name || "સાથી"}, કૌશલ બંધુમાં તમારું સ્વાગત છે.`
-        : `Hello ${context.worker_name || "Partner"}, welcome to Kaushal Bandhu.`;
+        ? `નમસ્તે ${context.worker_name || "સાથી"}ભાઈ 👋`
+        : `Hello ${context.worker_name || "Partner"} 👋`;
 
+    // 2. SUMMARY
     const summary: string =
       typeof parsed.summary === "string" && parsed.summary.trim()
         ? parsed.summary.trim()
         : language === "hi"
-        ? `आप ${context.trade} सेवा में पंजीकृत हैं। अपना प्रोफ़ाइल सक्रिय रखें।`
+        ? `आपके इलाके में ${context.worker_trade} के काम की मांग सक्रिय है।`
         : language === "gu"
-        ? `તમે ${context.trade} સેવામાં નોંધાયેલા છો. તમારી પ્રોફાઇલ સક્રિય રાખો.`
-        : `You are registered in ${context.trade}. Keep your profile active.`;
+        ? `તમારા વિસ્તારમાં ${context.worker_trade}ના કામની માંગ સક્રિય છે.`
+        : `${context.worker_trade} demand is active in your area.`;
 
-    const defaultTips =
-      language === "hi"
-        ? [
-            "अपनी उपलब्धता सही रखें ताकि काम के समय सूचना मिल सके।",
-            "काम पर समय पर पहुंचें और अपने औजार तैयार रखें।",
-            "ग्राहकों से विनम्रता से बात करें, इससे रेटिंग अच्छी मिलती है।",
-          ]
-        : language === "gu"
-        ? [
-            "તમારી ઉપલબ્ધતા સમયસર અપડેટ કરો જેથી નવા કામની માહિતી મળે.",
-            "કામ પર સમયસર પહોંચો અને સાધનો તૈયાર રાખો.",
-            "ગ્રાહકો સાથે નમ્રતાથી વાત કરો, જેનાથી રેટિંગ સુધરે છે.",
-          ]
-        : [
-            "Keep your availability status updated to receive notifications.",
-            "Arrive on time and keep your tools clean and ready.",
-            "Speak politely with customers to earn higher ratings.",
-          ];
+    // 3. STRUCTURED PRIORITIES (3-5 items)
+    let priorities: WorkerAiPriority[] = [];
+    if (Array.isArray(parsed.priorities) && parsed.priorities.length > 0) {
+      priorities = (parsed.priorities as Array<Record<string, unknown>>).slice(0, 5).map((p) => ({
+        type: (typeof p.type === "string" && ["WORK_OPPORTUNITY", "PERFORMANCE", "AVAILABILITY", "PROFILE", "SKILL", "SAFETY", "EARNINGS"].includes(p.type))
+          ? (p.type as WorkerAiPriority["type"])
+          : "WORK_OPPORTUNITY",
+        title: String(p.title || "महत्वपूर्ण सुझाव"),
+        message: String(p.message || ""),
+        action: p.action ? String(p.action) : undefined,
+      }));
+    }
 
-    const tips: string[] =
-      Array.isArray(parsed.tips) && parsed.tips.length > 0
-        ? parsed.tips.map(String)
-        : defaultTips;
+    // Extract simple tips for backward compatibility
+    const tips: string[] = priorities.length > 0
+      ? priorities.map((p) => `${p.title}: ${p.message}`)
+      : Array.isArray(parsed.tips) && parsed.tips.length > 0
+      ? parsed.tips.map(String)
+      : language === "hi"
+      ? [
+          "अगर आप काम के लिए तैयार हैं, तो अपनी availability ON रखें।",
+          "ग्राहकों से काम के बाद फीडबैक जरूर लें।",
+          "समय पर पहुंचना और अच्छा व्यवहार आपकी रेटिंग मजबूत करता है।",
+        ]
+      : language === "gu"
+      ? [
+          "જો તમે કામ માટે તૈયાર હોવ, તો તમારી availability ON રાખો.",
+          "કામ પૂરું થયા પછી ગ્રાહક પાસેથી પ્રતિસાદ મેળવો.",
+          "સમયસર પહોંચવાથી અને સારી સેવાથી તમારું રેટિંગ સારું રહે છે.",
+        ]
+      : [
+          "Keep your availability ON when ready to take service requests.",
+          "Polite communication and punctuality ensure higher customer ratings.",
+          "Update your core skills to match incoming customer requirements.",
+        ];
 
-    let learning_suggestion = undefined;
+    // 4. HARD POST-AI TRADE SAFETY GUARD
+    // A course recommended by the LLM MUST exist in safeAllowedCourses.
+    // If it is unrelated or violated, reject it and replace with top allowed course or safe message!
+    let validatedLearningSuggestion: WorkerLearningSuggestion | null = null;
+
     if (parsed.learning_suggestion && typeof parsed.learning_suggestion === "object") {
-      learning_suggestion = {
-        title: String(parsed.learning_suggestion.title || context.recommended_course?.title || "Skill Training"),
-        reason: String(parsed.learning_suggestion.reason || "नया हुनर सीखने से काम के अवसर बढ़ते हैं।"),
-        course_id: String(parsed.learning_suggestion.course_id || context.recommended_course?.course_id || ""),
-      };
-    } else if (context.recommended_course) {
-      learning_suggestion = {
-        title: context.recommended_course.title,
+      const recTitle = String(parsed.learning_suggestion.title || "").toLowerCase();
+      const recId = String(parsed.learning_suggestion.course_id || "").toLowerCase();
+
+      // Check if recommended course is in allowed set
+      const matchingAllowed = safeAllowedCourses.find(
+        (c) =>
+          (c.course_id && c.course_id.toLowerCase() === recId) ||
+          c.title.toLowerCase().includes(recTitle) ||
+          recTitle.includes(c.title.toLowerCase())
+      );
+
+      if (matchingAllowed) {
+        validatedLearningSuggestion = {
+          course_id: matchingAllowed.course_id,
+          title: matchingAllowed.title,
+          category: matchingAllowed.category,
+          reason: String(parsed.learning_suggestion.reason || matchingAllowed.reason),
+        };
+      } else if (safeAllowedCourses.length > 0) {
+        // AI recommended an off-trade course (e.g. Electrical for Plumber).
+        // REJECT and substitute with top safe trade course!
+        const safeCourse = safeAllowedCourses[0];
+        validatedLearningSuggestion = {
+          course_id: safeCourse.course_id,
+          title: safeCourse.title,
+          category: safeCourse.category,
+          reason:
+            language === "hi"
+              ? `'${safeCourse.title}' आपके काम के लिए उपयोगी कोर्स रहेगा।`
+              : language === "gu"
+              ? `'${safeCourse.title}' તમારા કામ માટે ઉપયોગી કોર્સ રહેશે.`
+              : `'${safeCourse.title}' is a valuable training course for your trade.`,
+        };
+      }
+    } else if (safeAllowedCourses.length > 0) {
+      const safeCourse = safeAllowedCourses[0];
+      validatedLearningSuggestion = {
+        course_id: safeCourse.course_id,
+        title: safeCourse.title,
+        category: safeCourse.category,
         reason:
           language === "hi"
-            ? "यह कोर्स पूरा करने से आपको इस काम में नई तकनीक सीखने को मिलेगी।"
+            ? `'${safeCourse.title}' आपके काम के लिए उपयोगी कोर्स रहेगा।`
             : language === "gu"
-            ? "આ કોર્સ શીખવાથી તમને કામમાં નવી કુશળતા મળશે."
-            : "Completing this course helps you master new modern techniques.",
-        course_id: context.recommended_course.course_id,
+            ? `'${safeCourse.title}' તમારા કામ માટે ઉપયોગી કોર્સ રહેશે.`
+            : `'${safeCourse.title}' is a valuable training course for your trade.`,
       };
     }
 
@@ -487,25 +562,26 @@ Respond strictly with a JSON object adhering to this exact schema:
       typeof parsed.important_note === "string" && parsed.important_note.trim()
         ? parsed.important_note.trim()
         : language === "hi"
-        ? "कृपया ध्यान दें: नए काम की सूचना ग्राहकों की मांग और आपके क्षेत्र पर निर्भर करती है।"
+        ? "ध्यान रखें: नया काम आपके इलाके में ग्राहकों की मांग पर निर्भर करता है।"
         : language === "gu"
-        ? "ધ્યાન રાખો: નવું કામ ગ્રાહકોની જરૂરિયાત અને તમારા વિસ્તાર પર આધાર રાખે છે."
-        : "Please note: New work depends on customer requests in your area.";
+        ? "ધ્યાન રાખો: નવું કામ તમારા વિસ્તારમાં ગ્રાહકોની જરૂરિયાત પર આધાર રાખે છે."
+        : "Please note: Job opportunities depend on active customer requests in your area.";
 
     const disclaimer: string =
       typeof parsed.disclaimer === "string" && parsed.disclaimer.trim()
         ? parsed.disclaimer.trim()
         : language === "hi"
-        ? "यह सलाह आपके मार्गदर्शन के लिए है। किसी भी काम की कोई गारंटी नहीं दी जाती।"
+        ? "यह मार्गदर्शन आपके वास्तविक काम और प्लेटफ़ॉर्म डेटा पर आधारित है।"
         : language === "gu"
-        ? "આ માર્ગદર્શન તમારા સહકાર માટે છે. કોઈ કામની ગેરંટી અપાતી નથી."
-        : "This guidance is for assistance only. No job or income guarantees are made.";
+        ? "આ માર્ગદર્શન તમારા વાસ્તવિક કાર્ય અને પ્લેટફોર્મ ડેટા પર આધારિત છે."
+        : "Advisory guidance grounded in verified platform and regional activity.";
 
     return {
       greeting,
       summary,
+      priorities,
       tips,
-      learning_suggestion,
+      learning_suggestion: validatedLearningSuggestion,
       important_note,
       confidence: "HIGH",
       disclaimer,

@@ -29,96 +29,212 @@ import type {
   WorkerAiApiResponse,
 } from "@/lib/ai/ai-types";
 
+import { useLanguage } from "@/lib/i18n/language-context";
+import { workerJobService } from "@/features/worker/services/worker-job-service";
+
 const UI_TEXT = {
   hi: {
     title: "कौशल बंधु",
-    subtitle: "आपका डिजिटल कार्य और कौशल साथी",
+    subtitle: "कार्य, गुणवत्ता और कौशल विकास साथी",
     greetingDefault: "नमस्ते साथी, कौशल बंधु में आपका स्वागत है!",
-    desc: "यहाँ आप अपने काम, नई मांग और कौशल विकास के लिए सरल और उपयोगी सुझाव प्राप्त कर सकते हैं।",
+    desc: "यहाँ आप अपने काम के अवसर, सेवा गुणवत्ता और कौशल विकास के लिए व्यावहारिक और वास्तविक मार्गदर्शन प्राप्त कर सकते हैं।",
     getAdviceBtn: "मार्गदर्शन प्राप्त करें",
-    refreshAdviceBtn: "नया सुझाव प्राप्त करें",
-    loadingText: "कौशल बंधु आपके लिए उपयोगी सुझाव तैयार कर रहे हैं...",
+    refreshAdviceBtn: "नया मार्गदर्शन प्राप्त करें",
+    loadingText: "कौशल बंधु आपके लिए मार्गदर्शन तैयार कर रहे हैं...",
     tradeLabel: "पंजीकृत कार्य",
     experienceLabel: "अनुभव",
-    verifiedLabel: "सत्यापित कारीगर",
+    verifiedLabel: "सत्यापित साथी",
     jobsDoneLabel: "पूरे किए गए काम",
     demandLabel: "इलाके में काम की मांग",
     skillsLabel: "आपके कौशल",
-    tipsHeader: "आपके लिए महत्वपूर्ण सुझाव",
+    tipsHeader: "आज की जरूरी बातें",
     learningHeader: "कौशल विकास (KaushalGrow)",
-    openCourseBtn: "कोर्स देखें व सीखें",
-    quickActionsHeader: "त्वरित सहायता व सेटिंग्स",
+    openCourseBtn: "कोर्स सीखें",
+    quickActionsHeader: "त्वरित सेटिंग्स",
     disclaimerTitle: "ज़रूरी सूचना",
     highDemand: "उच्च मांग",
     steadyDemand: "सामान्य मांग",
     lowDemand: "सीमित मांग",
+    whyTitle: "यह सलाह आपको क्यों दिखाई दे रही है?",
+    whyDesc: "यह मार्गदर्शन आपके वास्तविक काम, रेटिंग, हाल के ऑर्डर्स और आपके इलाके की मांग पर आधारित है।",
+    noCourseMsg: "अभी आपके काम से जुड़ा कोई नया कोर्स उपलब्ध नहीं है।",
+    actionCheckAvailability: "उपलब्धता जांचें",
+    actionViewProfile: "प्रोफ़ाइल देखें",
+    actionSchedule: "शेड्यूल देखें",
   },
   gu: {
     title: "કૌશલ બંધુ",
-    subtitle: "તમારો ડિજિટલ કાર્ય અને કુશળતા સાથી",
+    subtitle: "કાર્ય, ગુણવત્તા અને કૌશલ્ય વિકાસ સાથી",
     greetingDefault: "નમસ્તે સાથી, કૌશલ બંધુમાં તમારું સ્વાગત છે!",
-    desc: "અહીં તમે તમારા કામ, નવી માંગ અને કૌશલ્ય વિકાસ માટે સરળ અને ઉપયોગી માર્ગદર્શન મેળવી શકો છો.",
+    desc: "અહીં તમે તમારા કામની તકો, સેવા ગુણવત્તા અને કૌશલ્ય વિકાસ માટે વ્યવહારુ અને વાસ્તવિક માર્ગદર્શન મેળવી શકો છો.",
     getAdviceBtn: "માર્ગદર્શન મેળવો",
     refreshAdviceBtn: "નવું માર્ગદર્શન મેળવો",
-    loadingText: "કૌશલ બંધુ તમારા માટે ઉપયોગી સૂચનો તૈયાર કરી રહ્યા છે...",
-    tradeLabel: "નોંધાયેલ કામ",
+    loadingText: "કૌશલ બંધુ તમારા માટે માર્ગદર્શન તૈયાર કરી રહ્યા છે...",
+    tradeLabel: "નોંધાયેલ કાર્ય",
     experienceLabel: "અનુભવ",
-    verifiedLabel: "પ્રમાણિત કારીગર",
+    verifiedLabel: "પ્રમાણિત સાથી",
     jobsDoneLabel: "પૂર્ણ કરેલા કામ",
     demandLabel: "વિસ્તારમાં કામની માંગ",
     skillsLabel: "તમારા કૌશલ્યો",
-    tipsHeader: "તમારા માટે મહત્વપૂર્ણ સૂચનો",
+    tipsHeader: "આજની મહત્વપૂર્ણ બાબતો",
     learningHeader: "કૌશલ્ય વિકાસ (KaushalGrow)",
-    openCourseBtn: "કોર્સ જુઓ અને શીખો",
-    quickActionsHeader: "ઝડપી સહાય અને સેટિંગ્સ",
+    openCourseBtn: "કોર્સ શીખો",
+    quickActionsHeader: "ઝડપી સેટિંગ્સ",
     disclaimerTitle: "મહત્વપૂર્ણ નોંધ",
     highDemand: "ઊંચી માંગ",
     steadyDemand: "સામાન્ય માંગ",
     lowDemand: "મર્યાદિત માંગ",
+    whyTitle: "આ સલાહ તમને કેમ દેખાઈ રહી છે?",
+    whyDesc: "આ માર્ગદર્શન તમારા વાસ્તવિક કાર્ય, રેટિંગ, તાજેતરના ઓર્ડર અને તમારા વિસ્તારની માંગ પર આધારિત છે.",
+    noCourseMsg: "હાલમાં તમારા કામ સાથે જોડાયેલ કોઈ નવો કોર્સ ઉપલબ્ધ નથી.",
+    actionCheckAvailability: "ઉપલબ્ધતા ચકાસો",
+    actionViewProfile: "પ્રોફાઇલ જુઓ",
+    actionSchedule: "શેડ્યૂલ જુઓ",
   },
   en: {
     title: "Kaushal Bandhu",
-    subtitle: "Your Digital Work & Skills Companion",
+    subtitle: "Work Care, Performance & Skills Assistant",
     greetingDefault: "Hello Partner, welcome to Kaushal Bandhu!",
-    desc: "Get simple, respectful guidance for your trade, regional demand insights, and skill growth.",
+    desc: "Get practical, grounded guidance to improve your work opportunities, service quality, and skill development.",
     getAdviceBtn: "Get Advice",
     refreshAdviceBtn: "Refresh Advice",
-    loadingText: "Kaushal Bandhu is preparing your guidance...",
+    loadingText: "Kaushal Bandhu is preparing your advice...",
     tradeLabel: "Registered Trade",
     experienceLabel: "Experience",
-    verifiedLabel: "Verified Craftsman",
+    verifiedLabel: "Verified Partner",
     jobsDoneLabel: "Completed Jobs",
     demandLabel: "Local Area Demand",
     skillsLabel: "Your Skills",
-    tipsHeader: "Helpful Tips for You",
+    tipsHeader: "Today's Priorities for You",
     learningHeader: "Skill Development (KaushalGrow)",
-    openCourseBtn: "Open Course & Learn",
-    quickActionsHeader: "Quick Actions & Navigation",
+    openCourseBtn: "Start Learning",
+    quickActionsHeader: "Quick Settings",
     disclaimerTitle: "Important Notice",
     highDemand: "High Demand",
     steadyDemand: "Steady Demand",
     lowDemand: "Limited Demand",
+    whyTitle: "Why are you seeing this advice?",
+    whyDesc: "This guidance is grounded in your real completed jobs, customer rating, availability, and regional trade demand.",
+    noCourseMsg: "No new course available for your trade right now.",
+    actionCheckAvailability: "Check Availability",
+    actionViewProfile: "View Profile",
+    actionSchedule: "View Schedule",
   },
 };
 
+const PRIORITY_TYPE_BADGES: Record<string, { labelHi: string; labelGu: string; labelEn: string; color: string }> = {
+  WORK_OPPORTUNITY: { labelHi: "काम का मौका", labelGu: "કામની તક", labelEn: "Work Opportunity", color: "bg-emerald-500/10 text-emerald-700 dark:text-emerald-300 border-emerald-500/30" },
+  PERFORMANCE: { labelHi: "सेवा गुणवत्ता", labelGu: "સેવા ગુણવત્તા", labelEn: "Performance", color: "bg-blue-500/10 text-blue-700 dark:text-blue-300 border-blue-500/30" },
+  AVAILABILITY: { labelHi: "उपलब्धता", labelGu: "ઉપલબ્ધતા", labelEn: "Availability", color: "bg-amber-500/10 text-amber-700 dark:text-amber-300 border-amber-500/30" },
+  PROFILE: { labelHi: "प्रोफ़ाइल", labelGu: "પ્રોફાઇલ", labelEn: "Profile", color: "bg-indigo-500/10 text-indigo-700 dark:text-indigo-300 border-indigo-500/30" },
+  SKILL: { labelHi: "कौशल", labelGu: "કૌશલ્ય", labelEn: "Skill", color: "bg-purple-500/10 text-purple-700 dark:text-purple-300 border-purple-500/30" },
+  SAFETY: { labelHi: "सुरक्षा", labelGu: "સુરક્ષા", labelEn: "Safety", color: "bg-rose-500/10 text-rose-700 dark:text-rose-300 border-rose-500/30" },
+  EARNINGS: { labelHi: "कमाई अवसर", labelGu: "કમાણી તક", labelEn: "Earning Potential", color: "bg-teal-500/10 text-teal-700 dark:text-teal-300 border-teal-500/30" },
+};
+
 export function KaushalBandhuView() {
-  const [language, setLanguage] = React.useState<WorkerAiLanguage>("hi");
+  const { locale, setLocale } = useLanguage();
+  const [language, setLanguage] = React.useState<WorkerAiLanguage>(
+    locale === "gu" ? "gu" : locale === "en" ? "en" : "hi"
+  );
   const [context, setContext] = React.useState<WorkerAiContext | null>(null);
   const [advice, setAdvice] = React.useState<WorkerAiAdviceResponse | null>(null);
   const [isLoadingContext, setIsLoadingContext] = React.useState(true);
   const [isGenerating, setIsGenerating] = React.useState(false);
   const [errorMsg, setErrorMsg] = React.useState<string | null>(null);
+  const [showWhyModal, setShowWhyModal] = React.useState(false);
+  const [workerCompletedCount, setWorkerCompletedCount] = React.useState<number | null>(null);
+  const [workerLast30DaysCount, setWorkerLast30DaysCount] = React.useState<number | null>(null);
+
+  // Load completed jobs from the existing Worker module source (workerJobService)
+  React.useEffect(() => {
+    let isMounted = true;
+    async function loadWorkerCompletedJobs() {
+      try {
+        const completedJobs = await workerJobService.getCompletedJobs();
+        if (!isMounted) return;
+
+        let total = Array.isArray(completedJobs) ? completedJobs.length : 0;
+        const thirtyDaysAgo = Date.now() - 30 * 24 * 60 * 60 * 1000;
+        let last30 = Array.isArray(completedJobs)
+          ? completedJobs.filter((j) => {
+              const dtStr = j.actualEndAt || j.scheduledDate || j.createdAt;
+              if (!dtStr) return false;
+              const t = new Date(dtStr).getTime();
+              return !isNaN(t) && t >= thirtyDaysAgo;
+            }).length
+          : 0;
+
+        // Also check completed large projects if authenticated worker has any
+        try {
+          const { createClient } = await import("@/lib/supabase/client");
+          const supabase = createClient();
+          const {
+            data: { user },
+          } = await supabase.auth.getUser();
+          if (user?.id) {
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            const { data: workerRow } = await (supabase.from("workers") as any)
+              .select("id")
+              .eq("profile_id", user.id)
+              .maybeSingle();
+            const currentWorkerId = workerRow?.id || user.id;
+
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            const { data: allocs } = await (supabase.from("project_allocations") as any)
+              .select("id, response_status, status, created_at, project_requests(status, updated_at, created_at)")
+              .or(`worker_id.eq.${currentWorkerId},worker_id.eq.${user.id}`);
+
+            if (Array.isArray(allocs)) {
+              const completedAllocs = allocs.filter((alloc: any) => {
+                const isAccepted = alloc.response_status === "ACCEPTED" || alloc.status === "assigned";
+                const projStatus = (alloc.project_requests?.status || "").toUpperCase();
+                return isAccepted && (projStatus === "COMPLETED" || projStatus === "SETTLED" || projStatus === "CLOSED");
+              });
+              total += completedAllocs.length;
+              last30 += completedAllocs.filter((alloc: any) => {
+                const dt = alloc.project_requests?.updated_at || alloc.project_requests?.created_at || alloc.created_at;
+                return dt && new Date(dt).getTime() >= thirtyDaysAgo;
+              }).length;
+            }
+          }
+        } catch {
+          // Graceful fallback
+        }
+
+        setWorkerCompletedCount(total);
+        setWorkerLast30DaysCount(last30);
+      } catch (err) {
+        console.warn("Notice: Kaushal Bandhu completed jobs fetch:", err);
+      }
+    }
+
+    loadWorkerCompletedJobs();
+    return () => {
+      isMounted = false;
+    };
+  }, []);
+
+  // Sync language with global app locale if user changes global language
+  React.useEffect(() => {
+    const target = locale === "gu" ? "gu" : locale === "en" ? "en" : "hi";
+    if (target !== language) {
+      setLanguage(target);
+    }
+  }, [locale]);
 
   const t = UI_TEXT[language];
 
-  // 1. Initial Load: Fetch factual context only (No Groq invocation on mount to avoid rate limits)
+  // 1. Initial Load: Fetch factual context only
   React.useEffect(() => {
     let isMounted = true;
     async function loadInitialContext() {
       try {
         setIsLoadingContext(true);
         setErrorMsg(null);
-        const res = await fetch("/api/worker/kaushal-bandhu?mode=context-only");
+        const res = await fetch("/api/worker/kaushal-bandhu?mode=context-only", {
+          cache: "no-store",
+        });
         if (!res.ok) {
           const errData = await res.json().catch(() => ({}));
           throw new Error(errData.error || `HTTP ${res.status}`);
@@ -180,6 +296,7 @@ export function KaushalBandhuView() {
 
   const handleLanguageChange = (newLang: WorkerAiLanguage) => {
     setLanguage(newLang);
+    setLocale(newLang); // Persist across the app session
     // If advice is already generated, refresh advice in the newly selected language
     if (advice) {
       handleRequestAdvice(newLang);
@@ -207,6 +324,15 @@ export function KaushalBandhuView() {
     advice && advice.learning_suggestion && typeof advice.learning_suggestion === "object"
       ? advice.learning_suggestion.reason
       : null;
+
+  const displayCompletedJobs = Math.max(
+    workerCompletedCount ?? 0,
+    context?.completed_bookings_count ?? 0
+  );
+  const displayLast30Days = Math.max(
+    workerLast30DaysCount ?? 0,
+    context?.bookings_last_30_days ?? 0
+  );
 
   return (
     <div className="space-y-6 w-full max-w-[1300px] mx-auto pb-16">
@@ -343,10 +469,10 @@ export function KaushalBandhuView() {
               <Clock className="h-3.5 w-3.5 text-blue-600" />
             </div>
             <div className="text-base font-bold text-foreground">
-              {context?.completed_bookings_count ?? 0}
+              {displayCompletedJobs}
             </div>
             <div className="text-[11px] text-muted-foreground">
-              Last 30 days: <strong>{context?.bookings_last_30_days ?? 0}</strong>
+              Last 30 days: <strong>{displayLast30Days}</strong>
             </div>
           </CardContent>
         </Card>
@@ -445,23 +571,62 @@ export function KaushalBandhuView() {
                   </div>
                 </div>
 
-                <Button
-                  size="sm"
-                  variant="outline"
-                  disabled={isGenerating}
-                  onClick={() => handleRequestAdvice()}
-                  className="h-8 text-xs font-semibold text-emerald-700 dark:text-emerald-300 border-emerald-500/30 hover:bg-emerald-500/10 flex-shrink-0"
-                >
-                  <RefreshCw
-                    className={`h-3.5 w-3.5 mr-1.5 ${isGenerating ? "animate-spin" : ""}`}
-                  />
-                  {t.refreshAdviceBtn}
-                </Button>
+                <div className="flex items-center gap-2">
+                  <Button
+                    size="sm"
+                    variant="ghost"
+                    onClick={() => setShowWhyModal(!showWhyModal)}
+                    className="h-8 text-xs font-medium text-muted-foreground hover:text-foreground"
+                  >
+                    <HelpCircle className="h-3.5 w-3.5 mr-1" />
+                    <span>{t.whyTitle}</span>
+                  </Button>
+
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    disabled={isGenerating}
+                    onClick={() => handleRequestAdvice()}
+                    className="h-8 text-xs font-semibold text-emerald-700 dark:text-emerald-300 border-emerald-500/30 hover:bg-emerald-500/10 flex-shrink-0"
+                  >
+                    <RefreshCw
+                      className={`h-3.5 w-3.5 mr-1.5 ${isGenerating ? "animate-spin" : ""}`}
+                    />
+                    {t.refreshAdviceBtn}
+                  </Button>
+                </div>
               </div>
+
+              {/* Optional "Why am I seeing this?" info box */}
+              {showWhyModal && (
+                <div className="mt-3 p-3.5 rounded-xl border border-emerald-500/20 bg-emerald-50/60 dark:bg-emerald-950/20 text-xs text-foreground space-y-1 animate-in fade-in">
+                  <div className="font-bold flex items-center gap-1.5 text-emerald-800 dark:text-emerald-300">
+                    <CheckCircle2 className="h-3.5 w-3.5" />
+                    <span>{t.whyTitle}</span>
+                  </div>
+                  <p className="text-muted-foreground leading-relaxed">
+                    {t.whyDesc}
+                  </p>
+                  <div className="pt-1 flex flex-wrap gap-2 text-[11px] text-muted-foreground">
+                    <span className="px-2 py-0.5 rounded bg-card border border-border">
+                      {t.tradeLabel}: <strong>{context?.trade || "General"}</strong>
+                    </span>
+                    <span className="px-2 py-0.5 rounded bg-card border border-border">
+                      {t.jobsDoneLabel}: <strong>{context?.completed_bookings_count ?? 0}</strong>
+                    </span>
+                    <span className="px-2 py-0.5 rounded bg-card border border-border">
+                      Rating: <strong>{context?.rating ? `${context.rating} ★` : "New Worker"}</strong>
+                    </span>
+                    <span className="px-2 py-0.5 rounded bg-card border border-border">
+                      Demand: <strong>{demandBadgeLabel}</strong>
+                    </span>
+                  </div>
+                </div>
+              )}
             </CardHeader>
           </Card>
 
-          {/* Practical Tips Grid */}
+          {/* Structured Priorities List */}
           <div className="space-y-3">
             <div className="flex items-center gap-2">
               <CheckCircle2 className="h-4 w-4 text-emerald-600" />
@@ -470,27 +635,97 @@ export function KaushalBandhuView() {
               </h3>
             </div>
 
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-              {advice.tips.map((tip, idx) => (
-                <Card
-                  key={idx}
-                  className="border-border/70 bg-card shadow-sm hover:border-emerald-500/40 transition-all"
-                >
-                  <CardContent className="p-4 space-y-2">
-                    <div className="h-6 w-6 rounded-full bg-emerald-100 dark:bg-emerald-950/50 text-emerald-700 dark:text-emerald-300 text-xs font-bold flex items-center justify-center">
-                      {idx + 1}
-                    </div>
-                    <p className="text-xs text-foreground font-medium leading-relaxed">
-                      {tip}
-                    </p>
-                  </CardContent>
-                </Card>
-              ))}
-            </div>
+            {advice.priorities && advice.priorities.length > 0 ? (
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                {advice.priorities.map((priority, idx) => {
+                  const badgeConfig = PRIORITY_TYPE_BADGES[priority.type] || PRIORITY_TYPE_BADGES.WORK_OPPORTUNITY;
+                  const badgeLabel = language === "hi" ? badgeConfig.labelHi : language === "gu" ? badgeConfig.labelGu : badgeConfig.labelEn;
+
+                  return (
+                    <Card
+                      key={idx}
+                      className="border-border/70 bg-card shadow-sm hover:border-emerald-500/40 transition-all flex flex-col justify-between"
+                    >
+                      <CardContent className="p-4 space-y-2.5 flex flex-col justify-between h-full">
+                        <div className="space-y-2">
+                          <div className="flex items-center justify-between gap-2">
+                            <Badge
+                              variant="outline"
+                              className={`text-[10px] font-semibold px-2 py-0.5 ${badgeConfig.color}`}
+                            >
+                              {badgeLabel}
+                            </Badge>
+                            <span className="text-[11px] font-mono text-muted-foreground">
+                              #{idx + 1}
+                            </span>
+                          </div>
+                          <h4 className="text-xs sm:text-sm font-bold text-foreground">
+                            {priority.title}
+                          </h4>
+                          <p className="text-xs text-muted-foreground leading-relaxed">
+                            {priority.message}
+                          </p>
+                        </div>
+
+                        {priority.action && (
+                          <div className="pt-2 border-t border-border/40">
+                            {priority.type === "AVAILABILITY" || priority.type === "WORK_OPPORTUNITY" ? (
+                              <Link href="/worker/schedule">
+                                <Button size="sm" variant="ghost" className="h-7 px-2 text-xs font-semibold text-emerald-700 dark:text-emerald-300 w-full justify-between hover:bg-emerald-50 dark:hover:bg-emerald-950/30">
+                                  <span>{priority.action}</span>
+                                  <ArrowRight className="h-3 w-3" />
+                                </Button>
+                              </Link>
+                            ) : priority.type === "PROFILE" ? (
+                              <Link href="/worker/profile">
+                                <Button size="sm" variant="ghost" className="h-7 px-2 text-xs font-semibold text-blue-700 dark:text-blue-300 w-full justify-between hover:bg-blue-50 dark:hover:bg-blue-950/30">
+                                  <span>{priority.action}</span>
+                                  <ArrowRight className="h-3 w-3" />
+                                </Button>
+                              </Link>
+                            ) : priority.type === "SKILL" ? (
+                              <Link href="/worker/grow">
+                                <Button size="sm" variant="ghost" className="h-7 px-2 text-xs font-semibold text-purple-700 dark:text-purple-300 w-full justify-between hover:bg-purple-50 dark:hover:bg-purple-950/30">
+                                  <span>{priority.action}</span>
+                                  <ArrowRight className="h-3 w-3" />
+                                </Button>
+                              </Link>
+                            ) : (
+                              <span className="text-[11px] font-medium text-muted-foreground">
+                                {priority.action}
+                              </span>
+                            )}
+                          </div>
+                        )}
+                      </CardContent>
+                    </Card>
+                  );
+                })}
+              </div>
+            ) : (
+              /* Fallback tips grid if priorities array is not present */
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                {advice.tips.map((tip, idx) => (
+                  <Card
+                    key={idx}
+                    className="border-border/70 bg-card shadow-sm hover:border-emerald-500/40 transition-all"
+                  >
+                    <CardContent className="p-4 space-y-2">
+                      <div className="h-6 w-6 rounded-full bg-emerald-100 dark:bg-emerald-950/50 text-emerald-700 dark:text-emerald-300 text-xs font-bold flex items-center justify-center">
+                        {idx + 1}
+                      </div>
+                      <p className="text-xs text-foreground font-medium leading-relaxed">
+                        {tip}
+                      </p>
+                    </CardContent>
+                  </Card>
+                ))}
+              </div>
+            )}
           </div>
 
-          {/* Learning Recommendation (KaushalGrow) */}
-          {learningTitle && (
+          {/* Learning Recommendation (KaushalGrow) - Strict Trade Safe */}
+          {learningTitle ? (
             <Card className="border-blue-500/30 bg-gradient-to-r from-blue-50/40 to-indigo-50/30 dark:from-blue-950/20 dark:to-indigo-950/10 shadow-sm">
               <CardContent className="p-5 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
                 <div className="flex items-start gap-3.5">
@@ -525,6 +760,11 @@ export function KaushalBandhuView() {
                 </Link>
               </CardContent>
             </Card>
+          ) : (
+            <div className="p-3.5 rounded-xl border border-border/60 bg-muted/30 text-xs text-muted-foreground flex items-center gap-2">
+              <BookOpen className="h-4 w-4 text-muted-foreground flex-shrink-0" />
+              <span>{t.noCourseMsg}</span>
+            </div>
           )}
 
           {/* Important Note Card */}

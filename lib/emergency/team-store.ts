@@ -667,18 +667,29 @@ export class EmergencyTeamRepository {
           status,
           emergency_response_teams!inner (
             id,
+            incident_id,
             status
           )
         `)
         .eq("worker_id", workerId)
         .in("status", ["ASSIGNED", "ACTIVE"])
         .in("emergency_response_teams.status", ["FORMING", "FORMED", "ACTIVE"])
-        .order("created_at", { ascending: false })
-        .limit(1)
-        .maybeSingle();
+        .order("created_at", { ascending: false });
 
-      if (!error && data?.team_id) {
-        return await this.getTeamById(data.team_id);
+      if (!error && Array.isArray(data) && data.length > 0) {
+        for (const row of data) {
+          const t = await this.getTeamById(row.team_id);
+          if (t && t.incident_id) {
+            const inc = await EmergencyIncidentRepository.findById(t.incident_id);
+            if (inc && inc.status !== "CLOSED" && inc.status !== "RESOLVED" && inc.status !== "CANCELLED") {
+              const members = await this.listTeamMembers(t.id);
+              const m = members.find((mem) => mem.worker_id === workerId);
+              if (m && (m.status === "ASSIGNED" || m.status === "ACTIVE")) {
+                return t;
+              }
+            }
+          }
+        }
       }
     } catch {
       // Memory fallback
@@ -690,7 +701,10 @@ export class EmergencyTeamRepository {
       if (member) {
         const team = inMemoryTeams.get(teamId) || inMemoryTeams.get(member.incident_id);
         if (team && (team.status === "FORMING" || team.status === "FORMED" || team.status === "ACTIVE")) {
-          return await this.getTeamById(team.id);
+          const inc = await EmergencyIncidentRepository.findById(team.incident_id);
+          if (inc && inc.status !== "CLOSED" && inc.status !== "RESOLVED" && inc.status !== "CANCELLED") {
+            return await this.getTeamById(team.id);
+          }
         }
       }
     }

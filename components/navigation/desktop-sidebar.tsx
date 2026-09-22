@@ -4,6 +4,7 @@ import * as React from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { cn } from "@/lib/utils";
+import { useTranslation, getTranslatedNavTitle } from "@/lib/i18n";
 
 export interface NavItem {
   title: string;
@@ -18,17 +19,19 @@ export interface DesktopSidebarProps {
 }
 
 export function DesktopSidebar({ items, className }: DesktopSidebarProps) {
+  const { t } = useTranslation();
   const pathname = usePathname();
 
   return (
     <aside className={cn("hidden md:flex flex-col w-64 border-r bg-card p-4 space-y-6 sticky top-16 h-[calc(100vh-4rem)] overflow-y-auto shrink-0", className)}>
       <div className="space-y-1">
         <p className="px-3 text-[10px] font-bold uppercase tracking-wider text-muted-foreground mb-2">
-          Platform Navigation
+          {t("nav.platformNavigation", "Platform Navigation")}
         </p>
         <nav className="space-y-1">
           {items.map((item) => {
             const isActive = pathname === item.href;
+            const displayTitle = getTranslatedNavTitle(item.title, t);
             return (
               <Link
                 key={item.href}
@@ -42,7 +45,7 @@ export function DesktopSidebar({ items, className }: DesktopSidebarProps) {
               >
                 <div className="flex items-center space-x-2.5">
                   <span className="h-4 w-4 shrink-0">{item.icon}</span>
-                  <span>{item.title}</span>
+                  <span>{displayTitle}</span>
                 </div>
                 {item.badge && (
                   <span
@@ -62,3 +65,4 @@ export function DesktopSidebar({ items, className }: DesktopSidebarProps) {
     </aside>
   );
 }
+

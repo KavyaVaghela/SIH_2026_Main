@@ -42,6 +42,25 @@ export function setCachedProfileName(role: string, name: string): void {
   }
 }
 
+export function getCachedProfileAvatar(role: string): string | null {
+  if (typeof window === "undefined") return null;
+  try {
+    const val = sessionStorage.getItem(`kaushalyasetu_avatar_${role.toLowerCase()}`);
+    return val ? val.trim() : null;
+  } catch {
+    return null;
+  }
+}
+
+export function setCachedProfileAvatar(role: string, url: string): void {
+  if (typeof window === "undefined" || !url) return;
+  try {
+    sessionStorage.setItem(`kaushalyasetu_avatar_${role.toLowerCase()}`, url.trim());
+  } catch {
+    // Ignore storage quota or access errors
+  }
+}
+
 export function clearCachedProfileNames(): void {
   if (typeof window === "undefined") return;
   try {
@@ -49,6 +68,10 @@ export function clearCachedProfileNames(): void {
     sessionStorage.removeItem("kaushalyasetu_name_customer");
     sessionStorage.removeItem("kaushalyasetu_name_federation_admin");
     sessionStorage.removeItem("kaushalyasetu_name_super_admin");
+    sessionStorage.removeItem("kaushalyasetu_avatar_worker");
+    sessionStorage.removeItem("kaushalyasetu_avatar_customer");
+    sessionStorage.removeItem("kaushalyasetu_avatar_federation_admin");
+    sessionStorage.removeItem("kaushalyasetu_avatar_super_admin");
   } catch {
     // Ignore storage errors
   }

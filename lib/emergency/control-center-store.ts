@@ -74,6 +74,7 @@ export interface FederationIncidentSummary {
   team_lead_name: string | null;
   task_progress: IncidentTaskProgress | null;
   pending_requests_count: number;
+  is_archived?: boolean;
 }
 
 export interface FederationEligibleWorkerSummary {
@@ -203,6 +204,7 @@ export class EmergencyControlCenterRepository {
       category?: string;
       search?: string;
       hasShortage?: boolean;
+      includeArchived?: boolean;
     }
   ): Promise<FederationIncidentSummary[]> {
     let incidents: any[] = []; // eslint-disable-line @typescript-eslint/no-explicit-any
@@ -215,7 +217,7 @@ export class EmergencyControlCenterRepository {
         .eq("federation_id", federationId)
         .order("created_at", { ascending: false });
 
-      if (filters?.status && filters.status !== "ALL") {
+      if (filters?.status && filters.status !== "ALL" && filters.status !== "ARCHIVED") {
         query = query.eq("status", filters.status);
       }
       if (filters?.severity && filters.severity !== "ALL") {
@@ -237,7 +239,7 @@ export class EmergencyControlCenterRepository {
       // Fallback: check in-memory incidents from EmergencyIncidentRepository
       const memoryIncidents = await EmergencyIncidentRepository.listIncidents({ federationId });
       incidents = memoryIncidents;
-      if (filters?.status && filters.status !== "ALL") {
+      if (filters?.status && filters.status !== "ALL" && filters.status !== "ARCHIVED") {
         incidents = incidents.filter((inc) => inc.status === filters.status);
       }
       if (filters?.severity && filters.severity !== "ALL") {
@@ -246,6 +248,14 @@ export class EmergencyControlCenterRepository {
       if (filters?.category && filters.category !== "ALL") {
         incidents = incidents.filter((inc) => inc.category_name === filters.category);
       }
+    }
+
+    // Filter by archive status
+    if (filters?.status === "ARCHIVED") {
+      incidents = incidents.filter((inc) => inc.metadata?.is_archived === true);
+    } else if (!filters?.includeArchived) {
+      // By default, exclude archived incidents from active list
+      incidents = incidents.filter((inc) => !inc.metadata?.is_archived);
     }
 
     if (filters?.search) {
@@ -283,7 +293,7 @@ export class EmergencyControlCenterRepository {
         const acceptedCount = team?.accepted_worker_count || 0;
         const shortageCount = Math.max(0, requiredCount - acceptedCount);
         const hasShortage =
-          shortageCount > 0 && inc.status !== "RESOLVED" && inc.status !== "CLOSED";
+          shortageCount > 0 && inc.status !== "RESOLVED" && inc.status !== "CLOSED" && inc.status !== "CANCELLED";
 
         if (filters?.hasShortage !== undefined) {
           if (filters.hasShortage && !hasShortage) return null;
@@ -318,6 +328,7 @@ export class EmergencyControlCenterRepository {
           team_lead_name: teamLeadName,
           task_progress: progress.total > 0 ? progress : null,
           pending_requests_count: pendingReqs.length,
+          is_archived: inc.metadata?.is_archived === true,
         };
       })
     );

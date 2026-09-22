@@ -24,6 +24,13 @@ export const RAW_SKILL_CATEGORIES: SkillCategory[] = [
     softBg: "bg-orange-500/10 text-orange-600 dark:bg-orange-500/20 dark:text-orange-400 border-orange-500/30",
   },
   {
+    id: "plumbing",
+    name: "Plumbing & Pipe Repair",
+    iconName: "Wrench",
+    courseCount: 0,
+    softBg: "bg-cyan-500/10 text-cyan-600 dark:bg-cyan-500/20 dark:text-cyan-400 border-cyan-500/30",
+  },
+  {
     id: "painting",
     name: "Painting",
     iconName: "Paintbrush",
@@ -137,6 +144,42 @@ export const RAW_MOCK_COURSES: Course[] = [
           { id: "l2-1", title: "Understanding Electrical Shock Hazards", duration: "02:20", isCompleted: true, videoPlaceholderText: "Current flow hazards, insulation resistance, and arc flash prevention." }
         ]
       },
+    ],
+  },
+  {
+    id: "resource-8",
+    title: "Plumbing Safety & Leakage Detection",
+    category: "Plumbing & Pipe Repair",
+    categoryId: "plumbing",
+    duration: "13:40",
+    progress: 0,
+    buttonText: "Start Learning",
+    thumbnailGradient: "from-cyan-600 to-blue-700",
+    contentType: "CHAPTERS",
+    status: "PUBLISHED",
+    iconName: "Wrench",
+    description: "Master water pressure testing, acoustic and dye leakage detection, sanitary fixture installation, and PPE for plumbing.",
+    difficulty: "Beginner",
+    createdAt: "2026-09-09T08:00:00Z",
+    updatedAt: "2026-09-15T11:00:00Z",
+    chapters: [
+      {
+        id: "c8-1",
+        title: "Plumbing Safety & Pressure Handling",
+        duration: "06:20",
+        lessons: [
+          { id: "l8-1", title: "Main Line Pressure & Valve Safety", duration: "03:10", isCompleted: true, videoPlaceholderText: "Safe shutoff and pressure testing procedures." },
+          { id: "l8-2", title: "PPE and Chemical Drain Safety", duration: "03:10", isCompleted: false, videoPlaceholderText: "Eye and respiratory protection during drainage servicing." }
+        ]
+      },
+      {
+        id: "c8-2",
+        title: "Leakage Detection Protocols",
+        duration: "07:20",
+        lessons: [
+          { id: "l8-3", title: "Concealed Pipe Acoustic Detection", duration: "03:40", isCompleted: false, videoPlaceholderText: "Listening sticks and digital acoustic leakage locating." }
+        ]
+      }
     ],
   },
 ];

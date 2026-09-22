@@ -378,7 +378,20 @@ export class EmergencyIncidentRepository {
       };
 
       if (team) {
-        await EmergencyTeamRepository.updateFieldStatus(team.id, "RESOLVED");
+        await EmergencyTeamRepository.updateTeam(team.id, {
+          status: "DISBANDED",
+          field_status: "RESOLVED",
+          updated_at: now,
+        });
+        const members = await EmergencyTeamRepository.listTeamMembers(team.id);
+        for (const m of members) {
+          if (m.status !== "RELEASED" && m.status !== "NO_SHOW") {
+            await EmergencyTeamRepository.updateMember(team.id, m.id, {
+              status: "RELEASED",
+              updated_at: now,
+            });
+          }
+        }
       }
     } else {
       // REOPEN / Request Further Work
@@ -435,12 +448,237 @@ export class EmergencyIncidentRepository {
   }
 
   /**
+   * Federation Admin cancels an active emergency incident
+   */
+  static async cancelIncident(params: {
+    incidentId: string;
+    adminProfileId: string;
+    reason: string;
+  }): Promise<{ success: boolean; record?: EmergencyIncidentRecord; error?: string; statusCode?: number }> {
+    const { incidentId, adminProfileId, reason } = params;
+    if (!reason || reason.trim().length === 0) {
+      return { success: false, error: "Cancellation reason is required.", statusCode: 400 };
+    }
+
+    const incident = await this.findById(incidentId);
+    if (!incident) {
+      return { success: false, error: "Emergency incident not found.", statusCode: 404 };
+    }
+
+    if (incident.status === "CLOSED" || incident.status === "CANCELLED") {
+      return {
+        success: false,
+        error: `Cannot cancel an incident that is already ${incident.status.toLowerCase()}.`,
+        statusCode: 400,
+      };
+    }
+
+    const now = new Date().toISOString();
+    const newStatus: EmergencyIncidentStatus = "CANCELLED";
+
+    const updatedMetadata = {
+      ...(incident.metadata || {}),
+      is_cancelled: true,
+      cancellation_reason: reason.trim(),
+      cancelled_at: now,
+      cancelled_by: adminProfileId,
+    };
+
+    const updated: EmergencyIncidentRecord = {
+      ...incident,
+      status: newStatus,
+      metadata: updatedMetadata,
+      updated_at: now,
+    };
+
+    setStoredIncident(updated);
+
+    try {
+      const supabase = createAdminClient();
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      await (supabase.from("emergency_incidents") as any)
+        .update({
+          status: newStatus,
+          metadata: updatedMetadata,
+          updated_at: now,
+        })
+        .eq("id", incident.id);
+    } catch {
+      // In-memory fallback
+    }
+
+    // Disband teams and release all assigned workers
+    try {
+      const { EmergencyTeamRepository } = await import("@/lib/emergency/team-store");
+      const teams = await EmergencyTeamRepository.listTeamsForIncident(incident.id);
+      for (const t of teams) {
+        await EmergencyTeamRepository.updateTeam(t.id, {
+          status: "DISBANDED",
+          field_status: "RESOLVED",
+          updated_at: now,
+        });
+        const members = await EmergencyTeamRepository.listTeamMembers(t.id);
+        for (const m of members) {
+          if (m.status !== "RELEASED" && m.status !== "NO_SHOW") {
+            await EmergencyTeamRepository.updateMember(t.id, m.id, {
+              status: "RELEASED",
+              updated_at: now,
+            });
+          }
+        }
+      }
+    } catch {
+      // Resilient
+    }
+
+    // Withdraw pending dispatches in pool
+    try {
+      const { EmergencyDispatchRepository } = await import("@/lib/emergency/dispatch-store");
+      const dispatches = await EmergencyDispatchRepository.listDispatchesForIncident(incident.id);
+      for (const d of dispatches) {
+        if (d.status === "DISPATCHED") {
+          await EmergencyDispatchRepository.updateDispatchStatus(d.id, "WITHDRAWN", now);
+        }
+      }
+    } catch {
+      // Resilient
+    }
+
+    // Cancel pending and active incident tasks
+    try {
+      const { EmergencyTaskRepository } = await import("@/lib/emergency/task-store");
+      const tasks = await EmergencyTaskRepository.listTasksForIncident(incident.id);
+      for (const task of tasks) {
+        if (task.status !== "COMPLETED" && task.status !== "CANCELLED") {
+          await EmergencyTaskRepository.updateTask(task.id, {
+            status: "CANCELLED",
+            completion_notes: `Incident cancelled: ${reason.trim()}`,
+            completed_at: now,
+          });
+        }
+      }
+    } catch {
+      // Resilient
+    }
+
+    // Cancel pending additional worker requests
+    try {
+      const { EmergencyTaskRepository } = await import("@/lib/emergency/task-store");
+      const addReqs = await EmergencyTaskRepository.listAdditionalWorkerRequests(incident.id);
+      for (const req of addReqs) {
+        if (req.status === "PENDING_FEDERATION_REVIEW") {
+          await EmergencyTaskRepository.updateAdditionalWorkerRequest({
+            ...req,
+            status: "CANCELLED",
+            updated_at: now,
+          });
+        }
+      }
+    } catch {
+      // Resilient
+    }
+
+    // Audit log
+    try {
+      if (incident.federation_id) {
+        const { EmergencyControlCenterRepository } = await import("@/lib/emergency/control-center-store");
+        await EmergencyControlCenterRepository.createAuditLog({
+          incident_id: incident.id,
+          federation_id: incident.federation_id,
+          actor_id: adminProfileId,
+          action_type: "EMERGENCY_CANCELLED",
+          previous_state: { status: incident.status },
+          new_state: { status: "CANCELLED", reason: reason.trim() },
+          notes: `Emergency cancelled by Federation Administrator: ${reason.trim()}`,
+        });
+      }
+    } catch {
+      // Resilient
+    }
+
+    return { success: true, record: updated };
+  }
+
+  /**
+   * Federation Admin archives a completed emergency incident from the active view
+   */
+  static async archiveIncident(params: {
+    incidentId: string;
+    adminProfileId: string;
+  }): Promise<{ success: boolean; record?: EmergencyIncidentRecord; error?: string; statusCode?: number }> {
+    const { incidentId, adminProfileId } = params;
+
+    const incident = await this.findById(incidentId);
+    if (!incident) {
+      return { success: false, error: "Emergency incident not found.", statusCode: 404 };
+    }
+
+    if (incident.status !== "CLOSED" && incident.status !== "RESOLVED" && incident.status !== "CANCELLED") {
+      return {
+        success: false,
+        error: "Only resolved, closed, or cancelled emergencies can be archived.",
+        statusCode: 400,
+      };
+    }
+
+    const now = new Date().toISOString();
+    const updatedMetadata = {
+      ...(incident.metadata || {}),
+      is_archived: true,
+      archived_at: now,
+      archived_by: adminProfileId,
+    };
+
+    const updated: EmergencyIncidentRecord = {
+      ...incident,
+      metadata: updatedMetadata,
+      updated_at: now,
+    };
+
+    setStoredIncident(updated);
+
+    try {
+      const supabase = createAdminClient();
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      await (supabase.from("emergency_incidents") as any)
+        .update({
+          metadata: updatedMetadata,
+          updated_at: now,
+        })
+        .eq("id", incident.id);
+    } catch {
+      // Fallback
+    }
+
+    // Audit log
+    try {
+      if (incident.federation_id) {
+        const { EmergencyControlCenterRepository } = await import("@/lib/emergency/control-center-store");
+        await EmergencyControlCenterRepository.createAuditLog({
+          incident_id: incident.id,
+          federation_id: incident.federation_id,
+          actor_id: adminProfileId,
+          action_type: "EMERGENCY_ARCHIVED",
+          previous_state: { is_archived: false },
+          new_state: { is_archived: true },
+          notes: "Emergency incident archived and removed from active control center list.",
+        });
+      }
+    } catch {
+      // Resilient
+    }
+
+    return { success: true, record: updated };
+  }
+
+  /**
    * Maps detailed internal status into a safe customer-facing status string
    */
   static getCustomerSafeStatus(
     incident: EmergencyIncidentRecord,
     team?: { status?: string; field_status?: string } | null
   ): string {
+    if (incident.status === "CANCELLED") return "Emergency Cancelled";
     if (incident.status === "CLOSED") return "Closed";
     if (incident.status === "RESOLVED") return "Emergency Resolved";
     if (incident.status === "STAFFING_SHORTAGE") return "Additional Support Required";
