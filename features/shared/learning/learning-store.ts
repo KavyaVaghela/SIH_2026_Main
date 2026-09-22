@@ -34,6 +34,14 @@ export const INITIAL_SKILL_CATEGORIES: SkillCategory[] = [
     description: "Furniture woodwork, mortise/tenon joints, and precision cutting.",
   },
   {
+    id: "plumbing",
+    name: "Plumbing & Pipe Repair",
+    iconName: "Wrench",
+    courseCount: 2,
+    softBg: "bg-cyan-500/10 text-cyan-600 dark:bg-cyan-500/20 dark:text-cyan-400 border-cyan-500/30",
+    description: "Sanitary fitting, pipeline leakage detection, and drainage repair.",
+  },
+  {
     id: "painting",
     name: "Painting",
     iconName: "Paintbrush",
@@ -329,6 +337,86 @@ export const INITIAL_LEARNING_RESOURCES: LearningResource[] = [
     createdAt: "2026-09-08T15:00:00Z",
     updatedAt: "2026-09-13T17:00:00Z",
   },
+  {
+    id: "resource-8",
+    title: "Plumbing Safety & Leakage Detection",
+    description: "Master water pressure testing, acoustic and dye leakage detection, sanitary fixture installation, and PPE for plumbing.",
+    category: "Plumbing & Pipe Repair",
+    categoryId: "plumbing",
+    difficulty: "Beginner",
+    duration: "13:40",
+    thumbnailGradient: "from-cyan-600 to-blue-700",
+    contentType: "CHAPTERS",
+    status: "PUBLISHED",
+    iconName: "Wrench",
+    learningObjectives: [
+      "Master water shutoff valves and pressure regulation",
+      "Detect hairline pipe leakages using dye and acoustic testing",
+      "Follow sanitary plumbing PPE and eye protection standards",
+    ],
+    chapters: [
+      {
+        id: "ch8-1",
+        title: "Plumbing Safety & Equipment Handling",
+        duration: "06:20",
+        lessons: [
+          { id: "les8-1", title: "Main Line Pressure & Valve Safety", duration: "03:10", isCompleted: true },
+          { id: "les8-2", title: "PPE and Chemical Drain Safety", duration: "03:10", isCompleted: false },
+        ],
+      },
+      {
+        id: "ch8-2",
+        title: "Leakage Detection Protocols",
+        duration: "07:20",
+        lessons: [
+          { id: "les8-3", title: "Concealed Pipe Acoustic Detection", duration: "03:40", isCompleted: false },
+          { id: "les8-4", title: "Joint Coupling & Sealing Methods", duration: "03:40", isCompleted: false },
+        ],
+      },
+    ],
+    createdAt: "2026-09-09T08:00:00Z",
+    updatedAt: "2026-09-15T11:00:00Z",
+  },
+  {
+    id: "resource-9",
+    title: "Pipe Repair & Sanitary Installation",
+    description: "Techniques for CPVC/GI pipe jointing, tap and mixer repairs, flush valve maintenance, and sanitary ware installation.",
+    category: "Plumbing & Pipe Repair",
+    categoryId: "plumbing",
+    difficulty: "Intermediate",
+    duration: "16:15",
+    thumbnailGradient: "from-teal-600 to-emerald-700",
+    contentType: "CHAPTERS",
+    status: "PUBLISHED",
+    iconName: "Wrench",
+    learningObjectives: [
+      "Execute solvent welding on CPVC and PVC pipelines",
+      "Disassemble and replace ceramic disc mixer cartridges",
+      "Install wall-hung and floor-mounted sanitary fixtures",
+    ],
+    chapters: [
+      {
+        id: "ch9-1",
+        title: "Pipe Cutting & Jointing Techniques",
+        duration: "08:00",
+        lessons: [
+          { id: "les9-1", title: "CPVC & PPR Solvent Welding", duration: "04:00", isCompleted: false },
+          { id: "les9-2", title: "Threading & Union Joint Installation", duration: "04:00", isCompleted: false },
+        ],
+      },
+      {
+        id: "ch9-2",
+        title: "Sanitary Fixture Installation",
+        duration: "08:15",
+        lessons: [
+          { id: "les9-3", title: "Mixer Tap Cartridge Replacement", duration: "04:15", isCompleted: false },
+          { id: "les9-4", title: "Drain Trap & Waste Coupling Fixes", duration: "04:00", isCompleted: false },
+        ],
+      },
+    ],
+    createdAt: "2026-09-10T10:00:00Z",
+    updatedAt: "2026-09-16T15:00:00Z",
+  },
 ];
 
 export interface SharedStoreData {
@@ -355,6 +443,22 @@ function loadStoreData(): SharedStoreData {
         Array.isArray(parsed.categories) &&
         Array.isArray(parsed.resources)
       ) {
+        // Ensure new system resources are merged into existing localStorage if missing
+        const existingIds = new Set(parsed.resources.map((r: any) => r.id));
+        const missingInitial = INITIAL_LEARNING_RESOURCES.filter(
+          (init) => !existingIds.has(init.id)
+        );
+        const existingCatIds = new Set(parsed.categories.map((c: any) => c.id));
+        const missingCats = INITIAL_SKILL_CATEGORIES.filter(
+          (cat) => !existingCatIds.has(cat.id)
+        );
+
+        if (missingInitial.length > 0 || missingCats.length > 0) {
+          parsed.resources = [...parsed.resources, ...missingInitial];
+          parsed.categories = [...parsed.categories, ...missingCats];
+          saveStoreData(parsed);
+        }
+
         return parsed;
       }
     }

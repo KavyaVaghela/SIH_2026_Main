@@ -90,6 +90,13 @@ export interface WorkerRegionalTradeDemand {
   demand_level: "LOW" | "STEADY" | "HIGH" | "ELEVATED";
 }
 
+export interface WorkerAiPriority {
+  type: "WORK_OPPORTUNITY" | "PERFORMANCE" | "AVAILABILITY" | "PROFILE" | "SKILL" | "SAFETY" | "EARNINGS";
+  title: string;
+  message: string;
+  action?: string;
+}
+
 export interface WorkerAiContext {
   worker_id?: string;
   worker_name: string;
@@ -107,10 +114,13 @@ export interface WorkerAiContext {
   total_bookings: number;
   bookings_last_30_days: number;
   rating: number;
+  reviews_count?: number;
+  is_new_worker?: boolean;
   utilization_level: "LOW" | "MODERATE" | "HIGH";
   regional_trade_demand: "LOW" | "MODERATE" | "HIGH" | "ELEVATED";
   regional_trade_demand_info?: WorkerRegionalTradeDemand;
   recommended_course?: WorkerLearningSuggestion;
+  allowed_courses?: WorkerLearningSuggestion[];
   relevant_training_title: string | null;
   relevant_training_category: string | null;
   has_sufficient_activity: boolean;
@@ -119,6 +129,7 @@ export interface WorkerAiContext {
 export interface WorkerAiAdviceResponse {
   greeting: string;
   summary: string;
+  priorities?: WorkerAiPriority[];
   tips: string[];
   learning_suggestion?: WorkerLearningSuggestion | string | null;
   important_note: string | null;

@@ -7,6 +7,7 @@ import type {
   WorkerAiContext,
   WorkerAiAdviceResponse,
   WorkerAiLanguage,
+  WorkerAiPriority,
 } from "./ai-types";
 
 /**
@@ -201,200 +202,348 @@ export function generateWorkerDeterministicFallback(
     ? context.worker_name.trim().split(" ")[0]
     : "";
 
+  const isHighDemand =
+    context.regional_trade_demand === "HIGH" ||
+    context.regional_trade_demand === "ELEVATED";
+
+  const isUnderUtilized = context.utilization_level === "LOW";
+  const isHighUtilized = context.utilization_level === "HIGH";
+
+  // Safe trade-filtered course selection
+  const safeCourse =
+    context.allowed_courses && context.allowed_courses.length > 0
+      ? context.allowed_courses[0]
+      : null;
+
+  // ----------------------------------------------------
+  // HINDI DETERMINISTIC RESPONSE (Pure Devanagari)
+  // ----------------------------------------------------
   if (language === "hi") {
     const greeting = firstName
       ? `नमस्ते ${firstName} जी 👋`
-      : "नमस्ते साथी 👋";
+      : "नमस्ते कारीगर साथी 👋";
 
-    if (!context.has_sufficient_activity) {
-      return {
-        greeting,
-        summary:
-          "अभी आपके काम की जानकारी कम है। जैसे-जैसे आप KaushalyaSetu पर काम करेंगे, मैं आपको बेहतर सलाह दे पाऊंगा।",
-        tips: [
-          "अपनी प्रोफाइल में अपने सभी skills सही तरीके से भरें।",
-          "काम पाने के लिए अपनी availability को 'Available' पर रखें।",
-          "नए काम के अवसर देखने के लिए अपने इलाके की मांग चेक करें।",
-        ],
-        learning_suggestion: context.relevant_training_title
-          ? `उपयोगी प्रशिक्षण के लिए KaushalGrow में '${context.relevant_training_title}' देखें।`
-          : "KaushalGrow में अपने काम से जुड़े उपयोगी कोर्स देखें।",
-        important_note:
-          "समय पर काम पूरा करके और ग्राहकों से अच्छी रेटिंग पाकर काम के अवसर बढ़ाएं।",
-        confidence: "MEDIUM",
-        disclaimer: reason
-          ? `प्लेटफ़ॉर्म आधारित सलाह (${reason})`
-          : "प्लेटफ़ॉर्म आधारित सलाह",
-        is_fallback: true,
-        generated_at: new Date().toISOString(),
-      };
+    let summary = isHighDemand
+      ? `आपके इलाके में ${context.worker_trade} के काम की मांग अभी ज्यादा है।`
+      : `आपके इलाके में ${context.worker_trade} का काम सामान्य रूप से चल रहा है।`;
+
+    if (context.is_new_worker) {
+      summary = "आप KaushalyaSetu पर नए कारीगर साथी हैं। आपकी प्रोफाइल तैयार करने में मैं आपकी मदद करूंगा।";
     }
 
-    const demandPhrase =
-      context.regional_trade_demand === "HIGH" ||
-      context.regional_trade_demand === "ELEVATED"
-        ? `आपके इलाके में अभी ${context.worker_trade} का काम ज्यादा है।`
-        : `आपके इलाके में अभी ${context.worker_trade} का काम सामान्य रूप से चल रहा है।`;
+    const priorities: WorkerAiPriority[] = [];
 
-    const tips: string[] = [
-      "अपनी availability हमेशा अपडेट रखें ताकि ग्राहक आपको चुन सकें।",
-      "ग्राहकों को समय पर और अच्छी सेवा देकर अपनी रेटिंग मजबूत रखें।",
-    ];
-
-    if (context.skills.length > 0) {
-      tips.push(
-        `अपने ${context.skills.slice(0, 2).join(" और ")} के कौशल का विवरण हमेशा अपडेट रखें।`
-      );
+    // 1. Work opportunity / availability
+    if (isUnderUtilized) {
+      priorities.push({
+        type: "AVAILABILITY",
+        title: "काम का मौका",
+        message: "आपके पास हाल में कम काम आया है। अगर आप तैयार हैं, तो अपनी उपलब्धता (Availability) ON रखें।",
+        action: "उपलब्धता जांचें",
+      });
+    } else if (isHighUtilized) {
+      priorities.push({
+        type: "PERFORMANCE",
+        title: "आराम और गुणवत्ता",
+        message: "हाल ही में आपके पास काफी काम रहा है। दो कामों के बीच पर्याप्त समय रखें ताकि काम की गुणवत्ता बनी रहे।",
+      });
     } else {
-      tips.push("अपनी प्रोफाइल में अपने मुख्य स्किल्स जोड़ें।");
+      priorities.push({
+        type: "WORK_OPPORTUNITY",
+        title: "काम का मौका",
+        message: isHighDemand
+          ? `आपके इलाके में ${context.worker_trade} के काम की अच्छी मांग है। अपनी उपलब्धता ON रखें।`
+          : "नियमित काम पाने के लिए अपने शेड्यूल पर नजर रखें।",
+        action: "उपलब्धता जांचें",
+      });
     }
+
+    // 2. Performance / Rating
+    if (context.rating >= 4.5 && (context.reviews_count ?? 0) > 0) {
+      priorities.push({
+        type: "PERFORMANCE",
+        title: "बेहतरीन सेवा",
+        message: `आपकी रेटिंग ${context.rating} बहुत अच्छी है। ग्राहकों से समय पर पहुंचना और साफ बातचीत बनाए रखें।`,
+      });
+    } else if (context.is_new_worker) {
+      priorities.push({
+        type: "PROFILE",
+        title: "प्रोफाइल पूरी करें",
+        message: "अपनी प्रोफाइल में मुख्य हुनर और अनुभव दर्ज करें ताकि ग्राहकों का भरोसा बढ़े।",
+        action: "प्रोफाइल देखें",
+      });
+    } else {
+      priorities.push({
+        type: "PERFORMANCE",
+        title: "ग्राहकों की संतुष्टि",
+        message: "काम पूरा होने पर ग्राहक से विनम्रता से बात करें और फीडबैक देने का अनुरोध करें।",
+      });
+    }
+
+    // 3. Earnings / Realism (NO unrealistic guarantees)
+    priorities.push({
+      type: "EARNINGS",
+      title: "कमाई के अवसर",
+      message: isHighDemand
+        ? "मांग अच्छी रहने पर सही समय पर काम स्वीकार करने से आपकी आय में सुधार की संभावना रहती है।"
+        : "नियमित उपलब्धता और अच्छी रेटिंग बनाए रखने से आपको लगातार काम मिलने में मदद मिलती है।",
+    });
+
+    // 4. Trade-safe Skill Recommendation
+    if (safeCourse) {
+      priorities.push({
+        type: "SKILL",
+        title: "हुनर में सुधार",
+        message: `'${safeCourse.title}' कोर्स आपके ${context.worker_trade} के काम के लिए काफी उपयोगी रहेगा।`,
+        action: "कोर्स सीखें",
+      });
+    }
+
+    const tips = priorities.map((p) => `${p.title}: ${p.message}`);
+
+    const learning_suggestion = safeCourse
+      ? {
+          course_id: safeCourse.course_id,
+          title: safeCourse.title,
+          category: safeCourse.category,
+          reason: `'${safeCourse.title}' कोर्स से आप काम के नए और सुरक्षित तरीके सीख सकते हैं।`,
+        }
+      : null;
 
     return {
       greeting,
-      summary: demandPhrase,
+      summary,
+      priorities,
       tips,
-      learning_suggestion: context.relevant_training_title
-        ? `KaushalGrow में '${context.relevant_training_title}' सीखकर अपना कौशल बढ़ाएं।`
-        : null,
+      learning_suggestion,
       important_note:
-        "काम के नए अवसरों के लिए अपना Schedule & Jobs समय-समय पर चेक करते रहें।",
+        "याद रखें: काम का मिलना ग्राहकों की मांग पर निर्भर करता है। हमेशा सुरक्षित काम करें।",
       confidence: "MEDIUM",
       disclaimer: reason
-        ? `प्लेटफ़ॉर्म आधारित सलाह (${reason})`
-        : "प्लेटफ़ॉर्म आधारित सलाह",
+        ? `मंच के आंकड़ों पर आधारित मार्गदर्शन (${reason})`
+        : "वास्तविक प्लेटफॉर्म डेटा पर आधारित सलाह",
       is_fallback: true,
       generated_at: new Date().toISOString(),
     };
   }
 
+  // ----------------------------------------------------
+  // GUJARATI DETERMINISTIC RESPONSE (Pure Gujarati)
+  // ----------------------------------------------------
   if (language === "gu") {
     const greeting = firstName
       ? `નમસ્તે ${firstName}ભાઈ 👋`
-      : "નમસ્તે સાથી 👋";
+      : "નમસ્તે કારીગર મિત્ર 👋";
 
-    if (!context.has_sufficient_activity) {
-      return {
-        greeting,
-        summary:
-          "હાલમાં તમારી કામની માહિતી ઓછી છે. તમે KaushalyaSetu પર વધુ કામ કરશો તેમ હું તમને વધુ સારી સલાહ આપી શકીશ.",
-        tips: [
-          "તમારી પ્રોફાઇલમાં તમારા બધા skills સાચી રીતે ઉમેરો.",
-          "કામ મેળવવા માટે તમારી availability હંમેશા 'Available' રાખો.",
-          "નવા કામના ઓર્ડર માટે તમારું Schedule નિયમિત ચેક કરો.",
-        ],
-        learning_suggestion: context.relevant_training_title
-          ? `KaushalGrow માં '${context.relevant_training_title}' તાલીમ જોઈ શકો છો.`
-          : "KaushalGrow માં ઉપયોગી તાલીમ જુઓ.",
-        important_note:
-          "સારી ગુણવત્તાનું કામ આપીને તમારી રેટિંગ સારી જાળવી રાખો.",
-        confidence: "MEDIUM",
-        disclaimer: reason
-          ? `પ્લેટફોર્મ આધારિત માર્ગદર્શન (${reason})`
-          : "પ્લેટફોર્મ આધારિત માર્ગદર્શન",
-        is_fallback: true,
-        generated_at: new Date().toISOString(),
-      };
+    let summary = isHighDemand
+      ? `તમારા વિસ્તારમાં ${context.worker_trade}ના કામની માંગ અત્યારે વધારે છે.`
+      : `તમારા વિસ્તારમાં ${context.worker_trade}નું કામ સામાન્ય રીતે ચાલી રહ્યું છે.`;
+
+    if (context.is_new_worker) {
+      summary = "તમે KaushalyaSetu પર નવા કારીગર મિત્ર છો. તમારી પ્રોફાઇલ તૈયાર કરવામાં હું મદદ કરીશ.";
     }
 
-    const demandPhrase =
-      context.regional_trade_demand === "HIGH" ||
-      context.regional_trade_demand === "ELEVATED"
-        ? `તમારા વિસ્તારમાં હાલમાં ${context.worker_trade}નું કામ વધારે છે.`
-        : `તમારા વિસ્તારમાં હાલમાં ${context.worker_trade}નું કામ ઉપલબ્ધ છે.`;
+    const priorities: WorkerAiPriority[] = [];
 
-    const tips: string[] = [
-      "ગ્રાહકો તમને સરળતાથી સંપર્ક કરી શકે તે માટે તમારી availability અપડેટ રાખો.",
-      "ગ્રાહકોને સમયસર સેવા આપીને તમારું rating સારું રાખો.",
-    ];
-
-    if (context.skills.length > 0) {
-      tips.push(
-        `તમારા ${context.skills.slice(0, 2).join(" અને ")} કૌશલ્ય પ્રોફાઇલમાં અપડેટ રાખો.`
-      );
+    // 1. Immediate work opportunity
+    if (isUnderUtilized) {
+      priorities.push({
+        type: "AVAILABILITY",
+        title: "કામની તક",
+        message: "તમારા પાસે હાલમાં ઓછું કામ આવ્યું છે. જો તમે તૈયાર હોવ તો તમારી ઉપલબ્ધતા (Availability) ON રાખો.",
+        action: "ઉપલબ્ધતા ચકાસો",
+      });
+    } else if (isHighUtilized) {
+      priorities.push({
+        type: "PERFORMANCE",
+        title: "આરામ અને ગુણવત્તા",
+        message: "તમે હાલમાં ઘણું કામ કર્યું છે. કામની સારી ગુણવત્તા જાળવવા માટે પૂરતો સમય અને આરામ રાખો.",
+      });
     } else {
-      tips.push("તમારી પ્રોફાઇલમાં તમારા મુખ્ય કૌશલ્યો ઉમેરો.");
+      priorities.push({
+        type: "WORK_OPPORTUNITY",
+        title: "કામની તક",
+        message: isHighDemand
+          ? `તમારા વિસ્તારમાં ${context.worker_trade}ના કામની સારી માંગ છે. ઉપલબ્ધતા ON રાખો.`
+          : "નવા ઓર્ડર સમયસર મેળવવા માટે તમારું શિડ્યુલ નિયમિત જોતા રહો.",
+        action: "ઉપલબ્ધતા ચકાસો",
+      });
     }
+
+    // 2. Performance
+    if (context.rating >= 4.5 && (context.reviews_count ?? 0) > 0) {
+      priorities.push({
+        type: "PERFORMANCE",
+        title: "ઉત્તમ સેવા",
+        message: `તમારું રેટિંગ ${context.rating} ઉત્તમ છે. ગ્રાહકો સાથે સમયસર પહોંચવું અને નમ્ર વાતચીત ચાલુ રાખો.`,
+      });
+    } else if (context.is_new_worker) {
+      priorities.push({
+        type: "PROFILE",
+        title: "પ્રોફાઇલ પૂર્ણ કરો",
+        message: "તમારા મુખ્ય કૌશલ્ય અને અનુભવ ઉમેરો જેથી ગ્રાહકોનો વિશ્વાસ વધે.",
+        action: "પ્રોફાઇલ જુઓ",
+      });
+    } else {
+      priorities.push({
+        type: "PERFORMANCE",
+        title: "ગ્રાહક સંતોષ",
+        message: "કામ પૂરું થયા પછી ગ્રાહક સાથે સ્પષ્ટ વાત કરો અને પ્રતિસાદ આપવા વિનંતી કરો.",
+      });
+    }
+
+    // 3. Earnings (No false guarantees)
+    priorities.push({
+      type: "EARNINGS",
+      title: "કમાણીની તકો",
+      message: isHighDemand
+        ? "વિસ્તારમાં માંગ સારી હોવાથી સમયસર કામ સ્વીકારવાથી આવક વધવાની સારી તક રહે છે."
+        : "નિયમિત ઉપલબ્ધતા અને સારું રેટિંગ રાખવાથી સતત કામ મેળવવામાં મદદ મળે છે.",
+    });
+
+    // 4. Trade-safe Skill Recommendation
+    if (safeCourse) {
+      priorities.push({
+        type: "SKILL",
+        title: "કૌશલ્ય વિકાસ",
+        message: `'${safeCourse.title}' કોર્સ તમારા ${context.worker_trade}ના કામ માટે ઘણો ઉપયોગી રહેશે.`,
+        action: "કોર્સ શીખો",
+      });
+    }
+
+    const tips = priorities.map((p) => `${p.title}: ${p.message}`);
+
+    const learning_suggestion = safeCourse
+      ? {
+          course_id: safeCourse.course_id,
+          title: safeCourse.title,
+          category: safeCourse.category,
+          reason: `'${safeCourse.title}' કોર્સ શીખવાથી તમારા કામની નવી તકનીકો શીખી શકાશે.`,
+        }
+      : null;
 
     return {
       greeting,
-      summary: demandPhrase,
+      summary,
+      priorities,
       tips,
-      learning_suggestion: context.relevant_training_title
-        ? `KaushalGrow માં '${context.relevant_training_title}' શીખીને તમારી કુશળતા વધારો.`
-        : null,
+      learning_suggestion,
       important_note:
-        "નવા કામના ઓર્ડર જોવા માટે તમારું Schedule નિયમિત જોતા રહો.",
+        "ધ્યાન રાખો: વધુ કામ લેતા પહેલા તમારી તૈયારી અને આરામનો સમય જરૂર જુઓ.",
       confidence: "MEDIUM",
       disclaimer: reason
         ? `પ્લેટફોર્મ આધારિત માર્ગદર્શન (${reason})`
-        : "પ્લેટફોર્મ આધારિત માર્ગદર્શન",
+        : "વાસ્તવિક પ્લેટફોર્મ ડેટા પર આધારિત સલાહ",
       is_fallback: true,
       generated_at: new Date().toISOString(),
     };
   }
 
-  // Default: English
-  const greeting = firstName ? `Hello ${firstName} 👋` : "Hello 👋";
+  // ----------------------------------------------------
+  // ENGLISH DETERMINISTIC RESPONSE
+  // ----------------------------------------------------
+  const greeting = firstName ? `Hello ${firstName} 👋` : "Hello Partner 👋";
 
-  if (!context.has_sufficient_activity) {
-    return {
-      greeting,
-      summary:
-        "There is not enough work activity yet. As you use KaushalyaSetu more, I can give you better advice.",
-      tips: [
-        "Keep your profile and skill details up to date.",
-        "Set your availability status to 'Available' when ready for work.",
-        "Check your schedule regularly for new customer requests.",
-      ],
-      learning_suggestion: context.relevant_training_title
-        ? `Consider reviewing '${context.relevant_training_title}' in KaushalGrow.`
-        : "Explore helpful vocational courses in KaushalGrow.",
-      important_note:
-        "Providing quality service and earning good ratings will help you receive more opportunities.",
-      confidence: "MEDIUM",
-      disclaimer: reason
-        ? `Platform-based advice (${reason})`
-        : "Platform-based advice",
-      is_fallback: true,
-      generated_at: new Date().toISOString(),
-    };
+  let summary = isHighDemand
+    ? `${context.worker_trade} demand is currently high in your area.`
+    : `${context.worker_trade} demand is steady in your local cooperative area.`;
+
+  if (context.is_new_worker) {
+    summary = "Welcome to KaushalyaSetu. I am here to help you set up your profile and grow your trade work.";
   }
 
-  const demandPhrase =
-    context.regional_trade_demand === "HIGH" ||
-    context.regional_trade_demand === "ELEVATED"
-      ? `${context.worker_trade} work is currently higher in your area.`
-      : `${context.worker_trade} work is currently available in your area.`;
+  const priorities: WorkerAiPriority[] = [];
 
-  const tips: string[] = [
-    "Keep your availability updated so customers can reach you.",
-    "Deliver prompt and courteous service to maintain a high customer rating.",
-  ];
-
-  if (context.skills.length > 0) {
-    tips.push(
-      `Ensure your ${context.skills.slice(0, 2).join(" and ")} skills are highlighted on your profile.`
-    );
+  // 1. Immediate work opportunity
+  if (isUnderUtilized) {
+    priorities.push({
+      type: "AVAILABILITY",
+      title: "Work Opportunity",
+      message: "You have had fewer jobs recently. If you are ready for work, keep your availability status ON.",
+      action: "Check Availability",
+    });
+  } else if (isHighUtilized) {
+    priorities.push({
+      type: "PERFORMANCE",
+      title: "Rest and Quality",
+      message: "You have been handling many jobs recently. Keep enough time between jobs so service quality does not suffer.",
+    });
   } else {
-    tips.push("Add your core skills to your profile to attract relevant jobs.");
+    priorities.push({
+      type: "WORK_OPPORTUNITY",
+      title: "Work Opportunity",
+      message: isHighDemand
+        ? `Local demand for ${context.worker_trade} is elevated. Keeping availability ON helps customers find you.`
+        : "Check your schedule regularly to receive suitable incoming requests.",
+      action: "Check Availability",
+    });
   }
+
+  // 2. Performance
+  if (context.rating >= 4.5 && (context.reviews_count ?? 0) > 0) {
+    priorities.push({
+      type: "PERFORMANCE",
+      title: "High Service Quality",
+      message: `Your rating is strong at ${context.rating}. Continue your prompt arrival and clear communication.`,
+    });
+  } else if (context.is_new_worker) {
+    priorities.push({
+      type: "PROFILE",
+      title: "Complete Profile",
+      message: "Add your key skills, past experience, and accurate phone number to build customer confidence.",
+      action: "View Profile",
+    });
+  } else {
+    priorities.push({
+      type: "PERFORMANCE",
+      title: "Customer Satisfaction",
+      message: "Always explain your completed work clearly to customers and politely request feedback.",
+    });
+  }
+
+  // 3. Earnings potential (No false promises)
+  priorities.push({
+    type: "EARNINGS",
+    title: "Earning Potential",
+    message: isHighDemand
+      ? "High local demand may create more work opportunities when your schedule is kept up to date."
+      : "Providing reliable service and maintaining high ratings helps secure repeat work opportunities.",
+  });
+
+  // 4. Trade-safe Skill Recommendation
+  if (safeCourse) {
+    priorities.push({
+      type: "SKILL",
+      title: "Skill Upgrade",
+      message: `'${safeCourse.title}' is a practical course directly relevant to your ${context.worker_trade} work.`,
+      action: "Start Learning",
+    });
+  }
+
+  const tips = priorities.map((p) => `${p.title}: ${p.message}`);
+
+  const learning_suggestion = safeCourse
+    ? {
+        course_id: safeCourse.course_id,
+        title: safeCourse.title,
+        category: safeCourse.category,
+        reason: `Master practical skills with '${safeCourse.title}' in KaushalGrow.`,
+      }
+    : null;
 
   return {
     greeting,
-    summary: demandPhrase,
+    summary,
+    priorities,
     tips,
-    learning_suggestion: context.relevant_training_title
-      ? `Upgrade your trade skills with '${context.relevant_training_title}' in KaushalGrow.`
-      : null,
+    learning_suggestion,
     important_note:
-      "Check your schedule regularly for upcoming bookings and requests.",
+      "Please note: Work opportunities depend on customer requests in your area. Always manage your schedule safely.",
     confidence: "MEDIUM",
     disclaimer: reason
-      ? `Platform-based advice (${reason})`
-      : "Platform-based advice",
+      ? `Advisory guidance (${reason})`
+      : "Grounded guidance based on real platform activity.",
     is_fallback: true,
     generated_at: new Date().toISOString(),
   };
 }
-
-
