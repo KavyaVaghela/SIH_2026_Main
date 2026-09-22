@@ -12,6 +12,8 @@ import {
 } from "@/constants/static-notifications";
 import type { PlatformRole } from "@/config/navigation";
 import { cn } from "@/lib/utils";
+import { useTranslation } from "@/lib/i18n";
+
 
 export interface NotificationCenterProps {
   role?: PlatformRole;
@@ -21,25 +23,35 @@ export interface NotificationCenterProps {
   className?: string;
 }
 
-const ROLE_DISPLAY_TITLES: Record<PlatformRole, string> = {
-  CUSTOMER: "Customer Notifications",
-  WORKER: "Worker Notifications",
-  FEDERATION_ADMIN: "Federation Alerts",
-  SUPER_ADMIN: "Super Admin Alerts",
-};
-
 export function NotificationCenter({
+
   role: propRole,
   notifications: propNotifications,
   onNotificationClick,
   onClearAll,
   className,
 }: NotificationCenterProps) {
+  const { t } = useTranslation();
   const pathname = usePathname();
   const router = useRouter();
 
   const currentRole: PlatformRole = propRole || getRoleFromPathname(pathname);
   const isSuperAdmin = currentRole === "SUPER_ADMIN";
+
+  const getRoleTitle = (r: PlatformRole): string => {
+    switch (r) {
+      case "CUSTOMER":
+        return t("notifications.customer", "Customer Notifications");
+      case "WORKER":
+        return t("notifications.worker", "Worker Notifications");
+      case "FEDERATION_ADMIN":
+        return t("notifications.federation", "Federation Alerts");
+      case "SUPER_ADMIN":
+        return t("notifications.superAdmin", "Super Admin Alerts");
+      default:
+        return t("notifications.title", "Notifications");
+    }
+  };
 
   const [isOpen, setIsOpen] = React.useState(false);
   const [items, setItems] = React.useState<RoleNotificationItem[]>(() =>
@@ -110,10 +122,10 @@ export function NotificationCenter({
           {/* Header */}
           <div className="flex items-center justify-between border-b p-3.5 bg-muted/30 rounded-t-xl">
             <h4 className="text-sm font-bold flex items-center gap-2">
-              <span>{ROLE_DISPLAY_TITLES[currentRole] || "Notifications"}</span>
+              <span>{getRoleTitle(currentRole)}</span>
               {unreadCount > 0 && (
                 <span className="text-[10px] font-semibold bg-emerald-100 dark:bg-emerald-950 text-emerald-800 dark:text-emerald-300 px-2 py-0.5 rounded-full">
-                  {unreadCount} new
+                  {unreadCount} {t("notifications.newBadge", "new")}
                 </span>
               )}
             </h4>
@@ -123,7 +135,7 @@ export function NotificationCenter({
                 className="text-xs text-emerald-700 dark:text-emerald-400 hover:underline font-medium flex items-center gap-1 focus:outline-none"
               >
                 <CheckCheck className="h-3.5 w-3.5" />
-                Mark all read
+                {t("notifications.markAllRead", "Mark all read")}
               </button>
             )}
           </div>
@@ -133,8 +145,8 @@ export function NotificationCenter({
             {activeItems.length === 0 ? (
               <div className="py-8 text-center">
                 <Bell className="h-8 w-8 text-muted-foreground/40 mx-auto mb-2" />
-                <p className="text-xs font-medium text-muted-foreground">No notifications recorded.</p>
-                <p className="text-[11px] text-muted-foreground/70 mt-0.5">You are up to date on platform updates.</p>
+                <p className="text-xs font-medium text-muted-foreground">{t("notifications.noNotifications", "No notifications recorded.")}</p>
+                <p className="text-[11px] text-muted-foreground/70 mt-0.5">{t("notifications.upToDate", "You are up to date on platform updates.")}</p>
               </div>
             ) : (
               activeItems.map((item) => (
@@ -162,7 +174,7 @@ export function NotificationCenter({
                 onClick={() => setIsOpen(false)}
                 className="text-xs font-bold text-emerald-800 dark:text-emerald-300 hover:text-emerald-900 dark:hover:text-emerald-200 inline-flex items-center gap-1 transition-colors"
               >
-                <span>View Platform Operational Bookings</span>
+                <span>{t("notifications.viewBookings", "View Platform Operational Bookings")}</span>
                 <ArrowRight className="h-3.5 w-3.5" />
               </Link>
             </div>
@@ -172,3 +184,4 @@ export function NotificationCenter({
     </div>
   );
 }
+

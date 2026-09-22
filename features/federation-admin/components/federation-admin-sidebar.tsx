@@ -34,8 +34,10 @@ import {
   DialogDescription,
   DialogFooter,
 } from "@/components/ui/dialog";
+import { useTranslation, getTranslatedNavTitle } from "@/lib/i18n";
 
 export interface FederationNavItem {
+
   title: string;
   href?: string;
   icon: React.ReactNode;
@@ -55,10 +57,12 @@ export function FederationAdminSidebar({
   pendingComplaintsCount,
   onNavigate,
 }: FederationAdminSidebarProps) {
+  const { t } = useTranslation();
   const pathname = usePathname();
 
   // Modal State
   const [isSettingsOpen, setIsSettingsOpen] = React.useState<boolean>(false);
+
   const [savedSuccessMessage, setSavedSuccessMessage] = React.useState<string | null>(null);
 
   // Settings State
@@ -145,7 +149,7 @@ export function FederationAdminSidebar({
     <>
       <aside
         className={cn(
-          "flex flex-col w-64 border-r border-border bg-card/95 backdrop-blur supports-[backdrop-filter]:bg-card/75 p-4 space-y-6 sticky top-16 h-[calc(100vh-4rem)] overflow-y-auto shrink-0 justify-between",
+          "hidden md:flex flex-col w-64 border-r border-border bg-card/95 backdrop-blur supports-[backdrop-filter]:bg-card/75 p-4 space-y-6 sticky top-16 h-[calc(100vh-4rem)] overflow-y-auto shrink-0 justify-between",
           className
         )}
       >
@@ -167,7 +171,7 @@ export function FederationAdminSidebar({
             </div>
 
             <div className="pt-1 flex items-center justify-between text-[10px] border-t border-border/60">
-              <span className="text-muted-foreground">Jurisdiction</span>
+              <span className="text-muted-foreground">{t("common.jurisdiction", "Jurisdiction")}</span>
               <Badge variant="outline" className="text-[9px] px-1.5 py-0 h-4 border-emerald-600/30 text-emerald-800 dark:text-emerald-300 font-medium">
                 Ahmedabad Urban
               </Badge>
@@ -177,7 +181,7 @@ export function FederationAdminSidebar({
           {/* Primary Navigation Menu */}
           <div className="space-y-1.5">
             <p className="px-3 text-[10px] font-bold uppercase tracking-wider text-muted-foreground mb-2">
-              Federation Administration
+              {t("nav.federationAdmin", "Federation Administration")}
             </p>
 
             <nav className="space-y-1">
@@ -186,6 +190,8 @@ export function FederationAdminSidebar({
                   item.href === "/federation-admin"
                     ? pathname === "/federation-admin"
                     : item.href && (pathname === item.href || pathname.startsWith(`${item.href}/`));
+
+                const displayTitle = getTranslatedNavTitle(item.title, t);
 
                 if (item.onClick) {
                   return (
@@ -205,7 +211,7 @@ export function FederationAdminSidebar({
                         <span className="text-muted-foreground group-hover:text-foreground transition-colors">
                           {item.icon}
                         </span>
-                        <span className="truncate">{item.title}</span>
+                        <span className="truncate">{displayTitle}</span>
                       </div>
                     </button>
                   );
@@ -232,7 +238,7 @@ export function FederationAdminSidebar({
                       >
                         {item.icon}
                       </span>
-                      <span className="truncate">{item.title}</span>
+                      <span className="truncate">{displayTitle}</span>
                     </div>
 
                     {item.badge !== undefined && (
@@ -253,6 +259,7 @@ export function FederationAdminSidebar({
             </nav>
           </div>
         </div>
+
       </aside>
 
       {/* ACCOUNT SETTINGS MODAL */}
@@ -352,12 +359,13 @@ export function FederationAdminSidebar({
 
             <DialogFooter className="pt-2">
               <Button type="button" variant="outline" size="sm" onClick={() => setIsSettingsOpen(false)}>
-                Close
+                {t("common.close", "Close")}
               </Button>
               <Button type="submit" size="sm" className="bg-emerald-600 hover:bg-emerald-700 text-white">
-                <Save className="h-3.5 w-3.5 mr-1.5" /> Save Preferences
+                <Save className="h-3.5 w-3.5 mr-1.5" /> {t("common.savePreferences", "Save Preferences")}
               </Button>
             </DialogFooter>
+
           </form>
         </DialogContent>
       </Dialog>
