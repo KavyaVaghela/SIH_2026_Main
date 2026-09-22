@@ -11,9 +11,9 @@ import {
   Video,
   ExternalLink,
   Download,
+  X,
 } from "lucide-react";
 import { Course, CourseChapter } from "../types";
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
@@ -31,9 +31,30 @@ export function CoursePlayerModal({
   onClose,
   onToggleLessonCompletion,
 }: CoursePlayerModalProps) {
-  if (!course) return null;
+  // Lock body scroll while modal is active
+  React.useEffect(() => {
+    if (isOpen) {
+      document.body.style.overflow = "hidden";
+    } else {
+      document.body.style.overflow = "";
+    }
+    return () => {
+      document.body.style.overflow = "";
+    };
+  }, [isOpen]);
 
-  const chapters = course.chapters || [];
+  // Handle Escape key to close modal
+  React.useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === "Escape" && isOpen) {
+        onClose();
+      }
+    };
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, [isOpen, onClose]);
+
+  const chapters = course?.chapters || [];
 
   // Extract all lesson IDs in course for progress calculation
   const allLessonIds: string[] = React.useMemo(() => {
@@ -56,6 +77,8 @@ export function CoursePlayerModal({
       setIsPlaying(false);
     }
   }, [course]);
+
+  if (!isOpen || !course) return null;
 
   const activeChapter = chapters[activeChapterIndex] || {
     id: "def-ch",
@@ -107,32 +130,52 @@ export function CoursePlayerModal({
   const computedProgress = allLessonIds.length > 0 ? Math.round((completedCount / allLessonIds.length) * 100) : course.progress || 0;
 
   return (
-    <Dialog open={isOpen} onOpenChange={(open) => !open && onClose()}>
-      <DialogContent className="max-w-4xl p-0 overflow-hidden bg-card border-border sm:rounded-2xl gap-0 max-h-[90vh] flex flex-col">
-        {/* Header Bar */}
-        <div className="p-4 sm:p-5 border-b border-border flex items-center justify-between bg-muted/30 shrink-0">
-          <div className="space-y-1">
-            <div className="flex items-center gap-2">
-              <Badge className="bg-emerald-700 text-white text-[10px] font-semibold">
+    <div
+      className="fixed inset-0 z-50 flex items-center justify-center bg-black/75 p-2 sm:p-4 md:p-6 backdrop-blur-xs animate-in fade-in-0"
+      onClick={(e) => {
+        if (e.target === e.currentTarget) onClose();
+      }}
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="course-modal-title"
+    >
+      <div
+        className="relative w-full max-w-5xl rounded-2xl border border-border bg-card text-card-foreground shadow-2xl overflow-hidden flex flex-col max-h-[94vh] sm:max-h-[90vh] animate-in zoom-in-95 duration-200"
+        onClick={(e) => e.stopPropagation()}
+      >
+        {/* Header Bar with Single Accessible Close Action */}
+        <div className="p-3.5 sm:p-5 border-b border-border flex items-center justify-between bg-muted/30 shrink-0">
+          <div className="space-y-1 min-w-0 pr-4">
+            <div className="flex flex-wrap items-center gap-2">
+              <Badge className="bg-emerald-700 text-white text-[10px] font-semibold shrink-0">
                 {course.category}
               </Badge>
 
-              <span className="text-xs text-muted-foreground font-mono flex items-center gap-1">
+              <span className="text-xs text-muted-foreground font-mono flex items-center gap-1 shrink-0">
                 <Clock className="h-3 w-3 text-amber-500" />
                 {course.duration}
               </span>
             </div>
 
-            <DialogTitle className="text-base sm:text-lg font-bold text-foreground leading-snug">
+            <h2 id="course-modal-title" className="text-base sm:text-lg font-bold text-foreground leading-snug line-clamp-1">
               {course.title}
-            </DialogTitle>
+            </h2>
           </div>
+
+          <button
+            type="button"
+            onClick={onClose}
+            className="rounded-lg p-1.5 sm:p-2 text-muted-foreground hover:text-foreground hover:bg-muted transition-colors shrink-0 focus:outline-none focus:ring-2 focus:ring-emerald-500"
+            aria-label="Close course player"
+          >
+            <X className="h-5 w-5" />
+          </button>
         </div>
 
         {/* Modal Body: Video/PDF Player + Chapter List Grid */}
-        <div className="grid grid-cols-1 lg:grid-cols-12 overflow-y-auto flex-1">
+        <div className="grid grid-cols-1 lg:grid-cols-12 overflow-y-auto flex-1 min-h-0">
           {/* Left: Video / PDF / Lesson Content Player Canvas */}
-          <div className="lg:col-span-7 bg-slate-950 p-4 sm:p-6 flex flex-col justify-between min-h-[300px] sm:min-h-[400px] text-white">
+          <div className="lg:col-span-7 bg-slate-950 p-4 sm:p-6 flex flex-col justify-between min-h-[320px] sm:min-h-[400px] text-white">
             {/* 1. YouTube Video Embed Player */}
             {course.contentType === "VIDEO" && youtubeEmbedUrl ? (
               <div className="relative aspect-video w-full rounded-xl overflow-hidden border border-slate-800 bg-black shadow-inner">
@@ -146,16 +189,16 @@ export function CoursePlayerModal({
               </div>
             ) : course.contentType === "PDF" && course.pdfUrl ? (
               /* 2. PDF Resource View */
-              <div className="relative flex-1 rounded-xl border border-slate-800 bg-slate-900/90 p-6 flex flex-col items-center justify-center text-center space-y-4 shadow-inner">
-                <div className="p-4 rounded-full bg-rose-600/30 border-2 border-rose-500 text-rose-400">
-                  <FileText className="h-8 w-8" />
+              <div className="relative flex-1 rounded-xl border border-slate-800 bg-slate-900/90 p-5 sm:p-6 flex flex-col items-center justify-center text-center space-y-4 shadow-inner min-h-[240px]">
+                <div className="p-3.5 sm:p-4 rounded-full bg-rose-600/30 border-2 border-rose-500 text-rose-400">
+                  <FileText className="h-7 w-7 sm:h-8 sm:w-8" />
                 </div>
                 <div className="space-y-1 max-w-md">
                   <span className="text-[10px] font-mono text-rose-400 uppercase tracking-wider block font-bold">
                     Official PDF Resource Guide
                   </span>
                   <h4 className="text-sm sm:text-base font-bold text-white">{course.title}</h4>
-                  <p className="text-xs text-slate-400 leading-relaxed">
+                  <p className="text-xs text-slate-400 leading-relaxed line-clamp-3 sm:line-clamp-none">
                     {course.description}
                   </p>
                 </div>
@@ -174,9 +217,9 @@ export function CoursePlayerModal({
               </div>
             ) : (
               /* 3. Interactive Lesson Canvas */
-              <div className="relative flex-1 rounded-xl border border-slate-800 bg-slate-900/90 p-6 flex flex-col items-center justify-center text-center space-y-4 shadow-inner">
-                <div className="p-4 rounded-full bg-emerald-600/30 border-2 border-emerald-500 text-emerald-400">
-                  {isPlaying ? <Pause className="h-8 w-8 animate-pulse" /> : <Play className="h-8 w-8 ml-1" />}
+              <div className="relative flex-1 rounded-xl border border-slate-800 bg-slate-900/90 p-5 sm:p-6 flex flex-col items-center justify-center text-center space-y-4 shadow-inner min-h-[240px]">
+                <div className="p-3.5 sm:p-4 rounded-full bg-emerald-600/30 border-2 border-emerald-500 text-emerald-400">
+                  {isPlaying ? <Pause className="h-7 w-7 sm:h-8 sm:w-8 animate-pulse" /> : <Play className="h-7 w-7 sm:h-8 sm:w-8 ml-1" />}
                 </div>
 
                 <div className="space-y-1 max-w-md">
@@ -186,7 +229,7 @@ export function CoursePlayerModal({
                   <h4 className="text-sm sm:text-base font-bold text-white">
                     {activeLesson.title}
                   </h4>
-                  <p className="text-xs text-slate-400 leading-relaxed">
+                  <p className="text-xs text-slate-400 leading-relaxed line-clamp-3 sm:line-clamp-none">
                     {activeLesson.videoPlaceholderText || activeLesson.description || course.description}
                   </p>
                 </div>
@@ -212,19 +255,19 @@ export function CoursePlayerModal({
             )}
 
             {/* Video Control & Completion Bar */}
-            <div className="pt-4 flex items-center justify-between text-xs text-slate-300 border-t border-slate-800/80 mt-4">
+            <div className="pt-3.5 sm:pt-4 flex flex-wrap sm:flex-nowrap items-center justify-between gap-3 text-xs text-slate-300 border-t border-slate-800/80 mt-4 shrink-0">
               <div className="flex items-center gap-2">
-                <Progress value={computedProgress} className="w-28 sm:w-36 h-2 bg-slate-800" />
-                <span className="font-mono text-[11px] font-bold text-emerald-400">{computedProgress}% Completed</span>
+                <Progress value={computedProgress} className="w-24 sm:w-36 h-2 bg-slate-800 shrink-0" />
+                <span className="font-mono text-[11px] font-bold text-emerald-400 shrink-0">{computedProgress}% Completed</span>
               </div>
 
               <Button
                 size="sm"
                 variant="outline"
                 onClick={() => onToggleLessonCompletion(course.id, activeLesson.id, allLessonIds)}
-                className={`text-xs h-8 border-slate-700 ${
+                className={`text-xs h-8 border-slate-700 shrink-0 transition-colors ${
                   activeLesson.isCompleted
-                    ? "bg-emerald-950 text-emerald-300 border-emerald-500/50"
+                    ? "bg-emerald-950 text-emerald-300 border-emerald-500/50 hover:bg-emerald-900"
                     : "bg-slate-900 text-slate-200 hover:bg-slate-800"
                 }`}
               >
@@ -235,25 +278,25 @@ export function CoursePlayerModal({
           </div>
 
           {/* Right: Course Syllabus & Chapters List */}
-          <div className="lg:col-span-5 p-4 sm:p-5 border-l border-border bg-card space-y-4 flex flex-col justify-between">
-            <div className="space-y-3">
-              <div className="flex items-center justify-between border-b pb-2">
+          <div className="lg:col-span-5 p-4 sm:p-5 border-t lg:border-t-0 lg:border-l border-border bg-card flex flex-col justify-between">
+            <div className="space-y-3 flex-1 min-h-0">
+              <div className="flex items-center justify-between border-b border-border/80 pb-2">
                 <h4 className="text-xs font-bold text-foreground uppercase tracking-wider flex items-center gap-1.5">
-                  <BookOpen className="h-4 w-4 text-emerald-600" />
+                  <BookOpen className="h-4 w-4 text-emerald-600 shrink-0" />
                   Course Content & Syllabus
                 </h4>
-                <span className="text-[11px] font-semibold text-emerald-600">
+                <span className="text-[11px] font-semibold text-emerald-600 shrink-0">
                   {completedCount}/{allLessonIds.length} Lessons
                 </span>
               </div>
 
               {/* Chapters & Lessons Accordion */}
-              <div className="space-y-3 max-h-[340px] overflow-y-auto pr-1">
+              <div className="space-y-3 max-h-[260px] sm:max-h-[320px] lg:max-h-[380px] overflow-y-auto pr-1">
                 {chapters.map((chap, chIdx) => (
                   <div key={chap.id} className="space-y-1.5">
                     <div className="text-[11px] font-bold text-muted-foreground uppercase tracking-wider flex items-center justify-between px-1">
-                      <span>{chIdx + 1}. {chap.title}</span>
-                      <span className="font-mono">{chap.duration}</span>
+                      <span className="truncate pr-2">{chIdx + 1}. {chap.title}</span>
+                      <span className="font-mono shrink-0">{chap.duration}</span>
                     </div>
 
                     <div className="space-y-1">
@@ -272,7 +315,7 @@ export function CoursePlayerModal({
                                 : "border-border bg-card hover:bg-muted/40"
                             }`}
                           >
-                            <div className="flex items-center gap-2 truncate">
+                            <div className="flex items-center gap-2 min-w-0">
                               <button
                                 type="button"
                                 onClick={(e) => {
@@ -284,6 +327,7 @@ export function CoursePlayerModal({
                                     ? "text-emerald-600 dark:text-emerald-400"
                                     : "text-muted-foreground hover:text-foreground"
                                 }`}
+                                aria-label={`Toggle lesson ${les.title} completion`}
                               >
                                 <CheckCircle2 className="h-4 w-4" />
                               </button>
@@ -302,18 +346,18 @@ export function CoursePlayerModal({
               </div>
             </div>
 
-            {/* Footer Notice */}
-            <div className="pt-3 border-t border-border/60 text-center space-y-2">
+            {/* Footer Notice & Close Button */}
+            <div className="pt-3 border-t border-border/60 text-center space-y-2 mt-4 shrink-0">
               <p className="text-[11px] text-muted-foreground">
                 Progress updates in real-time & syncs with SuperAdmin analytics.
               </p>
-              <Button size="sm" onClick={onClose} className="w-full text-xs font-semibold h-9">
+              <Button size="sm" onClick={onClose} className="w-full text-xs font-semibold h-9 bg-primary hover:bg-primary/90 text-primary-foreground">
                 Close Player
               </Button>
             </div>
           </div>
         </div>
-      </DialogContent>
-    </Dialog>
+      </div>
+    </div>
   );
 }
