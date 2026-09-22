@@ -30,6 +30,7 @@ import type {
 } from "@/lib/ai/ai-types";
 
 import { useLanguage } from "@/lib/i18n/language-context";
+import { workerJobService } from "@/features/worker/services/worker-job-service";
 
 const UI_TEXT = {
   hi: {
@@ -142,6 +143,77 @@ export function KaushalBandhuView() {
   const [isGenerating, setIsGenerating] = React.useState(false);
   const [errorMsg, setErrorMsg] = React.useState<string | null>(null);
   const [showWhyModal, setShowWhyModal] = React.useState(false);
+  const [workerCompletedCount, setWorkerCompletedCount] = React.useState<number | null>(null);
+  const [workerLast30DaysCount, setWorkerLast30DaysCount] = React.useState<number | null>(null);
+
+  // Load completed jobs from the existing Worker module source (workerJobService)
+  React.useEffect(() => {
+    let isMounted = true;
+    async function loadWorkerCompletedJobs() {
+      try {
+        const completedJobs = await workerJobService.getCompletedJobs();
+        if (!isMounted) return;
+
+        let total = Array.isArray(completedJobs) ? completedJobs.length : 0;
+        const thirtyDaysAgo = Date.now() - 30 * 24 * 60 * 60 * 1000;
+        let last30 = Array.isArray(completedJobs)
+          ? completedJobs.filter((j) => {
+              const dtStr = j.actualEndAt || j.scheduledDate || j.createdAt;
+              if (!dtStr) return false;
+              const t = new Date(dtStr).getTime();
+              return !isNaN(t) && t >= thirtyDaysAgo;
+            }).length
+          : 0;
+
+        // Also check completed large projects if authenticated worker has any
+        try {
+          const { createClient } = await import("@/lib/supabase/client");
+          const supabase = createClient();
+          const {
+            data: { user },
+          } = await supabase.auth.getUser();
+          if (user?.id) {
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            const { data: workerRow } = await (supabase.from("workers") as any)
+              .select("id")
+              .eq("profile_id", user.id)
+              .maybeSingle();
+            const currentWorkerId = workerRow?.id || user.id;
+
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            const { data: allocs } = await (supabase.from("project_allocations") as any)
+              .select("id, response_status, status, created_at, project_requests(status, updated_at, created_at)")
+              .or(`worker_id.eq.${currentWorkerId},worker_id.eq.${user.id}`);
+
+            if (Array.isArray(allocs)) {
+              const completedAllocs = allocs.filter((alloc: any) => {
+                const isAccepted = alloc.response_status === "ACCEPTED" || alloc.status === "assigned";
+                const projStatus = (alloc.project_requests?.status || "").toUpperCase();
+                return isAccepted && (projStatus === "COMPLETED" || projStatus === "SETTLED" || projStatus === "CLOSED");
+              });
+              total += completedAllocs.length;
+              last30 += completedAllocs.filter((alloc: any) => {
+                const dt = alloc.project_requests?.updated_at || alloc.project_requests?.created_at || alloc.created_at;
+                return dt && new Date(dt).getTime() >= thirtyDaysAgo;
+              }).length;
+            }
+          }
+        } catch {
+          // Graceful fallback
+        }
+
+        setWorkerCompletedCount(total);
+        setWorkerLast30DaysCount(last30);
+      } catch (err) {
+        console.warn("Notice: Kaushal Bandhu completed jobs fetch:", err);
+      }
+    }
+
+    loadWorkerCompletedJobs();
+    return () => {
+      isMounted = false;
+    };
+  }, []);
 
   // Sync language with global app locale if user changes global language
   React.useEffect(() => {
@@ -252,6 +324,15 @@ export function KaushalBandhuView() {
     advice && advice.learning_suggestion && typeof advice.learning_suggestion === "object"
       ? advice.learning_suggestion.reason
       : null;
+
+  const displayCompletedJobs = Math.max(
+    workerCompletedCount ?? 0,
+    context?.completed_bookings_count ?? 0
+  );
+  const displayLast30Days = Math.max(
+    workerLast30DaysCount ?? 0,
+    context?.bookings_last_30_days ?? 0
+  );
 
   return (
     <div className="space-y-6 w-full max-w-[1300px] mx-auto pb-16">
@@ -388,10 +469,10 @@ export function KaushalBandhuView() {
               <Clock className="h-3.5 w-3.5 text-blue-600" />
             </div>
             <div className="text-base font-bold text-foreground">
-              {context?.completed_bookings_count ?? 0}
+              {displayCompletedJobs}
             </div>
             <div className="text-[11px] text-muted-foreground">
-              Last 30 days: <strong>{context?.bookings_last_30_days ?? 0}</strong>
+              Last 30 days: <strong>{displayLast30Days}</strong>
             </div>
           </CardContent>
         </Card>
