@@ -803,6 +803,16 @@ export class AnalyticsService {
         })
         .sort((a, b) => b.transactionVolume - a.transactionVolume);
 
+      const totalWorkerEarnings = Number(
+        allBookings.reduce((acc, b) => acc + (Number(b.worker_earnings) || 0), 0).toFixed(2)
+      );
+      const effectiveWorkerEarnings = totalWorkerEarnings > 0
+        ? totalWorkerEarnings
+        : Number((totalTransactionVolume * 0.85).toFixed(2));
+      const federationServiceShare = Number(
+        Math.max(0, totalTransactionVolume - effectiveWorkerEarnings - platformCommission - taxCollected).toFixed(2)
+      );
+
       financialAnalytics = {
         overview: {
           totalTransactionVolume,
@@ -814,6 +824,9 @@ export class AnalyticsService {
           averageTransactionValue,
           totalPaymentsCount: allPayments.length,
           successfulPaymentsCount: paidPayments.length,
+          workerEarnings: effectiveWorkerEarnings,
+          federationShare: federationServiceShare,
+          failedPaymentsCount: failedPayments.length,
         },
         paymentStatusBreakdown: {
           paidCount: paidPayments.length,

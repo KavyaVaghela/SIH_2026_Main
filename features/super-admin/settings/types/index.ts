@@ -3,6 +3,8 @@ export interface ManagedServiceItem {
   title: string;
   category: string;
   basePrice: number;
+  minimumVisitCharge: number;
+  priceUnit?: string;
   isActive: boolean;
   description?: string;
 }

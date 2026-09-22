@@ -35,3 +35,6 @@ export * from "./complaint-management";
 
 // Stage 7: Large Projects Management
 export * from "./projects/federation-projects-view";
+
+// Phase 4B: Federation AI Intelligence
+export * from "./ai-intelligence";

@@ -18,7 +18,8 @@ export type WorkforceTab =
   | "roster"
   | "new-worker-requests"
   | "existing-worker-requests"
-  | "change-requests";
+  | "change-requests"
+  | "workforce-intelligence";
 
 export function useWorkforceManagement() {
   // Navigation tabs

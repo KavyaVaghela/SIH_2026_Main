@@ -20,6 +20,7 @@ import {
   Bell,
   CheckCircle2,
   Save,
+  BrainCircuit,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Badge } from "@/components/ui/badge";
@@ -105,6 +106,11 @@ export function FederationAdminSidebar({
       title: "Workforce Management",
       href: "/federation-admin/workforce-management",
       icon: <Briefcase className="h-4 w-4 shrink-0" />,
+    },
+    {
+      title: "AI Intelligence",
+      href: "/federation-admin/ai-intelligence",
+      icon: <BrainCircuit className="h-4 w-4 shrink-0 text-emerald-600 dark:text-emerald-400" />,
     },
     {
       title: "Large Projects",

@@ -77,6 +77,10 @@ export interface WorkforceAllocationRecommendation {
   rationale: string;
   estimatedSlaImprovement: string;
   candidateWorkers: CandidateSupportWorker[];
+  trade?: string;
+  city?: string;
+  demandCount?: number;
+  localAvailableCount?: number;
 }
 
 export type DemandDateRange = "today" | "7d" | "30d" | "90d";

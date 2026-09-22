@@ -21,6 +21,8 @@ import {
   CheckCircle2,
   Clock,
   ShieldCheck,
+  Users,
+  Coins,
 } from "lucide-react";
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -37,8 +39,8 @@ export function FinancialAnalyticsSection({ data, isLoading }: FinancialAnalytic
     return (
       <Card className="border bg-card shadow-xs p-6 space-y-4">
         <Skeleton className="h-6 w-64 mb-2" />
-        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-          {Array.from({ length: 4 }).map((_, i) => (
+        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3">
+          {Array.from({ length: 6 }).map((_, i) => (
             <Skeleton key={i} className="h-20 rounded-xl" />
           ))}
         </div>
@@ -67,13 +69,13 @@ export function FinancialAnalyticsSection({ data, isLoading }: FinancialAnalytic
       <CardHeader className="pb-3 border-b flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
         <div className="space-y-1">
           <div className="flex items-center space-x-2">
-            <DollarSign className="h-5 w-5 text-emerald-700 dark:text-emerald-400" />
+            <Coins className="h-5 w-5 text-emerald-700 dark:text-emerald-400" />
             <CardTitle className="text-base font-bold text-foreground">
-              Platform Financials & Invoicing Intelligence
+              Platform Economics & Invoicing Intelligence
             </CardTitle>
           </div>
           <CardDescription className="text-xs text-muted-foreground">
-            Gross transaction volume, platform commission, statutory tax compliance, and federation financial activity
+            Gross transaction volume, guaranteed worker earnings, federation service share, nominal sustainability fee, and statutory compliance
           </CardDescription>
         </div>
 
@@ -94,65 +96,101 @@ export function FinancialAnalyticsSection({ data, isLoading }: FinancialAnalytic
       </CardHeader>
 
       <CardContent className="p-4 sm:p-6 space-y-6">
-        {/* 4 Financial KPI Cards */}
-        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+        {/* 6 Cooperative Economics KPI Cards */}
+        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3">
+          {/* 1. Gross Volume */}
           <div className="p-3 rounded-xl border bg-muted/20 space-y-1">
             <div className="flex items-center justify-between">
-              <span className="text-[11px] font-bold text-muted-foreground uppercase truncate">
+              <span className="text-[10px] font-bold text-muted-foreground uppercase truncate">
                 Gross Volume
               </span>
-              <TrendingUp className="h-4 w-4 text-emerald-600" />
+              <TrendingUp className="h-3.5 w-3.5 text-emerald-600" />
             </div>
-            <p className="text-2xl font-bold font-mono text-emerald-700 dark:text-emerald-400 mt-0.5">
+            <p className="text-xl font-bold font-mono text-emerald-700 dark:text-emerald-400 mt-0.5">
               {formatCompactCurrency(overview.totalTransactionVolume)}
             </p>
             <p className="text-[10px] text-muted-foreground truncate" title={formatCurrency(overview.totalTransactionVolume)}>
-              {overview.successfulPaymentsCount} successful payments
+              {overview.successfulPaymentsCount} completed payments
             </p>
           </div>
 
+          {/* 2. Worker Earnings */}
           <div className="p-3 rounded-xl border bg-muted/20 space-y-1">
             <div className="flex items-center justify-between">
-              <span className="text-[11px] font-bold text-muted-foreground uppercase truncate">
-                Platform Commission
+              <span className="text-[10px] font-bold text-muted-foreground uppercase truncate">
+                Worker Earnings
               </span>
-              <Receipt className="h-4 w-4 text-indigo-600" />
+              <Users className="h-3.5 w-3.5 text-blue-600" />
             </div>
-            <p className="text-2xl font-bold font-mono text-foreground mt-0.5">
+            <p className="text-xl font-bold font-mono text-blue-700 dark:text-blue-400 mt-0.5">
+              {formatCompactCurrency(overview.workerEarnings ?? 0)}
+            </p>
+            <p className="text-[10px] text-muted-foreground truncate" title={formatCurrency(overview.workerEarnings ?? 0)}>
+              Guaranteed gig payout
+            </p>
+          </div>
+
+          {/* 3. Federation Retained Share */}
+          <div className="p-3 rounded-xl border bg-muted/20 space-y-1">
+            <div className="flex items-center justify-between">
+              <span className="text-[10px] font-bold text-muted-foreground uppercase truncate">
+                Fed. Service Share
+              </span>
+              <Building2 className="h-3.5 w-3.5 text-purple-600" />
+            </div>
+            <p className="text-xl font-bold font-mono text-purple-700 dark:text-purple-400 mt-0.5">
+              {formatCompactCurrency(overview.federationShare ?? 0)}
+            </p>
+            <p className="text-[10px] text-muted-foreground truncate" title={formatCurrency(overview.federationShare ?? 0)}>
+              Cooperative retained value
+            </p>
+          </div>
+
+          {/* 4. Platform Sustainability Fee */}
+          <div className="p-3 rounded-xl border bg-muted/20 space-y-1">
+            <div className="flex items-center justify-between">
+              <span className="text-[10px] font-bold text-muted-foreground uppercase truncate">
+                Sustainability Fee
+              </span>
+              <Receipt className="h-3.5 w-3.5 text-indigo-600" />
+            </div>
+            <p className="text-xl font-bold font-mono text-foreground mt-0.5">
               {formatCompactCurrency(overview.platformCommission)}
             </p>
             <p className="text-[10px] text-muted-foreground truncate" title={formatCurrency(overview.platformCommission)}>
-              Actual accrued invoice fees
+              5% nominal platform fee
             </p>
           </div>
 
+          {/* 5. Tax Collected */}
           <div className="p-3 rounded-xl border bg-muted/20 space-y-1">
             <div className="flex items-center justify-between">
-              <span className="text-[11px] font-bold text-muted-foreground uppercase truncate">
+              <span className="text-[10px] font-bold text-muted-foreground uppercase truncate">
                 Tax Collected
               </span>
-              <ShieldCheck className="h-4 w-4 text-sky-600" />
+              <ShieldCheck className="h-3.5 w-3.5 text-sky-600" />
             </div>
-            <p className="text-2xl font-bold font-mono text-sky-700 dark:text-sky-400 mt-0.5">
+            <p className="text-xl font-bold font-mono text-sky-700 dark:text-sky-400 mt-0.5">
               {formatCompactCurrency(overview.taxCollected)}
             </p>
             <p className="text-[10px] text-muted-foreground truncate" title={formatCurrency(overview.taxCollected)}>
-              Statutory GST / invoice tax
+              Statutory 18% GST
             </p>
           </div>
 
+          {/* 6. Receivables */}
           <div className="p-3 rounded-xl border bg-muted/20 space-y-1">
             <div className="flex items-center justify-between">
-              <span className="text-[11px] font-bold text-muted-foreground uppercase truncate">
+              <span className="text-[10px] font-bold text-muted-foreground uppercase truncate">
                 Receivables
               </span>
-              <AlertCircle className="h-4 w-4 text-amber-600" />
+              <AlertCircle className="h-3.5 w-3.5 text-amber-600" />
             </div>
-            <p className="text-2xl font-bold font-mono text-amber-700 dark:text-amber-400 mt-0.5">
+            <p className="text-xl font-bold font-mono text-amber-700 dark:text-amber-400 mt-0.5">
               {formatCompactCurrency(overview.outstandingReceivables)}
             </p>
             <p className="text-[10px] text-muted-foreground truncate">
-              {invoiceStatusBreakdown.issuedCount} issued/pending invoices
+              {invoiceStatusBreakdown.issuedCount} pending invoices
             </p>
           </div>
         </div>
@@ -249,10 +287,10 @@ export function FinancialAnalyticsSection({ data, isLoading }: FinancialAnalytic
                   </div>
                   <div className="flex justify-between">
                     <span className="text-muted-foreground flex items-center">
-                      <AlertCircle className="h-3 w-3 mr-1 text-muted-foreground" /> Failed / Cancelled:
+                      <AlertCircle className="h-3 w-3 mr-1 text-rose-500" /> Failed Payments:
                     </span>
-                    <span className="font-mono text-muted-foreground">
-                      {paymentStatusBreakdown.failedCount}
+                    <span className="font-mono font-bold text-rose-600 dark:text-rose-400">
+                      {overview.failedPaymentsCount ?? paymentStatusBreakdown.failedCount}
                     </span>
                   </div>
                 </div>

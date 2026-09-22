@@ -7,6 +7,9 @@ export interface EarningsKpiMetric {
   commissionGrowth: number;
   netPayout: number;
   netPayoutGrowth: number;
+  federationServiceShare?: number;
+  taxCollected?: number;
+  completedTransactionsCount?: number;
 }
 
 export interface MonthlyEarningsTrendPoint {

@@ -14,6 +14,7 @@ import { GeographicDemandView } from "./geographic-demand-view";
 import { ShortageAlertsPanel } from "./shortage-alerts-panel";
 import { SmartRecommendationCard } from "./smart-recommendation-card";
 import { ShortageDetailModal } from "./shortage-detail-modal";
+import { AiDemandForecastPanel } from "./ai-demand-forecast-panel";
 
 export function DemandIntelligenceView() {
   const {
@@ -88,6 +89,9 @@ export function DemandIntelligenceView() {
         <DemandVsWorkforce stats={stats} isLoading={isLoading} />
         <MostDemandedServices services={demandedServices} isLoading={isLoading} />
       </div>
+
+      {/* AI Demand Forecasting Panel (Phase 4A) */}
+      <AiDemandForecastPanel />
 
       {/* Geographic Regional Demand Hotspots & Map View */}
       <GeographicDemandView
