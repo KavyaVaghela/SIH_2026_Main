@@ -783,6 +783,7 @@ export class EmergencyDispatchRepository {
             category_name,
             emergency_type,
             severity,
+            status,
             location,
             description
           )
@@ -792,13 +793,34 @@ export class EmergencyDispatchRepository {
         .order("offered_at", { ascending: false });
 
       if (!error && data && data.length > 0) {
-        return data as EmergencyDispatchPoolRecord[];
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        const active = (data as any[]).filter((d) => {
+          const incStatus = d.emergency_incidents?.status;
+          return incStatus !== "CLOSED" && incStatus !== "RESOLVED" && incStatus !== "CANCELLED";
+        });
+        return active as EmergencyDispatchPoolRecord[];
       }
     } catch {
       // Memory check
     }
 
-    return Array.from(inMemoryDispatchPool.values()).filter((d) => d.worker_id === workerId);
+    const { EmergencyIncidentRepository } = await import("@/lib/emergency/incident-store");
+    const rawList = Array.from(inMemoryDispatchPool.values()).filter((d) => d.worker_id === workerId);
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const validList: (EmergencyDispatchPoolRecord & { emergency_incidents?: any })[] = [];
+
+    for (const d of rawList) {
+      const inc = await EmergencyIncidentRepository.findById(d.incident_id);
+      if (inc && inc.status !== "CLOSED" && inc.status !== "RESOLVED" && inc.status !== "CANCELLED") {
+        validList.push({
+          ...d,
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          emergency_incidents: inc as any,
+        });
+      }
+    }
+
+    return validList;
   }
 
   /**

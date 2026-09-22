@@ -82,21 +82,24 @@ export function EmergencyTrackingView({ incidentId }: EmergencyTrackingViewProps
     }, 150);
   }, [fetchTracking]);
 
-  // Realtime updates: debounced refresh on WAL updates to avoid redundant requests
+  // Realtime updates: targeted debounced refresh on WAL updates for this specific incident
   useRealtimeSubscription({
     table: "emergency_incidents",
+    filter: `id=eq.${incidentId}`,
     enabled: !!incidentId,
     onPayload: handleRealtimeUpdate,
   });
 
   useRealtimeSubscription({
     table: "emergency_incident_tasks",
+    filter: `incident_id=eq.${incidentId}`,
     enabled: !!incidentId,
     onPayload: handleRealtimeUpdate,
   });
 
   useRealtimeSubscription({
     table: "emergency_response_teams",
+    filter: `incident_id=eq.${incidentId}`,
     enabled: !!incidentId,
     onPayload: handleRealtimeUpdate,
   });
@@ -181,7 +184,9 @@ export function EmergencyTrackingView({ incidentId }: EmergencyTrackingViewProps
             </h1>
             <Badge
               className={
-                isResolvedOrClosed
+                incident.status === "CANCELLED"
+                  ? "bg-rose-100 text-rose-900 dark:bg-rose-950 dark:text-rose-300 font-black"
+                  : isResolvedOrClosed
                   ? "bg-emerald-100 text-emerald-900 dark:bg-emerald-950 dark:text-emerald-300 font-black"
                   : incident.status === "ACTIVE"
                   ? "bg-blue-100 text-blue-900 dark:bg-blue-950 dark:text-blue-300 font-black animate-pulse"
@@ -205,6 +210,28 @@ export function EmergencyTrackingView({ incidentId }: EmergencyTrackingViewProps
           </Button>
         </div>
       </div>
+
+      {/* Cancelled Incident Notice */}
+      {incident.status === "CANCELLED" && (
+        <Card className="border-2 border-rose-300 dark:border-rose-900/60 bg-rose-50/70 dark:bg-rose-950/30 p-5 rounded-2xl shadow-sm">
+          <div className="flex items-start gap-3">
+            <AlertTriangle className="w-5 h-5 text-rose-600 dark:text-rose-400 mt-0.5 shrink-0" />
+            <div className="space-y-1">
+              <h3 className="text-sm font-bold text-rose-900 dark:text-rose-200">
+                Emergency Response Cancelled
+              </h3>
+              <p className="text-xs text-rose-800 dark:text-rose-300 leading-relaxed">
+                This emergency request was cancelled by Federation Command Center. No further field actions are scheduled.
+              </p>
+              {incident.metadata?.cancellation_reason && (
+                <p className="text-xs text-rose-700 dark:text-rose-400 pt-1">
+                  <span className="font-semibold">Reason:</span> {incident.metadata.cancellation_reason}
+                </p>
+              )}
+            </div>
+          </div>
+        </Card>
+      )}
 
       {/* 1. Progress Timeline Stepper */}
       <Card className="p-5 md:p-6 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl shadow-sm space-y-4">

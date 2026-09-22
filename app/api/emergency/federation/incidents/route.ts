@@ -38,6 +38,8 @@ export async function GET(request: NextRequest) {
     const search = searchParams.get("search") || undefined;
     const hasShortageParam = searchParams.get("hasShortage");
     const hasShortage = hasShortageParam !== null ? hasShortageParam === "true" : undefined;
+    const includeArchivedParam = searchParams.get("includeArchived");
+    const includeArchived = includeArchivedParam !== null ? includeArchivedParam === "true" : undefined;
 
     const incidents = await EmergencyControlCenterRepository.listIncidentsForFederation(
       federationId,
@@ -47,6 +49,7 @@ export async function GET(request: NextRequest) {
         category,
         search,
         hasShortage,
+        includeArchived,
       }
     );
 

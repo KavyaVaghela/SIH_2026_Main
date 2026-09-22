@@ -169,7 +169,7 @@ export const INITIAL_LEARNING_RESOURCES: LearningResource[] = [
     duration: "10:20",
     thumbnailGradient: "from-blue-600 to-indigo-700",
     contentType: "VIDEO",
-    youtubeUrl: "https://www.youtube.com/watch?v=eBGIQ7ZuuiU",
+    youtubeUrl: "https://youtu.be/CSpD6JmNfQs?si=EA7SqqRPOSJSSfiQ",
     status: "PUBLISHED",
     iconName: "Zap",
     learningObjectives: [
@@ -187,7 +187,7 @@ export const INITIAL_LEARNING_RESOURCES: LearningResource[] = [
             id: "les2-1",
             title: "Shock & Arc Flash Prevention Video",
             duration: "10:20",
-            videoUrl: "https://www.youtube.com/watch?v=eBGIQ7ZuuiU",
+            videoUrl: "https://youtu.be/CSpD6JmNfQs?si=EA7SqqRPOSJSSfiQ",
             videoPlaceholderText: "Complete safety protocol walkthrough for residential electrician servicing.",
           },
         ],

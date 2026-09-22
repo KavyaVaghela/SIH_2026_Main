@@ -177,6 +177,7 @@ export function getStore(): EmergencyDataStore {
  * Incident Store Helpers
  */
 export function getStoredIncident(idOrEmergencyId: string): any | null {
+  if (!idOrEmergencyId || typeof idOrEmergencyId !== "string") return null;
   const store = getStore();
   let found = store.incidents.get(idOrEmergencyId);
   if (found) return found;
@@ -241,6 +242,7 @@ export function listStoredIncidents(): any[] {
  * Team Store Helpers
  */
 export function getStoredTeam(teamIdOrIncidentId: string): any | null {
+  if (!teamIdOrIncidentId || typeof teamIdOrIncidentId !== "string") return null;
   const store = getStore();
   const team = store.teams.get(teamIdOrIncidentId);
   if (team) return team;
@@ -279,6 +281,7 @@ export function setStoredTeamMembers(teamId: string, members: any[]): void {
  * Verification Store Helpers
  */
 export function getStoredVerification(idOrTokenOrCodeOrIncidentId: string): any | null {
+  if (!idOrTokenOrCodeOrIncidentId || typeof idOrTokenOrCodeOrIncidentId !== "string") return null;
   const store = getStore();
   const v = store.verifications.get(idOrTokenOrCodeOrIncidentId);
   if (v) return v;

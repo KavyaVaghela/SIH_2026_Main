@@ -63,8 +63,15 @@ export function EmergencyOpportunitiesCard({
           matched_skills: d.matched_skills || [],
           status: d.status,
           offered_at: d.offered_at,
+          incident_status: d.emergency_incidents?.status,
         }));
-        setOpportunities(mapped.filter((o) => o.status === "DISPATCHED"));
+        setOpportunities(
+          mapped.filter(
+            (o: any) =>
+              o.status === "DISPATCHED" &&
+              !["CLOSED", "RESOLVED", "CANCELLED"].includes(o.incident_status)
+          )
+        );
       }
     } catch (err) {
       console.warn("Emergency opportunities fetch notice:", err);
@@ -92,6 +99,13 @@ export function EmergencyOpportunitiesCard({
   // Live real-time link: Worker receives dispatched opportunities immediately
   useRealtimeSubscription({
     table: "emergency_dispatch_pool",
+    enabled: !!workerId,
+    onPayload: handleRealtimeDispatch,
+  });
+
+  // Also listen to incident changes so cancelled/closed incidents are removed immediately
+  useRealtimeSubscription({
+    table: "emergency_incidents",
     enabled: !!workerId,
     onPayload: handleRealtimeDispatch,
   });
