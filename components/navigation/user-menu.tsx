@@ -7,6 +7,7 @@ import { Avatar } from "@/components/ui/avatar";
 import { Dropdown, type DropdownItem } from "@/components/ui/dropdown";
 import { createClient } from "@/lib/supabase/client";
 import { clearCachedProfileNames } from "@/lib/auth/session-user";
+import { useTranslation } from "@/lib/i18n";
 
 export interface UserMenuProps {
   userName?: string;
@@ -25,6 +26,7 @@ export function UserMenu({
   onNavigateSettings,
   onLogout,
 }: UserMenuProps) {
+  const { t } = useTranslation();
   const router = useRouter();
   const pathname = usePathname();
   const isSuperAdmin = pathname?.startsWith("/super-admin") || userRole?.toLowerCase().includes("super");
@@ -120,27 +122,28 @@ export function UserMenu({
       disabled: true,
     },
     {
-      label: "Profile",
+      label: t("nav.profile", "Profile"),
       icon: <User className="h-4 w-4 text-emerald-600" />,
       onClick: handleProfileClick,
     },
     {
-      label: "Help & Guidance",
+      label: t("nav.helpGuidance", "Help & Guidance"),
       icon: <HelpCircle className="h-4 w-4 text-emerald-600" />,
       onClick: handleGuidanceClick,
     },
     {
-      label: "Account Settings",
+      label: t("nav.accountSettings", "Account Settings"),
       icon: <Settings className="h-4 w-4 text-emerald-600" />,
       onClick: handleSettingsClick,
     },
     {
-      label: "Sign Out",
+      label: t("common.logout", "Sign Out"),
       icon: <LogOut className="h-4 w-4" />,
       destructive: true,
       onClick: handleSignOutClick,
     },
   ];
+
 
   return (
     <Dropdown

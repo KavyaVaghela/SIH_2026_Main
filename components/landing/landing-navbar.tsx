@@ -5,6 +5,8 @@ import Link from "next/link";
 import { Menu, X, ArrowRight, ChevronDown, HelpCircle } from "lucide-react";
 import { Logo } from "@/components/ui/logo";
 import { LandingFaqAccordion } from "./landing-faq";
+import { LanguageSelector } from "@/components/navigation/language-selector";
+
 
 export function LandingNavbar() {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
@@ -153,8 +155,9 @@ export function LandingNavbar() {
             </div>
           </nav>
 
-          {/* Desktop Actions: Sign In & Get Started (Pill) */}
+          {/* Desktop Actions: Language Selector, Sign In & Get Started (Pill) */}
           <div className="hidden sm:flex items-center space-x-3">
+            <LanguageSelector />
             <Link
               href="/login"
               id="landing-nav-signin"
@@ -172,7 +175,10 @@ export function LandingNavbar() {
             </Link>
           </div>
 
-          {/* Mobile Menu Toggle Button */}
+          {/* Mobile Menu Toggle & Language Selector */}
+          <div className="flex sm:hidden items-center space-x-1.5">
+            <LanguageSelector />
+          </div>
           <div className="flex lg:hidden items-center">
             <button
               onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
@@ -183,6 +189,7 @@ export function LandingNavbar() {
               {isMobileMenuOpen ? <X className="h-6 w-6" /> : <Menu className="h-6 w-6" />}
             </button>
           </div>
+
         </div>
       </div>
 
