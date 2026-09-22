@@ -171,13 +171,46 @@ export async function getDailyMonitoringData(projectId: string) {
         .eq("project_request_id", projectId);
       if (queries) customerQueries = queries;
     } catch {}
+  }
+
+  // 2. Always merge local store data so that updates written by saveDailyUpdate
+  //    are included even when the remote DB also returned rows (the remote upsert
+  //    in saveDailyUpdate uses TEXT-format ids which fail silently against the
+  //    UUID-typed DB column, leaving data only in the local file store).
+  const store = readLocalStore();
+  const localUpdates: any[] = store.updates[projectId] || [];
+  const localCharges: any[] = store.charges[projectId] || [];
+  const localExpenses: any[] = store.expenses[projectId] || [];
+  const localQueries: any[] = store.queries[projectId] || [];
+
+  if (!usedRemote) {
+    // Remote returned nothing — use local store exclusively
+    dailyUpdates = localUpdates;
+    workerCharges = localCharges;
+    allExpenses = localExpenses;
+    customerQueries = localQueries;
   } else {
-    // 2. Read from persistent local fallback store
-    const store = readLocalStore();
-    dailyUpdates = store.updates[projectId] || [];
-    workerCharges = store.charges[projectId] || [];
-    allExpenses = store.expenses[projectId] || [];
-    customerQueries = store.queries[projectId] || [];
+    // Remote returned data — merge in any local entries not already in remote results
+    const remoteUpdateIds = new Set(dailyUpdates.map((u: any) => u.id));
+    const localOnlyUpdates = localUpdates.filter((u: any) => !remoteUpdateIds.has(u.id));
+    if (localOnlyUpdates.length > 0) {
+      dailyUpdates = [...dailyUpdates, ...localOnlyUpdates];
+      dailyUpdates.sort(
+        (a: any, b: any) =>
+          new Date(b.created_at || 0).getTime() - new Date(a.created_at || 0).getTime()
+      );
+    }
+    const remoteChargeIds = new Set(workerCharges.map((c: any) => c.id));
+    const localOnlyCharges = localCharges.filter((c: any) => !remoteChargeIds.has(c.id));
+    if (localOnlyCharges.length > 0) workerCharges = [...workerCharges, ...localOnlyCharges];
+
+    const remoteExpenseIds = new Set(allExpenses.map((e: any) => e.id));
+    const localOnlyExpenses = localExpenses.filter((e: any) => !remoteExpenseIds.has(e.id));
+    if (localOnlyExpenses.length > 0) allExpenses = [...allExpenses, ...localOnlyExpenses];
+
+    const remoteQueryIds = new Set(customerQueries.map((q: any) => q.id));
+    const localOnlyQueries = localQueries.filter((q: any) => !remoteQueryIds.has(q.id));
+    if (localOnlyQueries.length > 0) customerQueries = [...customerQueries, ...localOnlyQueries];
   }
 
   // Compute Financial Summary
