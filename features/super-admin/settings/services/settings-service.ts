@@ -70,6 +70,15 @@ export class SettingsService {
     }
   }
 
+  async updateServicePricing(
+    _serviceId: string,
+    _basePrice: number,
+    _minimumVisitCharge: number
+  ): Promise<void> {
+    // Policy Preview Isolation: does NOT mutate database services table, guaranteeing live pricing remains unchanged.
+    return Promise.resolve();
+  }
+
   updateNotificationPreference(
     key: keyof NotificationPreferences,
     value: boolean

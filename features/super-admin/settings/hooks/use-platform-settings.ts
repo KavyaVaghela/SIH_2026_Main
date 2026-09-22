@@ -82,6 +82,29 @@ export function usePlatformSettings() {
     }
   };
 
+  const handleUpdatePricing = async (
+    serviceId: string,
+    basePrice: number,
+    minimumVisitCharge: number
+  ) => {
+    setIsSaving(true);
+    setErrorMessage(null);
+    try {
+      await settingsService.updateServicePricing(serviceId, basePrice, minimumVisitCharge);
+      setSettings((prev) => ({
+        ...prev,
+        services: prev.services.map((s) =>
+          s.id === serviceId ? { ...s, basePrice, minimumVisitCharge } : s
+        ),
+      }));
+      showSuccessFeedback("Fair Wage standard updated in Policy Preview mode. Live customer booking pricing remains unchanged.");
+    } catch (err: any) {
+      setErrorMessage(err.message || "Failed to update fair wage policy preview.");
+    } finally {
+      setIsSaving(false);
+    }
+  };
+
   return {
     settings,
     isLoading,
@@ -91,5 +114,6 @@ export function usePlatformSettings() {
     retryFetch: fetchSettings,
     handleToggleService,
     handleToggleNotification,
+    handleUpdatePricing,
   };
 }
