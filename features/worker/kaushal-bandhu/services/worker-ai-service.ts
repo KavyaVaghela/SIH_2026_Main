@@ -197,40 +197,69 @@ export async function buildWorkerAiContext(
     // Graceful fallback if table query fails
   }
 
-  // 5. Completed Bookings Counts
+  // 5. Completed Bookings Counts (All canonical completed statuses & large project allocations)
   let completedBookingsCount = 0;
   let bookingsLast30Days = 0;
   const thirtyDaysAgoIso = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString();
 
+  const completedStatuses = [
+    "BOOKING_COMPLETED",
+    "SERVICE_COMPLETED",
+    "PAYMENT_RECEIVED",
+    "COMPLETED",
+    "completed",
+    "booking_completed",
+    "service_completed",
+    "payment_received",
+  ];
+
   try {
+    // Query standard bookings matching either workerId or workerProfileId
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const { count: totalCompleted } = await (adminClient.from("bookings") as any)
-      .select("id", { count: "exact", head: true })
-      .eq("worker_id", workerId)
-      .eq("status", "COMPLETED");
+    const { data: completedBookings } = await (adminClient.from("bookings") as any)
+      .select("id, created_at, status")
+      .or(`worker_id.eq.${workerId},worker_id.eq.${workerProfileId}`)
+      .in("status", completedStatuses);
 
-    completedBookingsCount = totalCompleted || 0;
+    if (Array.isArray(completedBookings)) {
+      completedBookingsCount += completedBookings.length;
+      bookingsLast30Days += completedBookings.filter((b: any) => {
+        const d = b.created_at ? new Date(b.created_at) : null;
+        return d && d >= new Date(thirtyDaysAgoIso);
+      }).length;
+    }
 
+    // Also include completed large project allocations
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const { count: last30 } = await (adminClient.from("bookings") as any)
-      .select("id", { count: "exact", head: true })
-      .eq("worker_id", workerId)
-      .eq("status", "COMPLETED")
-      .gte("created_at", thirtyDaysAgoIso);
+    const { data: allocations } = await (adminClient.from("project_allocations") as any)
+      .select("id, response_status, status, created_at, project_requests(status, updated_at, created_at)")
+      .or(`worker_id.eq.${workerId},worker_id.eq.${workerProfileId}`);
 
-    bookingsLast30Days = last30 || 0;
+    if (Array.isArray(allocations)) {
+      const completedAllocations = allocations.filter((alloc: any) => {
+        const isAccepted = alloc.response_status === "ACCEPTED" || alloc.status === "assigned";
+        const projStatus = (alloc.project_requests?.status || "").toUpperCase();
+        return isAccepted && (projStatus === "COMPLETED" || projStatus === "SETTLED" || projStatus === "CLOSED");
+      });
+
+      completedBookingsCount += completedAllocations.length;
+      bookingsLast30Days += completedAllocations.filter((alloc: any) => {
+        const dt = alloc.project_requests?.updated_at || alloc.project_requests?.created_at || alloc.created_at;
+        return dt && new Date(dt) >= new Date(thirtyDaysAgoIso);
+      }).length;
+    }
   } catch {
     // Graceful fallback
   }
 
-  // 6. REAL Reviews & Rating Calculation (NEVER fabricated 4.8 or 5.0!)
+  // 6. REAL Reviews & Rating Calculation (matching workerId or workerProfileId)
   let rating = 0.0;
   let reviewsCount = 0;
   try {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const { data: revs } = await (adminClient.from("reviews") as any)
       .select("rating")
-      .eq("worker_id", workerId);
+      .or(`worker_id.eq.${workerId},worker_id.eq.${workerProfileId}`);
 
     if (Array.isArray(revs) && revs.length > 0) {
       reviewsCount = revs.length;

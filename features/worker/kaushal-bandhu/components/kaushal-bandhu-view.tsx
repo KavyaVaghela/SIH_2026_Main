@@ -160,7 +160,9 @@ export function KaushalBandhuView() {
       try {
         setIsLoadingContext(true);
         setErrorMsg(null);
-        const res = await fetch("/api/worker/kaushal-bandhu?mode=context-only");
+        const res = await fetch("/api/worker/kaushal-bandhu?mode=context-only", {
+          cache: "no-store",
+        });
         if (!res.ok) {
           const errData = await res.json().catch(() => ({}));
           throw new Error(errData.error || `HTTP ${res.status}`);
