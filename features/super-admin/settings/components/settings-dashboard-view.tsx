@@ -8,6 +8,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { usePlatformSettings } from "../hooks/use-platform-settings";
 import { NotificationPreferencesSection } from "./notification-preferences-section";
 import { ServiceManagementTable } from "./service-management-table";
+import { FairWageManagementSection } from "./fair-wage-management-section";
 
 export function SettingsDashboardView() {
   const {
@@ -19,6 +20,7 @@ export function SettingsDashboardView() {
     retryFetch,
     handleToggleService,
     handleToggleNotification,
+    handleUpdatePricing,
   } = usePlatformSettings();
 
   return (
@@ -26,7 +28,7 @@ export function SettingsDashboardView() {
       {/* Top Header */}
       <PageHeader
         title="Platform Governance & Operational Settings"
-        description="Administer master trade catalog availability in the live marketplace and manage administrative alert signals."
+        description="Administer master trade catalog availability, statutory fair wage floors, and cooperative alert signals."
         breadcrumbs={[
           { label: "Super Admin", href: "/super-admin" },
           { label: "Settings" },
@@ -74,14 +76,21 @@ export function SettingsDashboardView() {
         </div>
       ) : (
         <>
-          {/* 1. Master Trade Services Catalog Controls (Real Database-backed) */}
+          {/* 1. Fair Wage & Guaranteed Minimum Floor Controls (Persists to public.services) */}
+          <FairWageManagementSection
+            services={settings.services}
+            onUpdatePricing={handleUpdatePricing}
+            isSaving={isSaving}
+          />
+
+          {/* 2. Master Trade Services Catalog Availability */}
           <ServiceManagementTable
             services={settings.services}
             onToggleService={handleToggleService}
             isSaving={isSaving}
           />
 
-          {/* 2. Administrative Alert Preferences (Local Workspace) */}
+          {/* 3. Administrative Alert Preferences (Local Workspace) */}
           <NotificationPreferencesSection
             preferences={settings.notificationPreferences}
             onTogglePreference={handleToggleNotification}

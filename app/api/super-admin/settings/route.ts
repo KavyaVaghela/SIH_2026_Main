@@ -13,6 +13,8 @@ export async function GET() {
         title,
         description,
         base_price,
+        minimum_visit_charge,
+        price_unit,
         is_active,
         service_categories (name)
       `)
@@ -31,6 +33,8 @@ export async function GET() {
       title: s.title,
       category: s.service_categories?.name || "General Trades",
       basePrice: Number(s.base_price) || 0,
+      minimumVisitCharge: Number(s.minimum_visit_charge) || 200,
+      priceUnit: s.price_unit || "per_hour",
       isActive: Boolean(s.is_active),
       description: s.description || undefined,
     }));

@@ -125,6 +125,9 @@ export interface FinancialOverviewMetrics {
   averageTransactionValue: number | null;
   totalPaymentsCount: number;
   successfulPaymentsCount: number;
+  workerEarnings?: number;
+  federationShare?: number;
+  failedPaymentsCount?: number;
 }
 
 export interface PaymentStatusBreakdown {

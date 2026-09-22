@@ -19,7 +19,6 @@ import {
   Users,
   Building2,
   TrendingUp,
-  Sparkles,
   ArrowRight,
   ShieldCheck,
   Star,
@@ -123,23 +122,23 @@ export function ShortageDetailModal({
             </div>
           </div>
 
-          {/* Smart Allocation Recommendation Section */}
+          {/* Allocation Recommendation Section */}
           {recommendation && (
-            <div className="p-4 rounded-xl border border-emerald-200/80 dark:border-emerald-900/60 bg-emerald-50/50 dark:bg-emerald-950/20 space-y-3">
+            <div className="p-4 rounded-xl border bg-muted/20 space-y-3">
               <div className="flex items-center space-x-2">
-                <Sparkles className="h-4 w-4 text-emerald-700 dark:text-emerald-400" />
-                <h4 className="text-sm font-bold text-emerald-900 dark:text-emerald-200">
+                <ArrowRight className="h-4 w-4 text-foreground" />
+                <h4 className="text-sm font-bold text-foreground">
                   {recommendation.title}
                 </h4>
               </div>
 
-              <p className="text-xs text-emerald-900/80 dark:text-emerald-300/80 leading-relaxed">
+              <p className="text-xs text-muted-foreground leading-relaxed">
                 {recommendation.rationale}
               </p>
 
-              <div className="p-2 rounded-lg bg-emerald-100/60 dark:bg-emerald-900/40 border border-emerald-200 dark:border-emerald-800 text-[11px] text-emerald-950 dark:text-emerald-200 font-semibold flex items-center justify-between">
+              <div className="p-2.5 rounded-lg bg-card border text-[11px] font-semibold flex items-center justify-between">
                 <span>Suggested Headcount: {recommendation.suggestedHeadcount} Craftsmen</span>
-                <span>{recommendation.estimatedSlaImprovement}</span>
+                <span className="text-muted-foreground font-normal">{recommendation.estimatedSlaImprovement}</span>
               </div>
             </div>
           )}

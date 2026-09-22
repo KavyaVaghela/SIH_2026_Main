@@ -18,6 +18,7 @@ import { QualityFeedbackSection } from "./quality-feedback-section";
 import { EmergencyIntelligenceSection } from "./emergency-intelligence-section";
 import { DemandVsWorkforce } from "@/features/super-admin/demand-intelligence/components/demand-vs-workforce";
 import { GeographicDemandView } from "@/features/super-admin/demand-intelligence/components/geographic-demand-view";
+import { AiDemandForecastPanel } from "@/features/super-admin/demand-intelligence/components/ai-demand-forecast-panel";
 import { demandService } from "@/features/super-admin/demand-intelligence/services/demand-service";
 import type { DemandOverviewStats, GeographicDemandCluster } from "@/features/super-admin/demand-intelligence/types";
 
@@ -112,6 +113,9 @@ export function AnalyticsDashboardView() {
 
       {/* Demand vs. Workforce Balance Panel */}
       <DemandVsWorkforce stats={demandData.stats} isLoading={isDemandLoading} />
+
+      {/* AI Demand Forecasting Panel (Phase 4A) */}
+      <AiDemandForecastPanel />
 
       {/* Multi-Region Geographic Demand Hotspots & Map View */}
       <GeographicDemandView

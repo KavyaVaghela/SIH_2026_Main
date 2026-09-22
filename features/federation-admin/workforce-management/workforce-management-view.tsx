@@ -9,12 +9,14 @@ import {
   UserCheck,
   FileEdit,
   ShieldCheck,
+  BarChart2,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { ToastItem } from "@/components/ui/toast";
 import { useWorkforceManagement, type WorkforceTab } from "./hooks/use-workforce-management";
 import { WorkforceManagementHeader } from "./components/workforce-management-header";
+import { FederationWorkforceIntelligence } from "./components/federation-workforce-intelligence";
 import { WorkerStatusSearch } from "./components/worker-status-search";
 import { WorkerStatusTable } from "./components/worker-status-table";
 import { AddWorkerDialog } from "./components/add-worker-dialog";
@@ -206,6 +208,18 @@ export function WorkforceManagementView() {
             </span>
           )}
         </button>
+
+        <button
+          onClick={() => setActiveTab("workforce-intelligence")}
+          className={`flex items-center space-x-2 px-3.5 py-2 rounded-t-lg font-medium transition-colors border-b-2 ${
+            activeTab === "workforce-intelligence"
+              ? "border-emerald-700 text-emerald-800 dark:text-emerald-300 bg-muted/40 font-semibold"
+              : "border-transparent text-muted-foreground hover:text-foreground hover:bg-muted/20"
+          }`}
+        >
+          <BarChart2 className="h-3.5 w-3.5" />
+          <span>Workforce Intelligence</span>
+        </button>
       </div>
 
       {/* ==================================================== */}
@@ -335,6 +349,15 @@ export function WorkforceManagementView() {
             onReviewRequest={(req) => setSelectedReqForDetail(req)}
             isLoading={isLoading}
           />
+        </section>
+      )}
+
+      {/* ==================================================== */}
+      {/* TAB 5: WORKFORCE INTELLIGENCE & ALLOCATION (PHASE 3) */}
+      {/* ==================================================== */}
+      {activeTab === "workforce-intelligence" && (
+        <section aria-label="Workforce Allocation Intelligence" className="space-y-4 animate-in fade-in-50">
+          <FederationWorkforceIntelligence />
         </section>
       )}
 
