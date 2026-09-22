@@ -2,6 +2,7 @@ import { createClient } from "@/lib/supabase/client";
 import { federationService } from "@/features/workforce/services/federation-service";
 import { bookingService } from "@/features/bookings/services/booking-service";
 import { complaintService } from "@/features/complaints/services/complaint-service";
+import { resolveFederationContext } from "@/features/federation-admin/utils/federation-context";
 import type {
   FederationAdminDashboardData,
   DashboardTimeframe,
@@ -44,32 +45,33 @@ interface DbReviewRow {
 }
 
 interface DbFederationRow {
-  id?: string;
+  id: string;
   name?: string | null;
   code?: string | null;
   registration_number?: string | null;
   city?: string | null;
   state?: string | null;
   service_region?: string | null;
+  jurisdiction?: string | null;
   contact_email?: string | null;
   contact_phone?: string | null;
 }
 
 export class FederationAdminService {
   /**
-   * Prototype federation identity as specified in Section 10 of project guidelines:
-   * Federation: ABC Labour Cooperative Federation
+   * Default federation identity matching canonical cooperative federation:
+   * Federation: Ahmedabad Skilled Workers Federation
    * Location: Ahmedabad, Gujarat
    */
   private readonly defaultFederation: FederationIdentity = {
-    id: "fed-ahmedabad-01",
-    name: "ABC Labour Cooperative Federation",
-    code: "FED-AHM-01",
+    id: "b765df3b-c418-4a15-b79f-3cbc09e475dc",
+    name: "Ahmedabad Skilled Workers Federation",
+    code: "FED-AMD-01",
     registrationNumber: "REG/GJ/AHM/2024/042",
     city: "Ahmedabad",
     state: "Gujarat",
-    jurisdiction: "Ahmedabad Municipal Corporation & Greater Urban Region",
-    contactEmail: "admin@abclabour.coop.in",
+    jurisdiction: "Ahmedabad Urban & Suburban District",
+    contactEmail: "federation@example.com",
     contactPhone: "+91 79 2658 0101",
     establishedYear: 2021,
   };
@@ -85,17 +87,17 @@ export class FederationAdminService {
     const supabase = createClient();
 
     try {
-      // 1. Attempt to resolve caller's federation identity from DB
+      // 1. Attempt to resolve caller's federation identity dynamically
       let targetFed: any = null;
       try {
-        const { data: { user } } = await supabase.auth.getUser();
-        if (user?.email) {
-          const { data: fedByEmail } = await supabase
+        const fedContext = await resolveFederationContext(supabase);
+        if (fedContext?.id) {
+          const { data: dbFed } = await supabase
             .from("federations")
             .select("*")
-            .eq("contact_email", user.email)
+            .eq("id", fedContext.id)
             .maybeSingle();
-          if (fedByEmail) targetFed = fedByEmail;
+          if (dbFed) targetFed = dbFed;
         }
       } catch (_) {}
 
@@ -103,10 +105,9 @@ export class FederationAdminService {
         const { data: defaultFed } = await supabase
           .from("federations")
           .select("*")
-          .eq("is_active", true)
-          .limit(1)
+          .eq("id", this.defaultFederation.id)
           .maybeSingle();
-        targetFed = defaultFed;
+        targetFed = defaultFed || this.defaultFederation;
       }
 
       if (targetFed) {
@@ -122,10 +123,39 @@ export class FederationAdminService {
           .select("id, status, total_amount, created_at, scheduled_start_at")
           .eq("federation_id", targetFed.id);
 
-        // 4. Fetch complaints belonging to this federation
-        const { data: dbComplaints } = await supabase
-          .from("complaints")
-          .select("id, status, category, created_at");
+        // 4. Fetch complaints belonging to this federation (strictly scoped)
+        let dbComplaints: DbComplaintRow[] = [];
+        try {
+          if (typeof window !== "undefined") {
+            const res = await fetch(`/api/complaints?role=FEDERATION_ADMIN&federationId=${targetFed.id}&pageSize=200`);
+            if (res.ok) {
+              const json = await res.json();
+              if (json.success && Array.isArray(json.complaints)) {
+                dbComplaints = json.complaints.map((c: any) => ({
+                  id: c.id,
+                  status: c.status,
+                  category: c.category,
+                  created_at: c.createdAt || c.created_at,
+                }));
+              }
+            }
+          }
+          if (dbComplaints.length === 0) {
+            const { cases } = await complaintService.listGrievances({
+              role: "FEDERATION_ADMIN",
+              federationId: targetFed.id,
+              pageSize: 200,
+            });
+            dbComplaints = cases.map((c) => ({
+              id: c.id,
+              status: c.status,
+              category: c.category,
+              created_at: c.createdAt,
+            }));
+          }
+        } catch (compErr) {
+          console.warn("Notice: Scoped complaint query for federation:", compErr);
+        }
 
         // 5. Fetch reviews
         const { data: dbReviews } = await supabase
@@ -233,8 +263,12 @@ export class FederationAdminService {
 
     // Complaints breakdown
     const totalComplaints = complaints.length;
-    const pendingComplaints = complaints.filter((c) => c.status && ["OPEN", "IN_REVIEW"].includes(c.status)).length;
-    const resolvedComplaints = complaints.filter((c) => c.status === "RESOLVED").length;
+    const pendingComplaints = complaints.filter((c) =>
+      c.status && ["OPEN", "IN_REVIEW", "ACTION_REQUIRED", "ESCALATED", "UNDER_REVIEW"].includes(c.status)
+    ).length;
+    const resolvedComplaints = complaints.filter((c) =>
+      c.status && ["RESOLVED", "CLOSED"].includes(c.status)
+    ).length;
 
     // Performance Calculations (Section 19)
     const jobCompletionRate = totalJobs > 0 ? Number(((completedJobs / totalJobs) * 100).toFixed(1)) : 100;

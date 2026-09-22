@@ -4,6 +4,7 @@ import { analyticsService } from "@/features/super-admin/analytics/services/anal
 import type { AnalyticsTimeframe } from "@/features/super-admin/analytics/types";
 
 export const dynamic = "force-dynamic";
+export const revalidate = 0;
 
 export async function GET(request: Request) {
   try {

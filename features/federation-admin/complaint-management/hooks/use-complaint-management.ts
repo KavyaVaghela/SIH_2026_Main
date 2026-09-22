@@ -3,6 +3,7 @@
 import * as React from "react";
 import { complaintManagementService } from "../services/complaint-management-service";
 import { createClient } from "@/lib/supabase/client";
+import { resolveFederationContext } from "@/features/federation-admin/utils/federation-context";
 import type {
   FederationComplaintItem,
   ComplaintManagementData,
@@ -77,26 +78,14 @@ export function useComplaintManagement() {
             .eq("id", user.id)
             .maybeSingle();
 
-          let fedId = "b765df3b-c418-4a15-b79f-3cbc09e475dc";
-          let fedName = "Ahmedabad Skilled Workers Federation";
-
-          if (user.email) {
-            const { data: fed } = await (supabase.from("federations") as any)
-              .select("id, name")
-              .eq("contact_email", user.email)
-              .maybeSingle();
-            if (fed) {
-              fedId = fed.id;
-              fedName = fed.name;
-            }
-          }
+          const fedContext = await resolveFederationContext(supabase);
 
           setCurrentAdminProfile({
             id: user.id,
             fullName: prof?.full_name || "Federation Dispute Officer",
             email: user.email || "",
-            federationId: fedId,
-            federationName: fedName,
+            federationId: fedContext?.id || "b765df3b-c418-4a15-b79f-3cbc09e475dc",
+            federationName: fedContext?.name || "Ahmedabad Skilled Workers Federation",
           });
         }
       } catch (err) {

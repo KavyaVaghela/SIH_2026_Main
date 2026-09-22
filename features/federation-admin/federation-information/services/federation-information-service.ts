@@ -1,4 +1,5 @@
 import { createClient } from "@/lib/supabase/client";
+import { resolveFederationContext } from "@/features/federation-admin/utils/federation-context";
 import type {
   FederationInformationData,
   OfficialFederationDetails,
@@ -37,23 +38,23 @@ interface DbFederationRow {
 
 export class FederationInformationService {
   /**
-   * Prototype federation identity conforming to project specification:
-   * ABC Labour Cooperative Federation, Ahmedabad, Gujarat.
+   * Default federation identity matching canonical cooperative federation:
+   * Ahmedabad Skilled Workers Federation, Ahmedabad, Gujarat.
    */
   private readonly defaultOfficialDetails: OfficialFederationDetails = {
-    id: "fed-ahmedabad-01",
-    name: "ABC Labour Cooperative Federation",
-    code: "FED-AHM-01",
+    id: "b765df3b-c418-4a15-b79f-3cbc09e475dc",
+    name: "Ahmedabad Skilled Workers Federation",
+    code: "FED-AMD-01",
     registrationNumber: "REG/GJ/AHM/2024/042",
     registrationDate: "2021-04-15",
     gstNumber: "24AAACB9876C1Z3",
     state: "Gujarat",
     city: "Ahmedabad",
     address: "Cooperative Bhavan, Opposite Khokhra Labour Colony, Maninagar East, Ahmedabad, Gujarat - 380008",
-    serviceRegion: "Ahmedabad Municipal Corporation & Greater Urban Metropolitan Area",
-    contactEmail: "admin@abclabour.coop.in",
+    serviceRegion: "Ahmedabad Urban & Suburban District",
+    contactEmail: "federation@example.com",
     contactPhone: "+91 79 2658 0101",
-    jurisdiction: "Ahmedabad District & Urban Development Authority (AUDA)",
+    jurisdiction: "Ahmedabad Urban & Suburban District",
     status: "ACTIVE",
     establishedYear: 2021,
   };
@@ -177,18 +178,24 @@ export class FederationInformationService {
     const supabase = createClient();
     let dbDetails: OfficialFederationDetails | null = null;
     let isFallback = true;
-    let dataSourceNotice: string | undefined =
-      "Development Fallback Mode: Showing deterministic prototype data (ABC Labour Cooperative Federation, Ahmedabad).";
+    let dataSourceNotice: string | undefined = undefined;
 
     try {
-      // 1. Attempt to read live database row matching authenticated federation
-      const { data: dbFederation, error } = await supabase
-        .from("federations")
-        .select("*")
-        .limit(1)
-        .maybeSingle();
+      // 1. Attempt to resolve authenticated federation context dynamically
+      const fedContext = await resolveFederationContext(supabase);
 
-      if (!error && dbFederation) {
+      let dbFederation: any = null;
+      if (fedContext?.id) {
+        const { data, error } = await (supabase.from("federations") as any)
+          .select("*")
+          .eq("id", fedContext.id)
+          .maybeSingle();
+        if (!error && data) {
+          dbFederation = data;
+        }
+      }
+
+      if (dbFederation) {
         const raw = dbFederation as unknown as DbFederationRow;
         dbDetails = {
           id: raw.id || this.defaultOfficialDetails.id,
@@ -211,7 +218,7 @@ export class FederationInformationService {
         dataSourceNotice = undefined;
       }
     } catch (err) {
-      console.warn("Notice: Live Supabase federation query unpopulated, engaging development fallback.", err);
+      console.warn("Notice: Live Supabase federation query unpopulated, engaging default context.", err);
     }
 
     const officialDetails = dbDetails || this.defaultOfficialDetails;

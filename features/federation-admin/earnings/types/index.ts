@@ -14,9 +14,13 @@ export interface EarningsKpiMetric {
 
 export interface MonthlyEarningsTrendPoint {
   month: string;
-  grossEarnings: number;
-  platformCommission: number;
-  netPayout: number;
+  serviceValue: number;
+  workerPayout: number;
+  federationShare: number;
+  platformCommission?: number;
+  taxCollected?: number;
+  grossEarnings?: number;
+  netPayout?: number;
 }
 
 export interface CategoryEarningsDistributionPoint {
