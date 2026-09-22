@@ -149,7 +149,7 @@ export function FederationAdminSidebar({
     <>
       <aside
         className={cn(
-          "flex flex-col w-64 border-r border-border bg-card/95 backdrop-blur supports-[backdrop-filter]:bg-card/75 p-4 space-y-6 sticky top-16 h-[calc(100vh-4rem)] overflow-y-auto shrink-0 justify-between",
+          "hidden md:flex flex-col w-64 border-r border-border bg-card/95 backdrop-blur supports-[backdrop-filter]:bg-card/75 p-4 space-y-6 sticky top-16 h-[calc(100vh-4rem)] overflow-y-auto shrink-0 justify-between",
           className
         )}
       >

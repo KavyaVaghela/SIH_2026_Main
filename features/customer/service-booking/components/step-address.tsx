@@ -16,6 +16,39 @@ export interface StepAddressProps {
   onBack: () => void;
 }
 
+/**
+ * Deduplicate identical addresses before rendering selection list.
+ * Normalizes address fields to identify identical locations
+ * while preserving stable IDs and user selection.
+ */
+function deduplicateAddresses(list: AddressItem[], selectedId?: string | null): AddressItem[] {
+  const seen = new Map<string, AddressItem>();
+
+  for (const addr of list) {
+    const normLine1 = (addr.addressLine1 || "").trim().toLowerCase();
+    const normLine2 = (addr.addressLine2 || "").trim().toLowerCase();
+    const normCity = (addr.city || "").trim().toLowerCase();
+    const normState = (addr.state || "").trim().toLowerCase();
+    const normPostal = (addr.postalCode || "").trim().toLowerCase();
+    const key = `${normLine1}|${normLine2}|${normCity}|${normState}|${normPostal}`;
+
+    const existing = seen.get(key);
+    if (!existing) {
+      seen.set(key, addr);
+    } else {
+      // If the duplicate matches selectedId, retain it so selection ID remains identical
+      if (selectedId && addr.id === selectedId) {
+        seen.set(key, addr);
+      } else if (addr.isDefault && !existing.isDefault && existing.id !== selectedId) {
+        // If duplicate is default and existing is not (and not selected), prefer default
+        seen.set(key, addr);
+      }
+    }
+  }
+
+  return Array.from(seen.values());
+}
+
 export function StepAddress({
   selectedAddress,
   onSelectAddress,
@@ -27,6 +60,11 @@ export function StepAddress({
   const [showAddForm, setShowAddForm] = React.useState(false);
   const [saving, setSaving] = React.useState(false);
   const [error, setError] = React.useState<string | null>(null);
+
+  // Deduplicate identical addresses for display
+  const displayedAddresses = React.useMemo(() => {
+    return deduplicateAddresses(addresses, selectedAddress?.id);
+  }, [addresses, selectedAddress?.id]);
 
   // New address form state
   const [title, setTitle] = React.useState("Home");
@@ -71,8 +109,11 @@ export function StepAddress({
             setAddresses(mapped);
 
             if (!selectedAddress && mapped.length > 0) {
-              const defaultAddr = mapped.find((a) => a.isDefault) || mapped[0];
-              onSelectAddress(defaultAddr);
+              const uniqueList = deduplicateAddresses(mapped);
+              const defaultAddr = uniqueList.find((a) => a.isDefault) || uniqueList[0];
+              if (defaultAddr) {
+                onSelectAddress(defaultAddr);
+              }
             }
           }
         }
@@ -319,7 +360,7 @@ export function StepAddress({
       )}
 
       {/* Empty State when user has no saved addresses */}
-      {!loading && addresses.length === 0 && !showAddForm && (
+      {!loading && displayedAddresses.length === 0 && !showAddForm && (
         <div className="p-8 text-center border border-dashed border-slate-200 dark:border-slate-800 rounded-xl space-y-3">
           <div className="w-10 h-10 rounded-full bg-emerald-50 dark:bg-emerald-950/50 text-emerald-600 flex items-center justify-center mx-auto">
             <MapPin className="w-5 h-5" />
@@ -342,9 +383,9 @@ export function StepAddress({
       )}
 
       {/* Existing Addresses Grid */}
-      {!loading && addresses.length > 0 && (
+      {!loading && displayedAddresses.length > 0 && (
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          {addresses.map((addr) => {
+          {displayedAddresses.map((addr) => {
             const isSelected = selectedAddress?.id === addr.id;
 
             return (
