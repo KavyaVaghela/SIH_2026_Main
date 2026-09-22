@@ -4,6 +4,7 @@ import * as React from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { cn } from "@/lib/utils";
+import { useTranslation, getTranslatedNavTitle } from "@/lib/i18n";
 
 export interface MobileNavItem {
   title: string;
@@ -17,6 +18,7 @@ export interface MobileNavigationProps {
 }
 
 export function MobileNavigation({ items, className }: MobileNavigationProps) {
+  const { t } = useTranslation();
   const pathname = usePathname();
 
   return (
@@ -24,6 +26,7 @@ export function MobileNavigation({ items, className }: MobileNavigationProps) {
       <nav className="flex items-center justify-around h-16 px-2">
         {items.map((item) => {
           const isActive = pathname === item.href;
+          const displayTitle = getTranslatedNavTitle(item.title, t);
           return (
             <Link
               key={item.href}
@@ -36,7 +39,7 @@ export function MobileNavigation({ items, className }: MobileNavigationProps) {
               <div className={cn("h-5 w-5", isActive && "scale-110 transition-transform")}>
                 {item.icon}
               </div>
-              <span>{item.title}</span>
+              <span>{displayTitle}</span>
             </Link>
           );
         })}
@@ -44,3 +47,4 @@ export function MobileNavigation({ items, className }: MobileNavigationProps) {
     </div>
   );
 }
+

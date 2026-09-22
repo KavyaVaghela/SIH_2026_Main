@@ -1,16 +1,20 @@
 "use client";
 
-import { useState } from "react";
+import { useLanguage } from "./language-context";
 import { LOCALES, DEFAULT_LOCALE, type SupportedLocale } from "./config";
 
 /**
- * Lightweight internationalization hook supporting EN, GU, and HI.
+ * Global reactive internationalization hook supporting EN, GU, and HI.
+ * Reactively connects to LanguageProvider with safe fallback.
  */
 export function useTranslation() {
-  const [currentLocale, setLocale] = useState<SupportedLocale>(DEFAULT_LOCALE);
+  const language = useLanguage();
 
-  function t(keyPath: string, fallback?: string): string {
-    const dict = LOCALES[currentLocale]?.dict || LOCALES[DEFAULT_LOCALE].dict;
+  const locale = language?.locale || DEFAULT_LOCALE;
+  const setLocale = language?.setLocale || (() => {});
+  const supportedLocales = language?.supportedLocales || (Object.keys(LOCALES) as SupportedLocale[]);
+  const t = language?.t || ((keyPath: string, fallback?: string) => {
+    const dict = LOCALES[DEFAULT_LOCALE].dict;
     const parts = keyPath.split(".");
     let result: unknown = dict;
 
@@ -23,12 +27,13 @@ export function useTranslation() {
     }
 
     return typeof result === "string" ? result : fallback || keyPath;
-  }
+  });
 
   return {
     t,
-    locale: currentLocale,
+    locale,
     setLocale,
-    supportedLocales: Object.keys(LOCALES) as SupportedLocale[],
+    supportedLocales,
   };
 }
+
