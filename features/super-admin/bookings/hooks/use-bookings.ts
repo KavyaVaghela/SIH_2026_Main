@@ -62,7 +62,7 @@ export function useBookings() {
     setError(null);
     try {
       const [statsRes, listRes] = await Promise.all([
-        bookingsService.getBookingStats(),
+        bookingsService.getBookingStats(filters.dateRange),
         bookingsService.getBookings(filters),
       ]);
 

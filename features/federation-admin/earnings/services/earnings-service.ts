@@ -1,4 +1,5 @@
 import { createClient } from "@/lib/supabase/client";
+import { resolveFederationContext } from "@/features/federation-admin/utils/federation-context";
 import type {
   FederationEarningsData,
   EarningsKpiMetric,
@@ -23,40 +24,13 @@ export const SUPPORTED_2026_MONTHS = [
 export class FederationEarningsService {
   /**
    * Resolves the authenticated user's federation ID dynamically.
-   * Never accepts untrusted client input.
+   * Adheres strictly to the 4-step hierarchy without unconstrained limit(1).
    */
   async resolveFederationId(clientOverride?: any): Promise<string> {
     const supabase = clientOverride || createClient();
     try {
-      const {
-        data: { user },
-      } = await supabase.auth.getUser();
-
-      if (user?.email) {
-        // Find matching federation by contact email
-        const { data: fed } = await (supabase.from("federations") as any)
-          .select("id")
-          .eq("contact_email", user.email)
-          .maybeSingle();
-        if (fed?.id) return fed.id;
-      }
-
-      if (user?.id) {
-        // Check if profile links to federation
-        const { data: profile } = await (supabase.from("profiles") as any)
-          .select("id, role")
-          .eq("id", user.id)
-          .maybeSingle();
-
-        if (profile?.role === "FEDERATION_ADMIN") {
-          const { data: activeFed } = await (supabase.from("federations") as any)
-            .select("id")
-            .eq("is_active", true)
-            .limit(1)
-            .maybeSingle();
-          if (activeFed?.id) return activeFed.id;
-        }
-      }
+      const fedContext = await resolveFederationContext(supabase);
+      if (fedContext?.id) return fedContext.id;
     } catch (e) {
       console.warn("Notice: resolving federation ID fallback:", e);
     }
@@ -240,13 +214,28 @@ export class FederationEarningsService {
 
       // 5. Monthly Trend Points (6-month moving trend from real database timestamps)
       const monthNames = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
-      const trendMap = new Map<string, { gross: number; commission: number; net: number }>();
+      const trendMap = new Map<
+        string,
+        {
+          serviceValue: number;
+          workerPayout: number;
+          platformCommission: number;
+          taxCollected: number;
+          federationShare: number;
+        }
+      >();
 
       // Initialize past 6 months
       for (let i = 5; i >= 0; i--) {
         const d = new Date(Number(yearStr), Number(monthStr) - 1 - i, 1);
         const k = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}`;
-        trendMap.set(k, { gross: 0, commission: 0, net: 0 });
+        trendMap.set(k, {
+          serviceValue: 0,
+          workerPayout: 0,
+          platformCommission: 0,
+          taxCollected: 0,
+          federationShare: 0,
+        });
       }
 
       activeInvoices.forEach((inv) => {
@@ -255,11 +244,20 @@ export class FederationEarningsService {
         const k = d.slice(0, 7);
         if (trendMap.has(k)) {
           const entry = trendMap.get(k)!;
-          const amt = Number(inv.total_amount) || 0;
-          const fee = Number(inv.platform_fee) || Math.round(amt * 0.05 * 100) / 100;
-          entry.gross += amt;
-          entry.commission += fee;
-          entry.net += Math.round((amt - fee) * 0.95);
+          const totalAmt = Number(inv.total_amount) || 0;
+          const fee = Number(inv.platform_fee) || 0;
+          const tax = Number(inv.tax_amount) || 0;
+          const linkedBooking = allBookings.find((b) => b.id === inv.booking_id);
+          const wEarn = linkedBooking?.worker_earnings
+            ? Number(linkedBooking.worker_earnings)
+            : Number(inv.subtotal) * 0.9;
+          const fedShare = Math.max(0, totalAmt - wEarn - fee - tax);
+
+          entry.serviceValue += totalAmt;
+          entry.workerPayout += wEarn;
+          entry.platformCommission += fee;
+          entry.taxCollected += tax;
+          entry.federationShare += fedShare;
         }
       });
 
@@ -269,9 +267,13 @@ export class FederationEarningsService {
           const label = `${monthNames[Number(mo) - 1]} ${yr}`;
           return {
             month: label,
-            grossEarnings: Number(val.gross.toFixed(2)) || 32000,
-            platformCommission: Number(val.commission.toFixed(2)) || 1600,
-            netPayout: Number(val.net.toFixed(2)) || 28800,
+            serviceValue: Number(val.serviceValue.toFixed(2)),
+            workerPayout: Number(val.workerPayout.toFixed(2)),
+            federationShare: Number(val.federationShare.toFixed(2)),
+            platformCommission: Number(val.platformCommission.toFixed(2)),
+            taxCollected: Number(val.taxCollected.toFixed(2)),
+            grossEarnings: Number(val.serviceValue.toFixed(2)),
+            netPayout: Number(val.workerPayout.toFixed(2)),
           };
         }
       );
@@ -368,12 +370,12 @@ export class FederationEarningsService {
           netPayoutGrowth: 12,
         },
         trend: [
-          { month: "Apr 2026", grossEarnings: 32000, platformCommission: 1600, netPayout: 28800 },
-          { month: "May 2026", grossEarnings: 36500, platformCommission: 1825, netPayout: 32850 },
-          { month: "Jun 2026", grossEarnings: 41000, platformCommission: 2050, netPayout: 36900 },
-          { month: "Jul 2026", grossEarnings: 42500, platformCommission: 2125, netPayout: 38250 },
-          { month: "Aug 2026", grossEarnings: 48440, platformCommission: 2422, netPayout: 43596 },
-          { month: "Sep 2026", grossEarnings: 48320, platformCommission: 2416, netPayout: 43488 },
+          { month: "Apr 2026", serviceValue: 32000, workerPayout: 24000, federationShare: 2400, platformCommission: 1600, taxCollected: 4000, grossEarnings: 32000, netPayout: 24000 },
+          { month: "May 2026", serviceValue: 36500, workerPayout: 27375, federationShare: 2737, platformCommission: 1825, taxCollected: 4563, grossEarnings: 36500, netPayout: 27375 },
+          { month: "Jun 2026", serviceValue: 41000, workerPayout: 30750, federationShare: 3075, platformCommission: 2050, taxCollected: 5125, grossEarnings: 41000, netPayout: 30750 },
+          { month: "Jul 2026", serviceValue: 42500, workerPayout: 31875, federationShare: 3187, platformCommission: 2125, taxCollected: 5313, grossEarnings: 42500, netPayout: 31875 },
+          { month: "Aug 2026", serviceValue: 48440, workerPayout: 36330, federationShare: 3633, platformCommission: 2422, taxCollected: 6055, grossEarnings: 48440, netPayout: 36330 },
+          { month: "Sep 2026", serviceValue: 48320, workerPayout: 36240, federationShare: 3624, platformCommission: 2416, taxCollected: 6040, grossEarnings: 48320, netPayout: 36240 },
         ],
         categories: [
           { name: "Plumbing", percentage: 28, amount: 13530, color: "#059669" },

@@ -8,10 +8,7 @@ export const metadata = {
 
 export default function FederationAdminLayout({ children }: { children: React.ReactNode }) {
   return (
-    <FederationAdminShell
-      userName="Federation Administrator"
-      userRole="ABC Labour Cooperative Federation"
-    >
+    <FederationAdminShell>
       {children}
     </FederationAdminShell>
   );

@@ -67,7 +67,7 @@ export function DashboardHeader({
           <div className="flex flex-wrap items-center gap-2">
             <div className="flex items-center space-x-1.5 text-xs font-semibold text-emerald-800 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-950/60 px-2.5 py-0.5 rounded-md border border-emerald-200 dark:border-emerald-800/40">
               <Building2 className="h-3.5 w-3.5" />
-              <span>{federation?.name || "ABC Labour Cooperative Federation"}</span>
+              <span>{federation?.name || "Ahmedabad Skilled Workers Federation"}</span>
             </div>
             <Badge variant="secondary" className="flex items-center space-x-1 text-[11px] font-medium text-muted-foreground">
               <MapPin className="h-3 w-3 text-muted-foreground" />
@@ -75,7 +75,7 @@ export function DashboardHeader({
             </Badge>
             <Badge variant="outline" className="flex items-center space-x-1 text-[10px] text-muted-foreground font-mono">
               <ShieldCheck className="h-3 w-3 text-emerald-600" />
-              <span>{federation?.registrationNumber || "REG/GJ/AHM/2024/042"}</span>
+              <span>{federation?.registrationNumber || federation?.code || "FED-AMD-01"}</span>
             </Badge>
           </div>
 

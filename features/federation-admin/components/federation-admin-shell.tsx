@@ -13,6 +13,7 @@ import {
   getCachedProfileAvatar,
   setCachedProfileAvatar,
 } from "@/lib/auth/session-user";
+import { useFederationContext } from "../utils/federation-context";
 
 interface FederationAdminShellProps {
   children: React.ReactNode;
@@ -24,15 +25,18 @@ interface FederationAdminShellProps {
 export function FederationAdminShell({
   children,
   userName = "Federation Administrator",
-  userRole = "ABC Labour Cooperative Federation",
+  userRole,
   className,
 }: FederationAdminShellProps) {
   const [mobileDrawerOpen, setMobileDrawerOpen] = React.useState(false);
   const pathname = usePathname();
+  const { federation } = useFederationContext();
   const [displayName, setDisplayName] = React.useState<string>(
     userName !== "Federation Administrator" ? userName : "Vikram Shah"
   );
   const [avatarUrl, setAvatarUrl] = React.useState<string | undefined>(undefined);
+
+  const displayRole = federation?.name || (userRole && userRole !== "ABC Labour Cooperative Federation" ? userRole : "Federation Administrator");
 
   React.useEffect(() => {
     const cachedName = getCachedProfileName("FEDERATION_ADMIN");
@@ -111,7 +115,7 @@ export function FederationAdminShell({
       <TopNavbar
         platformTitle="KaushalyaSetu"
         userName={displayName}
-        userRole={userRole}
+        userRole={displayRole}
         role="FEDERATION_ADMIN"
         avatarUrl={avatarUrl}
         onToggleMobileMenu={() => setMobileDrawerOpen(!mobileDrawerOpen)}
