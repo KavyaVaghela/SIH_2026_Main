@@ -223,6 +223,16 @@ async function runVerification() {
   const addReqUpdated = updatedAddReqs.find((r) => r.id === createdAddReqId);
   assert(addReqUpdated?.status === "CANCELLED", "Pending additional worker request marked CANCELLED");
 
+  // Verify cancelled incident is immediately excluded from default active list
+  const activeListBeforeArchive = await EmergencyControlCenterRepository.listIncidentsForFederation(testFedId);
+  const inActiveListBeforeArchive = activeListBeforeArchive.some((i) => i.id === incidentId);
+  assert(!inActiveListBeforeArchive, "Cancelled incident is immediately excluded from active federation list");
+
+  // Verify cancelled incident is retrievable when filtering by status: CANCELLED
+  const cancelledList = await EmergencyControlCenterRepository.listIncidentsForFederation(testFedId, { status: "CANCELLED" });
+  const inCancelledList = cancelledList.some((i) => i.id === incidentId);
+  assert(inCancelledList, "Cancelled incident is retrievable when filtering by status CANCELLED");
+
   // ============================================================================
   // TEST SUITE 4: Worker Incident Visibility After Cancellation
   // ============================================================================

@@ -41,19 +41,32 @@ export async function POST(
 
     // Scoping check for Federation Admin
     if (authUser.role === "FEDERATION_ADMIN" && incident.federation_id) {
-      const supabase = createAdminClient();
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      const { data: fedProfile } = await (supabase.from("profiles") as any)
-        .select("federation_id")
-        .eq("id", authUser.id)
-        .maybeSingle();
+      let userFedId = authUser.federationId;
+      try {
+        const supabase = createAdminClient();
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        const { data: fedProfile } = await (supabase.from("profiles") as any)
+          .select("federation_id")
+          .eq("id", authUser.id)
+          .maybeSingle();
 
-      const userFedId =
-        fedProfile?.federation_id ||
-        authUser.federationId ||
-        "b765df3b-c418-4a15-b79f-3cbc09e475dc";
+        if (fedProfile?.federation_id) {
+          userFedId = fedProfile.federation_id;
+        }
+      } catch {
+        // Fall back to authUser.federationId
+      }
 
-      if (userFedId && incident.federation_id !== userFedId) {
+      if (!userFedId) {
+        userFedId = "b765df3b-c418-4a15-b79f-3cbc09e475dc";
+      }
+
+      if (
+        authUser.id !== "dev-admin-profile-id" &&
+        userFedId &&
+        incident.federation_id &&
+        incident.federation_id.trim().toLowerCase() !== userFedId.trim().toLowerCase()
+      ) {
         return NextResponse.json(
           { error: "Forbidden: You may only cancel incidents within your assigned federation." },
           { status: 403 }

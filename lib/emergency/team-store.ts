@@ -1,4 +1,4 @@
-import { createAdminClient } from "@/lib/supabase/admin";
+import { createAdminClient, isSupabaseConfigured } from "@/lib/supabase/admin";
 import {
   EmergencyIncidentRepository,
 } from "@/lib/emergency/incident-store";
@@ -902,15 +902,34 @@ export class EmergencyTeamRepository {
     memberId: string,
     updates: Partial<EmergencyTeamMemberRecord>
   ): Promise<void> {
-    const list = inMemoryTeamMembers.get(teamId) || [];
+    const list = inMemoryTeamMembers.get(teamId) || getStoredTeamMembers(teamId) || [];
     const idx = list.findIndex((m) => m.id === memberId || m.worker_id === memberId);
+    const now = new Date().toISOString();
     if (idx !== -1) {
-      list[idx] = { ...list[idx], ...updates };
+      list[idx] = { ...list[idx], ...updates, updated_at: updates.updated_at || now };
       inMemoryTeamMembers.set(teamId, list);
+      setStoredTeamMembers(teamId, list);
     }
-    const team = inMemoryTeams.get(teamId);
+    const team = inMemoryTeams.get(teamId) || getStoredTeam(teamId);
     if (team) {
       team.members = list;
+      setStoredTeam(team);
+    }
+
+    if (isSupabaseConfigured()) {
+      try {
+        const supabase = createAdminClient();
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        await (supabase.from("emergency_response_team_members") as any)
+          .update({
+            ...(updates.status ? { status: updates.status } : {}),
+            ...(updates.role ? { role: updates.role } : {}),
+            updated_at: updates.updated_at || now,
+          })
+          .or(`id.eq.${memberId},and(team_id.eq.${teamId},worker_id.eq.${memberId})`);
+      } catch {
+        // Memory fallback
+      }
     }
   }
 
@@ -921,9 +940,32 @@ export class EmergencyTeamRepository {
     teamId: string,
     updates: Partial<EmergencyResponseTeamRecord>
   ): Promise<void> {
-    const team = inMemoryTeams.get(teamId);
+    const team = inMemoryTeams.get(teamId) || getStoredTeam(teamId);
+    const now = new Date().toISOString();
     if (team) {
-      Object.assign(team, updates);
+      Object.assign(team, updates, { updated_at: updates.updated_at || now });
+      inMemoryTeams.set(teamId, team);
+      if (team.incident_id) {
+        inMemoryTeams.set(team.incident_id, team);
+      }
+      setStoredTeam(team);
+    }
+
+    if (isSupabaseConfigured()) {
+      try {
+        const supabase = createAdminClient();
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        await (supabase.from("emergency_response_teams") as any)
+          .update({
+            ...(updates.status ? { status: updates.status } : {}),
+            ...(updates.field_status ? { field_status: updates.field_status } : {}),
+            ...(updates.team_lead_worker_id !== undefined ? { team_lead_worker_id: updates.team_lead_worker_id } : {}),
+            updated_at: updates.updated_at || now,
+          })
+          .eq("id", teamId);
+      } catch {
+        // Memory fallback
+      }
     }
   }
 
@@ -944,17 +986,19 @@ export class EmergencyTeamRepository {
     inMemoryTeams.set(team.incident_id, team);
     setStoredTeam(team);
 
-    try {
-      const supabase = createAdminClient();
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      await (supabase.from("emergency_response_teams") as any)
-        .update({
-          field_status: fieldStatus,
-          updated_at: team.updated_at,
-        })
-        .eq("id", teamId);
-    } catch {
-      // In-memory fallback
+    if (isSupabaseConfigured()) {
+      try {
+        const supabase = createAdminClient();
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        await (supabase.from("emergency_response_teams") as any)
+          .update({
+            field_status: fieldStatus,
+            updated_at: team.updated_at,
+          })
+          .eq("id", teamId);
+      } catch {
+        // In-memory fallback
+      }
     }
 
     return team;
