@@ -31,6 +31,7 @@ export function LoginView() {
   const {
     register,
     handleSubmit,
+    setValue,
     formState: { errors, isSubmitting },
   } = useForm<LoginFormData>({
     resolver: zodResolver(loginSchema),
@@ -40,6 +41,12 @@ export function LoginView() {
     },
     mode: "onTouched",
   });
+
+  const handleQuickFill = (email: string, password: string) => {
+    setValue("email", email, { shouldValidate: true, shouldDirty: true, shouldTouch: true });
+    setValue("password", password, { shouldValidate: true, shouldDirty: true, shouldTouch: true });
+    setAuthError(null);
+  };
 
   // Real Supabase Login Submission
   const onSubmit = async (data: LoginFormData) => {
@@ -108,6 +115,50 @@ export function LoginView() {
           )}
 
           <form onSubmit={handleSubmit(onSubmit)} className="space-y-4" noValidate>
+            {/* Demo Role Quick-Fill Buttons (2x2 Grid) */}
+            <div className="grid grid-cols-2 gap-2">
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                onClick={() => handleQuickFill("customer@example.com", "Password123!")}
+                disabled={isSubmitting}
+                className="w-full text-xs font-medium"
+              >
+                Customer
+              </Button>
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                onClick={() => handleQuickFill("worker@example.com", "Password123!")}
+                disabled={isSubmitting}
+                className="w-full text-xs font-medium"
+              >
+                Worker
+              </Button>
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                onClick={() => handleQuickFill("federation@example.com", "Password123!")}
+                disabled={isSubmitting}
+                className="w-full text-xs font-medium"
+              >
+                Federation Admin
+              </Button>
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                onClick={() => handleQuickFill("admin@example.com", "Password123!")}
+                disabled={isSubmitting}
+                className="w-full text-xs font-medium"
+              >
+                Super Admin
+              </Button>
+            </div>
+
             {/* Email Field */}
             <div className="space-y-1.5">
               <label htmlFor="email" className="text-xs font-semibold text-foreground">
