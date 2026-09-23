@@ -2,6 +2,8 @@ import { NextRequest, NextResponse } from "next/server";
 import { getAuthenticatedUser } from "@/lib/emergency/auth-helper";
 import { EmergencyControlCenterRepository } from "@/lib/emergency/control-center-store";
 
+export const dynamic = "force-dynamic";
+
 export async function GET(request: NextRequest) {
   try {
     const authUser = await getAuthenticatedUser(request);
