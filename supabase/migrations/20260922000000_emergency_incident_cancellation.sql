@@ -5,39 +5,30 @@
 --              to include CANCELLED status while preserving all existing statuses.
 -- ====================================================================
 
-DO $$ 
-DECLARE
-  con_record RECORD;
+DO $$
 BEGIN
-  -- 1. Find and drop any existing check constraints on public.emergency_incidents checking status
-  FOR con_record IN (
-    SELECT c.conname
-    FROM pg_constraint c
-    JOIN pg_class t ON c.conrelid = t.oid
-    JOIN pg_namespace n ON t.relnamespace = n.oid
-    WHERE n.nspname = 'public'
-      AND t.relname = 'emergency_incidents'
-      AND c.contype = 'c'
-      AND pg_get_constraintdef(c.oid) ILIKE '%status%'
-  ) LOOP
-    EXECUTE 'ALTER TABLE public.emergency_incidents DROP CONSTRAINT IF EXISTS ' || quote_ident(con_record.conname);
-  END LOOP;
+    IF EXISTS (
+        SELECT 1
+        FROM pg_constraint
+        WHERE conrelid = 'public.emergency_incidents'::regclass
+          AND conname = 'emergency_incidents_status_check'
+    ) THEN
+        ALTER TABLE public.emergency_incidents
+        DROP CONSTRAINT emergency_incidents_status_check;
+    END IF;
 
-  -- 2. Explicitly drop emergency_incidents_status_check if it still exists
-  ALTER TABLE public.emergency_incidents 
-    DROP CONSTRAINT IF EXISTS emergency_incidents_status_check;
-
-  -- 3. Add authoritative emergency_incidents_status_check constraint with CANCELLED
-  ALTER TABLE public.emergency_incidents 
-    ADD CONSTRAINT emergency_incidents_status_check 
-    CHECK (status IN (
-      'AWAITING_RESPONSE',
-      'DISPATCHING',
-      'TEAM_FORMING',
-      'ACTIVE',
-      'STAFFING_SHORTAGE',
-      'RESOLVED',
-      'CLOSED',
-      'CANCELLED'
-    ));
+    ALTER TABLE public.emergency_incidents
+    ADD CONSTRAINT emergency_incidents_status_check
+    CHECK (
+        status IN (
+            'AWAITING_RESPONSE',
+            'DISPATCHING',
+            'TEAM_FORMING',
+            'ACTIVE',
+            'STAFFING_SHORTAGE',
+            'RESOLVED',
+            'CLOSED',
+            'CANCELLED'
+        )
+    );
 END $$;
