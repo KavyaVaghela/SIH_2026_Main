@@ -131,13 +131,87 @@ function normalizeTrade(trade: string): string {
     }
   });
 
-  // Sort by demand gap descending
+  // 5. Calculate 7D, 14D, 30D timeframe metrics and weekly series
+  let demand7d = 0;
+  let demand14d = 0;
+  let demand30d = 0;
+  const weeklyBuckets: Record<string, number> = {
+    "Week 1": 0,
+    "Week 2": 0,
+    "Week 3": 0,
+    "Week 4": 0,
+  };
+
+  bookings.forEach((b) => {
+    const ageDays = (now - new Date(b.created_at).getTime()) / 86400000;
+    if (ageDays <= 30) {
+      demand30d++;
+      if (ageDays <= 14) demand14d++;
+      if (ageDays <= 7) {
+        demand7d++;
+        weeklyBuckets["Week 4"]++;
+      } else if (ageDays <= 14) {
+        weeklyBuckets["Week 3"]++;
+      } else if (ageDays <= 21) {
+        weeklyBuckets["Week 2"]++;
+      } else {
+        weeklyBuckets["Week 1"]++;
+      }
+    }
+  });
+
+  const weekly_demand_series = [
+    { period: "Week 1", demand: weeklyBuckets["Week 1"], capacity: utilizationSummary.availableWorkers },
+    { period: "Week 2", demand: weeklyBuckets["Week 2"], capacity: utilizationSummary.availableWorkers },
+    { period: "Week 3", demand: weeklyBuckets["Week 3"], capacity: utilizationSummary.availableWorkers },
+    { period: "Week 4 (Current)", demand: weeklyBuckets["Week 4"], capacity: utilizationSummary.availableWorkers },
+  ];
+
+  // 6. Query federation complaints backlog
+  let openComplaintsCount = 0;
+  let highPriorityComplaintsCount = 0;
+  try {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const { data: complaintsData } = await (adminClient.from("complaints") as any)
+      .select("id, status, severity, bookings!inner(federation_id)")
+      .eq("bookings.federation_id", federationId)
+      .limit(150);
+
+    const complaintsList = (complaintsData || []) as any[];
+    complaintsList.forEach((c) => {
+      const isClosed = ["RESOLVED", "CLOSED", "REJECTED"].includes(c.status);
+      if (!isClosed) {
+        openComplaintsCount++;
+        if (c.severity === "HIGH" || c.severity === "CRITICAL" || c.severity === "URGENT") {
+          highPriorityComplaintsCount++;
+        }
+      }
+    });
+  } catch (compErr) {
+    console.warn("Notice: Federation complaints count:", compErr);
+  }
+
+  // 7. Sort by demand gap descending and assign severity
+  demandGaps.forEach((g) => {
+    if (g.demand_gap >= 50) g.severity = "CRITICAL";
+    else if (g.demand_gap >= 10) g.severity = "HIGH";
+    else if (g.demand_gap > 0) g.severity = "MEDIUM";
+    else g.severity = "LOW";
+  });
   demandGaps.sort((a, b) => b.demand_gap - a.demand_gap);
 
   const totalActive = utilizationSummary.totalWorkers;
   const available = utilizationSummary.availableWorkers;
   const underutilized = utilizationSummary.underUtilizedWorkersCount;
   const busy = Math.max(0, totalActive - available);
+
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const { count: deactivatedCount } = await (adminClient.from("workers") as any)
+    .select("id", { count: "exact", head: true })
+    .eq("federation_id", federationId)
+    .eq("account_status", "DEACTIVATED");
+
+  const unavailableCount = (deactivatedCount || 0) + Math.max(0, totalActive - available - busy);
 
   return {
     federation_id: federationId,
@@ -157,5 +231,21 @@ function normalizeTrade(trade: string): string {
     demand_gaps: demandGaps.slice(0, 8), // Top trades
     project_workload: utilizationSummary.largeProjectDemandHeadcount || 0,
     emergency_workload: utilizationSummary.emergencyActiveTaskCount || 0,
+
+    open_complaints_count: openComplaintsCount,
+    high_priority_complaints_count: highPriorityComplaintsCount,
+    timeframe_metrics: {
+      demand_7d: demand7d,
+      demand_14d: demand14d,
+      demand_30d: demand30d,
+    },
+    weekly_demand_series,
+    workforce_breakdown: {
+      available,
+      busy,
+      underutilized,
+      unavailable: unavailableCount,
+      total: totalActive + (deactivatedCount || 0),
+    },
   };
 }

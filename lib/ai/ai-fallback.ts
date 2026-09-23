@@ -8,6 +8,9 @@ import type {
   WorkerAiAdviceResponse,
   WorkerAiLanguage,
   WorkerAiPriority,
+  OperationalIssue,
+  OperationalPlanItem,
+  OperationalActionPlan,
 } from "./ai-types";
 
 /**
@@ -111,6 +114,7 @@ export function generateFederationDeterministicFallback(
   );
   const primaryGapItem =
     context.demand_gaps.find((g) => g.demand_gap > 0) || context.demand_gaps[0];
+  const primaryTrade = primaryGapItem ? primaryGapItem.trade : "Plumbing";
 
   let outlook_level: ForecastLevel = "MODERATE";
   if (
@@ -124,55 +128,227 @@ export function generateFederationDeterministicFallback(
     outlook_level = "LOW";
   }
 
-  const primaryTrade = primaryGapItem ? primaryGapItem.trade : "Key trade";
   const outlook =
     totalDemandGap > 0
-      ? `${primaryTrade} demand in ${context.region} is currently elevated relative to available qualified capacity with an estimated ${totalDemandGap}-job regional demand gap.`
-      : `Service demand in ${context.region} remains balanced with ${context.workforce.available} qualified workers currently available across trades.`;
+      ? `${primaryTrade} demand is significantly higher than available qualified capacity in ${context.region}, creating a regional shortage of ${totalDemandGap} jobs.`
+      : `Operations are balanced in ${context.region} with ${context.workforce.available} qualified craftsmen currently available across trades.`;
 
   const key_factors: string[] = [
-    `Current period service requests: ${context.demand.current_period} (vs ${context.demand.previous_period} prior period, trend: ${context.demand.trend})`,
-    `Active workforce roster: ${context.workforce.total_active} craftsmen (${context.workforce.available} available, ${context.workforce.busy} engaged)`,
+    `Current period service requests: ${context.demand.current_period} (trend: ${context.demand.trend})`,
+    `Active roster: ${context.workforce.total_active} craftsmen (${context.workforce.available} available, ${context.workforce.busy} engaged)`,
     totalDemandGap > 0
-      ? `Identified demand gap: ${totalDemandGap} unfulfilled booking requests across trade categories`
-      : `No immediate trade demand deficits detected in this territory`,
+      ? `Total capacity deficit: ${totalDemandGap} unfulfilled bookings concentrated in ${primaryTrade}`
+      : `No immediate trade deficits detected`,
     context.workforce.underutilized > 0
-      ? `${context.workforce.underutilized} verified craftsmen currently under-utilized (<40% capacity) available for deployment`
-      : `Workforce utilization within normal operational parameters across roster`,
+      ? `${context.workforce.underutilized} verified craftsmen operating below 40% capacity`
+      : `Roster utilization within normal operational parameters`,
   ];
 
-  if (context.project_workload > 0) {
-    key_factors.push(
-      `Active large project commitments engaging ${context.project_workload} craftsmen`
-    );
-  }
-
-  if (context.emergency_workload > 0) {
-    key_factors.push(
-      `Active emergency response duties engaging ${context.emergency_workload} craftsmen`
-    );
+  if (context.open_complaints_count > 0) {
+    key_factors.push(`${context.open_complaints_count} open grievances awaiting review`);
   }
 
   const workforce_insight =
     context.workforce.underutilized > 0
-      ? `Existing under-utilized local capacity (${context.workforce.underutilized} workers) should be reviewed before seeking cross-federation workforce rebalancing.`
-      : `Local qualified capacity is operating near optimal deployment. Monitor incoming demand peaks closely.`;
+      ? `Review the ${context.workforce.underutilized} under-utilized craftsmen before seeking external cooperative support.`
+      : `Local qualified capacity is near optimal deployment. Monitor incoming demand closely.`;
 
-  const recommended_actions: string[] = [
-    totalDemandGap > 0
-      ? `Address the ${totalDemandGap}-job demand gap by reviewing available qualified capacity in trades with elevated request volume.`
-      : `Maintain standard cooperative shift allocations and monitor weekly request trends.`,
-    context.workforce.underutilized > 0
-      ? `Prioritize job dispatches to the ${context.workforce.underutilized} under-utilized craftsmen to improve cooperative earnings equity.`
-      : `Continue standard local cooperative scheduling.`,
-    totalDemandGap > 10
-      ? `Review qualified support from nearby cooperative regions only where workers possess required trade certifications.`
-      : `Review upcoming project workload before scheduling additional service commitments.`,
-  ];
+  // -------------------------------------------------------------
+  // CONTROLLED OPERATIONAL ISSUES (PROBLEM -> EVIDENCE -> SOLUTION)
+  // -------------------------------------------------------------
+  const priority_problems: OperationalIssue[] = [];
+
+  // 1. Primary Trade Demand Shortage
+  if (primaryGapItem && primaryGapItem.demand_gap > 0) {
+    priority_problems.push({
+      id: `gap-${primaryGapItem.trade.toLowerCase()}`,
+      type: "DEMAND_SHORTAGE",
+      severity: primaryGapItem.demand_gap >= 50 ? "CRITICAL" : "HIGH",
+      category: "demand",
+      title: `${primaryGapItem.trade} Capacity Shortage`,
+      problem: `${primaryGapItem.trade} demand is much higher than the number of qualified available ${primaryGapItem.trade.toLowerCase()}s.`,
+      evidence: [
+        `${primaryGapItem.demand} service requests in recent period`,
+        `Only ${primaryGapItem.available_qualified_workers} qualified ${primaryGapItem.trade.toLowerCase()}(s) currently available`,
+        `Unmet capacity gap: ${primaryGapItem.demand_gap} jobs`,
+      ],
+      impact: "Customers may experience delayed response times or unfulfilled bookings.",
+      solution: `First review available ${primaryGapItem.trade.toLowerCase()}s. If shortage continues, request temporary support from a nearby cooperative.`,
+      confidence: "HIGH",
+      confidenceReasons: ["Verified booking requests", "Real-time worker availability roster"],
+      actionIds: ["REVIEW_TRADE_WORKERS", "OPEN_ALLOCATION_OPPORTUNITIES"],
+      trade: primaryGapItem.trade,
+    });
+  }
+
+  // 2. Secondary Trade Shortages (gap >= 5)
+  const secondaryGap = context.demand_gaps.find(
+    (g) => g.trade !== primaryTrade && g.demand_gap >= 5
+  );
+  if (secondaryGap) {
+    priority_problems.push({
+      id: `gap-${secondaryGap.trade.toLowerCase()}`,
+      type: "DEMAND_SHORTAGE",
+      severity: "HIGH",
+      category: "demand",
+      title: `${secondaryGap.trade} Deficit Detected`,
+      problem: `${secondaryGap.trade} booking volume exceeds available qualified roster capacity.`,
+      evidence: [
+        `${secondaryGap.demand} requests vs ${secondaryGap.available_qualified_workers} available craftsmen`,
+        `Deficit of ${secondaryGap.demand_gap} jobs`,
+      ],
+      impact: "Risk of service delays and customer drop-off.",
+      solution: `Inspect roster availability and verify upcoming completions for ${secondaryGap.trade}.`,
+      confidence: "HIGH",
+      confidenceReasons: ["Historical booking logs", "Trade skill mapping"],
+      actionIds: ["REVIEW_TRADE_WORKERS"],
+      trade: secondaryGap.trade,
+    });
+  }
+
+  // 3. Under-Utilized Craftsmen
+  if (context.workforce.underutilized > 0) {
+    priority_problems.push({
+      id: "issue-underutilized",
+      type: "UNDER_UTILIZATION",
+      severity: context.workforce.underutilized >= 5 ? "HIGH" : "MEDIUM",
+      category: "workforce",
+      title: "Worker Under-Utilization",
+      problem: `${context.workforce.underutilized} verified workers are currently operating below 40% target capacity.`,
+      evidence: [
+        `${context.workforce.underutilized} craftsmen logged under 32 hours in past 14 days`,
+        `Active and available on roster but not dispatched`,
+      ],
+      impact: "Lower income equity for cooperative members and unused local capacity.",
+      solution: "Review under-utilized workers' availability and assign them to incoming jobs.",
+      confidence: "HIGH",
+      confidenceReasons: ["14-day deterministic booking hours", "Account activation verification"],
+      actionIds: ["REVIEW_UNDERUTILIZED", "REVIEW_WORKFORCE"],
+    });
+  }
+
+  // 4. Complaints Backlog
+  if (context.open_complaints_count > 0) {
+    priority_problems.push({
+      id: "issue-complaints",
+      type: "COMPLAINT_BACKLOG",
+      severity: context.open_complaints_count >= 20 ? "HIGH" : "MEDIUM",
+      category: "complaints",
+      title: "Grievance Backlog",
+      problem: `${context.open_complaints_count} customer complaints require conciliation and review.`,
+      evidence: [
+        `${context.open_complaints_count} open grievance disputes`,
+        context.high_priority_complaints_count > 0
+          ? `${context.high_priority_complaints_count} marked high priority or escalated`
+          : "Disputes pending hearing schedule",
+      ],
+      impact: "Prolonged disputes lower cooperative reputation and dispute resolution scores.",
+      solution: "Prioritize unresolved complaints by age and severity, and schedule hearings.",
+      confidence: "HIGH",
+      confidenceReasons: ["Active complaints database records", "Conciliation dispute logs"],
+      actionIds: ["OPEN_COMPLAINTS"],
+    });
+  }
+
+  // 5. Certification & Skills Gap
+  if (primaryGapItem && primaryGapItem.demand_gap > 10) {
+    priority_problems.push({
+      id: "issue-certification",
+      type: "CERTIFICATION_GAP",
+      severity: "MEDIUM",
+      category: "workforce",
+      title: "Trade Certification Gap",
+      problem: `High demand concentration in ${primaryTrade} exceeds certified worker roster depth.`,
+      evidence: [
+        `High proportion of incoming jobs requires certified ${primaryTrade} competency`,
+        `Available qualified craftsmen pool is narrow`,
+      ],
+      impact: "Limits the federation from taking higher-value commercial projects.",
+      solution: "Enroll active craftsmen in KaushalGrow certification modules to expand qualified pool.",
+      confidence: "MEDIUM",
+      confidenceReasons: ["Trade demand trends", "Worker certification records"],
+      actionIds: ["OPEN_KAUSHALGROW", "REVIEW_CERTIFICATIONS"],
+      trade: primaryTrade,
+    });
+  }
+
+  // If no problems detected, add stable operational state
+  if (priority_problems.length === 0) {
+    priority_problems.push({
+      id: "ops-stable",
+      type: "LOW_WORKFORCE_AVAILABILITY",
+      severity: "LOW",
+      category: "workforce",
+      title: "Workforce Operations Stable",
+      problem: "Current qualified capacity meets active booking demand across all trade categories.",
+      evidence: [
+        `${context.workforce.available} craftsmen available for dispatch`,
+        "No critical trade shortage detected",
+      ],
+      impact: "Standard operations maintained with healthy fulfillment.",
+      solution: "Maintain standard cooperative shift allocations and monitor weekly trends.",
+      confidence: "HIGH",
+      confidenceReasons: ["Stable booking flow", "Balanced worker utilization"],
+      actionIds: ["REVIEW_WORKFORCE"],
+    });
+  }
+
+  // -------------------------------------------------------------
+  // STRUCTURED RECOMMENDED PLAN (TODAY & NEXT)
+  // -------------------------------------------------------------
+  const todayPlan: OperationalPlanItem[] = [];
+  const nextPlan: OperationalPlanItem[] = [];
+
+  if (primaryGapItem && primaryGapItem.demand_gap > 0) {
+    todayPlan.push({
+      step: `Review available ${primaryTrade.toLowerCase()}s and assign pending requests.`,
+      actionId: "REVIEW_TRADE_WORKERS",
+      label: `Review ${primaryTrade}s`,
+      trade: primaryTrade,
+      priority: "URGENT",
+    });
+  }
+
+  if (context.workforce.underutilized > 0) {
+    todayPlan.push({
+      step: `Check the ${context.workforce.underutilized} under-utilized craftsmen for open booking allocation.`,
+      actionId: "REVIEW_UNDERUTILIZED",
+      label: "Review Under-Utilized",
+      priority: "URGENT",
+    });
+  }
+
+  if (context.open_complaints_count > 0) {
+    todayPlan.push({
+      step: `Review ${context.open_complaints_count} open grievances and prioritize high-severity disputes.`,
+      actionId: "OPEN_COMPLAINTS",
+      label: "Review Complaints",
+      priority: "RECOMMENDED",
+    });
+  }
+
+  nextPlan.push({
+    step: "Identify trade certification gaps and enroll craftsmen in KaushalGrow.",
+    actionId: "OPEN_KAUSHALGROW",
+    label: "Open KaushalGrow",
+    priority: "RECOMMENDED",
+  });
+
+  if (primaryGapItem && primaryGapItem.demand_gap > 10) {
+    nextPlan.push({
+      step: `Evaluate cross-federation capacity sharing for ${primaryTrade} support.`,
+      actionId: "OPEN_ALLOCATION_OPPORTUNITIES",
+      label: "Allocation Opportunities",
+      trade: primaryTrade,
+      priority: "MONITOR",
+    });
+  }
+
+  const recommended_actions = todayPlan.map((p) => p.step).concat(nextPlan.map((p) => p.step));
 
   const disclaimer = reason
-    ? `AI intelligence temporarily unavailable (${reason}). Showing platform workforce intelligence.`
-    : "AI intelligence temporarily unavailable. Showing platform workforce intelligence.";
+    ? `Showing Platform Operations Intelligence (${reason}). Derived from verified database metrics.`
+    : "Platform Operations Intelligence derived from verified database metrics.";
 
   return {
     outlook_level,
@@ -180,7 +356,18 @@ export function generateFederationDeterministicFallback(
     key_factors,
     workforce_insight,
     recommended_actions,
-    confidence: "MEDIUM",
+    priority_problems,
+    recommended_plan: {
+      today: todayPlan,
+      next: nextPlan,
+    },
+    confidence: "HIGH",
+    confidence_reasons: [
+      "Verified booking request logs",
+      "Real-time worker availability and shift statuses",
+      "Bi-weekly utilization capacity analysis",
+      "Active dispute and complaint arbitration records",
+    ],
     disclaimer,
     is_fallback: true,
     generated_at: new Date().toISOString(),

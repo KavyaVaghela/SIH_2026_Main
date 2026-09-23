@@ -35,6 +35,13 @@ export interface FederationDemandGapItem {
   demand: number;
   available_qualified_workers: number;
   demand_gap: number; // unmet booking requests (demand - available_qualified_workers)
+  severity?: "CRITICAL" | "HIGH" | "MEDIUM" | "LOW";
+}
+
+export interface DemandTimeSeriesPoint {
+  period: string;
+  demand: number;
+  capacity: number;
 }
 
 export interface FederationDemandContext {
@@ -55,6 +62,79 @@ export interface FederationDemandContext {
   demand_gaps: FederationDemandGapItem[];
   project_workload: number;
   emergency_workload: number;
+
+  // Operational metrics
+  open_complaints_count: number;
+  high_priority_complaints_count: number;
+  timeframe_metrics: {
+    demand_7d: number;
+    demand_14d: number;
+    demand_30d: number;
+  };
+  weekly_demand_series: DemandTimeSeriesPoint[];
+  workforce_breakdown: {
+    available: number;
+    busy: number;
+    underutilized: number;
+    unavailable: number;
+    total: number;
+  };
+}
+
+export type OperationalProblemType =
+  | "DEMAND_SHORTAGE"
+  | "UNDER_UTILIZATION"
+  | "CERTIFICATION_GAP"
+  | "COMPLAINT_BACKLOG"
+  | "EMERGENCY_LOAD"
+  | "PROJECT_WORKFORCE_PRESSURE"
+  | "LOW_WORKFORCE_AVAILABILITY";
+
+export type OperationalActionId =
+  | "REVIEW_WORKFORCE"
+  | "REVIEW_UNDERUTILIZED"
+  | "REVIEW_TRADE_WORKERS"
+  | "REVIEW_CERTIFICATIONS"
+  | "OPEN_COMPLAINTS"
+  | "OPEN_EMERGENCY"
+  | "OPEN_PROJECTS"
+  | "OPEN_ALLOCATION_OPPORTUNITIES"
+  | "OPEN_KAUSHALGROW";
+
+export type OperationalCategory =
+  | "workforce"
+  | "demand"
+  | "complaints"
+  | "emergency"
+  | "projects";
+
+export interface OperationalIssue {
+  id: string;
+  type: OperationalProblemType;
+  severity: "CRITICAL" | "HIGH" | "MEDIUM" | "LOW";
+  category: OperationalCategory;
+  title: string;
+  problem: string;
+  evidence: string[];
+  impact: string;
+  solution: string;
+  confidence: ForecastConfidence;
+  confidenceReasons?: string[];
+  actionIds: OperationalActionId[];
+  trade?: string;
+}
+
+export interface OperationalPlanItem {
+  step: string;
+  actionId: OperationalActionId;
+  label: string;
+  trade?: string;
+  priority?: "URGENT" | "RECOMMENDED" | "MONITOR";
+}
+
+export interface OperationalActionPlan {
+  today: OperationalPlanItem[];
+  next: OperationalPlanItem[];
 }
 
 export interface FederationAiIntelligenceResponse {
@@ -63,10 +143,29 @@ export interface FederationAiIntelligenceResponse {
   key_factors: string[];
   workforce_insight: string;
   recommended_actions: string[];
+  priority_problems?: OperationalIssue[];
+  recommended_plan?: OperationalActionPlan;
   confidence: ForecastConfidence;
+  confidence_reasons?: string[];
   disclaimer: string;
   is_fallback?: boolean;
   generated_at?: string;
+
+  timeframe_metrics?: {
+    demand_7d: number;
+    demand_14d: number;
+    demand_30d: number;
+  };
+  weekly_demand_series?: DemandTimeSeriesPoint[];
+  workforce_breakdown?: {
+    available: number;
+    busy: number;
+    underutilized: number;
+    unavailable: number;
+    total: number;
+  };
+  open_complaints_count?: number;
+  high_priority_complaints_count?: number;
 }
 
 export interface FederationAiApiResponse {

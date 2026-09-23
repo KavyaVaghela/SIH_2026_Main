@@ -11,6 +11,7 @@ import type {
   WorkerAiPriority,
   WorkerLearningSuggestion,
 } from "./ai-types";
+import { generateFederationDeterministicFallback } from "./ai-fallback";
 
 const GROQ_API_URL = "https://api.groq.com/openai/v1/chat/completions";
 const GROQ_MODEL = "openai/gpt-oss-20b";
@@ -206,6 +207,10 @@ Respond strictly with a JSON object adhering to this exact schema:
       demand_gaps: context.demand_gaps,
       project_workload: context.project_workload,
       emergency_workload: context.emergency_workload,
+      open_complaints_count: context.open_complaints_count,
+      high_priority_complaints_count: context.high_priority_complaints_count,
+      timeframe_metrics: context.timeframe_metrics,
+      workforce_breakdown: context.workforce_breakdown,
     });
 
     const response = await fetch(GROQ_API_URL, {
@@ -288,6 +293,8 @@ Respond strictly with a JSON object adhering to this exact schema:
         ? parsed.disclaimer.trim()
         : "AI-generated advisory interpretation based on verified cooperative metrics.";
 
+    const fallbackData = generateFederationDeterministicFallback(context);
+
     return {
       outlook_level,
       outlook,
@@ -298,6 +305,19 @@ Respond strictly with a JSON object adhering to this exact schema:
       disclaimer,
       is_fallback: false,
       generated_at: new Date().toISOString(),
+      timeframe_metrics: context.timeframe_metrics,
+      weekly_demand_series: context.weekly_demand_series,
+      workforce_breakdown: context.workforce_breakdown,
+      open_complaints_count: context.open_complaints_count,
+      high_priority_complaints_count: context.high_priority_complaints_count,
+      priority_problems:
+        Array.isArray(parsed.priority_problems) && parsed.priority_problems.length > 0
+          ? parsed.priority_problems
+          : fallbackData.priority_problems,
+      recommended_plan:
+        parsed.recommended_plan?.today && parsed.recommended_plan?.next
+          ? parsed.recommended_plan
+          : fallbackData.recommended_plan,
     };
   } catch (error: unknown) {
     clearTimeout(timeoutId);
