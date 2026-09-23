@@ -156,7 +156,7 @@ export class EmergencyIncidentRepository {
       }
 
       const { data, error } = await query;
-      if (!error && data && data.length > 0) {
+      if (!error && data) {
         for (const item of data) {
           setStoredIncident(item);
         }
@@ -491,23 +491,84 @@ export class EmergencyIncidentRepository {
       updated_at: now,
     };
 
-    setStoredIncident(updated);
+    // Check if connected Supabase database is configured
+    const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+    const isSupabaseConfigured = !!supabaseUrl && !supabaseUrl.includes("placeholder.supabase.co");
 
-    try {
-      const supabase = createAdminClient();
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      await (supabase.from("emergency_incidents") as any)
-        .update({
-          status: newStatus,
-          metadata: updatedMetadata,
-          updated_at: now,
-        })
-        .eq("id", incident.id);
-    } catch {
-      // In-memory fallback
+    if (isSupabaseConfigured) {
+      try {
+        const supabase = createAdminClient();
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        const { error: updateErr } = await (supabase.from("emergency_incidents") as any)
+          .update({
+            status: newStatus,
+            metadata: updatedMetadata,
+            updated_at: now,
+          })
+          .or(`id.eq.${incident.id},emergency_id.eq.${incident.emergency_id}`);
+
+        if (updateErr) {
+          console.error("Supabase emergency incident update failed:", updateErr);
+          return {
+            success: false,
+            error: updateErr.message || "Failed to update incident in connected Supabase database.",
+            statusCode: 500,
+          };
+        }
+      } catch (err) {
+        console.error("Supabase connection error during cancellation:", err);
+        return {
+          success: false,
+          error: (err as Error)?.message || "Failed to connect to Supabase for emergency cancellation.",
+          statusCode: 500,
+        };
+      }
+    } else {
+      // Local development or offline fallback
+      try {
+        const supabase = createAdminClient();
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        await (supabase.from("emergency_incidents") as any)
+          .update({
+            status: newStatus,
+            metadata: updatedMetadata,
+            updated_at: now,
+          })
+          .or(`id.eq.${incident.id},emergency_id.eq.${incident.emergency_id}`);
+      } catch {
+        // Quiet fallback
+      }
     }
 
-    // Disband teams and release all assigned workers
+    // Persist to store & disk
+    setStoredIncident(updated);
+
+    // 1. Disband teams and release all assigned workers in Supabase and memory
+    if (isSupabaseConfigured) {
+      try {
+        const supabase = createAdminClient();
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        await (supabase.from("emergency_response_teams") as any)
+          .update({
+            status: "DISBANDED",
+            field_status: "RESOLVED",
+            updated_at: now,
+          })
+          .eq("incident_id", incident.id);
+
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        await (supabase.from("emergency_response_team_members") as any)
+          .update({
+            status: "RELEASED",
+            updated_at: now,
+          })
+          .eq("incident_id", incident.id)
+          .neq("status", "NO_SHOW");
+      } catch {
+        // Resilient
+      }
+    }
+
     try {
       const { EmergencyTeamRepository } = await import("@/lib/emergency/team-store");
       const teams = await EmergencyTeamRepository.listTeamsForIncident(incident.id);
@@ -531,7 +592,24 @@ export class EmergencyIncidentRepository {
       // Resilient
     }
 
-    // Withdraw pending dispatches in pool
+    // 2. Withdraw pending dispatches in Supabase and memory
+    if (isSupabaseConfigured) {
+      try {
+        const supabase = createAdminClient();
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        await (supabase.from("emergency_dispatch_pool") as any)
+          .update({
+            status: "WITHDRAWN",
+            responded_at: now,
+            updated_at: now,
+          })
+          .eq("incident_id", incident.id)
+          .eq("status", "DISPATCHED");
+      } catch {
+        // Resilient
+      }
+    }
+
     try {
       const { EmergencyDispatchRepository } = await import("@/lib/emergency/dispatch-store");
       const dispatches = await EmergencyDispatchRepository.listDispatchesForIncident(incident.id);
@@ -544,7 +622,26 @@ export class EmergencyIncidentRepository {
       // Resilient
     }
 
-    // Cancel pending and active incident tasks
+    // 3. Cancel pending and active incident tasks in Supabase and memory
+    if (isSupabaseConfigured) {
+      try {
+        const supabase = createAdminClient();
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        await (supabase.from("emergency_incident_tasks") as any)
+          .update({
+            status: "CANCELLED",
+            completion_notes: `Incident cancelled: ${reason.trim()}`,
+            completed_at: now,
+            updated_at: now,
+          })
+          .eq("incident_id", incident.id)
+          .neq("status", "COMPLETED")
+          .neq("status", "CANCELLED");
+      } catch {
+        // Resilient
+      }
+    }
+
     try {
       const { EmergencyTaskRepository } = await import("@/lib/emergency/task-store");
       const tasks = await EmergencyTaskRepository.listTasksForIncident(incident.id);
@@ -561,7 +658,23 @@ export class EmergencyIncidentRepository {
       // Resilient
     }
 
-    // Cancel pending additional worker requests
+    // 4. Cancel pending additional worker requests in Supabase and memory
+    if (isSupabaseConfigured) {
+      try {
+        const supabase = createAdminClient();
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        await (supabase.from("emergency_additional_worker_requests") as any)
+          .update({
+            status: "CANCELLED",
+            updated_at: now,
+          })
+          .eq("incident_id", incident.id)
+          .eq("status", "PENDING_FEDERATION_REVIEW");
+      } catch {
+        // Resilient
+      }
+    }
+
     try {
       const { EmergencyTaskRepository } = await import("@/lib/emergency/task-store");
       const addReqs = await EmergencyTaskRepository.listAdditionalWorkerRequests(incident.id);
@@ -578,7 +691,7 @@ export class EmergencyIncidentRepository {
       // Resilient
     }
 
-    // Audit log
+    // 5. Audit log in Supabase & memory
     try {
       if (incident.federation_id) {
         const { EmergencyControlCenterRepository } = await import("@/lib/emergency/control-center-store");

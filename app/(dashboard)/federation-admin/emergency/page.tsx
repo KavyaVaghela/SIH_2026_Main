@@ -190,6 +190,7 @@ export default function FederationEmergencyDashboardPage() {
           onSeverityChange={setSeverityFilter}
           onShortageToggle={setShortageFilter}
           onIncidentArchived={() => fetchIncidents(false)}
+          onIncidentCancelled={() => fetchIncidents(false)}
         />
       )}
     </div>

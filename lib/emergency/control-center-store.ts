@@ -219,6 +219,8 @@ export class EmergencyControlCenterRepository {
 
       if (filters?.status && filters.status !== "ALL" && filters.status !== "ARCHIVED") {
         query = query.eq("status", filters.status);
+      } else if (!filters?.includeArchived && (!filters?.status || filters.status === "ALL")) {
+        query = query.neq("status", "CANCELLED");
       }
       if (filters?.severity && filters.severity !== "ALL") {
         query = query.eq("severity", filters.severity);
@@ -241,6 +243,8 @@ export class EmergencyControlCenterRepository {
       incidents = memoryIncidents;
       if (filters?.status && filters.status !== "ALL" && filters.status !== "ARCHIVED") {
         incidents = incidents.filter((inc) => inc.status === filters.status);
+      } else if (!filters?.includeArchived && (!filters?.status || filters.status === "ALL")) {
+        incidents = incidents.filter((inc) => inc.status !== "CANCELLED");
       }
       if (filters?.severity && filters.severity !== "ALL") {
         incidents = incidents.filter((inc) => inc.severity === filters.severity);
@@ -248,6 +252,11 @@ export class EmergencyControlCenterRepository {
       if (filters?.category && filters.category !== "ALL") {
         incidents = incidents.filter((inc) => inc.category_name === filters.category);
       }
+    }
+
+    // Double safeguard: ensure cancelled incidents never leak into default active view
+    if (!filters?.includeArchived && (!filters?.status || filters.status === "ALL")) {
+      incidents = incidents.filter((inc) => inc.status !== "CANCELLED");
     }
 
     // Filter by archive status

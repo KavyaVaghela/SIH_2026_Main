@@ -20,3 +20,12 @@ export function createAdminClient() {
     },
   });
 }
+
+/**
+ * Checks whether Supabase is configured with a real project URL rather than placeholder.
+ */
+export function isSupabaseConfigured(): boolean {
+  const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
+  return !!url && !url.includes("placeholder.supabase.co");
+}
+

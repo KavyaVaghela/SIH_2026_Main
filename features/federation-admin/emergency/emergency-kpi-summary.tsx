@@ -10,13 +10,15 @@ interface EmergencyKpiSummaryProps {
 }
 
 export function EmergencyKpiSummary({ incidents }: EmergencyKpiSummaryProps) {
-  const activeEmergencies = incidents.filter((i) => i.status !== "RESOLVED" && i.status !== "CLOSED").length;
+  const activeEmergencies = incidents.filter(
+    (i) => i.status !== "RESOLVED" && i.status !== "CLOSED" && i.status !== "CANCELLED"
+  ).length;
   const awaitingResponse = incidents.filter((i) => i.status === "AWAITING_RESPONSE").length;
   const shortages = incidents.filter((i) => i.has_shortage).length;
   const forming = incidents.filter((i) => i.status === "TEAM_FORMING" || i.status === "DISPATCHING").length;
   const activeResponse = incidents.filter((i) => i.status === "ACTIVE").length;
   const criticalHigh = incidents.filter(
-    (i) => (i.severity === "CRITICAL" || i.severity === "HIGH") && i.status !== "RESOLVED" && i.status !== "CLOSED"
+    (i) => (i.severity === "CRITICAL" || i.severity === "HIGH") && i.status !== "RESOLVED" && i.status !== "CLOSED" && i.status !== "CANCELLED"
   ).length;
 
   return (
