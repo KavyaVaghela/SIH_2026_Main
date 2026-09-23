@@ -17,7 +17,7 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
-import { Archive, Loader2 } from "lucide-react";
+import { Archive, Loader2, XCircle } from "lucide-react";
 import { FederationIncidentSummary } from "@/lib/emergency/control-center-store";
 
 interface EmergencyIncidentTableProps {
@@ -27,6 +27,7 @@ interface EmergencyIncidentTableProps {
   onSeverityChange: (val: string) => void;
   onShortageToggle: (val: boolean) => void;
   onIncidentArchived?: () => void;
+  onIncidentCancelled?: () => void;
   searchValue: string;
   statusFilter: string;
   severityFilter: string;
@@ -40,12 +41,41 @@ export function EmergencyIncidentTable({
   onSeverityChange,
   onShortageToggle,
   onIncidentArchived,
+  onIncidentCancelled,
   searchValue,
   statusFilter,
   severityFilter,
   shortageFilter,
 }: EmergencyIncidentTableProps) {
   const [archivingId, setArchivingId] = React.useState<string | null>(null);
+  const [cancellingId, setCancellingId] = React.useState<string | null>(null);
+
+  const handleCancelIncident = async (incidentId: string, emergencyId: string) => {
+    const reason = window.prompt(
+      `Enter operational justification reason to cancel emergency ${emergencyId}:`,
+      "Resolved/cancelled by Federation Administration"
+    );
+    if (!reason || !reason.trim()) return;
+
+    try {
+      setCancellingId(incidentId);
+      const res = await fetch(`/api/emergency/incidents/${incidentId}/cancel`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ reason: reason.trim() }),
+      });
+      const data = await res.json();
+      if (res.ok && data.success) {
+        if (onIncidentCancelled) onIncidentCancelled();
+      } else {
+        alert(data.error || "Failed to cancel incident.");
+      }
+    } catch {
+      alert("Network error cancelling incident.");
+    } finally {
+      setCancellingId(null);
+    }
+  };
 
   const handleArchive = async (incidentId: string) => {
     const confirmed = window.confirm(
@@ -293,6 +323,24 @@ export function EmergencyIncidentTable({
                             <Archive className="h-3.5 w-3.5" />
                           )}
                           Archive
+                        </Button>
+                      )}
+
+                      {inc.status !== "CLOSED" && inc.status !== "RESOLVED" && inc.status !== "CANCELLED" && (
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          disabled={cancellingId === inc.id}
+                          onClick={() => handleCancelIncident(inc.id, inc.emergency_id)}
+                          className="h-8 gap-1 font-semibold text-xs border-rose-500/30 text-rose-500 hover:bg-rose-500/10 hover:text-rose-400"
+                          title="Cancel emergency incident"
+                        >
+                          {cancellingId === inc.id ? (
+                            <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                          ) : (
+                            <XCircle className="h-3.5 w-3.5" />
+                          )}
+                          Cancel
                         </Button>
                       )}
 
