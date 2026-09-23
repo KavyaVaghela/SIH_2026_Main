@@ -21,7 +21,8 @@ CREATE TABLE IF NOT EXISTS public.emergency_incidents (
       'ACTIVE',
       'STAFFING_SHORTAGE',
       'RESOLVED',
-      'CLOSED'
+      'CLOSED',
+      'CANCELLED'
     )
   ),
   location TEXT NOT NULL,
