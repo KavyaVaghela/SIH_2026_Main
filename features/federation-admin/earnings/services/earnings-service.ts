@@ -50,6 +50,31 @@ export class FederationEarningsService {
     monthKey: string = "2026-09",
     clientOverride?: any
   ): Promise<FederationEarningsData> {
+    if (typeof window !== "undefined" && !clientOverride) {
+      try {
+        const headers: Record<string, string> = {};
+        try {
+          const supabaseClient = createClient();
+          const { data: sessData } = await supabaseClient.auth.getSession();
+          if (sessData?.session?.access_token) {
+            headers["Authorization"] = `Bearer ${sessData.session.access_token}`;
+          }
+        } catch (_) {}
+
+        const res = await fetch(`/api/federation-admin/earnings?month=${monthKey}`, {
+          headers,
+        });
+        if (res.ok) {
+          const json = await res.json();
+          if (json && json.kpis) {
+            return json;
+          }
+        }
+      } catch (apiErr) {
+        console.warn("Notice: Earnings API fetch fallback:", apiErr);
+      }
+    }
+
     const supabase = clientOverride || createClient();
     const federationId = await this.resolveFederationId(supabase);
 
@@ -310,10 +335,14 @@ export class FederationEarningsService {
         );
       }
 
-      // 7. Recent Transactions from live payments / invoices / bookings
-      const recentTransactions: RecentEarningsTransaction[] = (
-        allPayments.length > 0 ? allPayments : activeInvoices
-      )
+      // 7. Recent Transactions from live payments / invoices / bookings (sorted newest first)
+      const sortedInvoices = [...activeInvoices].sort((a, b) => {
+        const da = a.paid_at || a.issue_date || a.created_at || "";
+        const db = b.paid_at || b.issue_date || b.created_at || "";
+        return db.localeCompare(da);
+      });
+
+      const recentTransactions: RecentEarningsTransaction[] = sortedInvoices
         .slice(0, 8)
         .map((item, idx) => {
           const linkedBooking = allBookings.find(

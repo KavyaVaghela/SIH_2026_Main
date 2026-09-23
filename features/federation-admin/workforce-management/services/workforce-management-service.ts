@@ -363,14 +363,32 @@ export class WorkforceManagementService {
   }
 
   /**
+   * Helper to retrieve session bearer token for authoritative server mutations.
+   */
+  private async getAuthHeaders(): Promise<Record<string, string>> {
+    const headers: Record<string, string> = { "Content-Type": "application/json" };
+    try {
+      if (typeof window !== "undefined") {
+        const supabase = createClient();
+        const { data: sessData } = await supabase.auth.getSession();
+        if (sessData?.session?.access_token) {
+          headers["Authorization"] = `Bearer ${sessData.session.access_token}`;
+        }
+      }
+    } catch (_) {}
+    return headers;
+  }
+
+  /**
    * Registers a new worker to the authenticated Federation Admin's federation.
    * Delegates authoritatively to /api/federation/workers (action: "create") backed by real Supabase Auth + DB.
    */
   async addWorker(payload: AddWorkerPayload): Promise<ManagedWorkerItem> {
     if (typeof window !== "undefined") {
+      const headers = await this.getAuthHeaders();
       const res = await fetch("/api/federation/workers", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers,
         body: JSON.stringify({
           action: "create",
           ...payload,
@@ -415,9 +433,10 @@ export class WorkforceManagementService {
     newStatus: WorkerAccountStatus
   ): Promise<{ success: boolean; workerId: string; updatedStatus: WorkerAccountStatus }> {
     if (typeof window !== "undefined") {
+      const headers = await this.getAuthHeaders();
       const res = await fetch("/api/federation/workers", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers,
         body: JSON.stringify({ action: "status", workerId, status: newStatus }),
       });
 
@@ -465,8 +484,9 @@ export class WorkforceManagementService {
   ): Promise<WorkerApplicationItem[]> {
     if (typeof window !== "undefined") {
       try {
+        const headers = await this.getAuthHeaders();
         const url = `/api/federation/workers?type=applications&status=${statusFilter}&registrationType=${registrationTypeFilter}&search=${encodeURIComponent(searchQuery)}`;
-        const res = await fetch(url);
+        const res = await fetch(url, { headers });
         if (res.ok) {
           const json = await res.json();
           if (json.success && Array.isArray(json.applications)) {
@@ -685,23 +705,19 @@ export class WorkforceManagementService {
     let updatedWorker: any = null;
 
     // 1. Invoke server-side route to update workers AND synchronize profiles.is_active = true
-    try {
-      if (typeof window !== "undefined") {
-        const res = await fetch("/api/federation/workers", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ action: "accept", workerId: applicationId }),
-        });
-        if (res.ok) {
-          const json = await res.json();
-          updatedWorker = json.worker;
-        }
+    if (typeof window !== "undefined") {
+      const headers = await this.getAuthHeaders();
+      const res = await fetch("/api/federation/workers", {
+        method: "POST",
+        headers,
+        body: JSON.stringify({ action: "accept", workerId: applicationId }),
+      });
+      const json = await res.json();
+      if (!res.ok || !json.success) {
+        throw new Error(json.error || "Failed to approve worker application in database.");
       }
-    } catch (apiErr) {
-      console.warn("API worker approval notice, falling back to direct client:", apiErr);
-    }
-
-    if (!updatedWorker) {
+      updatedWorker = json.worker;
+    } else {
       const supabase = createClient();
       const { data, error } = await (supabase.from("workers") as any)
         .update({
@@ -726,10 +742,9 @@ export class WorkforceManagementService {
         .maybeSingle();
 
       if (error) {
-        console.error("Failed to approve worker in database:", error);
-      } else {
-        updatedWorker = data;
+        throw new Error(error.message || "Failed to approve worker application in database.");
       }
+      updatedWorker = data;
     }
 
     // Update local fallback application if present
@@ -785,23 +800,30 @@ export class WorkforceManagementService {
   ): Promise<{ success: boolean; applicationId: string }> {
     const today = new Date().toISOString().split("T")[0];
 
-    try {
-      if (typeof window !== "undefined") {
-        await fetch("/api/federation/workers", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ action: "reject", workerId: applicationId, rejectionReason }),
-        });
+    if (typeof window !== "undefined") {
+      const headers = await this.getAuthHeaders();
+      const res = await fetch("/api/federation/workers", {
+        method: "POST",
+        headers,
+        body: JSON.stringify({ action: "reject", workerId: applicationId, rejectionReason }),
+      });
+      const json = await res.json();
+      if (!res.ok || !json.success) {
+        throw new Error(json.error || "Failed to reject worker application in database.");
       }
-    } catch (apiErr) {
-      console.warn("API worker rejection notice, falling back to direct client:", apiErr);
+    } else {
       const supabase = createClient();
-      await (supabase.from("workers") as any)
+      const { error } = await (supabase.from("workers") as any)
         .update({
           verification_status: "suspended",
           account_status: "DEACTIVATED",
+          rejection_reason: rejectionReason,
         })
         .eq("id", applicationId);
+
+      if (error) {
+        throw new Error(error.message || "Failed to reject worker application in database.");
+      }
     }
 
     // Update local fallback list if present

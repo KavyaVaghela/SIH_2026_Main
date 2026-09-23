@@ -63,7 +63,7 @@ export class FederationAdminService {
    * Federation: Ahmedabad Skilled Workers Federation
    * Location: Ahmedabad, Gujarat
    */
-  private readonly defaultFederation: FederationIdentity = {
+  public readonly defaultFederation: FederationIdentity = {
     id: "b765df3b-c418-4a15-b79f-3cbc09e475dc",
     name: "Ahmedabad Skilled Workers Federation",
     code: "FED-AMD-01",
@@ -84,6 +84,31 @@ export class FederationAdminService {
    * 3. Deterministic, internally consistent development fallback data
    */
   async getDashboardData(timeframe: DashboardTimeframe = "30d"): Promise<FederationAdminDashboardData> {
+    if (typeof window !== "undefined") {
+      try {
+        const headers: Record<string, string> = {};
+        try {
+          const supabaseClient = createClient();
+          const { data: sessData } = await supabaseClient.auth.getSession();
+          if (sessData?.session?.access_token) {
+            headers["Authorization"] = `Bearer ${sessData.session.access_token}`;
+          }
+        } catch (_) {}
+
+        const res = await fetch(`/api/federation-admin/dashboard?timeframe=${timeframe}`, {
+          headers,
+        });
+        if (res.ok) {
+          const json = await res.json();
+          if (json && json.stats) {
+            return json;
+          }
+        }
+      } catch (apiErr) {
+        console.warn("Notice: Dashboard API fetch fallback:", apiErr);
+      }
+    }
+
     const supabase = createClient();
 
     try {
@@ -232,7 +257,7 @@ export class FederationAdminService {
   /**
    * Transforms raw database rows into typed Federation Admin view models.
    */
-  private transformLiveData(
+  public transformLiveData(
     dbFederation: DbFederationRow | null,
     workers: DbWorkerRow[],
     bookings: DbBookingRow[],
