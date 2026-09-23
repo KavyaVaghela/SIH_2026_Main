@@ -2591,6 +2591,132 @@
       "closed_at": "2026-09-23T07:51:47.208Z",
       "closed_by_admin_id": "fed-super-admin-01",
       "closure_notes": "Containment confirmed"
+    },
+    "inc-test-1790152157714": {
+      "id": "inc-test-1790152157714",
+      "emergency_id": "EMG-6316",
+      "customer_id": "cust-test-1790152157713",
+      "federation_id": "fed-test-1790152157713",
+      "category_name": "Electrical Services",
+      "emergency_type": "Transformer Arc Flash",
+      "severity": "HIGH",
+      "status": "CANCELLED",
+      "location": "Block C, Industrial Park, Sector 4",
+      "address_details": {
+        "city": "Ahmedabad"
+      },
+      "description": "High voltage sparks and smoke near main distribution board",
+      "evidence_photos": [],
+      "approx_people_affected": 20,
+      "immediate_danger": true,
+      "danger_details": "Active fire hazard",
+      "metadata": {
+        "is_cancelled": true,
+        "cancellation_reason": "False alarm: building engineer confirmed normal controlled switching operation.",
+        "cancelled_at": "2026-09-23T08:30:01.612Z",
+        "cancelled_by": "fed-super-admin-01",
+        "is_archived": true,
+        "archived_at": "2026-09-23T08:32:02.782Z",
+        "archived_by": "fed-super-admin-01"
+      },
+      "created_at": "2026-09-23T08:29:17.713Z",
+      "updated_at": "2026-09-23T08:32:02.782Z",
+      "verification_code": "EMG-43EA",
+      "verification_token": "b3029e9b58d173aeea3da991c22b583fb0e68c1f225aa84d4af4ac59214c6d92"
+    },
+    "EMG-6316": {
+      "id": "inc-test-1790152157714",
+      "emergency_id": "EMG-6316",
+      "customer_id": "cust-test-1790152157713",
+      "federation_id": "fed-test-1790152157713",
+      "category_name": "Electrical Services",
+      "emergency_type": "Transformer Arc Flash",
+      "severity": "HIGH",
+      "status": "CANCELLED",
+      "location": "Block C, Industrial Park, Sector 4",
+      "address_details": {
+        "city": "Ahmedabad"
+      },
+      "description": "High voltage sparks and smoke near main distribution board",
+      "evidence_photos": [],
+      "approx_people_affected": 20,
+      "immediate_danger": true,
+      "danger_details": "Active fire hazard",
+      "metadata": {
+        "is_cancelled": true,
+        "cancellation_reason": "False alarm: building engineer confirmed normal controlled switching operation.",
+        "cancelled_at": "2026-09-23T08:30:01.612Z",
+        "cancelled_by": "fed-super-admin-01",
+        "is_archived": true,
+        "archived_at": "2026-09-23T08:32:02.782Z",
+        "archived_by": "fed-super-admin-01"
+      },
+      "created_at": "2026-09-23T08:29:17.713Z",
+      "updated_at": "2026-09-23T08:32:02.782Z",
+      "verification_code": "EMG-43EA",
+      "verification_token": "b3029e9b58d173aeea3da991c22b583fb0e68c1f225aa84d4af4ac59214c6d92"
+    },
+    "inc-test-2-1790152379426": {
+      "id": "inc-test-2-1790152379426",
+      "emergency_id": "EMG-7426",
+      "customer_id": "cust-test-1790152157713",
+      "federation_id": "fed-test-1790152157713",
+      "category_name": "Plumbing Services",
+      "emergency_type": "Basement Main Rupture",
+      "severity": "CRITICAL",
+      "status": "CLOSED",
+      "location": "Tower 2, Sector 9",
+      "address_details": {
+        "city": "Ahmedabad"
+      },
+      "description": "Flooding threatening electrical transformer",
+      "evidence_photos": [],
+      "approx_people_affected": 50,
+      "immediate_danger": true,
+      "danger_details": "Water rising",
+      "metadata": {
+        "is_archived": true,
+        "archived_at": "2026-09-23T08:34:10.579Z",
+        "archived_by": "fed-super-admin-01"
+      },
+      "created_at": "2026-09-23T08:32:59.426Z",
+      "updated_at": "2026-09-23T08:34:10.579Z",
+      "verification_code": "EMG-9B85",
+      "verification_token": "f068b146b3189cfe97d3825348105ded5a37b81c29638bc78ff04e3bb80128dd",
+      "closed_at": "2026-09-23T08:33:35.085Z",
+      "closed_by_admin_id": "fed-super-admin-01",
+      "closure_notes": "Containment confirmed"
+    },
+    "EMG-7426": {
+      "id": "inc-test-2-1790152379426",
+      "emergency_id": "EMG-7426",
+      "customer_id": "cust-test-1790152157713",
+      "federation_id": "fed-test-1790152157713",
+      "category_name": "Plumbing Services",
+      "emergency_type": "Basement Main Rupture",
+      "severity": "CRITICAL",
+      "status": "CLOSED",
+      "location": "Tower 2, Sector 9",
+      "address_details": {
+        "city": "Ahmedabad"
+      },
+      "description": "Flooding threatening electrical transformer",
+      "evidence_photos": [],
+      "approx_people_affected": 50,
+      "immediate_danger": true,
+      "danger_details": "Water rising",
+      "metadata": {
+        "is_archived": true,
+        "archived_at": "2026-09-23T08:34:10.579Z",
+        "archived_by": "fed-super-admin-01"
+      },
+      "created_at": "2026-09-23T08:32:59.426Z",
+      "updated_at": "2026-09-23T08:34:10.579Z",
+      "verification_code": "EMG-9B85",
+      "verification_token": "f068b146b3189cfe97d3825348105ded5a37b81c29638bc78ff04e3bb80128dd",
+      "closed_at": "2026-09-23T08:33:35.085Z",
+      "closed_by_admin_id": "fed-super-admin-01",
+      "closure_notes": "Containment confirmed"
     }
   },
   "teams": {
@@ -4359,6 +4485,142 @@
         }
       ],
       "field_status": "RESOLVED"
+    },
+    "team-test-1790152173260": {
+      "id": "team-test-1790152173260",
+      "incident_id": "inc-test-1790152157714",
+      "federation_id": "fed-test-1790152157713",
+      "status": "DISBANDED",
+      "team_lead_worker_id": "worker-test-1-1790152157713",
+      "requires_team_lead": true,
+      "required_worker_count": 2,
+      "accepted_worker_count": 2,
+      "created_at": "2026-09-23T08:29:17.713Z",
+      "updated_at": "2026-09-23T08:30:01.612Z",
+      "team_type": "PRIMARY",
+      "members": [
+        {
+          "id": "mem-1-1790152173260",
+          "team_id": "team-test-1790152173260",
+          "incident_id": "inc-test-1790152157714",
+          "worker_id": "worker-test-1-1790152157713",
+          "role": "Emergency Lead Electrician",
+          "is_team_lead": true,
+          "status": "RELEASED",
+          "accepted_at": "2026-09-23T08:29:17.713Z",
+          "created_at": "2026-09-23T08:29:17.713Z",
+          "updated_at": "2026-09-23T08:30:01.612Z"
+        },
+        {
+          "id": "mem-2-1790152173260",
+          "team_id": "team-test-1790152173260",
+          "incident_id": "inc-test-1790152157714",
+          "worker_id": "worker-test-2-1790152157713",
+          "role": "Safety Assistant",
+          "is_team_lead": false,
+          "status": "RELEASED",
+          "accepted_at": "2026-09-23T08:29:17.713Z",
+          "created_at": "2026-09-23T08:29:17.713Z",
+          "updated_at": "2026-09-23T08:30:01.612Z"
+        }
+      ],
+      "field_status": "RESOLVED"
+    },
+    "inc-test-1790152157714": {
+      "id": "team-test-1790152173260",
+      "incident_id": "inc-test-1790152157714",
+      "federation_id": "fed-test-1790152157713",
+      "status": "DISBANDED",
+      "team_lead_worker_id": "worker-test-1-1790152157713",
+      "requires_team_lead": true,
+      "required_worker_count": 2,
+      "accepted_worker_count": 2,
+      "created_at": "2026-09-23T08:29:17.713Z",
+      "updated_at": "2026-09-23T08:30:01.612Z",
+      "team_type": "PRIMARY",
+      "members": [
+        {
+          "id": "mem-1-1790152173260",
+          "team_id": "team-test-1790152173260",
+          "incident_id": "inc-test-1790152157714",
+          "worker_id": "worker-test-1-1790152157713",
+          "role": "Emergency Lead Electrician",
+          "is_team_lead": true,
+          "status": "RELEASED",
+          "accepted_at": "2026-09-23T08:29:17.713Z",
+          "created_at": "2026-09-23T08:29:17.713Z",
+          "updated_at": "2026-09-23T08:30:01.612Z"
+        },
+        {
+          "id": "mem-2-1790152173260",
+          "team_id": "team-test-1790152173260",
+          "incident_id": "inc-test-1790152157714",
+          "worker_id": "worker-test-2-1790152157713",
+          "role": "Safety Assistant",
+          "is_team_lead": false,
+          "status": "RELEASED",
+          "accepted_at": "2026-09-23T08:29:17.713Z",
+          "created_at": "2026-09-23T08:29:17.713Z",
+          "updated_at": "2026-09-23T08:30:01.612Z"
+        }
+      ],
+      "field_status": "RESOLVED"
+    },
+    "team-2-1790152393785": {
+      "id": "team-2-1790152393785",
+      "incident_id": "inc-test-2-1790152379426",
+      "federation_id": "fed-test-1790152157713",
+      "status": "DISBANDED",
+      "team_lead_worker_id": "worker-test-1-1790152157713",
+      "requires_team_lead": true,
+      "required_worker_count": 1,
+      "accepted_worker_count": 1,
+      "created_at": "2026-09-23T08:32:59.426Z",
+      "updated_at": "2026-09-23T08:33:35.085Z",
+      "team_type": "PRIMARY",
+      "members": [
+        {
+          "id": "mem-21-1790152393785",
+          "team_id": "team-2-1790152393785",
+          "incident_id": "inc-test-2-1790152379426",
+          "worker_id": "worker-test-1-1790152157713",
+          "role": "Master Plumber",
+          "is_team_lead": true,
+          "status": "RELEASED",
+          "accepted_at": "2026-09-23T08:32:59.426Z",
+          "created_at": "2026-09-23T08:32:59.426Z",
+          "updated_at": "2026-09-23T08:33:35.085Z"
+        }
+      ],
+      "field_status": "RESOLVED"
+    },
+    "inc-test-2-1790152379426": {
+      "id": "team-2-1790152393785",
+      "incident_id": "inc-test-2-1790152379426",
+      "federation_id": "fed-test-1790152157713",
+      "status": "DISBANDED",
+      "team_lead_worker_id": "worker-test-1-1790152157713",
+      "requires_team_lead": true,
+      "required_worker_count": 1,
+      "accepted_worker_count": 1,
+      "created_at": "2026-09-23T08:32:59.426Z",
+      "updated_at": "2026-09-23T08:33:35.085Z",
+      "team_type": "PRIMARY",
+      "members": [
+        {
+          "id": "mem-21-1790152393785",
+          "team_id": "team-2-1790152393785",
+          "incident_id": "inc-test-2-1790152379426",
+          "worker_id": "worker-test-1-1790152157713",
+          "role": "Master Plumber",
+          "is_team_lead": true,
+          "status": "RELEASED",
+          "accepted_at": "2026-09-23T08:32:59.426Z",
+          "created_at": "2026-09-23T08:32:59.426Z",
+          "updated_at": "2026-09-23T08:33:35.085Z"
+        }
+      ],
+      "field_status": "RESOLVED"
     }
   },
   "teamMembers": {
@@ -4852,6 +5114,46 @@
         "accepted_at": "2026-09-23T07:51:11.454Z",
         "created_at": "2026-09-23T07:51:11.454Z",
         "updated_at": "2026-09-23T07:51:47.208Z"
+      }
+    ],
+    "team-test-1790152173260": [
+      {
+        "id": "mem-1-1790152173260",
+        "team_id": "team-test-1790152173260",
+        "incident_id": "inc-test-1790152157714",
+        "worker_id": "worker-test-1-1790152157713",
+        "role": "Emergency Lead Electrician",
+        "is_team_lead": true,
+        "status": "RELEASED",
+        "accepted_at": "2026-09-23T08:29:17.713Z",
+        "created_at": "2026-09-23T08:29:17.713Z",
+        "updated_at": "2026-09-23T08:30:01.612Z"
+      },
+      {
+        "id": "mem-2-1790152173260",
+        "team_id": "team-test-1790152173260",
+        "incident_id": "inc-test-1790152157714",
+        "worker_id": "worker-test-2-1790152157713",
+        "role": "Safety Assistant",
+        "is_team_lead": false,
+        "status": "RELEASED",
+        "accepted_at": "2026-09-23T08:29:17.713Z",
+        "created_at": "2026-09-23T08:29:17.713Z",
+        "updated_at": "2026-09-23T08:30:01.612Z"
+      }
+    ],
+    "team-2-1790152393785": [
+      {
+        "id": "mem-21-1790152393785",
+        "team_id": "team-2-1790152393785",
+        "incident_id": "inc-test-2-1790152379426",
+        "worker_id": "worker-test-1-1790152157713",
+        "role": "Master Plumber",
+        "is_team_lead": true,
+        "status": "RELEASED",
+        "accepted_at": "2026-09-23T08:32:59.426Z",
+        "created_at": "2026-09-23T08:32:59.426Z",
+        "updated_at": "2026-09-23T08:33:35.085Z"
       }
     ]
   },
@@ -5379,6 +5681,20 @@
       "status": "CANCELLED",
       "created_at": "2026-09-23T07:47:58.164Z",
       "updated_at": "2026-09-23T07:48:12.323Z"
+    },
+    "38fcdffd-eaff-4bd5-ac85-9453b726243d": {
+      "id": "38fcdffd-eaff-4bd5-ac85-9453b726243d",
+      "incident_id": "inc-test-1790152157714",
+      "team_id": "team-test-1790152173260",
+      "requested_by_worker_id": "worker-test-1-1790152157713",
+      "reason": "Requires mobile crane to clear fallen transformer",
+      "requested_role": "Specialist",
+      "requested_skill": "Specialist",
+      "requested_worker_count": 1,
+      "count": 1,
+      "status": "CANCELLED",
+      "created_at": "2026-09-23T08:29:47.413Z",
+      "updated_at": "2026-09-23T08:30:01.612Z"
     }
   },
   "verifications": {
@@ -7061,6 +7377,102 @@
       "team_id": null,
       "expires_at": "2026-09-24T07:51:18.501Z",
       "created_at": "2026-09-23T07:51:18.501Z"
+    },
+    "3c859f1f-ddc7-4b13-8e28-d522ef2c28b6": {
+      "id": "3c859f1f-ddc7-4b13-8e28-d522ef2c28b6",
+      "incident_id": "inc-test-1790152157714",
+      "verification_token": "b3029e9b58d173aeea3da991c22b583fb0e68c1f225aa84d4af4ac59214c6d92",
+      "verification_code": "EMG-43EA",
+      "status": "PENDING",
+      "verified_at": null,
+      "verified_by_worker_id": null,
+      "team_id": null,
+      "expires_at": "2026-09-24T08:29:26.069Z",
+      "created_at": "2026-09-23T08:29:26.069Z"
+    },
+    "inc-test-1790152157714": {
+      "id": "3c859f1f-ddc7-4b13-8e28-d522ef2c28b6",
+      "incident_id": "inc-test-1790152157714",
+      "verification_token": "b3029e9b58d173aeea3da991c22b583fb0e68c1f225aa84d4af4ac59214c6d92",
+      "verification_code": "EMG-43EA",
+      "status": "PENDING",
+      "verified_at": null,
+      "verified_by_worker_id": null,
+      "team_id": null,
+      "expires_at": "2026-09-24T08:29:26.069Z",
+      "created_at": "2026-09-23T08:29:26.069Z"
+    },
+    "EMG-43EA": {
+      "id": "3c859f1f-ddc7-4b13-8e28-d522ef2c28b6",
+      "incident_id": "inc-test-1790152157714",
+      "verification_token": "b3029e9b58d173aeea3da991c22b583fb0e68c1f225aa84d4af4ac59214c6d92",
+      "verification_code": "EMG-43EA",
+      "status": "PENDING",
+      "verified_at": null,
+      "verified_by_worker_id": null,
+      "team_id": null,
+      "expires_at": "2026-09-24T08:29:26.069Z",
+      "created_at": "2026-09-23T08:29:26.069Z"
+    },
+    "b3029e9b58d173aeea3da991c22b583fb0e68c1f225aa84d4af4ac59214c6d92": {
+      "id": "3c859f1f-ddc7-4b13-8e28-d522ef2c28b6",
+      "incident_id": "inc-test-1790152157714",
+      "verification_token": "b3029e9b58d173aeea3da991c22b583fb0e68c1f225aa84d4af4ac59214c6d92",
+      "verification_code": "EMG-43EA",
+      "status": "PENDING",
+      "verified_at": null,
+      "verified_by_worker_id": null,
+      "team_id": null,
+      "expires_at": "2026-09-24T08:29:26.069Z",
+      "created_at": "2026-09-23T08:29:26.069Z"
+    },
+    "225d892e-b618-44a2-adb7-f735a0fa3609": {
+      "id": "225d892e-b618-44a2-adb7-f735a0fa3609",
+      "incident_id": "inc-test-2-1790152379426",
+      "verification_token": "f068b146b3189cfe97d3825348105ded5a37b81c29638bc78ff04e3bb80128dd",
+      "verification_code": "EMG-9B85",
+      "status": "PENDING",
+      "verified_at": null,
+      "verified_by_worker_id": null,
+      "team_id": null,
+      "expires_at": "2026-09-24T08:33:06.703Z",
+      "created_at": "2026-09-23T08:33:06.703Z"
+    },
+    "inc-test-2-1790152379426": {
+      "id": "225d892e-b618-44a2-adb7-f735a0fa3609",
+      "incident_id": "inc-test-2-1790152379426",
+      "verification_token": "f068b146b3189cfe97d3825348105ded5a37b81c29638bc78ff04e3bb80128dd",
+      "verification_code": "EMG-9B85",
+      "status": "PENDING",
+      "verified_at": null,
+      "verified_by_worker_id": null,
+      "team_id": null,
+      "expires_at": "2026-09-24T08:33:06.703Z",
+      "created_at": "2026-09-23T08:33:06.703Z"
+    },
+    "EMG-9B85": {
+      "id": "225d892e-b618-44a2-adb7-f735a0fa3609",
+      "incident_id": "inc-test-2-1790152379426",
+      "verification_token": "f068b146b3189cfe97d3825348105ded5a37b81c29638bc78ff04e3bb80128dd",
+      "verification_code": "EMG-9B85",
+      "status": "PENDING",
+      "verified_at": null,
+      "verified_by_worker_id": null,
+      "team_id": null,
+      "expires_at": "2026-09-24T08:33:06.703Z",
+      "created_at": "2026-09-23T08:33:06.703Z"
+    },
+    "f068b146b3189cfe97d3825348105ded5a37b81c29638bc78ff04e3bb80128dd": {
+      "id": "225d892e-b618-44a2-adb7-f735a0fa3609",
+      "incident_id": "inc-test-2-1790152379426",
+      "verification_token": "f068b146b3189cfe97d3825348105ded5a37b81c29638bc78ff04e3bb80128dd",
+      "verification_code": "EMG-9B85",
+      "status": "PENDING",
+      "verified_at": null,
+      "verified_by_worker_id": null,
+      "team_id": null,
+      "expires_at": "2026-09-24T08:33:06.703Z",
+      "created_at": "2026-09-23T08:33:06.703Z"
     }
   },
   "checkIns": {
@@ -8475,6 +8887,72 @@
         },
         "notes": "Emergency cancelled by Federation Administrator: Resolved/cancelled by Federation Administration",
         "created_at": "2026-09-23T08:01:00.516Z"
+      }
+    ],
+    "inc-test-1790152157714": [
+      {
+        "id": "05151fca-698a-4662-a572-fe6af13cea47",
+        "incident_id": "inc-test-1790152157714",
+        "federation_id": "fed-test-1790152157713",
+        "actor_id": "fed-super-admin-01",
+        "action_type": "EMERGENCY_ARCHIVED",
+        "previous_state": {
+          "is_archived": false
+        },
+        "new_state": {
+          "is_archived": true
+        },
+        "notes": "Emergency incident archived and removed from active control center list.",
+        "created_at": "2026-09-23T08:32:02.788Z"
+      },
+      {
+        "id": "ef950eb4-0228-4515-80c8-333edea45633",
+        "incident_id": "inc-test-1790152157714",
+        "federation_id": "fed-test-1790152157713",
+        "actor_id": "fed-super-admin-01",
+        "action_type": "EMERGENCY_CANCELLED",
+        "previous_state": {
+          "status": "ACTIVE"
+        },
+        "new_state": {
+          "status": "CANCELLED",
+          "reason": "False alarm: building engineer confirmed normal controlled switching operation."
+        },
+        "notes": "Emergency cancelled by Federation Administrator: False alarm: building engineer confirmed normal controlled switching operation.",
+        "created_at": "2026-09-23T08:30:37.018Z"
+      }
+    ],
+    "inc-test-2-1790152379426": [
+      {
+        "id": "bd1ea2bc-b486-4c14-9246-9ec730f74be3",
+        "incident_id": "inc-test-2-1790152379426",
+        "federation_id": "fed-test-1790152157713",
+        "actor_id": "fed-super-admin-01",
+        "action_type": "EMERGENCY_ARCHIVED",
+        "previous_state": {
+          "is_archived": false
+        },
+        "new_state": {
+          "is_archived": true
+        },
+        "notes": "Emergency incident archived and removed from active control center list.",
+        "created_at": "2026-09-23T08:34:10.585Z"
+      },
+      {
+        "id": "dab5cbc8-8583-4534-8999-969c638fa352",
+        "incident_id": "inc-test-2-1790152379426",
+        "federation_id": "fed-test-1790152157713",
+        "actor_id": "fed-super-admin-01",
+        "action_type": "EMERGENCY_CLOSED",
+        "previous_state": {
+          "status": "ACTIVE"
+        },
+        "new_state": {
+          "status": "CLOSED",
+          "closure_notes": "Containment confirmed"
+        },
+        "notes": "Emergency resolution approved and closed.",
+        "created_at": "2026-09-23T08:33:42.146Z"
       }
     ]
   },

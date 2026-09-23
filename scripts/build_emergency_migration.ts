@@ -12,7 +12,8 @@ const migrationFiles = [
   "20260919070000_emergency_scaling_and_failure.sql",
   "20260920000000_emergency_time_rules_config.sql",
   "20260920010000_emergency_live_handoff_realtime_rls.sql",
-  "20260920020000_emergency_verification_and_resolution.sql"
+  "20260920020000_emergency_verification_and_resolution.sql",
+  "20260922000000_emergency_incident_cancellation.sql"
 ];
 
 const migrationsDir = path.resolve(process.cwd(), "supabase", "migrations");
