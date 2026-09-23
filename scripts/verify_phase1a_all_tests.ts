@@ -209,7 +209,7 @@ async function runAllTests() {
   const testAcceptEmail = "test_phase1a_accept@example.com";
   // Clean up if exists
   const { data: existingUsers } = await adminClient.auth.admin.listUsers();
-  const existingAcceptUser = existingUsers?.users?.find(u => u.email === testAcceptEmail);
+  const existingAcceptUser = (existingUsers?.users as any[])?.find((u: any) => u.email === testAcceptEmail);
   if (existingAcceptUser) {
     await adminClient.from("workers").delete().eq("profile_id", existingAcceptUser.id);
     await adminClient.auth.admin.deleteUser(existingAcceptUser.id);
@@ -290,7 +290,7 @@ async function runAllTests() {
   // -------------------------------------------------------------------------
   console.log("\n--- TEST G: WORKER REGISTRATION & REJECT ---");
   const testRejectEmail = "test_phase1a_reject@example.com";
-  const existingRejectUser = existingUsers?.users?.find(u => u.email === testRejectEmail);
+  const existingRejectUser = (existingUsers?.users as any[])?.find((u: any) => u.email === testRejectEmail);
   if (existingRejectUser) {
     await adminClient.from("workers").delete().eq("profile_id", existingRejectUser.id);
     await adminClient.auth.admin.deleteUser(existingRejectUser.id);
@@ -380,7 +380,7 @@ async function runAllTests() {
   try {
     const { data: usersToClean } = await adminClient.auth.admin.listUsers();
     for (const testEmail of [testAcceptEmail, testRejectEmail]) {
-      const u = usersToClean?.users?.find(user => user.email === testEmail);
+      const u = (usersToClean?.users as any[])?.find((user: any) => user.email === testEmail);
       if (u) {
         await adminClient.from("workers").delete().eq("profile_id", u.id);
         await adminClient.from("profiles").delete().eq("id", u.id);
