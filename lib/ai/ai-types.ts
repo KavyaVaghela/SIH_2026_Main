@@ -226,6 +226,47 @@ export interface WorkerRegionGuidance {
   guidance_text: string;
 }
 
+export interface WorkerCustomerComplaintItem {
+  id: string;
+  complaint_number: string;
+  category: string;
+  subcategory?: string;
+  subject: string;
+  description: string;
+  status: string;
+  priority: "LOW" | "MEDIUM" | "HIGH" | "CRITICAL";
+  customer_name: string;
+  customer_phone?: string;
+  booking_id?: string | null;
+  booking_number?: string | null;
+  response_required?: boolean;
+  worker_submitted?: boolean;
+  response_prompt?: string;
+  created_at: string;
+}
+
+export interface WorkerComplaintSolutionActionStep {
+  title: string;
+  description: string;
+  timeline?: string;
+}
+
+export interface WorkerComplaintSolution {
+  complaint_id: string;
+  complaint_number: string;
+  category: string;
+  subject: string;
+  summary: string;
+  root_cause_analysis: string;
+  suggested_worker_statement: string;
+  action_steps: WorkerComplaintSolutionActionStep[];
+  prevention_tips: string[];
+  federation_governance_guideline: string;
+  is_fallback?: boolean;
+  fallback_reason?: string;
+  generated_at?: string;
+}
+
 export interface WorkerComplaintSummary {
   has_complaints: boolean;
   open_customer_complaints: number;
@@ -233,6 +274,7 @@ export interface WorkerComplaintSummary {
   resolved_complaints: number;
   my_filed_complaints: number;
   guidance_note: string;
+  customer_complaints?: WorkerCustomerComplaintItem[];
 }
 
 export interface WorkerWelfareGuidance {
@@ -289,6 +331,7 @@ export interface WorkerAiContext {
   expiring_certifications_count?: number;
   region_guidance?: WorkerRegionGuidance;
   complaint_summary?: WorkerComplaintSummary;
+  customer_complaints?: WorkerCustomerComplaintItem[];
   welfare_guidance?: WorkerWelfareGuidance;
   growth_plan?: WorkerGrowthPlanItem[];
   available_opportunities_count?: number;

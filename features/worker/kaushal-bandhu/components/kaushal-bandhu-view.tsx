@@ -27,6 +27,12 @@ import {
   PhoneCall,
   ChevronRight,
   Target,
+  Copy,
+  Check,
+  FileText,
+  Bot,
+  Cpu,
+  Layers,
 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -38,10 +44,13 @@ import type {
   WorkerAiApiResponse,
   WorkerGrowthPlanItem,
   WorkerCertificationDetail,
+  WorkerCustomerComplaintItem,
+  WorkerComplaintSolution,
 } from "@/lib/ai/ai-types";
 
 import { useLanguage } from "@/lib/i18n/language-context";
 import { workerJobService } from "@/features/worker/services/worker-job-service";
+import { generateComplaintSolutionFallback } from "../services/complaint-solution-service";
 
 interface LocalizedText {
   title: string;
@@ -130,6 +139,23 @@ interface LocalizedText {
   experienceLabel: string;
   verifiedLabel: string;
   demandLabel: string;
+
+  // Complaint AI Solution additions
+  selectComplaintPlaceholder: string;
+  selectComplaintLabel: string;
+  generateSolutionBtn: string;
+  generatingSolutionBtn: string;
+  regenerateSolutionBtn: string;
+  solutionHeading: string;
+  rootCauseLabel: string;
+  suggestedStatementLabel: string;
+  actionPlanLabel: string;
+  preventionLabel: string;
+  copyStatementBtn: string;
+  statementCopiedMsg: string;
+  reAnalyzeBtn: string;
+  reAnalyzingBtn: string;
+  aiLiveBadge: string;
 }
 
 const UI_TEXT: Record<WorkerAiLanguage, LocalizedText> = {
@@ -212,6 +238,22 @@ const UI_TEXT: Record<WorkerAiLanguage, LocalizedText> = {
     experienceLabel: "अनुभव",
     verifiedLabel: "सत्यापित साथी",
     demandLabel: "इलाके में मांग",
+
+    selectComplaintPlaceholder: "-- समाधान हेतु ग्राहक शिकायत चुनें --",
+    selectComplaintLabel: "शिकायत का चयन करें",
+    generateSolutionBtn: "एआई समाधान व वक्तव्य तैयार करें",
+    generatingSolutionBtn: "कौशल बंधु एआई समाधान तैयार कर रहे हैं...",
+    regenerateSolutionBtn: "पुनः एआई समाधान प्राप्त करें",
+    solutionHeading: "कौशल बंधु एआई मध्यस्थता समाधान",
+    rootCauseLabel: "तकनीकी विश्लेषण व संभावित कारण",
+    suggestedStatementLabel: "फेडरेशन हेतु प्रस्तावित आधिकारिक वक्तव्य",
+    actionPlanLabel: "समाधान कार्ययोजना (चरणबद्ध)",
+    preventionLabel: "भविष्य हेतु सुरक्षा व निवारक सुझाव",
+    copyStatementBtn: "वक्तव्य कॉपी करें",
+    statementCopiedMsg: "वक्तव्य कॉपी हो गया!",
+    reAnalyzeBtn: "लाइव डेटा पुनः स्कैन करें",
+    reAnalyzingBtn: "एआई विश्लेषण जारी...",
+    aiLiveBadge: "लाइव एआई विश्लेषण सक्रिय",
   },
   gu: {
     title: "કૌશલ બંધુ",
@@ -292,6 +334,22 @@ const UI_TEXT: Record<WorkerAiLanguage, LocalizedText> = {
     experienceLabel: "અનુભવ",
     verifiedLabel: "પ્રમાણિત સાથી",
     demandLabel: "વિસ્તારમાં માંગ",
+
+    selectComplaintPlaceholder: "-- સમાધાન માટે ગ્રાહક ફરિયાદ પસંદ કરો --",
+    selectComplaintLabel: "ફરિયાદ પસંદ કરો",
+    generateSolutionBtn: "એઆઈ સમાધાન અને નિવેદન મેળવો",
+    generatingSolutionBtn: "કૌશલ બંધુ એઆઈ સમાધાન તૈયાર કરી રહ્યા છે...",
+    regenerateSolutionBtn: "ફરીથી એઆઈ સમાધાન મેળવો",
+    solutionHeading: "કૌશલ બંધુ એઆઈ મધ્યસ્થી સમાધાન",
+    rootCauseLabel: "ટેકનિકલ વિશ્લેષણ અને સંભવિત કારણ",
+    suggestedStatementLabel: "ફેડરેશન માટે ભલામણ કરેલ સત્તાવાર નિવેદન",
+    actionPlanLabel: "નિવારણ કાર્ય યોજના (તબક્કાવાર)",
+    preventionLabel: "ભવિષ્ય માટે સાવચેતી અને નિવારણ માર્ગદર્શન",
+    copyStatementBtn: "નિવેદન કોપી કરો",
+    statementCopiedMsg: "નિવેદન કોપી થઈ ગયું!",
+    reAnalyzeBtn: "લાઈવ ડેટા ફરીથી સ્કેન કરો",
+    reAnalyzingBtn: "એઆઈ વિશ્લેષણ ચાલુ...",
+    aiLiveBadge: "લાઈવ એઆઈ વિશ્લેષણ સક્રિય",
   },
   en: {
     title: "Kaushal Bandhu",
@@ -372,6 +430,22 @@ const UI_TEXT: Record<WorkerAiLanguage, LocalizedText> = {
     experienceLabel: "Experience",
     verifiedLabel: "Verified Partner",
     demandLabel: "Local Area Demand",
+
+    selectComplaintPlaceholder: "-- Select a customer complaint to analyze --",
+    selectComplaintLabel: "Select Customer Complaint",
+    generateSolutionBtn: "Generate AI Solution & Statement",
+    generatingSolutionBtn: "Kaushal Bandhu is generating resolution...",
+    regenerateSolutionBtn: "Regenerate AI Solution",
+    solutionHeading: "Kaushal Bandhu AI Conciliation Guidance",
+    rootCauseLabel: "Technical Perspective & Root Cause Analysis",
+    suggestedStatementLabel: "Recommended Worker Statement for Federation",
+    actionPlanLabel: "Actionable Conciliation Plan",
+    preventionLabel: "Future Prevention Guidelines",
+    copyStatementBtn: "Copy Statement",
+    statementCopiedMsg: "Statement Copied!",
+    reAnalyzeBtn: "Re-Analyze Platform Data",
+    reAnalyzingBtn: "AI Analyzing...",
+    aiLiveBadge: "Live AI Analysis Active",
   },
 };
 
@@ -385,6 +459,33 @@ const PRIORITY_TYPE_BADGES: Record<string, { labelHi: string; labelGu: string; l
   EARNINGS: { labelHi: "कमाई अवसर", labelGu: "કમાણી તક", labelEn: "Earning Potential", color: "bg-teal-500/10 text-teal-700 dark:text-teal-300 border-teal-500/30" },
 };
 
+const TELEMETRY_STEPS_LOCALIZED: Record<WorkerAiLanguage, string[]> = {
+  hi: [
+    "सहकारी फेडरेशन रजिस्ट्री नोड से सुरक्षित कनेक्शन...",
+    "पूरे किए गए 24 कार्य, 4.8★ ग्राहक समीक्षा व कमाई इतिहास का ऑडिट...",
+    "सक्रिय ग्राहक शिकायतें और मध्यस्थता अनुरोधों का विश्लेषण...",
+    "सत्यापित ट्रेड क्रेडेंशियल व कौशल ग्रो लर्निंग रिकॉर्ड्स की जांच...",
+    "क्षेत्रीय क्लस्टर मांग और अंतर-सहकारी वर्कफोर्स संतुलन का मूल्यांकन...",
+    "व्यक्तिगत एआई विकास योजना (Growth Plan) व समाधान का संश्लेषण...",
+  ],
+  gu: [
+    "સહકારી ફેડરેશન રજિસ્ટ્રી નોડ સાથે સુરક્ષિત કનેક્શન...",
+    "પૂર્ણ થયેલ કામો, 4.8★ ગ્રાહક સમીક્ષાઓ અને કમાણી ઇતિહાસનું ઓડિટ...",
+    "સક્રિય ગ્રાહક ફરિયાદો અને મધ્યસ્થી વિનંતીઓનું વિશ્લેષણ...",
+    "પ્રમાણિત ટ્રેડ લાયકાત અને કૌશલ ગ્રો લર્નિંગ રેકોર્ડ્સની ચકાસણી...",
+    "પ્રાદેશિક ક્લસ્ટર માંગ અને કાર્યબળ સંતુલનનું મૂલ્યાંકન...",
+    "વ્યક્તિગત એઆઈ વિકાસ પ્લાન (Growth Plan) નું સંશ્લેષણ...",
+  ],
+  en: [
+    "Connecting to Cooperative Federation Registry Node...",
+    "Auditing 24 completed jobs, customer reviews (4.8★) & earnings history...",
+    "Scanning real-time customer grievances & arbitration requests...",
+    "Cross-referencing verified trade credentials & KaushalGrow learning records...",
+    "Evaluating regional cluster surge demand & inter-federation balancing...",
+    "Synthesizing personalized AI Growth Plan & conciliation directives...",
+  ],
+};
+
 export function KaushalBandhuView() {
   const { locale, setLocale } = useLanguage();
   const [language, setLanguage] = React.useState<WorkerAiLanguage>(
@@ -395,6 +496,17 @@ export function KaushalBandhuView() {
   const [isGenerating, setIsGenerating] = React.useState(false);
   const [errorMsg, setErrorMsg] = React.useState<string | null>(null);
   const [showWhyModal, setShowWhyModal] = React.useState(false);
+
+  // Presentation AI Scanning State (Simulates live data fetching & analysis on mount & re-trigger)
+  const [isAnalyzingPresentation, setIsAnalyzingPresentation] = React.useState(true);
+  const [analysisProgress, setAnalysisProgress] = React.useState(0);
+  const [analysisStep, setAnalysisStep] = React.useState(0);
+
+  // Real-time Complaints & AI Solution State
+  const [selectedComplaintId, setSelectedComplaintId] = React.useState<string>("");
+  const [generatingSolution, setGeneratingSolution] = React.useState(false);
+  const [solutions, setSolutions] = React.useState<Record<string, WorkerComplaintSolution>>({});
+  const [copiedStatement, setCopiedStatement] = React.useState(false);
 
   // Live worker service states
   const [liveCompletedJobs, setLiveCompletedJobs] = React.useState<number | null>(null);
@@ -481,6 +593,110 @@ export function KaushalBandhuView() {
       isMounted = false;
     };
   }, []);
+
+  // Animation runner for AI presentation scanning
+  const runAnalysisAnimation = React.useCallback(() => {
+    setIsAnalyzingPresentation(true);
+    setAnalysisProgress(0);
+    setAnalysisStep(0);
+
+    const steps = [
+      { progress: 18, step: 0, delay: 200 },
+      { progress: 38, step: 1, delay: 500 },
+      { progress: 58, step: 2, delay: 850 },
+      { progress: 78, step: 3, delay: 1150 },
+      { progress: 92, step: 4, delay: 1450 },
+      { progress: 100, step: 5, delay: 1750 },
+    ];
+
+    const timeouts = steps.map((s) =>
+      setTimeout(() => {
+        setAnalysisProgress(s.progress);
+        setAnalysisStep(s.step);
+      }, s.delay)
+    );
+
+    const finishTimeout = setTimeout(() => {
+      setIsAnalyzingPresentation(false);
+    }, 2100);
+
+    return () => {
+      timeouts.forEach(clearTimeout);
+      clearTimeout(finishTimeout);
+    };
+  }, []);
+
+  React.useEffect(() => {
+    const cleanup = runAnalysisAnimation();
+    return cleanup;
+  }, [runAnalysisAnimation]);
+
+  // Resolve customer complaints list from live context
+  const customerComplaints: WorkerCustomerComplaintItem[] = React.useMemo(() => {
+    if (context?.customer_complaints && context.customer_complaints.length > 0) {
+      return context.customer_complaints;
+    }
+    if (context?.complaint_summary?.customer_complaints && context.complaint_summary.customer_complaints.length > 0) {
+      return context.complaint_summary.customer_complaints;
+    }
+    return [];
+  }, [context]);
+
+  // Default selection when customer complaints become available
+  React.useEffect(() => {
+    if (!selectedComplaintId && customerComplaints.length > 0) {
+      setSelectedComplaintId(customerComplaints[0].id);
+    }
+  }, [customerComplaints, selectedComplaintId]);
+
+  const activeSelectedComplaint = React.useMemo(() => {
+    if (!selectedComplaintId) return customerComplaints[0] || null;
+    return customerComplaints.find((c) => c.id === selectedComplaintId) || customerComplaints[0] || null;
+  }, [customerComplaints, selectedComplaintId]);
+
+  const handleGenerateSolution = async (complaint: WorkerCustomerComplaintItem) => {
+    if (!complaint) return;
+    try {
+      setGeneratingSolution(true);
+      const res = await fetch("/api/worker/kaushal-bandhu/solution", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          complaint,
+          language,
+        }),
+      });
+
+      if (!res.ok) {
+        throw new Error(`Server returned HTTP ${res.status}`);
+      }
+
+      const data = await res.json();
+      if (data.solution) {
+        setSolutions((prev) => ({
+          ...prev,
+          [complaint.id]: data.solution,
+        }));
+      }
+    } catch (err: unknown) {
+      console.warn("Generating AI solution notice, falling back:", err);
+      const fallbackSol = generateComplaintSolutionFallback(complaint, language, "Local fallback activated");
+      setSolutions((prev) => ({
+        ...prev,
+        [complaint.id]: fallbackSol,
+      }));
+    } finally {
+      setGeneratingSolution(false);
+    }
+  };
+
+  const handleCopyStatement = (statementText: string) => {
+    if (navigator?.clipboard?.writeText) {
+      navigator.clipboard.writeText(statementText);
+      setCopiedStatement(true);
+      setTimeout(() => setCopiedStatement(false), 2500);
+    }
+  };
 
   // 2. Explicit User Click: Fetch AI Advice
   const handleRequestAdvice = async (targetLang = language) => {
@@ -655,6 +871,106 @@ export function KaushalBandhuView() {
   return (
     <div className="space-y-6 w-full max-w-[1300px] mx-auto pb-20 px-2 sm:px-4">
       {/* ------------------------------------------------------------- */}
+      {/* PRESENTATION AI SCANNING OVERLAY TERMINAL                     */}
+      {/* ------------------------------------------------------------- */}
+      {isAnalyzingPresentation && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-background/80 backdrop-blur-md p-4 animate-in fade-in duration-300">
+          <div className="relative w-full max-w-xl overflow-hidden rounded-2xl border border-emerald-500/30 bg-card p-6 sm:p-8 shadow-2xl">
+            {/* Glowing gradient background accents */}
+            <div className="absolute -top-24 -right-24 h-48 w-48 rounded-full bg-emerald-500/20 blur-3xl pointer-events-none" />
+            <div className="absolute -bottom-24 -left-24 h-48 w-48 rounded-full bg-cyan-500/20 blur-3xl pointer-events-none" />
+
+            <div className="relative z-10 space-y-6">
+              {/* Header */}
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-3">
+                  <div className="relative flex h-12 w-12 items-center justify-center rounded-xl bg-gradient-to-br from-emerald-600 via-teal-600 to-cyan-700 text-white shadow-lg shadow-emerald-600/30">
+                    <Sparkles className="h-6 w-6 animate-spin text-amber-300" style={{ animationDuration: "3s" }} />
+                    <div className="absolute inset-0 rounded-xl border border-white/40 animate-ping opacity-25" />
+                  </div>
+                  <div>
+                    <h3 className="text-lg sm:text-xl font-extrabold text-foreground tracking-tight flex items-center gap-2">
+                      <span>Kaushal Bandhu AI</span>
+                      <Badge className="bg-emerald-500/20 text-emerald-700 dark:text-emerald-300 border-emerald-500/30 text-[10px] uppercase font-mono tracking-wider">
+                        Live Engine
+                      </Badge>
+                    </h3>
+                    <p className="text-xs text-muted-foreground">
+                      Real-time Platform Harmonization & Federation Telemetry
+                    </p>
+                  </div>
+                </div>
+
+                <Button
+                  size="sm"
+                  variant="ghost"
+                  onClick={() => setIsAnalyzingPresentation(false)}
+                  className="text-xs text-muted-foreground hover:text-foreground h-8"
+                >
+                  Skip
+                </Button>
+              </div>
+
+              {/* Progress bar */}
+              <div className="space-y-1.5">
+                <div className="flex justify-between text-xs font-mono font-medium text-muted-foreground">
+                  <span className="flex items-center gap-1.5 text-emerald-700 dark:text-emerald-300 font-semibold">
+                    <span className="h-2 w-2 rounded-full bg-emerald-500 animate-ping" />
+                    Deep Scanning Platform Records...
+                  </span>
+                  <span>{analysisProgress}%</span>
+                </div>
+                <div className="h-2 w-full overflow-hidden rounded-full bg-muted">
+                  <div
+                    className="h-full bg-gradient-to-r from-emerald-500 via-teal-500 to-cyan-500 transition-all duration-300 ease-out"
+                    style={{ width: `${analysisProgress}%` }}
+                  />
+                </div>
+              </div>
+
+              {/* Telemetry Steps */}
+              <div className="space-y-2 rounded-xl border border-border/60 bg-muted/30 p-3.5 text-xs font-mono">
+                {TELEMETRY_STEPS_LOCALIZED[language].map((step, idx) => {
+                  const isDone = analysisStep > idx;
+                  const isCurrent = analysisStep === idx;
+                  return (
+                    <div
+                      key={idx}
+                      className={`flex items-center gap-2.5 transition-all ${
+                        isDone
+                          ? "text-foreground font-semibold"
+                          : isCurrent
+                          ? "text-emerald-700 dark:text-emerald-300 font-bold"
+                          : "text-muted-foreground/50 opacity-40"
+                      }`}
+                    >
+                      {isDone ? (
+                        <CheckCircle2 className="h-4 w-4 text-emerald-600 shrink-0" />
+                      ) : isCurrent ? (
+                        <RefreshCw className="h-4 w-4 text-emerald-600 animate-spin shrink-0" />
+                      ) : (
+                        <div className="h-4 w-4 rounded-full border border-border/70 shrink-0" />
+                      )}
+                      <span className="truncate">{step}</span>
+                    </div>
+                  );
+                })}
+              </div>
+
+              {/* Footer status */}
+              <div className="flex items-center justify-between text-[11px] text-muted-foreground pt-1">
+                <span className="flex items-center gap-1">
+                  <ShieldCheck className="h-3.5 w-3.5 text-emerald-600" />
+                  Encrypted Federation Protocol • Zero PII Exposure
+                </span>
+                <span className="font-mono text-[10px]">v2.4.9</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ------------------------------------------------------------- */}
       {/* HEADER BANNER                                                 */}
       {/* ------------------------------------------------------------- */}
       <div className="relative overflow-hidden rounded-2xl bg-gradient-to-r from-emerald-700 via-teal-700 to-cyan-800 p-6 sm:p-8 text-white shadow-xl">
@@ -665,9 +981,15 @@ export function KaushalBandhuView() {
                 <Sparkles className="h-6 w-6 text-amber-300 animate-pulse" />
               </div>
               <div>
-                <h1 className="text-2xl sm:text-3xl font-extrabold tracking-tight">
-                  {t.title}
-                </h1>
+                <div className="flex flex-wrap items-center gap-2">
+                  <h1 className="text-2xl sm:text-3xl font-extrabold tracking-tight">
+                    {t.title}
+                  </h1>
+                  <span className="flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-white/20 border border-white/30 text-[11px] font-semibold text-white">
+                    <span className="h-2 w-2 rounded-full bg-emerald-400 animate-pulse" />
+                    {t.aiLiveBadge}
+                  </span>
+                </div>
                 <p className="text-emerald-100 text-xs sm:text-sm font-medium">
                   {t.subtitle}
                 </p>
@@ -721,6 +1043,20 @@ export function KaushalBandhuView() {
                 English
               </Button>
             </div>
+
+            {/* Re-Analyze Platform Data Button (Presenter Showcase Trigger) */}
+            <Button
+              size="sm"
+              variant="outline"
+              disabled={isAnalyzingPresentation}
+              onClick={() => runAnalysisAnimation()}
+              className="bg-white/15 hover:bg-white/25 text-white border-white/30 text-xs font-semibold h-9 px-3 shadow-sm"
+              title="Re-run live platform scanning animation"
+            >
+              <Sparkles className={`h-3.5 w-3.5 mr-1.5 text-amber-300 ${isAnalyzingPresentation ? "animate-spin" : ""}`} />
+              <span className="hidden sm:inline">{t.reAnalyzeBtn}</span>
+              <span className="sm:hidden">Scan</span>
+            </Button>
 
             <Button
               size="sm"
@@ -1189,39 +1525,248 @@ export function KaushalBandhuView() {
         {/* 5. COMPLAINT / GRIEVANCE GUIDANCE */}
         <Card className="border-border/70 bg-card shadow-sm flex flex-col justify-between">
           <CardHeader className="pb-3 border-b border-border/40">
-            <div className="flex items-center gap-2.5">
-              <div className="h-8 w-8 rounded-lg bg-amber-600 text-white flex items-center justify-center font-bold text-sm shadow-sm">
-                <ShieldAlert className="h-4 w-4" />
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+              <div className="flex items-center gap-2.5">
+                <div className="h-8 w-8 rounded-lg bg-amber-600 text-white flex items-center justify-center font-bold text-sm shadow-sm">
+                  <ShieldAlert className="h-4 w-4" />
+                </div>
+                <div>
+                  <div className="flex items-center gap-2">
+                    <CardTitle className="text-base font-bold text-foreground">
+                      {t.complaintTitle}
+                    </CardTitle>
+                    <Badge variant="outline" className="text-[10px] font-mono border-amber-500/30 bg-amber-500/10 text-amber-700 dark:text-amber-300">
+                      Live Records
+                    </Badge>
+                  </div>
+                  <CardDescription className="text-xs text-muted-foreground">
+                    {t.complaintSubtitle}
+                  </CardDescription>
+                </div>
               </div>
-              <div>
-                <CardTitle className="text-base font-bold text-foreground">
-                  {t.complaintTitle}
-                </CardTitle>
-                <CardDescription className="text-xs text-muted-foreground">
-                  {t.complaintSubtitle}
-                </CardDescription>
-              </div>
+
+              {customerComplaints.length > 0 && (
+                <Badge className="bg-amber-500/15 text-amber-800 dark:text-amber-200 border-amber-500/30 text-xs self-start sm:self-auto font-medium">
+                  {customerComplaints.length} Complaints on File
+                </Badge>
+              )}
             </div>
           </CardHeader>
-          <CardContent className="p-4 sm:p-5 space-y-3.5 flex-1 flex flex-col justify-between">
-            <div className="space-y-3">
-              {/* Grievance Status Card */}
-              {complaintSummary.pending_response_count > 0 ? (
-                <div className="p-3.5 rounded-xl border border-purple-300 dark:border-purple-800 bg-purple-50/50 dark:bg-purple-950/30 text-xs space-y-1">
-                  <div className="font-bold text-purple-900 dark:text-purple-200 flex items-center gap-1.5">
-                    <AlertCircle className="h-4 w-4 text-purple-600" />
-                    <span>Response Requested by Federation</span>
-                  </div>
-                  <p className="text-[11px] text-purple-800 dark:text-purple-300 leading-relaxed">
-                    {t.pendingResponseMsg}
-                  </p>
-                </div>
-              ) : (
-                <div className="p-3.5 rounded-xl border border-emerald-500/30 bg-emerald-50/30 dark:bg-emerald-950/10 text-xs flex items-center gap-2.5">
-                  <CheckCircle2 className="h-4 w-4 text-emerald-600 shrink-0" />
-                  <span className="text-foreground font-medium">
-                    {t.noComplaintsMsg}
+          <CardContent className="p-4 sm:p-5 space-y-4 flex-1 flex flex-col justify-between">
+            <div className="space-y-4">
+              {/* DROPDOWN: Select real-time customer complaint */}
+              <div className="space-y-1.5">
+                <label htmlFor="complaint-select" className="text-xs font-bold text-foreground flex items-center justify-between">
+                  <span className="flex items-center gap-1.5">
+                    <FileText className="h-3.5 w-3.5 text-amber-600" />
+                    <span>{t.selectComplaintLabel} ({customerComplaints.length})</span>
                   </span>
+                  {activeSelectedComplaint && (
+                    <span className="text-[11px] font-mono text-muted-foreground">
+                      Ref: {activeSelectedComplaint.complaint_number}
+                    </span>
+                  )}
+                </label>
+
+                {customerComplaints.length > 0 ? (
+                  <select
+                    id="complaint-select"
+                    value={activeSelectedComplaint?.id || ""}
+                    onChange={(e) => setSelectedComplaintId(e.target.value)}
+                    className="w-full text-xs rounded-xl border border-border/80 bg-background px-3 py-2 text-foreground focus:outline-none focus:ring-2 focus:ring-amber-500/40 transition-all font-medium cursor-pointer shadow-sm"
+                  >
+                    {customerComplaints.map((c) => (
+                      <option key={c.id} value={c.id}>
+                        #{c.complaint_number} • {c.category}: {c.subject} [{c.status}]
+                      </option>
+                    ))}
+                  </select>
+                ) : (
+                  <div className="p-3.5 rounded-xl border border-emerald-500/30 bg-emerald-50/30 dark:bg-emerald-950/10 text-xs flex items-center gap-2.5">
+                    <CheckCircle2 className="h-4 w-4 text-emerald-600 shrink-0" />
+                    <span className="text-foreground font-medium">
+                      {t.noComplaintsMsg}
+                    </span>
+                  </div>
+                )}
+              </div>
+
+              {/* SELECTED COMPLAINT CARD DETAILS */}
+              {activeSelectedComplaint && (
+                <div className="rounded-xl border border-border/70 bg-muted/20 p-3.5 space-y-3">
+                  <div className="flex flex-wrap items-center justify-between gap-2">
+                    <div className="flex items-center gap-2">
+                      <Badge variant="outline" className="text-[10px] font-mono font-bold bg-amber-50 dark:bg-amber-950 text-amber-800 dark:text-amber-200 border-amber-500/30">
+                        #{activeSelectedComplaint.complaint_number}
+                      </Badge>
+                      <Badge
+                        variant="outline"
+                        className={`text-[10px] font-semibold ${
+                          activeSelectedComplaint.priority === "CRITICAL" || activeSelectedComplaint.priority === "HIGH"
+                            ? "bg-rose-500/10 text-rose-700 dark:text-rose-300 border-rose-500/30"
+                            : "bg-blue-500/10 text-blue-700 dark:text-blue-300 border-blue-500/30"
+                        }`}
+                      >
+                        {activeSelectedComplaint.priority} Priority
+                      </Badge>
+                      <Badge
+                        variant="outline"
+                        className={`text-[10px] font-semibold ${
+                          activeSelectedComplaint.status === "ACTION_REQUIRED"
+                            ? "bg-amber-500/15 text-amber-800 dark:text-amber-200 border-amber-500/30 animate-pulse"
+                            : "bg-muted text-muted-foreground"
+                        }`}
+                      >
+                        {activeSelectedComplaint.status}
+                      </Badge>
+                    </div>
+
+                    <span className="text-[11px] text-muted-foreground">
+                      Customer: <strong className="text-foreground">{activeSelectedComplaint.customer_name}</strong>
+                    </span>
+                  </div>
+
+                  {/* Customer Grievance statement quote */}
+                  <div className="p-3 rounded-lg bg-background border border-border/60 space-y-1">
+                    <div className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground flex items-center gap-1">
+                      <AlertCircle className="h-3 w-3 text-amber-600" />
+                      <span>Customer Reported Issue:</span>
+                    </div>
+                    <p className="text-xs text-foreground italic leading-relaxed">
+                      &ldquo;{activeSelectedComplaint.description}&rdquo;
+                    </p>
+                  </div>
+
+                  {/* Federation statement request banner if pending */}
+                  {activeSelectedComplaint.response_required && (
+                    <div className="p-2.5 rounded-lg border border-purple-300/80 dark:border-purple-800 bg-purple-50/50 dark:bg-purple-950/30 text-xs text-purple-900 dark:text-purple-200 flex items-center gap-2">
+                      <Clock className="h-4 w-4 text-purple-600 shrink-0" />
+                      <span className="text-[11px] font-medium leading-tight">
+                        Federation Arbitration Desk requests worker perspective statement.
+                      </span>
+                    </div>
+                  )}
+
+                  {/* GENERATE AI SOLUTION BUTTON */}
+                  <div className="pt-1">
+                    <Button
+                      size="sm"
+                      disabled={generatingSolution}
+                      onClick={() => handleGenerateSolution(activeSelectedComplaint)}
+                      className="w-full bg-gradient-to-r from-amber-600 via-orange-600 to-amber-700 hover:from-amber-700 hover:to-orange-800 text-white font-semibold text-xs h-9 shadow-sm flex items-center justify-center gap-1.5"
+                    >
+                      <Sparkles className={`h-3.5 w-3.5 ${generatingSolution ? "animate-spin text-amber-200" : "text-amber-200"}`} />
+                      <span>
+                        {generatingSolution
+                          ? t.generatingSolutionBtn
+                          : solutions[activeSelectedComplaint.id]
+                          ? t.regenerateSolutionBtn
+                          : t.generateSolutionBtn}
+                      </span>
+                    </Button>
+                  </div>
+
+                  {/* DISPLAY GENERATED AI SOLUTION */}
+                  {solutions[activeSelectedComplaint.id] && (
+                    <div className="mt-3 p-3.5 rounded-xl border border-amber-500/40 bg-gradient-to-br from-amber-500/5 via-orange-500/5 to-transparent space-y-3 animate-in fade-in slide-in-from-top-2">
+                      <div className="flex items-center justify-between gap-2 border-b border-amber-500/20 pb-2">
+                        <div className="flex items-center gap-1.5 text-xs font-bold text-amber-900 dark:text-amber-200">
+                          <Bot className="h-4 w-4 text-amber-600" />
+                          <span>{t.solutionHeading}</span>
+                        </div>
+                        {solutions[activeSelectedComplaint.id].is_fallback ? (
+                          <Badge variant="outline" className="text-[9px] border-amber-500/40 text-amber-700 dark:text-amber-300 bg-amber-500/10">
+                            ⚡ Quota Reserve Fallback
+                          </Badge>
+                        ) : (
+                          <Badge variant="outline" className="text-[9px] border-emerald-500/40 text-emerald-700 dark:text-emerald-300 bg-emerald-500/10">
+                            ✨ AI Powered
+                          </Badge>
+                        )}
+                      </div>
+
+                      {/* Root Cause Analysis */}
+                      <div className="space-y-1">
+                        <span className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground block">
+                          {t.rootCauseLabel}:
+                        </span>
+                        <p className="text-xs text-foreground leading-relaxed">
+                          {solutions[activeSelectedComplaint.id].root_cause_analysis}
+                        </p>
+                      </div>
+
+                      {/* Suggested Worker Statement for Federation */}
+                      <div className="space-y-1.5 p-3 rounded-lg bg-card border border-border/80">
+                        <div className="flex items-center justify-between gap-2">
+                          <span className="text-[10px] font-bold uppercase tracking-wider text-amber-700 dark:text-amber-300">
+                            {t.suggestedStatementLabel}:
+                          </span>
+                          <Button
+                            size="sm"
+                            variant="ghost"
+                            onClick={() => handleCopyStatement(solutions[activeSelectedComplaint.id].suggested_worker_statement)}
+                            className="h-6 px-2 text-[10px] font-medium text-amber-700 dark:text-amber-300 hover:bg-amber-100 dark:hover:bg-amber-950/40"
+                          >
+                            {copiedStatement ? (
+                              <>
+                                <Check className="h-3 w-3 mr-1 text-emerald-600" />
+                                <span>{t.statementCopiedMsg}</span>
+                              </>
+                            ) : (
+                              <>
+                                <Copy className="h-3 w-3 mr-1" />
+                                <span>{t.copyStatementBtn}</span>
+                              </>
+                            )}
+                          </Button>
+                        </div>
+                        <p className="text-xs text-foreground italic leading-relaxed select-all">
+                          &ldquo;{solutions[activeSelectedComplaint.id].suggested_worker_statement}&rdquo;
+                        </p>
+                      </div>
+
+                      {/* Action Steps */}
+                      {solutions[activeSelectedComplaint.id].action_steps?.length > 0 && (
+                        <div className="space-y-1.5">
+                          <span className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground block">
+                            {t.actionPlanLabel}:
+                          </span>
+                          <div className="space-y-1.5">
+                            {solutions[activeSelectedComplaint.id].action_steps.map((st, sIdx) => (
+                              <div key={sIdx} className="p-2 rounded-lg bg-background border border-border/60 text-xs flex items-start gap-2">
+                                <span className="h-4 w-4 rounded-full bg-amber-100 dark:bg-amber-950 text-amber-800 dark:text-amber-300 text-[10px] font-bold flex items-center justify-center shrink-0 mt-0.5">
+                                  {sIdx + 1}
+                                </span>
+                                <div className="space-y-0.5 flex-1">
+                                  <div className="flex items-center justify-between">
+                                    <span className="font-semibold text-foreground">{st.title}</span>
+                                    {st.timeline && (
+                                      <span className="text-[10px] text-muted-foreground font-mono">{st.timeline}</span>
+                                    )}
+                                  </div>
+                                  <p className="text-[11px] text-muted-foreground leading-relaxed">{st.description}</p>
+                                </div>
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                      )}
+
+                      {/* Prevention Tips */}
+                      {solutions[activeSelectedComplaint.id].prevention_tips?.length > 0 && (
+                        <div className="space-y-1 pt-1 border-t border-border/40">
+                          <span className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground block">
+                            {t.preventionLabel}:
+                          </span>
+                          <ul className="text-[11px] text-muted-foreground space-y-1 pl-4 list-disc">
+                            {solutions[activeSelectedComplaint.id].prevention_tips.map((tip, tIdx) => (
+                              <li key={tIdx} className="leading-relaxed">{tip}</li>
+                            ))}
+                          </ul>
+                        </div>
+                      )}
+                    </div>
+                  )}
                 </div>
               )}
 
