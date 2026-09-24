@@ -196,6 +196,65 @@ export interface WorkerAiPriority {
   action?: string;
 }
 
+export interface WorkerCertificationDetail {
+  id: string;
+  title: string;
+  status: string;
+  expiry_date: string | null;
+  days_remaining?: number | null;
+  is_verified: boolean;
+}
+
+export interface WorkerPerformanceMetrics {
+  completed_jobs: number;
+  completed_last_30_days: number;
+  cancellations_count: number;
+  rating: number;
+  reviews_count: number;
+  days_since_last_job: number | null;
+  total_earnings: number;
+  response_rate_percent?: number;
+}
+
+export interface WorkerRegionGuidance {
+  current_region: string;
+  city?: string;
+  state?: string;
+  demand_level: "LOW" | "STEADY" | "HIGH";
+  recent_requests_count: number;
+  nearby_regions_insight: string;
+  guidance_text: string;
+}
+
+export interface WorkerComplaintSummary {
+  has_complaints: boolean;
+  open_customer_complaints: number;
+  pending_response_count: number;
+  resolved_complaints: number;
+  my_filed_complaints: number;
+  guidance_note: string;
+}
+
+export interface WorkerWelfareGuidance {
+  insurance_active: boolean;
+  insurance_policy: string;
+  coverage_amount: number;
+  emergency_assistance_eligible: boolean;
+  welfare_fund_enrolled: boolean;
+  expiring_cert_warning?: { certName: string; daysRemaining: number } | null;
+  guidance_note: string;
+}
+
+export interface WorkerGrowthPlanItem {
+  id: string;
+  step_number: number;
+  title: string;
+  description: string;
+  category: "PERFORMANCE" | "OPPORTUNITY" | "REGION" | "CERTIFICATION" | "COMPLAINT" | "WELFARE" | "SKILL";
+  action_label: string;
+  action_route?: string;
+}
+
 export interface WorkerAiContext {
   worker_id?: string;
   worker_name: string;
@@ -223,6 +282,16 @@ export interface WorkerAiContext {
   relevant_training_title: string | null;
   relevant_training_category: string | null;
   has_sufficient_activity: boolean;
+
+  // Worker Growth & Support Mentor Extensions
+  performance_metrics?: WorkerPerformanceMetrics;
+  certifications_detail?: WorkerCertificationDetail[];
+  expiring_certifications_count?: number;
+  region_guidance?: WorkerRegionGuidance;
+  complaint_summary?: WorkerComplaintSummary;
+  welfare_guidance?: WorkerWelfareGuidance;
+  growth_plan?: WorkerGrowthPlanItem[];
+  available_opportunities_count?: number;
 }
 
 export interface WorkerAiAdviceResponse {
