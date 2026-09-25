@@ -3,9 +3,11 @@
 import React from "react";
 import { ArrowRight, Users, CheckCircle2 } from "lucide-react";
 import { useAuthModal } from "./landing-auth-modal";
+import { useTranslation } from "@/lib/i18n";
 
 export function LandingCTA() {
   const { openAuthModal } = useAuthModal();
+  const { t } = useTranslation();
 
   return (
     <section className="py-8 sm:py-10 md:py-12 bg-[#004525] text-white relative overflow-hidden border-t border-[#135e38]" id="cta">
@@ -19,18 +21,21 @@ export function LandingCTA() {
         <div className="max-w-3xl mx-auto space-y-3.5 sm:space-y-4">
           {/* Eyebrow */}
           <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-[#135e38] text-[#8ed5a5] text-xs font-bold uppercase tracking-wider border border-[#8ed5a5]/30">
-            <span>STRONGER TOGETHER</span>
+            <span>{t("landing.cta.eyebrow", "STRONGER TOGETHER")}</span>
           </div>
 
           {/* Heading */}
           <h2 className="text-2xl sm:text-3xl font-extrabold tracking-tight text-white leading-tight">
-            Stronger Services. Stronger Workers. <br />
-            Stronger Communities.
+            {t("landing.cta.titlePre", "Stronger Services. Stronger Workers.")} <br />
+            {t("landing.cta.titlePost", "Stronger Communities.")}
           </h2>
 
           {/* Supporting Text */}
           <p className="text-xs sm:text-sm text-[#eaf5ee] leading-relaxed max-w-2xl mx-auto">
-            Find skilled workers for everyday household services, or join as a cooperative member to discover organized jobs, federation support, certifications, and welfare resources.
+            {t(
+              "landing.cta.subtitle",
+              "Find skilled workers for everyday household services, or join as a cooperative member to discover organized jobs, federation support, certifications, and welfare resources."
+            )}
           </p>
 
           {/* Action Buttons */}
@@ -41,7 +46,7 @@ export function LandingCTA() {
               id="cta-find-service-btn"
               className="px-6 py-2.5 rounded-full bg-white text-[#004525] font-extrabold text-xs sm:text-sm hover:bg-[#eaf5ee] transition-all shadow-md inline-flex items-center justify-center gap-2 w-full sm:w-auto cursor-pointer"
             >
-              <span>Enter KaushalyaSetu Network</span>
+              <span>{t("landing.cta.enterNetworkCta", "Enter KaushalyaSetu Network")}</span>
               <ArrowRight className="w-3.5 h-3.5 text-[#135e38]" />
             </button>
 
@@ -52,23 +57,23 @@ export function LandingCTA() {
               className="px-6 py-2.5 rounded-full bg-[#135e38] text-white font-extrabold text-xs sm:text-sm border border-[#8ed5a5]/40 hover:bg-[#0c4427] hover:border-[#8ed5a5] transition-all inline-flex items-center justify-center gap-2 w-full sm:w-auto cursor-pointer"
             >
               <Users className="w-3.5 h-3.5 text-[#8ed5a5]" />
-              <span>Join as a Worker</span>
+              <span>{t("landing.cta.joinWorkerCta", "Join as a Worker")}</span>
             </button>
           </div>
 
           {/* Factual Highlights */}
           <div className="pt-4 sm:pt-5 flex flex-wrap items-center justify-center gap-3 sm:gap-5 text-[11px] sm:text-xs text-[#8ed5a5] font-semibold">
             <span className="flex items-center gap-1.5">
-              <CheckCircle2 className="w-3.5 h-3.5 text-white" /> 8 Trade Categories
+              <CheckCircle2 className="w-3.5 h-3.5 text-white" /> {t("landing.cta.highlightTrades", "8 Trade Categories")}
             </span>
             <span className="flex items-center gap-1.5">
-              <CheckCircle2 className="w-3.5 h-3.5 text-white" /> Itemized Estimates
+              <CheckCircle2 className="w-3.5 h-3.5 text-white" /> {t("landing.cta.highlightEstimates", "Itemized Estimates")}
             </span>
             <span className="flex items-center gap-1.5">
-              <CheckCircle2 className="w-3.5 h-3.5 text-white" /> Dedicated Role Portals
+              <CheckCircle2 className="w-3.5 h-3.5 text-white" /> {t("landing.cta.highlightPortals", "Dedicated Role Portals")}
             </span>
             <span className="flex items-center gap-1.5">
-              <CheckCircle2 className="w-3.5 h-3.5 text-white" /> Grievance Management
+              <CheckCircle2 className="w-3.5 h-3.5 text-white" /> {t("landing.cta.highlightGrievances", "Grievance Management")}
             </span>
           </div>
         </div>

@@ -5,47 +5,49 @@ import Link from "next/link";
 import { ExternalLink } from "lucide-react";
 import { Logo } from "@/components/ui/logo";
 import { useAuthModal } from "./landing-auth-modal";
+import { useTranslation } from "@/lib/i18n";
 
 export function LandingFooter() {
   const { openAuthModal } = useAuthModal();
+  const { t } = useTranslation();
 
   const navLinks = [
-    { label: "Home", href: "/#home" },
-    { label: "Services", href: "/#services" },
-    { label: "How It Works", href: "/#how-it-works" },
-    { label: "Ecosystem", href: "/#ecosystem" },
-    { label: "Worker Support / Welfare", href: "/#welfare" },
-    { label: "FAQ", href: "/#faq" },
+    { label: t("landing.nav.home", "Home"), href: "/#home" },
+    { label: t("landing.nav.services", "Services"), href: "/#services" },
+    { label: t("landing.nav.howItWorks", "How It Works"), href: "/#how-it-works" },
+    { label: t("landing.nav.ecosystem", "Ecosystem"), href: "/#ecosystem" },
+    { label: t("landing.nav.workerWelfare", "Worker Welfare"), href: "/#welfare" },
+    { label: t("landing.nav.faq", "FAQ"), href: "/#faq" },
   ];
 
   const platformPortals = [
     {
-      label: "Customer Portal",
+      label: t("landing.footer.customerPortal", "Customer Portal"),
       direct: false,
       contextMsg: "Sign in to access the customer booking portal.",
     },
     {
-      label: "Worker Portal",
+      label: t("landing.footer.workerPortal", "Worker Portal"),
       direct: false,
       contextMsg: "Sign in to access the cooperative worker portal.",
     },
     {
-      label: "Federation Console",
+      label: t("landing.footer.federationConsole", "Federation Console"),
       direct: false,
       contextMsg: "Sign in to access the federation administration console.",
     },
     {
-      label: "Find a Service",
+      label: t("landing.footer.findService", "Find a Service"),
       direct: false,
       contextMsg: "Sign in to request household services.",
     },
     {
-      label: "Sign In",
+      label: t("landing.footer.signIn", "Sign In"),
       direct: true,
       href: "/login",
     },
     {
-      label: "Get Started",
+      label: t("landing.footer.getStarted", "Get Started"),
       direct: true,
       href: "/register",
     },
@@ -57,23 +59,29 @@ export function LandingFooter() {
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-6 sm:gap-8">
           {/* Column 1 & 2: Brand, Tagline & Mission */}
           <div className="lg:col-span-2 space-y-2.5">
-            <Logo href="/" showTagline taglineText="Cooperative Platform" size="md" />
+            <Logo
+              href="/"
+              showTagline
+              taglineText={t("landing.footer.brandTagline", "Cooperative Platform")}
+              size="md"
+            />
 
             <p className="text-xs sm:text-sm font-semibold text-white">
-              Connecting skilled people, customers and cooperatives.
+              {t("landing.footer.tagline", "Connecting skilled people, customers and cooperatives.")}
             </p>
 
             <p className="text-xs text-[#eaf5ee]/80 leading-relaxed max-w-sm">
-              A digital platform connecting households with skilled trade workers through local
-              cooperative societies and federations for household maintenance, repair, and community
-              services.
+              {t(
+                "landing.footer.description",
+                "A digital platform connecting households with skilled trade workers through local cooperative societies and federations for household maintenance, repair, and community services."
+              )}
             </p>
           </div>
 
           {/* Column 3: Navigation Links */}
           <div>
             <h4 className="text-xs sm:text-sm font-bold text-white uppercase tracking-wider mb-2.5 border-b border-[#135e38] pb-1.5">
-              Navigation
+              {t("landing.footer.navigationHeader", "Navigation")}
             </h4>
             <ul className="space-y-1.5 sm:space-y-2 text-xs text-[#eaf5ee]/90">
               {navLinks.map((link, idx) => (
@@ -98,7 +106,7 @@ export function LandingFooter() {
           {/* Column 4: Platform Portals */}
           <div className="lg:col-span-2">
             <h4 className="text-xs sm:text-sm font-bold text-white uppercase tracking-wider mb-2.5 border-b border-[#135e38] pb-1.5">
-              Platform Portals
+              {t("landing.footer.portalsHeader", "Platform Portals")}
             </h4>
             <ul className="grid grid-cols-1 sm:grid-cols-2 gap-1.5 sm:gap-2 text-xs text-[#eaf5ee]/90">
               {platformPortals.map((portal, idx) => (
@@ -129,9 +137,9 @@ export function LandingFooter() {
 
         {/* Bottom Legal Copyright Bar */}
         <div className="mt-8 pt-5 border-t border-[#135e38] flex flex-col sm:flex-row items-center justify-between gap-3 text-xs text-[#8ed5a5]">
-          <p>© 2026 KaushalyaSetu. All rights reserved.</p>
+          <p>{t("landing.footer.copyright", "© 2026 KaushalyaSetu. All rights reserved.")}</p>
           <div className="flex items-center space-x-4 text-[#eaf5ee]/70">
-            <span>Cooperative Gig Services Platform</span>
+            <span>{t("landing.footer.platformSubtitle", "Cooperative Gig Services Platform")}</span>
           </div>
         </div>
       </div>

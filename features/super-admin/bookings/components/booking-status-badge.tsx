@@ -15,6 +15,7 @@ import {
   Zap,
 } from "lucide-react";
 import type { BookingStatus, PaymentStatus, BookingLifecycleStage } from "../types";
+import { useTranslation, getTranslatedStatus } from "@/lib/i18n";
 
 interface BookingStatusBadgeProps {
   type?: "status" | "payment" | "stage";
@@ -27,6 +28,8 @@ export function BookingStatusBadge({
   status,
   className = "",
 }: BookingStatusBadgeProps) {
+  const { t } = useTranslation();
+
   // Payment Status Badges
   if (type === "payment") {
     switch (status) {
@@ -37,7 +40,7 @@ export function BookingStatusBadge({
             className={`bg-emerald-50 text-emerald-800 dark:bg-emerald-950/70 dark:text-emerald-300 border-emerald-200 text-[11px] font-semibold ${className}`}
           >
             <CheckCircle className="h-3 w-3 mr-1 text-emerald-600" />
-            Paid & Settled
+            {getTranslatedStatus("PAID", t)}
           </Badge>
         );
       case "PENDING":
@@ -47,7 +50,7 @@ export function BookingStatusBadge({
             className={`bg-amber-50 text-amber-800 dark:bg-amber-950/70 dark:text-amber-300 border-amber-200 text-[11px] font-semibold ${className}`}
           >
             <Clock className="h-3 w-3 mr-1 text-amber-600" />
-            Escrow Pending
+            {getTranslatedStatus("PENDING", t)}
           </Badge>
         );
       case "REFUNDED":
@@ -57,7 +60,7 @@ export function BookingStatusBadge({
             className={`bg-blue-50 text-blue-800 dark:bg-blue-950/70 dark:text-blue-300 border-blue-200 text-[11px] font-semibold ${className}`}
           >
             <CreditCard className="h-3 w-3 mr-1 text-blue-600" />
-            Refunded
+            {getTranslatedStatus("REFUNDED", t)}
           </Badge>
         );
       case "FAILED":
@@ -68,7 +71,7 @@ export function BookingStatusBadge({
             className={`bg-rose-50 text-rose-800 dark:bg-rose-950/70 dark:text-rose-300 border-rose-200 text-[11px] font-semibold ${className}`}
           >
             <XCircle className="h-3 w-3 mr-1 text-rose-600" />
-            Payment Failed
+            {getTranslatedStatus("FAILED", t)}
           </Badge>
         );
     }
@@ -80,43 +83,45 @@ export function BookingStatusBadge({
       case "PENDING":
         return (
           <Badge variant="outline" className={`bg-amber-50 text-amber-800 border-amber-200 text-[11px] font-bold ${className}`}>
-            <Clock className="h-3 w-3 mr-1 text-amber-600" /> Pending Dispatch
+            <Clock className="h-3 w-3 mr-1 text-amber-600" /> {t("booking.pendingReview", "Pending Review")}
           </Badge>
         );
       case "ACCEPTED":
         return (
           <Badge variant="outline" className={`bg-blue-50 text-blue-800 border-blue-200 text-[11px] font-bold ${className}`}>
-            <CheckCircle2 className="h-3 w-3 mr-1 text-blue-600" /> Worker Assigned
+            <CheckCircle2 className="h-3 w-3 mr-1 text-blue-600" /> {t("status.WORKER_ACCEPTED", "Worker Accepted")}
           </Badge>
         );
       case "IN_PROGRESS":
         return (
           <Badge variant="outline" className={`bg-indigo-50 text-indigo-800 border-indigo-200 text-[11px] font-bold ${className}`}>
-            <Activity className="h-3 w-3 mr-1 text-indigo-600 animate-pulse" /> Active In-Progress
+            <Activity className="h-3 w-3 mr-1 text-indigo-600 animate-pulse" /> {t("status.SERVICE_STARTED", "Service Started")}
           </Badge>
         );
       case "COMPLETED":
         return (
           <Badge variant="outline" className={`bg-emerald-50 text-emerald-800 border-emerald-200 text-[11px] font-bold ${className}`}>
-            <ShieldCheck className="h-3 w-3 mr-1 text-emerald-600" /> Service Completed
+            <ShieldCheck className="h-3 w-3 mr-1 text-emerald-600" /> {t("status.SERVICE_COMPLETED", "Service Completed")}
           </Badge>
         );
       case "CANCELLED":
         return (
           <Badge variant="outline" className={`bg-rose-50 text-rose-800 border-rose-200 text-[11px] font-bold ${className}`}>
-            <AlertTriangle className="h-3 w-3 mr-1 text-rose-600" /> Cancelled
+            <AlertTriangle className="h-3 w-3 mr-1 text-rose-600" /> {t("status.CANCELLED", "Cancelled")}
           </Badge>
         );
     }
   }
 
   // Canonical Booking Status Badges
+  const label = getTranslatedStatus(status as string, t);
+
   switch (status) {
     case "REQUEST_SENT":
       return (
         <Badge variant="outline" className={`bg-slate-100 text-slate-800 border-slate-200 text-[11px] font-medium ${className}`}>
           <Clock className="h-3 w-3 mr-1 text-slate-500" />
-          Request Sent
+          {label}
         </Badge>
       );
     case "WORKER_REVIEWING":
@@ -124,7 +129,7 @@ export function BookingStatusBadge({
       return (
         <Badge variant="outline" className={`bg-blue-50 text-blue-800 border-blue-200 text-[11px] font-medium ${className}`}>
           <Clock className="h-3 w-3 mr-1 text-blue-500" />
-          Worker Reviewing
+          {label}
         </Badge>
       );
     case "CUSTOMER_CONFIRMATION_PENDING":
@@ -132,42 +137,42 @@ export function BookingStatusBadge({
       return (
         <Badge variant="outline" className={`bg-amber-50 text-amber-800 border-amber-200 text-[11px] font-semibold ${className}`}>
           <Clock className="h-3 w-3 mr-1 text-amber-600" />
-          Confirmation Pending
+          {label}
         </Badge>
       );
     case "WORKER_ACCEPTED":
       return (
         <Badge variant="outline" className={`bg-sky-50 text-sky-800 border-sky-200 text-[11px] font-semibold ${className}`}>
           <CheckCircle2 className="h-3 w-3 mr-1 text-sky-600" />
-          Worker Accepted
+          {label}
         </Badge>
       );
     case "ON_THE_WAY":
       return (
         <Badge variant="outline" className={`bg-indigo-50 text-indigo-800 border-indigo-200 text-[11px] font-semibold ${className}`}>
           <Truck className="h-3 w-3 mr-1 text-indigo-600" />
-          On The Way
+          {label}
         </Badge>
       );
     case "ARRIVED":
       return (
         <Badge variant="outline" className={`bg-indigo-50 text-indigo-800 border-indigo-200 text-[11px] font-semibold ${className}`}>
           <Truck className="h-3 w-3 mr-1 text-indigo-600" />
-          Arrived On-Site
+          {label}
         </Badge>
       );
     case "OTP_VERIFIED":
       return (
         <Badge variant="outline" className={`bg-purple-50 text-purple-800 border-purple-200 text-[11px] font-semibold ${className}`}>
           <ShieldCheck className="h-3 w-3 mr-1 text-purple-600" />
-          OTP Verified
+          {label}
         </Badge>
       );
     case "SERVICE_STARTED":
       return (
         <Badge variant="outline" className={`bg-amber-50 text-amber-800 border-amber-200 text-[11px] font-semibold ${className}`}>
           <Zap className="h-3 w-3 mr-1 text-amber-600 animate-pulse" />
-          Job In Progress
+          {label}
         </Badge>
       );
     case "SERVICE_COMPLETED":
@@ -178,20 +183,20 @@ export function BookingStatusBadge({
       return (
         <Badge variant="outline" className={`bg-emerald-50 text-emerald-800 border-emerald-200 text-[11px] font-semibold ${className}`}>
           <CheckCircle className="h-3 w-3 mr-1 text-emerald-600" />
-          Completed
+          {label}
         </Badge>
       );
     case "CANCELLED":
       return (
         <Badge variant="outline" className={`bg-rose-50 text-rose-800 border-rose-200 text-[11px] font-semibold ${className}`}>
           <AlertTriangle className="h-3 w-3 mr-1 text-rose-600" />
-          Cancelled
+          {label}
         </Badge>
       );
     default:
       return (
         <Badge variant="outline" className={`bg-muted text-muted-foreground text-[11px] ${className}`}>
-          {String(status).replace(/_/g, " ")}
+          {label}
         </Badge>
       );
   }

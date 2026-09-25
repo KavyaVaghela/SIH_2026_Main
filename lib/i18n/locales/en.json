@@ -18,7 +18,19 @@
     "close": "Close",
     "savePreferences": "Save Preferences",
     "jurisdiction": "Jurisdiction",
-    "toggleMenu": "Toggle Menu"
+    "toggleMenu": "Toggle Menu",
+    "viewAll": "View All",
+    "back": "Back",
+    "retry": "Retry",
+    "optional": "Optional",
+    "required": "Required",
+    "details": "Details",
+    "verify": "Verify",
+    "confirm": "Confirm",
+    "verified": "Verified",
+    "active": "Active",
+    "today": "Today",
+    "tomorrow": "Tomorrow"
   },
   "language": {
     "selectLanguageTitle": "SELECT LANGUAGE",
@@ -95,5 +107,373 @@
     "status_confirmed": "Booking Confirmed",
     "status_completed": "Completed",
     "status_cancelled": "Cancelled"
+  },
+  "status": {
+    "REQUEST_SENT": "Request Sent",
+    "WORKER_REVIEWING": "Worker Reviewing",
+    "WORKER_INTERESTED": "Worker Interested",
+    "CUSTOMER_CONFIRMATION_PENDING": "Confirmation Pending",
+    "BOOKING_CONFIRMED": "Booking Confirmed",
+    "WORKER_ACCEPTED": "Worker Accepted",
+    "ON_THE_WAY": "On The Way",
+    "ARRIVED": "Arrived On-Site",
+    "OTP_VERIFIED": "OTP Verified",
+    "SERVICE_STARTED": "Service Started",
+    "SERVICE_COMPLETED": "Service Completed",
+    "BILL_GENERATED": "Bill Generated",
+    "PAYMENT_PENDING": "Payment Pending",
+    "PAYMENT_RECEIVED": "Payment Received",
+    "BOOKING_COMPLETED": "Booking Completed",
+    "CANCELLED": "Cancelled",
+    "payment": {
+      "PAID": "Paid",
+      "PENDING": "Payment Pending",
+      "FAILED": "Payment Failed",
+      "REFUNDED": "Refunded"
+    },
+    "worker": {
+      "AVAILABLE": "Available",
+      "BUSY": "Busy on Job",
+      "OFFLINE": "Offline"
+    }
+  },
+  "landing": {
+    "nav": {
+      "brandTagline": "Cooperative Platform",
+      "home": "Home",
+      "services": "Services",
+      "howItWorks": "How It Works",
+      "ecosystem": "Ecosystem",
+      "workerWelfare": "Worker Welfare",
+      "faq": "FAQ",
+      "faqTitle": "Frequently Asked Questions",
+      "faqTopics": "9 Topics",
+      "signIn": "Sign In",
+      "getStarted": "Get Started",
+      "openMenu": "Toggle navigation menu",
+      "closeMenu": "Close navigation menu"
+    },
+    "hero": {
+      "eyebrow": "DEMOCRATICALLY OWNED COOPERATIVE NETWORK",
+      "headlinePre": "Skilled People.",
+      "headlineMid": "Stronger Communities.",
+      "headlinePost": "Connected Through KaushalyaSetu.",
+      "supportingCopy": "Connecting households with skilled service professionals through a transparent cooperative platform built around community, opportunity, and trusted service.",
+      "enterNetwork": "Enter KaushalyaSetu Network",
+      "joinCooperative": "Join the Cooperative Network",
+      "valueSkillMatching": "Skill-Based Matching",
+      "valueCoopNetwork": "Cooperative Network",
+      "valueOtpVerification": "OTP Verification",
+      "valueTransparentJourney": "Transparent Service Journey",
+      "workerName": "Ramesh Sharma",
+      "workerTrade": "Certified Master Electrician",
+      "workerFed": "District Cooperative Fed",
+      "workerRating": "5.0 Rating (184 Jobs)",
+      "workerMemberId": "Cooperative Member ID",
+      "serviceTitle": "Electrical Repair",
+      "serviceStatus": "On The Way • ETA 12 min",
+      "serviceOtpRequired": "OTP Verification Required",
+      "safetyBadge": "100% Cooperative Verified Workforce"
+    },
+    "trustStrip": {
+      "eyebrow": "Platform Highlights",
+      "title": "Built for Reliable & Inclusive Service Delivery",
+      "coopTitle": "Cooperative Network",
+      "coopDesc": "Workers operate through registered cooperative societies and federations.",
+      "emergencyTitle": "Emergency Services",
+      "emergencyDesc": "Priority assistance for urgent household repairs connecting with on-call cooperative professionals.",
+      "largeProjectsTitle": "Large Project Service",
+      "largeProjectsDesc": "Support for bulk or large-scale service requirements through coordinated cooperative workers and workforce planning.",
+      "grievanceTitle": "Grievance Support",
+      "grievanceDesc": "Booking-linked complaints can be reviewed through the federation and escalated when required."
+    },
+    "aiPlatform": {
+      "eyebrow": "POWERED BY AI",
+      "title": "Smarter Connections Powered by AI",
+      "subtitle": "Intelligent matching, demand insights, skill verification and accessible service coordination for cooperative operations.",
+      "smartserveTitle": "SmartServe AI",
+      "smartserveDesc": "Analyze customer text or uploaded service images to identify possible faults and suggest the relevant service or trade.",
+      "smartserveHighlight": "Image & Text Based Assistance",
+      "kaushalgrowTitle": "KaushalGrow",
+      "kaushalgrowDesc": "Help workers identify skill gaps and discover relevant training and upskilling opportunities based on their trade and service experience.",
+      "kaushalgrowHighlight": "Skill Growth & Training",
+      "smartMatchingTitle": "Smart Worker Matching",
+      "smartMatchingDesc": "Match customer service requests with suitable verified workers using skills, availability, service requirements and cooperative coordination.",
+      "smartMatchingHighlight": "Fair Service Matching",
+      "demandIntelligenceTitle": "Demand Intelligence",
+      "demandIntelligenceDesc": "Use service demand patterns to support workforce planning, improve worker availability and help cooperatives prepare for local demand.",
+      "demandIntelligenceHighlight": "Demand-Based Planning"
+    },
+    "services": {
+      "eyebrow": "Essential Trades",
+      "title": "Services for Everyday Needs",
+      "subtitle": "Find skilled help for essential household and community services across 8 verified trade categories.",
+      "catElectrical": "Electrical & Wiring",
+      "catPlumbing": "Plumbing & Drainage",
+      "catCarpentry": "Carpentry & Woodwork",
+      "catPainting": "Wall Painting",
+      "catCleaning": "Deep Cleaning",
+      "catAppliance": "Appliance Servicing",
+      "catGardening": "Gardening & Lawn",
+      "catDriver": "Driver & Chauffeur",
+      "bannerTitle": "Looking for a specific household service?",
+      "bannerDesc": "Submit your request with required task details to receive itemized estimates from local cooperative workers.",
+      "bannerCta": "Request a Service"
+    },
+    "howItWorks": {
+      "eyebrow": "5-Step Workflow",
+      "title": "How KaushalyaSetu Works",
+      "subtitle": "A clear and transparent service journey connecting households and cooperative workers.",
+      "step1Title": "Request",
+      "step1Desc": "Customer chooses a service and submits the job details.",
+      "step2Title": "Compare",
+      "step2Desc": "Nearby eligible workers receive the request and can submit itemized estimates.",
+      "step3Title": "Confirm",
+      "step3Desc": "Customer compares worker information and estimates and selects a worker.",
+      "step4Title": "Verify",
+      "step4Desc": "Worker arrives and uses the customer's 4-digit OTP before the service starts.",
+      "step5Title": "Complete",
+      "step5Desc": "Worker completes the service, generates an itemized bill, and the customer reviews and pays.",
+      "findServiceCta": "Find a Service",
+      "previewServiceRequest": "SERVICE REQUEST",
+      "previewEstimatesReceived": "2 Estimates Received",
+      "previewJobTitle": "Electrical Diagnostics & MCB Repair",
+      "previewJobTime": "Today • 4:00 PM",
+      "previewReadyToCompare": "Ready to Compare",
+      "previewAvailableWorkers": "AVAILABLE WORKERS",
+      "previewEligible": "2 eligible",
+      "previewCompareAdvice": "Compare workers before you confirm",
+      "previewVerified": "Verified",
+      "previewWorker1Title": "Certified Electrician • 6 yrs exp",
+      "previewWorker2Title": "Certified Electrician • 4 yrs exp",
+      "previewDistance": "{dist} km away",
+      "previewEstimateLabel": "Estimate",
+      "previewCompareCta": "Compare Estimates & Select Worker",
+      "previewFooterNote": "Compare workers before you confirm • OTP job verification"
+    },
+    "ecosystem": {
+      "eyebrow": "Platform Roles",
+      "title": "Built for Cooperatives, Workers & Customers",
+      "subtitle": "One connected platform for cooperative service delivery.",
+      "cooperativesTitle": "COOPERATIVES",
+      "cooperativesTagline": "Federation Oversight",
+      "cooperativesDesc": "Verify workers, coordinate trade availability, and provide cooperative oversight.",
+      "cooperativesCta": "Cooperative Console",
+      "cooperativesBullets": [
+        "Verify and manage workers",
+        "Coordinate workforce availability",
+        "Support welfare, training and grievances",
+        "Provide cooperative/federation oversight"
+      ],
+      "workersTitle": "WORKERS",
+      "workersTagline": "Organized Livelihood",
+      "workersDesc": "Manage profiles, respond to requests, submit estimates, and track earnings.",
+      "workersCta": "Worker Portal",
+      "workersBullets": [
+        "Manage profile, skills and availability",
+        "Receive and manage job requests",
+        "Submit estimates and execute services",
+        "Manage earnings, certifications and welfare"
+      ],
+      "customersTitle": "CUSTOMERS",
+      "customersTagline": "Trusted Services",
+      "customersDesc": "Find verified services, compare estimates, track bookings, and settle payments.",
+      "customersCta": "Customer Portal",
+      "customersBullets": [
+        "Find verified services",
+        "Submit service requests",
+        "Compare estimates",
+        "Book, track and pay for services",
+        "Review or raise grievances when required"
+      ]
+    },
+    "workerSupport": {
+      "eyebrow": "BUILT FOR SKILLED WORKERS",
+      "title": "More Than a Service. A Livelihood.",
+      "subtitle": "KaushalyaSetu helps skilled workers discover organized opportunities, manage incoming requests, track transparent earnings, and build a professional service history through the cooperative federation network.",
+      "skillsCertsTitle": "Skills & Certification",
+      "skillsCertsDesc": "Maintain verified trade skills, track certification validity, and receive training recommendations to qualify for more service opportunities.",
+      "jobOpportunitiesTitle": "Job Opportunities",
+      "jobOpportunitiesDesc": "Receive localized household service requests matching your trade skills and submit itemized estimates to customers.",
+      "earningsTitle": "Earnings & Transparent Settlement",
+      "earningsDesc": "Track earnings from completed bookings with clear breakdown of labor charges, platform fee, and direct bank settlement.",
+      "welfareTitle": "Welfare & Federation Support",
+      "welfareDesc": "Access cooperative-led welfare resources, safety guidance, federation dispute mediation, and structured operational support.",
+      "joinNetworkCta": "Join the Cooperative Network"
+    },
+    "emergency": {
+      "eyebrow": "WHEN A SERVICE CAN'T WAIT",
+      "desc": "Request urgent household assistance and connect with the appropriate local service network.",
+      "tagPlumbing": "Plumbing Leaks",
+      "tagElectrical": "Electrical Faults",
+      "tagLockout": "Urgent Lockouts",
+      "cta": "Request Emergency Help →"
+    },
+    "cta": {
+      "eyebrow": "STRONGER TOGETHER",
+      "titlePre": "Stronger Services. Stronger Workers.",
+      "titlePost": "Stronger Communities.",
+      "subtitle": "Find skilled workers for everyday household services, or join as a cooperative member to discover organized jobs, federation support, certifications, and welfare resources.",
+      "enterNetworkCta": "Enter KaushalyaSetu Network",
+      "joinWorkerCta": "Join as a Worker",
+      "highlightTrades": "8 Trade Categories",
+      "highlightEstimates": "Itemized Estimates",
+      "highlightPortals": "Dedicated Role Portals",
+      "highlightGrievances": "Grievance Management"
+    },
+    "footer": {
+      "brandTagline": "Cooperative Platform",
+      "tagline": "Connecting skilled people, customers and cooperatives.",
+      "description": "A digital platform connecting households with skilled trade workers through local cooperative societies and federations for household maintenance, repair, and community services.",
+      "navigationHeader": "Navigation",
+      "portalsHeader": "Platform Portals",
+      "customerPortal": "Customer Portal",
+      "workerPortal": "Worker Portal",
+      "federationConsole": "Federation Console",
+      "findService": "Find a Service",
+      "signIn": "Sign In",
+      "getStarted": "Get Started",
+      "copyright": "© 2026 KaushalyaSetu. All rights reserved.",
+      "platformSubtitle": "Cooperative Gig Services Platform"
+    },
+    "authModal": {
+      "title": "Sign in to continue",
+      "description": "Please sign in or create an account to access the KaushalyaSetu network.",
+      "signIn": "Sign In",
+      "register": "Register"
+    },
+    "faq": {
+      "title": "Frequently Asked Questions",
+      "subtitle": "Common questions regarding how the cooperative platform operates for customers and workers.",
+      "q1": "What is KaushalyaSetu?",
+      "a1": "KaushalyaSetu is a digital cooperative services platform connecting households with skilled trade workers through registered cooperative societies and federations for home maintenance, repair, and community services.",
+      "q2": "How do I request a service?",
+      "a2": "Customers choose an essential trade service, provide task details and location, specify an appointment schedule, and submit their request to notify nearby eligible cooperative workers.",
+      "q3": "How are workers matched with my request?",
+      "a3": "The platform evaluates verified trade skills, live availability, geographic proximity, and active federation membership to match eligible cooperative workers within your local area.",
+      "q4": "Can I compare estimates from multiple workers?",
+      "a4": "Yes. Nearby eligible workers review your request and submit itemized estimates detailing labor and anticipated material costs, allowing you to compare and select the best estimate.",
+      "q5": "How does OTP verification work?",
+      "a5": "When the selected worker arrives at your location, a secure 4-digit one-time passcode (OTP) displayed on your booking screen must be entered by the worker to officially start the service.",
+      "q6": "How does billing and payment work?",
+      "a6": "Upon job completion, the worker generates an itemized final bill covering actual labor and materials. Customers review the breakdown and settle payment securely online with digital receipt generation.",
+      "q7": "How can a worker join KaushalyaSetu?",
+      "a7": "Skilled craftspeople can register through their local cooperative society by submitting their trade credentials, identity verification, and bank details for federation approval.",
+      "q8": "What role does the cooperative/federation play?",
+      "a8": "District cooperative federations verify and onboard workers, maintain member trade records, oversee service standards, support welfare initiatives, and handle dispute mediation.",
+      "q9": "What happens if there is a problem with a service?",
+      "a9": "Both customers and workers can file formal, booking-linked grievances through the platform. Disputes are reviewed and mediated by federation administrators, with escalation to Super Admin if needed."
+    }
+  },
+  "customer": {
+    "greeting": "Good Morning, {name} 👋",
+    "homeSubtitle": "What service do you need today? Select a category or search verified trade professionals.",
+    "searchPlaceholder": "Search for a service (e.g. Electrician, Pipe Leakage, Deep Cleaning)...",
+    "exploreCategories": "Explore Service Categories",
+    "selectCategorySubtitle": "Select a verified cooperative trade service",
+    "categoriesCount": "{count} Categories",
+    "noCategoryFound": "No matching service category found for \"{query}\".",
+    "currentBookingTitle": "Active Service Booking",
+    "upcomingBookingsTitle": "Upcoming Confirmed Services",
+    "requestEmergencyHelp": "Request Emergency Service",
+    "emergencyDesc": "Rapid response for urgent household problems: water leakage, power failure, or lock issues.",
+    "largeProjectTitle": "Large Project Workforce",
+    "largeProjectDesc": "Request multiple skilled workers for renovations, construction, or bulk cooperative tasks.",
+    "categories": {
+      "ceb1ccc9-e769-47cb-9540-167158c684f2": {
+        "name": "Plumbing",
+        "description": "Tap repair, pipe leaks & drainage"
+      },
+      "2985a030-5e9a-4c21-9ecb-43edae490f00": {
+        "name": "Electrical",
+        "description": "Wiring, switchboards & MCB repair"
+      },
+      "9394b752-b921-45cf-b77d-4f9cdfd3b61f": {
+        "name": "Carpentry",
+        "description": "Furniture assembly & door fixes"
+      },
+      "d710bed5-7724-469f-8930-e9400398fc92": {
+        "name": "Painting",
+        "description": "House painting & wall touchups"
+      },
+      "eedc33a1-3d03-4bcb-bb44-3375365adea4": {
+        "name": "Cleaning",
+        "description": "Deep house & kitchen sanitization"
+      },
+      "cd97b6b4-91eb-4c50-b15f-efba528b31d1": {
+        "name": "Appliance Repair",
+        "description": "AC, Fridge & Washing Machine"
+      },
+      "18c5af04-2db5-41d6-983a-ddd5f02d86d1": {
+        "name": "Gardening",
+        "description": "Lawn care & plant maintenance"
+      },
+      "c4432db8-8be9-4975-941a-901f392fae68": {
+        "name": "Driver Services",
+        "description": "Personal & outstation drivers"
+      },
+      "ebda254d-3500-492e-b35c-83f5a00c5239": {
+        "name": "Masonry",
+        "description": "Brickwork, plastering & wall construction"
+      },
+      "f106c3b4-bdd2-4c05-9b01-d63ecae29dea": {
+        "name": "House Help / Domestic Help",
+        "description": "Daily cleaning, dishwashing & dusting"
+      },
+      "3bd5ddac-31be-4163-807a-0a0871ed4161": {
+        "name": "Welding",
+        "description": "Grills, gates, railings & metal fabrication"
+      },
+      "3fa324d5-3904-4d9a-b24a-3603d355834d": {
+        "name": "Construction Labour",
+        "description": "Site shifting, material handling & digging"
+      },
+      "1e73e7ac-f6da-45b9-9d6c-49d44ffa22ef": {
+        "name": "Tile & Floor Work",
+        "description": "Floor tiles, marble fixing & grout restoration"
+      }
+    }
+  },
+  "worker": {
+    "overview": {
+      "todaysJobs": "Today's Jobs",
+      "todaysEarnings": "Today's Earnings",
+      "overallRating": "Overall Rating",
+      "completedJobs": "Completed Jobs",
+      "noJobsScheduled": "No jobs scheduled today",
+      "scheduledToday": "{count} scheduled today",
+      "directSettlement": "Direct bank settlement",
+      "verifiedCustomers": "From verified customers",
+      "newMemberBaseline": "New member baseline",
+      "lifetimeRecord": "Lifetime cooperative record",
+      "noCompletedYet": "No completed jobs yet"
+    },
+    "jobs": {
+      "acceptJob": "Accept Job",
+      "declineJob": "Decline Request",
+      "submitEstimate": "Submit Estimate",
+      "startService": "Start Service",
+      "completeService": "Complete Service",
+      "generateBill": "Generate Final Bill",
+      "otpPrompt": "Enter 4-digit Customer OTP to start service",
+      "verifyOtp": "Verify & Start Service"
+    }
+  },
+  "smartserve": {
+    "title": "Find the Right Service with AI",
+    "subtitle": "Smart assistant matches natural language descriptions to verified trades",
+    "problemLabel": "Describe Household Problem",
+    "problemPlaceholder": "Example: My AC is not cooling, or my kitchen sink pipe is leaking water...",
+    "analyzeBtn": "Analyze Problem",
+    "analyzingBtn": "Analyzing Problem...",
+    "resetBtn": "Reset Analysis",
+    "clearBtn": "Clear Inputs"
+  },
+  "validation": {
+    "required": "This field is required.",
+    "invalidPhone": "Please enter a valid phone number.",
+    "invalidEmail": "Please enter a valid email address.",
+    "minLength": "Must be at least {min} characters.",
+    "maxLength": "Exceeds maximum limit of {max} characters."
   }
 }

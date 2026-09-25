@@ -6,9 +6,10 @@ import { Menu, X, ArrowRight, ChevronDown, HelpCircle } from "lucide-react";
 import { Logo } from "@/components/ui/logo";
 import { LandingFaqAccordion } from "./landing-faq";
 import { LanguageSelector } from "@/components/navigation/language-selector";
-
+import { useTranslation } from "@/lib/i18n";
 
 export function LandingNavbar() {
+  const { t } = useTranslation();
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [isFaqOpen, setIsFaqOpen] = useState(false);
   const [isMobileFaqOpen, setIsMobileFaqOpen] = useState(false);
@@ -59,7 +60,7 @@ export function LandingNavbar() {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex h-16 items-center justify-between">
           {/* Logo & Brand */}
-          <Logo href="/" showTagline taglineText="Cooperative Platform" size="md" />
+          <Logo href="/" showTagline taglineText={t("landing.nav.brandTagline", "Cooperative Platform")} size="md" />
 
           {/* Desktop Navigation Links */}
           <nav
@@ -71,35 +72,35 @@ export function LandingNavbar() {
               id="landing-nav-home"
               className="text-sm font-semibold text-[#374151] hover:text-[#135e38] transition-colors"
             >
-              Home
+              {t("landing.nav.home", "Home")}
             </Link>
             <Link
               href="/#services"
               id="landing-nav-services"
               className="text-sm font-semibold text-[#374151] hover:text-[#135e38] transition-colors"
             >
-              Services
+              {t("landing.nav.services", "Services")}
             </Link>
             <Link
               href="/#how-it-works"
               id="landing-nav-how-it-works"
               className="text-sm font-semibold text-[#374151] hover:text-[#135e38] transition-colors"
             >
-              How It Works
+              {t("landing.nav.howItWorks", "How It Works")}
             </Link>
             <Link
               href="/#ecosystem"
               id="landing-nav-ecosystem"
               className="text-sm font-semibold text-[#374151] hover:text-[#135e38] transition-colors"
             >
-              Ecosystem
+              {t("landing.nav.ecosystem", "Ecosystem")}
             </Link>
             <Link
               href="/#welfare"
               id="landing-nav-welfare"
               className="text-sm font-semibold text-[#374151] hover:text-[#135e38] transition-colors"
             >
-              Worker Welfare
+              {t("landing.nav.workerWelfare", "Worker Welfare")}
             </Link>
 
             {/* Desktop FAQ Dropdown Trigger & Panel */}
@@ -116,7 +117,7 @@ export function LandingNavbar() {
                     : "text-[#374151] hover:text-[#135e38]"
                 }`}
               >
-                <span>FAQ</span>
+                <span>{t("landing.nav.faq", "FAQ")}</span>
                 <ChevronDown
                   className={`w-3.5 h-3.5 transition-transform duration-200 ${
                     isFaqOpen ? "rotate-180 text-[#135e38]" : ""
@@ -138,11 +139,11 @@ export function LandingNavbar() {
                         <HelpCircle className="w-3.5 h-3.5 text-[#135e38]" />
                       </div>
                       <h3 className="font-bold text-sm text-[#111827]">
-                        Frequently Asked Questions
+                        {t("landing.nav.faqTitle", "Frequently Asked Questions")}
                       </h3>
                     </div>
                     <span className="text-[11px] font-bold text-[#135e38] bg-[#eaf5ee] px-2 py-0.5 rounded-full border border-[#8ed5a5]/40">
-                      9 Topics
+                      {t("landing.nav.faqTopics", "9 Topics")}
                     </span>
                   </div>
 
@@ -163,14 +164,14 @@ export function LandingNavbar() {
               id="landing-nav-signin"
               className="px-4 py-2 text-sm font-semibold text-[#374151] hover:text-[#135e38] rounded-lg transition-colors"
             >
-              Sign In
+              {t("common.login", "Sign In")}
             </Link>
             <Link
               href="/register"
               id="landing-nav-get-started"
               className="px-5 py-2 text-sm font-semibold rounded-full bg-[#135e38] text-white hover:bg-[#0c4427] transition-all shadow-sm flex items-center gap-1.5"
             >
-              <span>Get Started</span>
+              <span>{t("landing.nav.getStarted", "Get Started")}</span>
               <ArrowRight className="h-3.5 w-3.5" />
             </Link>
           </div>
@@ -183,7 +184,7 @@ export function LandingNavbar() {
             <button
               onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
               id="landing-mobile-menu-toggle"
-              aria-label="Toggle navigation menu"
+              aria-label={t("landing.nav.openMenu", "Toggle navigation menu")}
               className="p-2 rounded-lg text-[#374151] hover:bg-[#eaf5ee] focus:outline-none"
             >
               {isMobileMenuOpen ? <X className="h-6 w-6" /> : <Menu className="h-6 w-6" />}
@@ -202,35 +203,35 @@ export function LandingNavbar() {
               onClick={() => setIsMobileMenuOpen(false)}
               className="px-3 py-2 rounded-md text-sm font-semibold text-[#374151] hover:bg-[#eaf5ee] hover:text-[#135e38]"
             >
-              Home
+              {t("landing.nav.home", "Home")}
             </Link>
             <Link
               href="/#services"
               onClick={() => setIsMobileMenuOpen(false)}
               className="px-3 py-2 rounded-md text-sm font-semibold text-[#374151] hover:bg-[#eaf5ee] hover:text-[#135e38]"
             >
-              Services
+              {t("landing.nav.services", "Services")}
             </Link>
             <Link
               href="/#how-it-works"
               onClick={() => setIsMobileMenuOpen(false)}
               className="px-3 py-2 rounded-md text-sm font-semibold text-[#374151] hover:bg-[#eaf5ee] hover:text-[#135e38]"
             >
-              How It Works
+              {t("landing.nav.howItWorks", "How It Works")}
             </Link>
             <Link
               href="/#ecosystem"
               onClick={() => setIsMobileMenuOpen(false)}
               className="px-3 py-2 rounded-md text-sm font-semibold text-[#374151] hover:bg-[#eaf5ee] hover:text-[#135e38]"
             >
-              Ecosystem
+              {t("landing.nav.ecosystem", "Ecosystem")}
             </Link>
             <Link
               href="/#welfare"
               onClick={() => setIsMobileMenuOpen(false)}
               className="px-3 py-2 rounded-md text-sm font-semibold text-[#374151] hover:bg-[#eaf5ee] hover:text-[#135e38]"
             >
-              Worker Welfare
+              {t("landing.nav.workerWelfare", "Worker Welfare")}
             </Link>
 
             {/* Mobile FAQ Accordion Group */}
@@ -244,7 +245,7 @@ export function LandingNavbar() {
               >
                 <span className="flex items-center gap-2">
                   <HelpCircle className="w-4 h-4 text-[#135e38]" />
-                  <span>Frequently Asked Questions</span>
+                  <span>{t("landing.nav.faqTitle", "Frequently Asked Questions")}</span>
                 </span>
                 <ChevronDown
                   className={`w-4 h-4 text-[#135e38] transition-transform duration-200 ${
@@ -267,14 +268,14 @@ export function LandingNavbar() {
               onClick={() => setIsMobileMenuOpen(false)}
               className="w-full py-2.5 text-center text-sm font-semibold rounded-lg border border-[#e6f0ea] text-[#374151] hover:bg-[#eaf5ee]"
             >
-              Sign In
+              {t("common.login", "Sign In")}
             </Link>
             <Link
               href="/register"
               onClick={() => setIsMobileMenuOpen(false)}
               className="w-full py-2.5 text-center text-sm font-semibold rounded-full bg-[#135e38] text-white hover:bg-[#0c4427] flex items-center justify-center gap-1.5"
             >
-              <span>Get Started</span>
+              <span>{t("landing.nav.getStarted", "Get Started")}</span>
               <ArrowRight className="h-4 w-4" />
             </Link>
           </div>

@@ -1,27 +1,29 @@
 import React from "react";
 import { Users, AlertTriangle, Briefcase, Shield } from "lucide-react";
+import { useTranslation } from "@/lib/i18n";
 
 export function LandingTrustStrip() {
+  const { t } = useTranslation();
   const trustFeatures = [
     {
       icon: Users,
-      title: "Cooperative Network",
-      description: "Workers operate through registered cooperative societies and federations.",
+      title: t("landing.trustStrip.coopTitle", "Cooperative Network"),
+      description: t("landing.trustStrip.coopDesc", "Workers operate through registered cooperative societies and federations."),
     },
     {
       icon: AlertTriangle,
-      title: "Emergency Services",
-      description: "Priority assistance for urgent household repairs connecting with on-call cooperative professionals.",
+      title: t("landing.trustStrip.emergencyTitle", "Emergency Services"),
+      description: t("landing.trustStrip.emergencyDesc", "Priority assistance for urgent household repairs connecting with on-call cooperative professionals."),
     },
     {
       icon: Briefcase,
-      title: "Large Project Service",
-      description: "Support for bulk or large-scale service requirements through coordinated cooperative workers and workforce planning.",
+      title: t("landing.trustStrip.largeProjectsTitle", "Large Project Service"),
+      description: t("landing.trustStrip.largeProjectsDesc", "Support for bulk or large-scale service requirements through coordinated cooperative workers and workforce planning."),
     },
     {
       icon: Shield,
-      title: "Grievance Support",
-      description: "Booking-linked complaints can be reviewed through the federation and escalated when required.",
+      title: t("landing.trustStrip.grievanceTitle", "Grievance Support"),
+      description: t("landing.trustStrip.grievanceDesc", "Booking-linked complaints can be reviewed through the federation and escalated when required."),
     },
   ];
 
@@ -31,10 +33,10 @@ export function LandingTrustStrip() {
         {/* Section Heading */}
         <div className="text-center max-w-3xl mx-auto mb-4 sm:mb-5">
           <div className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-[#eaf5ee] text-[#004525] text-[10px] sm:text-[11px] font-bold border border-[#8ed5a5] mb-1.5 uppercase tracking-wider">
-            <span>Platform Highlights</span>
+            <span>{t("landing.trustStrip.eyebrow", "Platform Highlights")}</span>
           </div>
           <h2 className="text-xl sm:text-2xl lg:text-3xl font-extrabold tracking-tight text-[#111827]">
-            Built for Reliable &amp; Inclusive Service Delivery
+            {t("landing.trustStrip.title", "Built for Reliable & Inclusive Service Delivery")}
           </h2>
         </div>
 

@@ -9,61 +9,69 @@ import {
   Check,
 } from "lucide-react";
 import { useAuthModal } from "./landing-auth-modal";
+import { useTranslation } from "@/lib/i18n";
 
 export function LandingEcosystem() {
   const { openAuthModal } = useAuthModal();
+  const { t } = useTranslation();
 
   const platformRoles = [
     {
       id: "cooperative",
-      title: "COOPERATIVES",
-      tagline: "Federation Oversight",
-      description:
-        "Verify workers, coordinate trade availability, and provide cooperative oversight.",
+      title: t("landing.ecosystem.cooperativesTitle", "COOPERATIVES"),
+      tagline: t("landing.ecosystem.cooperativesTagline", "Federation Oversight"),
+      description: t(
+        "landing.ecosystem.cooperativesDesc",
+        "Verify workers, coordinate trade availability, and provide cooperative oversight."
+      ),
       icon: Building2,
-      ctaText: "Cooperative Console",
+      ctaText: t("landing.ecosystem.cooperativesCta", "Cooperative Console"),
       btnId: "ecosystem-cooperative-console-btn",
       contextMsg: "Sign in to access the federation administration console.",
       bullets: [
-        "Verify and manage workers",
-        "Coordinate workforce availability",
-        "Support welfare, training and grievances",
-        "Provide cooperative/federation oversight",
+        t("landing.ecosystem.cooperativesBullets.0", "Verify and manage workers"),
+        t("landing.ecosystem.cooperativesBullets.1", "Coordinate workforce availability"),
+        t("landing.ecosystem.cooperativesBullets.2", "Support welfare, training and grievances"),
+        t("landing.ecosystem.cooperativesBullets.3", "Provide cooperative/federation oversight"),
       ],
     },
     {
       id: "worker",
-      title: "WORKERS",
-      tagline: "Organized Livelihood",
-      description:
-        "Manage profiles, respond to requests, submit estimates, and track earnings.",
+      title: t("landing.ecosystem.workersTitle", "WORKERS"),
+      tagline: t("landing.ecosystem.workersTagline", "Organized Livelihood"),
+      description: t(
+        "landing.ecosystem.workersDesc",
+        "Manage profiles, respond to requests, submit estimates, and track earnings."
+      ),
       icon: Wrench,
-      ctaText: "Worker Portal",
+      ctaText: t("landing.ecosystem.workersCta", "Worker Portal"),
       btnId: "ecosystem-worker-portal-btn",
       contextMsg: "Sign in to access the cooperative worker portal.",
       bullets: [
-        "Manage profile, skills and availability",
-        "Receive and manage job requests",
-        "Submit estimates and execute services",
-        "Manage earnings, certifications and welfare",
+        t("landing.ecosystem.workersBullets.0", "Manage profile, skills and availability"),
+        t("landing.ecosystem.workersBullets.1", "Receive and manage job requests"),
+        t("landing.ecosystem.workersBullets.2", "Submit estimates and execute services"),
+        t("landing.ecosystem.workersBullets.3", "Manage earnings, certifications and welfare"),
       ],
     },
     {
       id: "customer",
-      title: "CUSTOMERS",
-      tagline: "Trusted Services",
-      description:
-        "Find verified services, compare estimates, track bookings, and settle payments.",
+      title: t("landing.ecosystem.customersTitle", "CUSTOMERS"),
+      tagline: t("landing.ecosystem.customersTagline", "Trusted Services"),
+      description: t(
+        "landing.ecosystem.customersDesc",
+        "Find verified services, compare estimates, track bookings, and settle payments."
+      ),
       icon: Home,
-      ctaText: "Customer Portal",
+      ctaText: t("landing.ecosystem.customersCta", "Customer Portal"),
       btnId: "ecosystem-customer-portal-btn",
       contextMsg: "Sign in to access the customer booking portal.",
       bullets: [
-        "Find verified services",
-        "Submit service requests",
-        "Compare estimates",
-        "Book, track and pay for services",
-        "Review or raise grievances when required",
+        t("landing.ecosystem.customersBullets.0", "Find verified services"),
+        t("landing.ecosystem.customersBullets.1", "Submit service requests"),
+        t("landing.ecosystem.customersBullets.2", "Compare estimates"),
+        t("landing.ecosystem.customersBullets.3", "Book, track and pay for services"),
+        t("landing.ecosystem.customersBullets.4", "Review or raise grievances when required"),
       ],
     },
   ];
@@ -77,13 +85,13 @@ export function LandingEcosystem() {
         {/* Section Header */}
         <div className="text-center max-w-2xl mx-auto mb-6 sm:mb-8">
           <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-[#eaf5ee] text-[#004525] text-xs font-bold border border-[#8ed5a5] mb-2">
-            <span>Platform Roles</span>
+            <span>{t("landing.ecosystem.eyebrow", "Platform Roles")}</span>
           </div>
           <h2 className="text-2xl sm:text-3xl font-extrabold tracking-tight text-[#111827]">
-            Built for Cooperatives, Workers &amp; Customers
+            {t("landing.ecosystem.title", "Built for Cooperatives, Workers & Customers")}
           </h2>
           <p className="mt-1.5 text-xs sm:text-sm text-[#374151]">
-            One connected platform for cooperative service delivery.
+            {t("landing.ecosystem.subtitle", "One connected platform for cooperative service delivery.")}
           </p>
         </div>
 

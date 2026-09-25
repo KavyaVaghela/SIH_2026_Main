@@ -8,8 +8,10 @@ import { ServiceDetailsModal } from "@/components/smartserve/ServiceDetailsModal
 import { analyzeProblem } from "@/lib/smartserve-ai";
 import { AnalysisResult } from "@/types/smartserve";
 import { AlertCircle } from "lucide-react";
+import { useTranslation } from "@/lib/i18n";
 
 export default function CustomerSmartServePage() {
+  const { locale } = useTranslation();
   const [isLoading, setIsLoading] = useState(false);
   const [apiError, setApiError] = useState<string | null>(null);
   const [analysisResult, setAnalysisResult] = useState<AnalysisResult | null>(null);
@@ -26,6 +28,7 @@ export default function CustomerSmartServePage() {
     try {
       const formData = new FormData();
       formData.append("description", text || "");
+      formData.append("language", locale);
       if (imageFile) {
         formData.append("image", imageFile);
       }
