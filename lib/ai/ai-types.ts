@@ -220,6 +220,10 @@ export interface WorkerRegionGuidance {
   current_region: string;
   city?: string;
   state?: string;
+  worker_address?: string;
+  worker_area?: string;
+  latitude?: number | null;
+  longitude?: number | null;
   demand_level: "LOW" | "STEADY" | "HIGH";
   recent_requests_count: number;
   nearby_regions_insight: string;
