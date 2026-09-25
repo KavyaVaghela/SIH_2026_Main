@@ -41,6 +41,21 @@ export async function POST(request: NextRequest) {
           .maybeSingle();
 
         if (existing) {
+          if (existing.status === "PENDING" && amount && Number(existing.amount) !== Number(amount)) {
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            const { data: updatedPay } = await (supabase.from("payments") as any)
+              .update({
+                amount: Number(amount),
+                invoice_id: invoiceId || existing.invoice_id,
+                updated_at: new Date().toISOString(),
+              })
+              .eq("id", existing.id)
+              .select()
+              .single();
+            if (updatedPay) {
+              return NextResponse.json({ payment: mapDbPayment(updatedPay) });
+            }
+          }
           return NextResponse.json({ payment: mapDbPayment(existing) });
         }
       }

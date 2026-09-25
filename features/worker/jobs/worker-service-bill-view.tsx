@@ -25,6 +25,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { formatINR } from "@/lib/formatters/currency";
 import { workerJobService } from "../services/worker-job-service";
+import { invoiceService } from "@/features/invoices/services/invoice-service";
 import type { WorkerJobItem, WorkerBillItemPayload } from "../types";
 
 export interface WorkerServiceBillViewProps {
@@ -61,11 +62,8 @@ export function WorkerServiceBillView({ bookingId }: WorkerServiceBillViewProps)
 
 
   // Bill Line Items
-  const [laborAmount, setLaborAmount] = React.useState<number>(400);
-  const [materialItems, setMaterialItems] = React.useState<WorkerBillItemPayload[]>([
-    { description: "Replacement Pipe & Coupling", quantity: 1, unitPrice: 150 },
-    { description: "Industrial Sealant Tape", quantity: 1, unitPrice: 50 },
-  ]);
+  const [laborAmount, setLaborAmount] = React.useState<number>(315);
+  const [materialItems, setMaterialItems] = React.useState<WorkerBillItemPayload[]>([]);
 
   // Form Inputs for New Material Item
   const [newDesc, setNewDesc] = React.useState("");
@@ -80,21 +78,60 @@ export function WorkerServiceBillView({ bookingId }: WorkerServiceBillViewProps)
       if (data) {
         setJob(data);
 
-        // Prefill labor from estimate if available, otherwise fallback to reasonable base
-        if (data.workerEstimateLabor && data.workerEstimateLabor > 0) {
-          setLaborAmount(data.workerEstimateLabor);
-        } else if (data.totalAmount && data.totalAmount > 0) {
-          setLaborAmount(Math.round(data.totalAmount * 0.7));
+        // Check if an invoice with items already exists (e.g. from persistence or previous reload)
+        let loadedFromInvoice = false;
+        try {
+          const inv = await invoiceService.getBookingInvoice(bookingId);
+          if (inv && inv.items && inv.items.length > 0) {
+            const laborItem = inv.items.find((it) =>
+              /labor|service execution|repair service/i.test(it.description)
+            );
+            const remaining = inv.items.filter((it) => it !== laborItem);
+            if (laborItem) {
+              setLaborAmount(laborItem.unitPrice * laborItem.quantity);
+              setMaterialItems(
+                remaining.map((it) => ({
+                  description: it.description,
+                  quantity: it.quantity,
+                  unitPrice: it.unitPrice,
+                }))
+              );
+              loadedFromInvoice = true;
+            } else if (inv.items.length > 0) {
+              setLaborAmount(inv.items[0].unitPrice * inv.items[0].quantity);
+              setMaterialItems(
+                inv.items.slice(1).map((it) => ({
+                  description: it.description,
+                  quantity: it.quantity,
+                  unitPrice: it.unitPrice,
+                }))
+              );
+              loadedFromInvoice = true;
+            }
+          }
+        } catch (invErr) {
+          console.warn("Notice checking existing invoice:", invErr);
         }
 
-        // If booking already had recorded materialsUsed from Task 6, seed initial material lines
-        if (data.materialsUsed && data.materialsUsed.length > 0) {
-          const seeded = data.materialsUsed.map((m) => ({
-            description: m,
-            quantity: 1,
-            unitPrice: 75,
-          }));
-          setMaterialItems(seeded);
+        if (!loadedFromInvoice) {
+          // Prefill labor from estimate if available, otherwise fallback to reasonable base
+          if (data.workerEstimateLabor && data.workerEstimateLabor > 0) {
+            setLaborAmount(data.workerEstimateLabor);
+          } else if (data.workerEstimateAmount && data.workerEstimateAmount > 0) {
+            setLaborAmount(Math.round(data.workerEstimateAmount * 0.7));
+          } else if (data.totalAmount && data.totalAmount > 0) {
+            setLaborAmount(Math.round(data.totalAmount * 0.7));
+          }
+
+          // If booking already had recorded materialsUsed from execution, seed initial material lines
+          if (data.materialsUsed && data.materialsUsed.length > 0) {
+            const seeded = data.materialsUsed.map((m) => ({
+              description: m,
+              quantity: 1,
+              unitPrice: 75,
+            }));
+            setMaterialItems(seeded);
+          }
         }
       } else {
         setErrorMessage("Service booking not found.");
@@ -299,7 +336,7 @@ export function WorkerServiceBillView({ bookingId }: WorkerServiceBillViewProps)
         <div className="space-y-1">
           <span className="font-bold">Final Bill vs. Estimates:</span>
           <p className="text-[11px] leading-relaxed text-muted-foreground dark:text-blue-200/80">
-            The final bill is based on the <strong>actual work completed and materials used</strong>. It is independent of the initial platform estimate ({formatINR(job.totalAmount)}) or previous worker estimate ({job.workerEstimateAmount ? formatINR(job.workerEstimateAmount) : "N/A"}).
+            The final bill is based on the <strong>actual work completed and materials used</strong>. It is independent of the initial platform estimate ({formatINR(job.platformEstimate || job.totalAmount)}) or previous worker estimate ({job.workerEstimateAmount ? formatINR(job.workerEstimateAmount) : "N/A"}).
           </p>
         </div>
       </div>
@@ -518,7 +555,7 @@ export function WorkerServiceBillView({ bookingId }: WorkerServiceBillViewProps)
               <div className="p-3 rounded-lg border bg-muted/20 space-y-1 text-[11px]">
                 <div className="flex justify-between">
                   <span className="text-muted-foreground">Original Platform Estimate:</span>
-                  <strong className="text-foreground">{formatINR(job.totalAmount)}</strong>
+                  <strong className="text-foreground">{formatINR(job.platformEstimate || job.totalAmount)}</strong>
                 </div>
                 {job.workerEstimateAmount && (
                   <div className="flex justify-between">

@@ -13,7 +13,7 @@ export interface InvoiceBreakdownCardProps {
 }
 
 export function InvoiceBreakdownCard({ invoice, booking }: InvoiceBreakdownCardProps) {
-  const initialEstimate = Math.round(booking.totalAmount);
+  const initialEstimate = Math.round(booking.platformEstimate || booking.totalAmount);
   const workerEstimate = Math.round(booking.workerEstimateAmount || initialEstimate);
   const finalBill = Math.round(invoice.totalAmount);
 

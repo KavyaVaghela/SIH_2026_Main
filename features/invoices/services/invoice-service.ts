@@ -98,34 +98,8 @@ export class InvoiceService implements IInvoiceService {
   constructor() {}
 
   async createInvoice(payload: CreateInvoicePayload): Promise<Invoice> {
-    const existing = Array.from(this.mockInvoices.values()).find((inv) => inv.bookingId === payload.bookingId);
-    if (existing) {
-      return existing;
-    }
-
     const isUuid = (str?: string | null) =>
       Boolean(str && /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(str));
-
-    // Check existing in DB first
-    try {
-      const supabase = await getSupabase();
-      if (isUuid(payload.bookingId)) {
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        const { data: existingDb } = await (supabase.from("invoices") as any)
-          .select("*, invoice_items(*)")
-          .eq("booking_id", payload.bookingId)
-          .maybeSingle();
-
-        if (existingDb) {
-          const mapped = mapDbInvoice(existingDb);
-          this.mockInvoices.set(mapped.id, mapped);
-          this.mockInvoices.set(mapped.bookingId, mapped);
-          return mapped;
-        }
-      }
-    } catch (err) {
-      console.warn("Check existing invoice notice:", err);
-    }
 
     // 1. Try server-side API endpoint with full admin privileges & RLS bypass in browser
     try {
@@ -148,12 +122,9 @@ export class InvoiceService implements IInvoiceService {
       console.warn("API /api/invoices call notice:", err);
     }
 
-    const invoiceId = `inv-${Date.now()}`;
-    const invoiceNumber = `INV-${Date.now().toString().slice(-6)}`;
-
     const items: InvoiceItem[] = payload.items.map((item, index) => ({
       id: `item-${Date.now()}-${index}`,
-      invoiceId,
+      invoiceId: "",
       description: item.description,
       quantity: Number(item.quantity),
       unitPrice: Number(item.unitPrice),
@@ -171,6 +142,89 @@ export class InvoiceService implements IInvoiceService {
 
     const issueDate = new Date().toISOString().split("T")[0];
     const dueDate = new Date(Date.now() + 7 * 86400000).toISOString().split("T")[0];
+
+    // Check existing in memory
+    const existing = Array.from(this.mockInvoices.values()).find((inv) => inv.bookingId === payload.bookingId);
+    if (existing) {
+      existing.items = items.map((it) => ({ ...it, invoiceId: existing.id }));
+      existing.subtotal = subtotal;
+      existing.platformFee = platformFee;
+      existing.totalAmount = totalAmount;
+      existing.updatedAt = new Date().toISOString();
+      this.mockInvoices.set(existing.id, existing);
+      this.mockInvoices.set(existing.bookingId, existing);
+      return existing;
+    }
+
+    // Check existing in DB
+    try {
+      const supabase = await getSupabase();
+      if (isUuid(payload.bookingId)) {
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        const { data: existingDb } = await (supabase.from("invoices") as any)
+          .select("*, invoice_items(*)")
+          .eq("booking_id", payload.bookingId)
+          .maybeSingle();
+
+        if (existingDb) {
+          // Update DB invoice with new items and amounts
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          await (supabase.from("invoices") as any)
+            .update({
+              subtotal,
+              platform_fee: platformFee,
+              tax_amount: taxAmount,
+              total_amount: totalAmount,
+              updated_at: new Date().toISOString(),
+            })
+            .eq("id", existingDb.id);
+
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          await (supabase.from("invoice_items") as any)
+            .delete()
+            .eq("invoice_id", existingDb.id);
+
+          for (const item of items) {
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            await (supabase.from("invoice_items") as any).insert({
+              invoice_id: existingDb.id,
+              description: item.description,
+              quantity: item.quantity,
+              unit_price: item.unitPrice,
+              amount: item.amount,
+            });
+          }
+
+          const mapped: Invoice = {
+            id: existingDb.id,
+            invoiceNumber: existingDb.invoice_number,
+            bookingId: existingDb.booking_id,
+            customerId: existingDb.customer_id,
+            federationId: existingDb.federation_id,
+            subtotal,
+            platformFee,
+            taxAmount,
+            totalAmount,
+            status: existingDb.status,
+            issueDate: existingDb.issue_date,
+            dueDate: existingDb.due_date,
+            items: items.map((it) => ({ ...it, invoiceId: existingDb.id })),
+            createdAt: existingDb.created_at,
+            updatedAt: new Date().toISOString(),
+          };
+
+          this.mockInvoices.set(mapped.id, mapped);
+          this.mockInvoices.set(mapped.bookingId, mapped);
+          return mapped;
+        }
+      }
+    } catch (err) {
+      console.warn("Check existing invoice notice:", err);
+    }
+
+    const invoiceId = `inv-${Date.now()}`;
+    const invoiceNumber = `INV-${Date.now().toString().slice(-6)}`;
+    items.forEach((it) => (it.invoiceId = invoiceId));
 
     let dbInvoice: Invoice | null = null;
     try {

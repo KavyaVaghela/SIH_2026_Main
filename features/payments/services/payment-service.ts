@@ -76,6 +76,10 @@ export class PaymentService implements IPaymentService {
   async createPaymentRecord(payload: CreatePaymentPayload): Promise<PaymentRecord> {
     const existing = Array.from(this.mockPayments.values()).find((p) => p.bookingId === payload.bookingId);
     if (existing) {
+      if (existing.status === "PENDING" && payload.amount && existing.amount !== payload.amount) {
+        existing.amount = payload.amount;
+        if (payload.invoiceId) existing.invoiceId = payload.invoiceId;
+      }
       return existing;
     }
 
@@ -94,6 +98,17 @@ export class PaymentService implements IPaymentService {
 
         if (existingDb) {
           const mapped = mapDbPayment(existingDb);
+          if (mapped.status === "PENDING" && payload.amount && Number(mapped.amount) !== Number(payload.amount)) {
+            await (supabase.from("payments") as any)
+              .update({
+                amount: payload.amount,
+                invoice_id: isUuid(payload.invoiceId) ? payload.invoiceId : mapped.invoiceId,
+                updated_at: new Date().toISOString(),
+              })
+              .eq("id", mapped.id);
+            mapped.amount = payload.amount;
+            if (payload.invoiceId) mapped.invoiceId = payload.invoiceId;
+          }
           this.mockPayments.set(mapped.id, mapped);
           this.mockPayments.set(mapped.bookingId, mapped);
           return mapped;

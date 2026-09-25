@@ -33,7 +33,7 @@ export function PaymentSection({
     try {
       setLoading(true);
       let record = await paymentService.getBookingPayment(bookingId);
-      if (!record) {
+      if (!record || (record.status === "PENDING" && record.amount !== invoice.totalAmount)) {
         record = await paymentService.createPaymentRecord({
           invoiceId: invoice.id,
           bookingId,
@@ -203,8 +203,8 @@ export function PaymentSection({
                 <div><span className="text-slate-400">Service:</span> <strong>{booking?.serviceTitle || "Cooperative Trade Service"}</strong></div>
                 <div><span className="text-slate-400">Assigned Worker:</span> <strong>{booking?.workerName || "Ravi Patel"}</strong></div>
                 <div><span className="text-slate-400">Service Date:</span> <strong>{booking?.scheduledStartAt?.split("T")[0] || invoice.issueDate}</strong></div>
-                <div><span className="text-slate-400">System Estimate:</span> <strong className="font-mono">₹{Math.round(booking?.totalAmount || invoice.totalAmount)}</strong></div>
-                <div><span className="text-slate-400">Worker Estimate:</span> <strong className="font-mono">₹{Math.round(booking?.workerEstimateAmount || invoice.totalAmount)}</strong></div>
+                <div><span className="text-slate-400">System Estimate:</span> <strong className="font-mono">₹{Math.round(booking?.platformEstimate || booking?.totalAmount || invoice.totalAmount)}</strong></div>
+                <div><span className="text-slate-400">Worker Estimate:</span> <strong className="font-mono">₹{Math.round(booking?.workerEstimateAmount || booking?.platformEstimate || invoice.totalAmount)}</strong></div>
                 <div><span className="text-slate-400">Final Bill Total:</span> <strong className="font-mono text-emerald-700 dark:text-emerald-400">₹{Math.round(invoice.totalAmount)}</strong></div>
                 <div><span className="text-slate-400">Payment Reference ID:</span> <strong className="font-mono">{gatewayRef}</strong></div>
                 <div><span className="text-slate-400">Settlement Timestamp:</span> <strong>{paymentTimestamp}</strong></div>

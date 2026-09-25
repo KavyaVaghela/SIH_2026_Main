@@ -32,7 +32,7 @@ export async function GET(request: NextRequest) {
         .eq("id", bookingId)
         .maybeSingle();
 
-      if (b && ["SERVICE_COMPLETED", "BILL_GENERATED", "PAYMENT_PENDING", "PAYMENT_RECEIVED", "BOOKING_COMPLETED"].includes(b.status)) {
+      if (b) {
         const subtotal = Number(b.total_amount) || 500;
         const platformFee = Math.round(subtotal * 0.05 * 100) / 100;
         const taxAmount = 0;
@@ -106,6 +106,26 @@ export async function POST(request: NextRequest) {
 
     const supabase = createAdminClient();
 
+    const lineItems = (items && items.length > 0)
+      ? items
+      : [{ description: "Standard Trade Service Labor", quantity: 1, unitPrice: 500 }];
+
+    // Validate line items
+    for (const it of lineItems) {
+      if (Number(it.quantity) <= 0 || Number(it.unitPrice) < 0) {
+        return NextResponse.json({ error: "Item quantity must be positive and unit price cannot be negative" }, { status: 400 });
+      }
+    }
+
+    const subtotal = lineItems.reduce(
+      (sum: number, it: { quantity: number; unitPrice: number }) => sum + Number(it.quantity) * Number(it.unitPrice),
+      0
+    );
+    const platformFee = Math.round(subtotal * 0.05 * 100) / 100;
+    const taxAmount = 0;
+    const discount = Number(discountAmount) || 0;
+    const totalAmount = Math.max(0, Math.round((subtotal - discount) * 100) / 100);
+
     // Check if invoice already exists for this booking
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const { data: existing } = await (supabase.from("invoices") as any)
@@ -114,6 +134,45 @@ export async function POST(request: NextRequest) {
       .maybeSingle();
 
     if (existing) {
+      // If items were provided in the POST request, update the existing invoice with the new itemized bill!
+      if (items && items.length > 0) {
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        const { data: updatedInv, error: upErr } = await (supabase.from("invoices") as any)
+          .update({
+            subtotal,
+            platform_fee: platformFee,
+            tax_amount: taxAmount,
+            total_amount: totalAmount,
+            updated_at: new Date().toISOString(),
+          })
+          .eq("id", existing.id)
+          .select()
+          .single();
+
+        if (!upErr && updatedInv) {
+          // Replace old items with new line items
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          await (supabase.from("invoice_items") as any)
+            .delete()
+            .eq("invoice_id", existing.id);
+
+          const itemRows = lineItems.map((it: { description: string; quantity: number; unitPrice: number }) => ({
+            invoice_id: existing.id,
+            description: it.description,
+            quantity: Number(it.quantity),
+            unit_price: Number(it.unitPrice),
+            amount: Math.round(Number(it.quantity) * Number(it.unitPrice) * 100) / 100,
+          }));
+
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          const { data: insertedItems } = await (supabase.from("invoice_items") as any)
+            .insert(itemRows)
+            .select();
+
+          updatedInv.invoice_items = insertedItems || itemRows;
+          return NextResponse.json({ invoice: mapDbInvoice(updatedInv) });
+        }
+      }
       return NextResponse.json({ invoice: mapDbInvoice(existing) });
     }
 
@@ -138,26 +197,6 @@ export async function POST(request: NextRequest) {
 
     targetCustomerId = targetCustomerId || "b0ef9604-54c8-4ad1-9a7a-c353cfd339ef";
     targetFederationId = targetFederationId || "b765df3b-c418-4a15-b79f-3cbc09e475dc";
-
-    const lineItems = (items && items.length > 0)
-      ? items
-      : [{ description: "Standard Trade Service Labor", quantity: 1, unitPrice: 500 }];
-
-    // Validate line items
-    for (const it of lineItems) {
-      if (Number(it.quantity) <= 0 || Number(it.unitPrice) < 0) {
-        return NextResponse.json({ error: "Item quantity must be positive and unit price cannot be negative" }, { status: 400 });
-      }
-    }
-
-    const subtotal = lineItems.reduce(
-      (sum: number, it: { quantity: number; unitPrice: number }) => sum + Number(it.quantity) * Number(it.unitPrice),
-      0
-    );
-    const platformFee = Math.round(subtotal * 0.05 * 100) / 100;
-    const taxAmount = 0;
-    const discount = Number(discountAmount) || 0;
-    const totalAmount = Math.max(0, Math.round((subtotal - discount) * 100) / 100);
 
     const invoiceNumber = `INV-${Date.now().toString().slice(-6)}`;
     const issueDate = new Date().toISOString().split("T")[0];
