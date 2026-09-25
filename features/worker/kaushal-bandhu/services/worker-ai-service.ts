@@ -367,6 +367,34 @@ export async function buildWorkerAiContext(
   let regionCity = "Ahmedabad";
   let regionState = "Gujarat";
   let recentDemandCount = 0;
+  let workerRegisteredAddress = "";
+  let workerRegisteredArea = "";
+  let workerLat: number | null = null;
+  let workerLng: number | null = null;
+
+  try {
+    // Query actual registered address for this worker
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const { data: addr } = await (adminClient.from("addresses") as any)
+      .select("address_line1, address_line2, city, state, postal_code, latitude, longitude")
+      .eq("profile_id", workerProfileId)
+      .order("is_default", { ascending: false })
+      .limit(1)
+      .maybeSingle();
+
+    if (addr) {
+      workerRegisteredAddress = [addr.address_line1, addr.address_line2, addr.city, addr.postal_code]
+        .filter(Boolean)
+        .join(", ");
+      workerRegisteredArea = addr.address_line2 || addr.address_line1 || addr.city || "";
+      if (addr.city) regionCity = addr.city;
+      if (addr.state) regionState = addr.state;
+      if (addr.latitude) workerLat = Number(addr.latitude);
+      if (addr.longitude) workerLng = Number(addr.longitude);
+    }
+  } catch (err) {
+    console.warn("Notice: address lookup in buildWorkerAiContext:", err);
+  }
 
   try {
     if (worker?.federation_id) {
@@ -378,8 +406,8 @@ export async function buildWorkerAiContext(
 
       if (fed?.name) {
         regionName = fed.name;
-        if (fed.city) regionCity = fed.city;
-        if (fed.state) regionState = fed.state;
+        if (!workerRegisteredAddress && fed.city) regionCity = fed.city;
+        if (!workerRegisteredAddress && fed.state) regionState = fed.state;
       }
 
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -788,6 +816,10 @@ export async function buildWorkerAiContext(
       current_region: regionName,
       city: regionCity,
       state: regionState,
+      worker_address: workerRegisteredAddress || (regionCity ? `${regionCity}, ${regionState}` : "Ahmedabad, Gujarat"),
+      worker_area: workerRegisteredArea || regionCity || "Local Ward",
+      latitude: workerLat,
+      longitude: workerLng,
       demand_level: demandLevel,
       recent_requests_count: recentDemandCount,
       nearby_regions_insight: `Nearby cooperative clusters in ${regionState} share workforce balancing during peak project workloads.`,

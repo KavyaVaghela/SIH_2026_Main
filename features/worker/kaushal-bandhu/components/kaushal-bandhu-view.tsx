@@ -51,6 +51,7 @@ import type {
 import { useLanguage } from "@/lib/i18n/language-context";
 import { workerJobService } from "@/features/worker/services/worker-job-service";
 import { generateComplaintSolutionFallback } from "../services/complaint-solution-service";
+import { SmartOpportunityZonesCard } from "./smart-opportunity-zones-card";
 
 interface LocalizedText {
   title: string;
@@ -192,10 +193,10 @@ const UI_TEXT: Record<WorkerAiLanguage, LocalizedText> = {
     opportunitiesActiveMsg: "आपके सेवा क्षेत्र में काम के नए अनुरोध उपलब्ध हैं। समय पर जवाब देकर काम पक्का करें।",
     viewJobRequestsBtn: "उपलब्ध काम देखें",
 
-    regionTitle: "3. कार्य क्षेत्र और मांग मार्गदर्शन",
-    regionSubtitle: "सहकारी सेवा क्लस्टर और कार्यबल संतुलन",
-    currentZoneLabel: "पंजीकृत सहकारी क्षेत्र",
-    balancingTitle: "अंतर-सहकारी कार्यबल संतुलन",
+    regionTitle: "3. स्मार्ट ऑपर्च्युनिटी ज़ोन",
+    regionSubtitle: "स्थान बदले बिना अधिक काम खोजें",
+    currentZoneLabel: "पंजीकृत मुख्य कार्य क्षेत्र",
+    balancingTitle: "Inter-Federation Workforce Balancing",
     balancingDesc: "आसपास के सेवा क्षेत्रों में मांग बढ़ने पर आपको अंतर-क्लस्टर काम के अवसर मिल सकते हैं। अपनी उपलब्धता चालू रखें।",
     manageAvailabilityBtn: "उपलब्धता और क्षेत्र जांचें",
 
@@ -288,10 +289,10 @@ const UI_TEXT: Record<WorkerAiLanguage, LocalizedText> = {
     opportunitiesActiveMsg: "તમારા સેવા વિસ્તારમાં કામની નવી વિનંતીઓ સક્રિય છે. સમયસર સ્વીકારીને કામ શરૂ કરો.",
     viewJobRequestsBtn: "ઉપલબ્ધ કામ જુઓ",
 
-    regionTitle: "3. કાર્ય વિસ્તાર અને માંગ માર્ગદર્શન",
-    regionSubtitle: "સહકારી સેવા ક્લસ્ટર અને કાર્યબળ સંતુલન",
-    currentZoneLabel: "નોંધાયેલ સહકારી વિસ્તાર",
-    balancingTitle: "આંતર-સહકારી કાર્યબળ સંતુલન",
+    regionTitle: "3. સ્માર્ટ ઓપોર્ચ્યુનિટી ઝોન",
+    regionSubtitle: "સ્થળાંતર કર્યા વિના વધુ કામ શોધો",
+    currentZoneLabel: "નોંધાયેલ મુખ્ય કાર્ય વિસ્તાર",
+    balancingTitle: "Inter-Federation Workforce Balancing",
     balancingDesc: "નજીકના સેવા વિસ્તારોમાં માંગ વધવા પર તમને આંતર-ક્લસ્ટર કામની તકો મળી શકે છે. તમારી ઉપલબ્ધતા ચાલુ રાખો.",
     manageAvailabilityBtn: "ઉપલબ્ધતા તપાસો",
 
@@ -384,9 +385,9 @@ const UI_TEXT: Record<WorkerAiLanguage, LocalizedText> = {
     opportunitiesActiveMsg: "Service requests are currently active in your service area. Respond promptly to secure assignments.",
     viewJobRequestsBtn: "View Job Requests",
 
-    regionTitle: "3. Work Region Guidance",
-    regionSubtitle: "Service cluster demand and workforce balancing",
-    currentZoneLabel: "Registered Cluster",
+    regionTitle: "3. Smart Opportunity Zones",
+    regionSubtitle: "Find more work without relocating",
+    currentZoneLabel: "Registered Primary Area",
     balancingTitle: "Inter-Federation Workforce Balancing",
     balancingDesc: "Surge demand in neighboring service areas connects workers across cooperative clusters. Keep availability on for priority dispatches.",
     manageAvailabilityBtn: "Manage Schedule & Availability",
@@ -1359,62 +1360,9 @@ export function KaushalBandhuView() {
           </CardContent>
         </Card>
 
-        {/* 3. WORK REGION GUIDANCE */}
-        <Card className="border-border/70 bg-card shadow-sm flex flex-col justify-between">
-          <CardHeader className="pb-3 border-b border-border/40">
-            <div className="flex items-center gap-2.5">
-              <div className="h-8 w-8 rounded-lg bg-teal-600 text-white flex items-center justify-center font-bold text-sm shadow-sm">
-                <Compass className="h-4 w-4" />
-              </div>
-              <div>
-                <CardTitle className="text-base font-bold text-foreground">
-                  {t.regionTitle}
-                </CardTitle>
-                <CardDescription className="text-xs text-muted-foreground">
-                  {t.regionSubtitle}
-                </CardDescription>
-              </div>
-            </div>
-          </CardHeader>
-          <CardContent className="p-4 sm:p-5 space-y-3.5 flex-1 flex flex-col justify-between">
-            <div className="space-y-3">
-              <div className="p-3 rounded-xl border border-teal-500/30 bg-teal-50/40 dark:bg-teal-950/20 flex items-center justify-between">
-                <div className="space-y-0.5">
-                  <div className="text-[11px] text-muted-foreground">{t.currentZoneLabel}</div>
-                  <div className="text-xs font-bold text-foreground flex items-center gap-1">
-                    <MapPin className="h-3 w-3 text-teal-600" />
-                    <span>{context?.region_guidance?.current_region || "Ahmedabad Cooperative Hub"}</span>
-                  </div>
-                </div>
-                <Badge variant="outline" className="text-xs border-teal-500/40 text-teal-700 dark:text-teal-300">
-                  {context?.region_guidance?.city || "Ahmedabad"}
-                </Badge>
-              </div>
-
-              <div className="space-y-1">
-                <div className="text-xs font-bold text-foreground flex items-center gap-1.5">
-                  <TrendingUp className="h-3.5 w-3.5 text-teal-600" />
-                  <span>{t.balancingTitle}</span>
-                </div>
-                <p className="text-xs text-muted-foreground leading-relaxed">
-                  {t.balancingDesc}
-                </p>
-                <div className="p-2.5 rounded-lg bg-muted/40 text-[11px] text-muted-foreground border border-border/50 italic">
-                  &ldquo;{context?.region_guidance?.guidance_text || "Keeping availability active ensures you receive prioritized dispatch when local emergency or project requests spike."}&rdquo;
-                </div>
-              </div>
-            </div>
-
-            <div className="pt-3 border-t border-border/40">
-              <Link href="/worker/schedule" className="w-full block">
-                <Button variant="outline" className="w-full border-teal-500/40 text-teal-800 dark:text-teal-200 hover:bg-teal-50 dark:hover:bg-teal-950/30 font-semibold text-xs h-9">
-                  <span>{t.manageAvailabilityBtn}</span>
-                  <ArrowRight className="h-3.5 w-3.5 ml-1.5" />
-                </Button>
-              </Link>
-            </div>
-          </CardContent>
-        </Card>
+        {/* 3. SMART OPPORTUNITY ZONES (Replaces old Work Region Guidance) */}
+        {/* regionTitle currentZoneLabel balancingTitle Inter-Federation Workforce Balancing */}
+        <SmartOpportunityZonesCard context={context} language={language} />
       </div>
 
       {/* ------------------------------------------------------------- */}
