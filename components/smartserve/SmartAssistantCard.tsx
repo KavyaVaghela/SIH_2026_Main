@@ -3,6 +3,7 @@
 import React, { useState } from "react";
 import { Sparkles, RefreshCw, AlertCircle } from "lucide-react";
 import { ImageUploadBox } from "./ImageUploadBox";
+import { useTranslation } from "@/lib/i18n";
 
 interface SmartAssistantCardProps {
   onAnalyze: (text: string, imageFile: File | null, imagePreview: string | null) => void;
@@ -17,6 +18,7 @@ export const SmartAssistantCard: React.FC<SmartAssistantCardProps> = ({
   onReset,
   hasResult,
 }) => {
+  const { t } = useTranslation();
   const [inputText, setInputText] = useState("");
   const [imageFile, setImageFile] = useState<File | null>(null);
   const [imagePreview, setImagePreview] = useState<string | null>(null);
@@ -54,10 +56,10 @@ export const SmartAssistantCard: React.FC<SmartAssistantCardProps> = ({
           </div>
           <div>
             <h2 className="text-xl font-bold tracking-tight text-[#17233C]">
-              Find the Right Service with AI
+              {t("smartserve.title", "Find the Right Service with AI")}
             </h2>
             <p className="text-xs font-medium text-[#5F718A]">
-              Smart assistant matches natural language descriptions to verified trades
+              {t("smartserve.subtitle", "Smart assistant matches natural language descriptions to verified trades")}
             </p>
           </div>
         </div>
@@ -69,7 +71,7 @@ export const SmartAssistantCard: React.FC<SmartAssistantCardProps> = ({
             className="flex items-center gap-1.5 rounded-xl border border-[#075E43]/30 bg-[#E8F8F2]/60 px-3 py-1.5 text-xs font-semibold text-[#17233C] hover:bg-[#E8F8F2] transition-colors"
           >
             <RefreshCw className="h-3.5 w-3.5 text-[#075E43]" />
-            <span>Reset Analysis</span>
+            <span>{t("smartserve.resetBtn", "Reset Analysis")}</span>
           </button>
         )}
       </div>
@@ -79,7 +81,7 @@ export const SmartAssistantCard: React.FC<SmartAssistantCardProps> = ({
         <div>
           <div className="flex justify-between items-center mb-1.5">
             <label className="block text-xs font-bold text-[#17233C]">
-              Describe Household Problem
+              {t("smartserve.problemLabel", "Describe Household Problem")}
             </label>
             <span className={`text-[11px] font-semibold ${inputText.length > 1000 ? 'text-red-600' : 'text-[#5F718A]'}`}>
               {inputText.length} / 1000
@@ -93,7 +95,7 @@ export const SmartAssistantCard: React.FC<SmartAssistantCardProps> = ({
               setInputText(e.target.value);
               if (errorMsg) setErrorMsg(null);
             }}
-            placeholder="Example: My AC is not cooling, or my kitchen sink pipe is leaking water..."
+            placeholder={t("smartserve.problemPlaceholder", "Example: My AC is not cooling, or my kitchen sink pipe is leaking water...")}
             className="w-full rounded-2xl border-2 border-[#075E43]/30 bg-[#F8FAFB] p-4 text-sm font-medium text-[#17233C] placeholder-[#5F718A]/60 transition-all focus:border-[#075E43] focus:bg-white focus:outline-none focus:ring-4 focus:ring-[#075E43]/15"
           />
         </div>
@@ -125,7 +127,7 @@ export const SmartAssistantCard: React.FC<SmartAssistantCardProps> = ({
               onClick={handleClearAll}
               className="rounded-xl px-4 py-2.5 text-xs font-semibold text-[#5F718A] hover:text-[#17233C] hover:bg-[#E8F8F2] transition-colors"
             >
-              Clear Inputs
+              {t("smartserve.clearBtn", "Clear Inputs")}
             </button>
           ) : null}
 
@@ -137,12 +139,12 @@ export const SmartAssistantCard: React.FC<SmartAssistantCardProps> = ({
             {isLoading ? (
               <>
                 <RefreshCw className="h-4 w-4 animate-spin text-white" />
-                <span>Analyzing Problem...</span>
+                <span>{t("smartserve.analyzingBtn", "Analyzing Problem...")}</span>
               </>
             ) : (
               <>
                 <Sparkles className="h-4 w-4" />
-                <span>Analyze Problem</span>
+                <span>{t("smartserve.analyzeBtn", "Analyze Problem")}</span>
               </>
             )}
           </button>

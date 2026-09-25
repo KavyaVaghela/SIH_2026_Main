@@ -12,49 +12,51 @@ import {
   Car,
 } from "lucide-react";
 import { useAuthModal } from "./landing-auth-modal";
+import { useTranslation } from "@/lib/i18n";
 
 export function LandingServices() {
   const { openAuthModal } = useAuthModal();
+  const { t } = useTranslation();
 
   const categories = [
     {
       id: "cat-electrical",
-      name: "Electrical & Wiring",
+      name: t("landing.services.catElectrical", "Electrical & Wiring"),
       icon: Zap,
     },
     {
       id: "cat-plumbing",
-      name: "Plumbing & Drainage",
+      name: t("landing.services.catPlumbing", "Plumbing & Drainage"),
       icon: Droplets,
     },
     {
       id: "cat-carpentry",
-      name: "Carpentry & Woodwork",
+      name: t("landing.services.catCarpentry", "Carpentry & Woodwork"),
       icon: Hammer,
     },
     {
       id: "cat-painting",
-      name: "Wall Painting",
+      name: t("landing.services.catPainting", "Wall Painting"),
       icon: Paintbrush,
     },
     {
       id: "cat-cleaning",
-      name: "Deep Cleaning",
+      name: t("landing.services.catCleaning", "Deep Cleaning"),
       icon: Sparkles,
     },
     {
       id: "cat-appliance",
-      name: "Appliance Servicing",
+      name: t("landing.services.catAppliance", "Appliance Servicing"),
       icon: Tv,
     },
     {
       id: "cat-gardening",
-      name: "Gardening & Lawn",
+      name: t("landing.services.catGardening", "Gardening & Lawn"),
       icon: TreePine,
     },
     {
       id: "cat-driver",
-      name: "Driver & Chauffeur",
+      name: t("landing.services.catDriver", "Driver & Chauffeur"),
       icon: Car,
     },
   ];
@@ -65,13 +67,13 @@ export function LandingServices() {
         {/* Section Heading */}
         <div className="text-center max-w-2xl mx-auto mb-4 sm:mb-6">
           <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-[#eaf5ee] text-[#004525] text-xs font-bold border border-[#8ed5a5] mb-1.5">
-            <span>Essential Trades</span>
+            <span>{t("landing.services.eyebrow", "Essential Trades")}</span>
           </div>
           <h2 className="text-2xl sm:text-3xl font-extrabold tracking-tight text-[#111827]">
-            Services for Everyday Needs
+            {t("landing.services.title", "Services for Everyday Needs")}
           </h2>
           <p className="mt-1 text-xs sm:text-sm text-[#374151]">
-            Find skilled help for essential household and community services across 8 verified trade categories.
+            {t("landing.services.subtitle", "Find skilled help for essential household and community services across 8 verified trade categories.")}
           </p>
         </div>
 
@@ -105,10 +107,10 @@ export function LandingServices() {
         <div className="mt-5 sm:mt-6 p-3 sm:p-3.5 rounded-xl bg-[#eaf5ee] border border-[#8ed5a5] flex flex-col sm:flex-row items-center justify-between gap-3">
           <div>
             <h4 className="font-bold text-xs sm:text-sm text-[#004525]">
-              Looking for a specific household service?
+              {t("landing.services.bannerTitle", "Looking for a specific household service?")}
             </h4>
             <p className="text-xs text-[#374151] mt-0.5">
-              Submit your request with required task details to receive itemized estimates from local cooperative workers.
+              {t("landing.services.bannerDesc", "Submit your request with required task details to receive itemized estimates from local cooperative workers.")}
             </p>
           </div>
           <button
@@ -117,7 +119,7 @@ export function LandingServices() {
             id="services-book-all-btn"
             className="landing-btn-primary px-4 py-2 text-xs font-bold whitespace-nowrap cursor-pointer shrink-0"
           >
-            Request a Service
+            {t("landing.services.bannerCta", "Request a Service")}
           </button>
         </div>
       </div>

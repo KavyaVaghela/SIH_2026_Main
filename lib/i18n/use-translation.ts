@@ -1,6 +1,6 @@
 "use client";
 
-import { useLanguage } from "./language-context";
+import { useLanguage, type TranslationParams } from "./language-context";
 import { LOCALES, DEFAULT_LOCALE, type SupportedLocale } from "./config";
 
 /**
@@ -13,7 +13,8 @@ export function useTranslation() {
   const locale = language?.locale || DEFAULT_LOCALE;
   const setLocale = language?.setLocale || (() => {});
   const supportedLocales = language?.supportedLocales || (Object.keys(LOCALES) as SupportedLocale[]);
-  const t = language?.t || ((keyPath: string, fallback?: string) => {
+  const t = language?.t || ((keyPath: string, paramsOrFallback?: string | TranslationParams, maybeFallback?: string) => {
+    const fallback = typeof paramsOrFallback === "string" ? paramsOrFallback : maybeFallback;
     const dict = LOCALES[DEFAULT_LOCALE].dict;
     const parts = keyPath.split(".");
     let result: unknown = dict;
