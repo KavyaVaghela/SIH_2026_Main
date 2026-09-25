@@ -424,21 +424,32 @@ function mapDbBooking(b: any) {
   const rawTotal = b.total_amount !== undefined && b.total_amount !== null ? Number(b.total_amount) : NaN;
   const basePrice = b.services?.base_price !== undefined && b.services?.base_price !== null ? Number(b.services.base_price) : NaN;
 
-  let totalAmount = 0;
-  if (!isNaN(rawTotal) && rawTotal > 0) {
-    totalAmount = rawTotal;
-  } else if (!isNaN(basePrice) && basePrice > 0) {
-    totalAmount = basePrice;
-  } else if (!isNaN(rawTotal)) {
-    totalAmount = rawTotal;
+  let platformEstimate: number | null = Number(b.platform_estimate) || null;
+  let workerEstimate: number | null = Number(b.worker_estimate_amount) || null;
+
+  if (typeof b.problem_description === "string") {
+    if (!platformEstimate) {
+      const pMatch = b.problem_description.match(/\[PLATFORM_ESTIMATE:\s*(\d+(\.\d+)?)\]/i);
+      if (pMatch) platformEstimate = Number(pMatch[1]);
+    }
+    if (!workerEstimate) {
+      const wMatch = b.problem_description.match(/\[WORKER_ESTIMATE:\s*(\d+(\.\d+)?)\]/i);
+      if (wMatch) workerEstimate = Number(wMatch[1]);
+    }
   }
+
+  const finalPlatformEstimate: number = platformEstimate && platformEstimate > 0
+    ? platformEstimate
+    : (!isNaN(basePrice) && basePrice > 0
+        ? basePrice
+        : (!isNaN(rawTotal) && rawTotal > 0 ? rawTotal : 450));
 
   const rawEarnings = b.worker_earnings !== undefined && b.worker_earnings !== null ? Number(b.worker_earnings) : NaN;
   let workerEarnings = 0;
   if (!isNaN(rawEarnings) && rawEarnings > 0) {
     workerEarnings = rawEarnings;
-  } else if (totalAmount > 0) {
-    workerEarnings = Math.round(totalAmount * 0.85);
+  } else if (finalPlatformEstimate > 0) {
+    workerEarnings = Math.round(finalPlatformEstimate * 0.95);
   }
 
   return {
@@ -467,14 +478,15 @@ function mapDbBooking(b: any) {
     problemPhotoUrl: b.problem_photo_url || problemPhotoUrl || null,
     otpCode: b.otp_code || "940218",
     isEmergency,
-    totalAmount,
-    estimatedAmount: totalAmount > 0 ? totalAmount : (Number(basePrice) || 0),
-    workerEstimateAmount: totalAmount > 0 ? totalAmount : null,
-    workerEstimateLabor: totalAmount > 0 ? Math.round(totalAmount * 0.7) : null,
-    workerEstimateMaterials: totalAmount > 0 ? Math.round(totalAmount * 0.3) : null,
+    totalAmount: finalPlatformEstimate,
+    platformEstimate: finalPlatformEstimate,
+    estimatedAmount: finalPlatformEstimate,
+    workerEstimateAmount: workerEstimate,
+    workerEstimateLabor: workerEstimate ? Math.round(workerEstimate * 0.7) : null,
+    workerEstimateMaterials: workerEstimate ? Math.round(workerEstimate * 0.3) : null,
     workerEarnings,
     estimatedPayout: workerEarnings,
-    platformFee: Number(b.platform_fee) || (totalAmount > 0 ? Math.round(totalAmount * 0.05) : 0),
+    platformFee: Number(b.platform_fee) || Math.round(finalPlatformEstimate * 0.05),
     actualStartAt: b.actual_start_at || null,
     actualEndAt: b.actual_end_at || null,
     createdAt: b.created_at,

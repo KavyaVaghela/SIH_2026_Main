@@ -357,7 +357,10 @@ export async function POST(request: NextRequest) {
         targetWorkerId = "59eca4ff-a589-4363-ad76-24a4ff5b6e2e"; // Ravi Patel default
       }
 
-      const problemDescription = createPayload.problemDescription || "Service request initiated by customer";
+      let problemDescription = createPayload.problemDescription || "Service request initiated by customer";
+      if (!problemDescription.includes("[PLATFORM_ESTIMATE:")) {
+        problemDescription = `[PLATFORM_ESTIMATE: ${totalAmount}] ${problemDescription}`.trim();
+      }
 
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const insertData: Record<string, any> = {
@@ -468,6 +471,29 @@ function mapDbBooking(b: any, fallbackPriority?: string | null) {
     }
   }
 
+  let platformEstimate: number | null = Number(b.platform_estimate) || null;
+  let workerEstimate: number | null = Number(b.worker_estimate_amount) || null;
+
+  if (typeof b.problem_description === "string") {
+    if (!platformEstimate) {
+      const pMatch = b.problem_description.match(/\[PLATFORM_ESTIMATE:\s*(\d+(\.\d+)?)\]/i);
+      if (pMatch) platformEstimate = Number(pMatch[1]);
+    }
+    if (!workerEstimate) {
+      const wMatch = b.problem_description.match(/\[WORKER_ESTIMATE:\s*(\d+(\.\d+)?)\]/i);
+      if (wMatch) workerEstimate = Number(wMatch[1]);
+    }
+  }
+
+  if (!platformEstimate) {
+    const srvBase = Number(b.services?.base_price);
+    if (!isNaN(srvBase) && srvBase > 0) {
+      platformEstimate = srvBase;
+    } else {
+      platformEstimate = Number(b.total_amount) || 450;
+    }
+  }
+
   return {
     id: b.id,
     bookingNumber: b.booking_number,
@@ -493,10 +519,14 @@ function mapDbBooking(b: any, fallbackPriority?: string | null) {
     scheduledEndAt: b.scheduled_end_at,
     actualStartAt: b.actual_start_at || null,
     actualEndAt: b.actual_end_at || null,
-    totalAmount: Number(b.total_amount) || 500,
-    platformFee: Number(b.platform_fee) || 25,
-    workerEarnings: Number(b.worker_earnings) || 425,
-    workerEstimateAmount: Number(b.total_amount) || 500,
+    totalAmount: platformEstimate,
+    platformEstimate,
+    platformFee: Number(b.platform_fee) || Math.round(platformEstimate * 0.05),
+    workerEarnings: Number(b.worker_earnings) || Math.round(platformEstimate * 0.95),
+    workerEstimateAmount: workerEstimate,
+    workerEstimateLabor: b.worker_estimate_labor || (workerEstimate ? Math.round(workerEstimate * 0.7) : null),
+    workerEstimateMaterials: b.worker_estimate_materials || (workerEstimate ? Math.round(workerEstimate * 0.3) : null),
+    workerEstimateNotes: b.worker_estimate_notes || null,
     createdAt: b.created_at,
     updatedAt: b.updated_at,
   };

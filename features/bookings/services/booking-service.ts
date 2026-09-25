@@ -22,6 +22,7 @@ export interface Booking {
   actualStartAt?: string | null;
   actualEndAt?: string | null;
   totalAmount: number; // Initial Platform Estimate
+  platformEstimate?: number | null; // Explicit Original Platform Estimate
   platformFee: number;
   workerEarnings: number;
 
@@ -196,9 +197,11 @@ export class BookingService implements IBookingService {
     let dbBooking: Booking | null = null;
     try {
       const supabase = await getSupabase();
-      const problemDesc = payload.priority
-        ? `[PRIORITY: ${payload.priority}] ${payload.problemDescription || ""}`.trim()
-        : (payload.problemDescription || null);
+      let problemDesc = payload.problemDescription || "";
+      if (payload.priority) {
+        problemDesc = `[PRIORITY: ${payload.priority}] ${problemDesc}`.trim();
+      }
+      problemDesc = `[PLATFORM_ESTIMATE: ${payload.totalAmount}] ${problemDesc}`.trim();
 
       const insertPayload: Record<string, any> = {
         booking_number: bookingNumber,
@@ -255,6 +258,7 @@ export class BookingService implements IBookingService {
           scheduledStartAt: data.scheduled_start_at,
           scheduledEndAt: data.scheduled_end_at,
           totalAmount: data.total_amount,
+          platformEstimate: payload.totalAmount,
           platformFee: data.platform_fee,
           workerEarnings: data.worker_earnings,
           serviceTitle: payload.serviceTitle,
@@ -298,6 +302,7 @@ export class BookingService implements IBookingService {
       scheduledStartAt: payload.scheduledStartAt,
       scheduledEndAt: payload.scheduledEndAt,
       totalAmount: payload.totalAmount,
+      platformEstimate: payload.totalAmount,
       platformFee,
       workerEarnings,
       serviceTitle: payload.serviceTitle,
@@ -359,11 +364,14 @@ export class BookingService implements IBookingService {
               const cached = this.mockBookings.get(bookingId);
               const mapped: Booking = {
                 ...json.booking,
-                workerEstimateAmount: cached?.workerEstimateAmount || json.booking.totalAmount,
-                workerEstimateLabor: cached?.workerEstimateLabor,
-                workerEstimateMaterials: cached?.workerEstimateMaterials,
-                workerEstimateNotes: cached?.workerEstimateNotes,
-                workerEstimateSubmittedAt: cached?.workerEstimateSubmittedAt,
+                platformEstimate: json.booking.platformEstimate || cached?.platformEstimate || json.booking.totalAmount,
+                workerEstimateAmount: json.booking.workerEstimateAmount !== undefined && json.booking.workerEstimateAmount !== null
+                  ? json.booking.workerEstimateAmount
+                  : (cached?.workerEstimateAmount || null),
+                workerEstimateLabor: cached?.workerEstimateLabor || json.booking.workerEstimateLabor,
+                workerEstimateMaterials: cached?.workerEstimateMaterials || json.booking.workerEstimateMaterials,
+                workerEstimateNotes: cached?.workerEstimateNotes || json.booking.workerEstimateNotes,
+                workerEstimateSubmittedAt: cached?.workerEstimateSubmittedAt || json.booking.workerEstimateSubmittedAt,
               };
               this.mockBookings.set(bookingId, mapped);
               return mapped;
@@ -384,6 +392,23 @@ export class BookingService implements IBookingService {
 
         if (!error && data) {
           const cached = this.mockBookings.get(bookingId);
+          let platformEstimate = cached?.platformEstimate || Number(data.platform_estimate) || null;
+          let workerEstimate = cached?.workerEstimateAmount || Number(data.worker_estimate_amount) || null;
+
+          if (typeof data.problem_description === "string") {
+            if (!platformEstimate) {
+              const pMatch = data.problem_description.match(/\[PLATFORM_ESTIMATE:\s*(\d+(\.\d+)?)\]/i);
+              if (pMatch) platformEstimate = Number(pMatch[1]);
+            }
+            if (!workerEstimate) {
+              const wMatch = data.problem_description.match(/\[WORKER_ESTIMATE:\s*(\d+(\.\d+)?)\]/i);
+              if (wMatch) workerEstimate = Number(wMatch[1]);
+            }
+          }
+          if (!platformEstimate) {
+            platformEstimate = cached?.totalAmount || Number(data.total_amount) || 450;
+          }
+
           const mapped: Booking = {
             id: data.id,
             bookingNumber: data.booking_number,
@@ -400,7 +425,8 @@ export class BookingService implements IBookingService {
             scheduledEndAt: data.scheduled_end_at,
             actualStartAt: data.actual_start_at,
             actualEndAt: data.actual_end_at,
-            totalAmount: data.total_amount,
+            totalAmount: Number(data.total_amount) || platformEstimate,
+            platformEstimate,
             platformFee: data.platform_fee,
             workerEarnings: data.worker_earnings,
             serviceTitle: cached?.serviceTitle || "Trade Service",
@@ -410,9 +436,9 @@ export class BookingService implements IBookingService {
             workerPhone: cached?.workerPhone,
             cooperativeName: cached?.cooperativeName || "Cooperative Federation",
             addressText: cached?.addressText,
-            workerEstimateAmount: cached?.workerEstimateAmount || data.total_amount,
-            workerEstimateLabor: cached?.workerEstimateLabor,
-            workerEstimateMaterials: cached?.workerEstimateMaterials,
+            workerEstimateAmount: workerEstimate,
+            workerEstimateLabor: cached?.workerEstimateLabor || (workerEstimate ? Math.round(workerEstimate * 0.7) : null),
+            workerEstimateMaterials: cached?.workerEstimateMaterials || (workerEstimate ? Math.round(workerEstimate * 0.3) : null),
             workerEstimateNotes: cached?.workerEstimateNotes,
             workerEstimateSubmittedAt: cached?.workerEstimateSubmittedAt,
             createdAt: data.created_at,
@@ -479,6 +505,23 @@ export class BookingService implements IBookingService {
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         const dbBookings: Booking[] = data.map((b: any) => {
           const cached = this.mockBookings.get(b.id);
+          let platformEstimate = cached?.platformEstimate || Number(b.platform_estimate) || null;
+          let workerEstimate = cached?.workerEstimateAmount || Number(b.worker_estimate_amount) || null;
+
+          if (typeof b.problem_description === "string") {
+            if (!platformEstimate) {
+              const pMatch = b.problem_description.match(/\[PLATFORM_ESTIMATE:\s*(\d+(\.\d+)?)\]/i);
+              if (pMatch) platformEstimate = Number(pMatch[1]);
+            }
+            if (!workerEstimate) {
+              const wMatch = b.problem_description.match(/\[WORKER_ESTIMATE:\s*(\d+(\.\d+)?)\]/i);
+              if (wMatch) workerEstimate = Number(wMatch[1]);
+            }
+          }
+          if (!platformEstimate) {
+            platformEstimate = cached?.totalAmount || Number(b.total_amount) || 450;
+          }
+
           return {
             id: b.id,
             bookingNumber: b.booking_number,
@@ -495,9 +538,13 @@ export class BookingService implements IBookingService {
             scheduledEndAt: b.scheduled_end_at,
             actualStartAt: b.actual_start_at,
             actualEndAt: b.actual_end_at,
-            totalAmount: b.total_amount,
+            totalAmount: Number(b.total_amount) || platformEstimate,
+            platformEstimate,
             platformFee: b.platform_fee,
             workerEarnings: b.worker_earnings,
+            workerEstimateAmount: workerEstimate,
+            workerEstimateLabor: cached?.workerEstimateLabor || (workerEstimate ? Math.round(workerEstimate * 0.7) : null),
+            workerEstimateMaterials: cached?.workerEstimateMaterials || (workerEstimate ? Math.round(workerEstimate * 0.3) : null),
             serviceTitle: b.services?.title || cached?.serviceTitle || "Trade Service",
             categoryName: b.services?.service_categories?.name || cached?.categoryName || "General Trade",
             workerName: cached?.workerName || "Ravi Patel",
@@ -599,9 +646,10 @@ export class BookingService implements IBookingService {
             actualStartAt: b.actual_start_at,
             actualEndAt: b.actual_end_at,
             totalAmount: b.total_amount,
+            platformEstimate: cached?.platformEstimate || Number(b.platform_estimate) || b.total_amount,
             platformFee: b.platform_fee,
             workerEarnings: b.worker_earnings,
-            workerEstimateAmount: b.worker_estimate_amount || cached?.workerEstimateAmount || b.total_amount,
+            workerEstimateAmount: b.worker_estimate_amount || cached?.workerEstimateAmount || null,
             workerEstimateLabor: b.worker_estimate_labor || cached?.workerEstimateLabor,
             workerEstimateMaterials: b.worker_estimate_materials || cached?.workerEstimateMaterials,
             workerEstimateNotes: b.worker_estimate_notes || cached?.workerEstimateNotes,
@@ -722,6 +770,9 @@ export class BookingService implements IBookingService {
       );
     }
 
+    const platformEst = booking.platformEstimate || booking.totalAmount || 450;
+    updated.platformEstimate = platformEst;
+    updated.totalAmount = platformEst; // Preserve original platform estimate
     updated.workerEstimateAmount = payload.totalAmount;
     updated.workerEstimateLabor = payload.laborAmount || Math.round(payload.totalAmount * 0.7);
     updated.workerEstimateMaterials = payload.materialAmount || Math.round(payload.totalAmount * 0.3);
@@ -731,19 +782,40 @@ export class BookingService implements IBookingService {
     // Persist updated estimate amounts to Supabase bookings table
     try {
       const supabase = await getSupabase();
-      const platformFee = Math.round(payload.totalAmount * 0.05 * 100) / 100;
-      const workerEarnings = payload.totalAmount - platformFee;
+      let updatedDesc = booking.problemDescription || "";
+      if (!updatedDesc.includes("[PLATFORM_ESTIMATE:")) {
+        updatedDesc = `[PLATFORM_ESTIMATE: ${platformEst}] ${updatedDesc}`.trim();
+      }
+      if (updatedDesc.includes("[WORKER_ESTIMATE:")) {
+        updatedDesc = updatedDesc.replace(/\[WORKER_ESTIMATE:\s*\d+(\.\d+)?\]/g, `[WORKER_ESTIMATE: ${payload.totalAmount}]`);
+      } else {
+        updatedDesc = `[WORKER_ESTIMATE: ${payload.totalAmount}] ${updatedDesc}`.trim();
+      }
+      updated.problemDescription = updatedDesc;
 
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      await (supabase.from("bookings") as any)
-        .update({
-          status: "CUSTOMER_CONFIRMATION_PENDING",
-          total_amount: payload.totalAmount,
-          platform_fee: platformFee,
-          worker_earnings: workerEarnings,
-          updated_at: new Date().toISOString(),
-        })
-        .eq("id", payload.bookingId);
+      const updateObj: Record<string, any> = {
+        status: "CUSTOMER_CONFIRMATION_PENDING",
+        problem_description: updatedDesc,
+        worker_estimate_amount: payload.totalAmount,
+        worker_estimate_labor: updated.workerEstimateLabor,
+        worker_estimate_materials: updated.workerEstimateMaterials,
+        updated_at: new Date().toISOString(),
+      };
+
+      try {
+        await (supabase.from("bookings") as any)
+          .update(updateObj)
+          .eq("id", payload.bookingId);
+      } catch {
+        // Fallback without new columns if schema doesn't have worker_estimate_amount
+        await (supabase.from("bookings") as any)
+          .update({
+            status: "CUSTOMER_CONFIRMATION_PENDING",
+            problem_description: updatedDesc,
+            updated_at: new Date().toISOString(),
+          })
+          .eq("id", payload.bookingId);
+      }
     } catch (err) {
       console.warn("DB submitWorkerEstimate update notice:", err);
     }

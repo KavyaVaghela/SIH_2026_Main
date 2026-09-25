@@ -11,7 +11,7 @@ export interface EstimateComparisonCardProps {
 }
 
 export function EstimateComparisonCard({ booking }: EstimateComparisonCardProps) {
-  const initialEstimate = Math.round(booking.totalAmount);
+  const initialEstimate = Math.round(booking.platformEstimate || booking.totalAmount);
   const hasWorkerEstimate = Boolean(booking.workerEstimateAmount);
   const workerEstimate = Math.round(booking.workerEstimateAmount || 0);
 
