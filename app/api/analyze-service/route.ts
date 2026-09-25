@@ -37,6 +37,8 @@ export async function POST(req: Request) {
     const formData = await req.formData();
     const description = (formData.get("description") as string) || "";
     const image = formData.get("image") as File | null;
+    const language = ((formData.get("language") as string) || "en").toLowerCase();
+    const languageName = language === "hi" ? "Hindi (हिन्दी)" : language === "gu" ? "Gujarati (ગુજરાતી)" : "English";
 
     const trimmedDescription = description.trim();
     const hasDescription = Boolean(trimmedDescription);
@@ -96,6 +98,11 @@ export async function POST(req: Request) {
       const systemPrompt = `You are SmartServe AI, an expert service classification & safety assistant for KaushalyaSetu.
 
 You are analyzing a user's service request. Analyze BOTH the user's text and the uploaded image when an image is provided. Identify the actual object/problem visible in the image. Do not assume the request is a traditional household plumbing request. Do not default to Plumbing. Return the most appropriate supported service category.
+
+TARGET LANGUAGE: ${languageName}
+IMPORTANT MULTILINGUAL INSTRUCTION:
+- Write the user-facing fields ("service", "explanation", "followUpQuestion") in ${languageName} using natural, conversational vocabulary.
+- The "category" field MUST REMAIN strictly one of the exact canonical English category names from the allowed list below.
 
 STRICT CLASSIFICATION RULES:
 1. ONLY ALLOW THESE CATEGORIES:
@@ -174,11 +181,11 @@ Image Attached: ${hasImage ? "Yes" : "No"}
 Return ONLY raw JSON matching this schema (no markdown backticks, no code blocks):
 {
   "category": "Plumbing | Electrical | Carpentry | Painting | Cleaning | AC & Refrigeration | Appliance Repair | Gardening | Driving & Transportation | Computer & IT Services | Mobile & Electronics Repair | Education & Tutoring | Tailoring & Fashion | Home Moving & Shifting | Gas & LPG Services | Glass & Window Services | Locksmith & Key Services | Water Tank & Purification | Laundry & Dry Cleaning | Other / General Services | Unsupported",
-  "service": "Specific service name",
+  "service": "Specific service name in ${languageName}",
   "confidence": <integer 0-100>,
-  "explanation": "Short 1-2 sentence explanation based on text and visual evidence",
+  "explanation": "Short 1-2 sentence explanation in ${languageName} based on text and visual evidence",
   "urgency": "Low | Medium | High",
-  "followUpQuestion": "Short clarifying question",
+  "followUpQuestion": "Short clarifying question in ${languageName}",
   "isHazardous": boolean,
   "emergencyType": "GAS_LEAKAGE | ELECTRICAL_HAZARD | NONE",
   "inputAgreement": "MATCH | TEXT_ONLY | IMAGE_ONLY | CONFLICT | UNCLEAR"
@@ -225,6 +232,13 @@ Return ONLY raw JSON matching this schema (no markdown backticks, no code blocks
       // Do NOT recommend workers if there is an unresolved text/image conflict
       const matchedWorkers = isConflict ? [] : (MOCK_WORKERS[validCategory] || MOCK_WORKERS["Other / General Services"] || []);
 
+      const localizedRate =
+        language === "hi"
+          ? "₹250 - ₹750 (सरकारी सहकारी मानक दरें)"
+          : language === "gu"
+          ? "₹250 - ₹750 (સરકારી સહકારી પ્રમાણભૂત દરો)"
+          : "₹250 - ₹750 (Govt. Co-op standard rates)";
+
       return NextResponse.json({
         category: validCategory,
         service: parsedJSON.service || `${validCategory} Service`,
@@ -237,7 +251,7 @@ Return ONLY raw JSON matching this schema (no markdown backticks, no code blocks
         followUpQuestion: parsedJSON.followUpQuestion || "Would you like us to schedule a verified technician?",
         matchedKeywords: [trimmedDescription.slice(0, 15)],
         visualAnalysis: hasImage ? "Visual scan verified by Gemini Vision model." : undefined,
-        estimatedPriceRange: "₹250 - ₹750 (Govt. Co-op standard rates)",
+        estimatedPriceRange: localizedRate,
         recommendedWorkers: matchedWorkers,
       });
     } catch (geminiErr: unknown) {

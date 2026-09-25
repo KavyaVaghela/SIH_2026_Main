@@ -13,14 +13,16 @@ import {
   Sparkles,
 } from "lucide-react";
 import { useAuthModal } from "./landing-auth-modal";
+import { useTranslation } from "@/lib/i18n";
 
 export function LandingHero() {
   const { openAuthModal } = useAuthModal();
+  const { t } = useTranslation();
   const valueStripItems = [
-    "Skill-Based Matching",
-    "Cooperative Network",
-    "OTP Verification",
-    "Transparent Service Journey",
+    t("landing.hero.valueSkillMatching", "Skill-Based Matching"),
+    t("landing.hero.valueCoopNetwork", "Cooperative Network"),
+    t("landing.hero.valueOtpVerification", "OTP Verification"),
+    t("landing.hero.valueTransparentJourney", "Transparent Service Journey"),
   ];
 
   return (
@@ -42,21 +44,20 @@ export function LandingHero() {
             <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-[#eaf5ee] border border-[#8ed5a5]">
               <Sparkles className="w-3.5 h-3.5 text-[#135e38]" />
               <span className="text-[11px] font-bold uppercase tracking-wider text-[#004525]">
-                DEMOCRATICALLY OWNED COOPERATIVE NETWORK
+                {t("landing.hero.eyebrow", "DEMOCRATICALLY OWNED COOPERATIVE NETWORK")}
               </span>
             </div>
 
             {/* Headline */}
             <h1 className="text-2xl sm:text-3xl lg:text-4xl font-extrabold tracking-tight text-[#111827] leading-[1.18]">
-              Skilled People. <br />
-              Stronger Communities. <br />
-              <span className="text-[#135e38]">Connected Through KaushalyaSetu.</span>
+              {t("landing.hero.headlinePre", "Skilled People.")} <br />
+              {t("landing.hero.headlineMid", "Stronger Communities.")} <br />
+              <span className="text-[#135e38]">{t("landing.hero.headlinePost", "Connected Through KaushalyaSetu.")}</span>
             </h1>
 
             {/* Supporting Copy */}
             <p className="text-sm sm:text-base text-[#374151] leading-relaxed max-w-xl">
-              Connecting households with skilled service professionals through a transparent
-              cooperative platform built around community, opportunity, and trusted service.
+              {t("landing.hero.supportingCopy", "Connecting households with skilled service professionals through a transparent cooperative platform built around community, opportunity, and trusted service.")}
             </p>
 
             {/* Hero Buttons */}
@@ -67,7 +68,7 @@ export function LandingHero() {
                 id="hero-find-service-btn"
                 className="inline-flex items-center justify-center px-5 py-2.5 sm:px-6 sm:py-3 text-xs sm:text-sm font-bold rounded-xl bg-[#135e38] text-white hover:bg-[#0c4427] transition-all shadow-sm gap-2 cursor-pointer"
               >
-                <span>Enter KaushalyaSetu Network</span>
+                <span>{t("landing.hero.enterNetwork", "Enter KaushalyaSetu Network")}</span>
                 <ArrowRight className="h-4 w-4" />
               </button>
               <button
@@ -76,7 +77,7 @@ export function LandingHero() {
                 id="hero-join-network-btn"
                 className="inline-flex items-center justify-center px-5 py-2.5 sm:px-6 sm:py-3 text-xs sm:text-sm font-bold rounded-xl bg-[#eaf5ee] text-[#004525] border border-[#8ed5a5] hover:bg-[#8ed5a5] transition-all gap-2 cursor-pointer"
               >
-                <span>Join the Cooperative Network</span>
+                <span>{t("landing.hero.joinCooperative", "Join the Cooperative Network")}</span>
               </button>
             </div>
 
@@ -114,15 +115,15 @@ export function LandingHero() {
               {/* Card 1: VERIFIED WORKER (Upper-Left Overlay) */}
               <div className="absolute top-1.5 left-1.5 sm:top-2.5 sm:left-2.5 lg:-top-5 lg:-left-6 w-auto max-w-[140px] sm:max-w-[165px] lg:max-w-xs bg-white/95 backdrop-blur-xs lg:bg-white p-1.5 sm:p-2 lg:p-3.5 rounded-lg sm:rounded-xl shadow-md lg:shadow-lg border border-[#8ed5a5]/50 lg:border-[#e6f0ea] hover:border-[#8ed5a5] transition-all z-20">
                 <div className="flex items-center justify-between gap-1 text-[8px] sm:text-[9px] lg:text-[10px] uppercase font-bold tracking-wider text-[#6b7280]">
-                  <span>VERIFIED WORKER</span>
+                  <span>{t("common.verified", "VERIFIED WORKER")}</span>
                   <span className="inline-flex items-center gap-0.5 text-[#135e38] font-semibold text-[8px] sm:text-[9px] lg:text-[10px]">
-                    <Check className="w-2.5 h-2.5 sm:w-3 sm:h-3 text-[#135e38]" /> Verified
+                    <Check className="w-2.5 h-2.5 sm:w-3 sm:h-3 text-[#135e38]" /> {t("common.verified", "Verified")}
                   </span>
                 </div>
                 <div className="mt-0.5 sm:mt-1 lg:mt-1.5 flex items-center justify-between gap-1.5 sm:gap-2 lg:gap-3">
                   <div className="min-w-0">
                     <h4 className="font-bold text-[11px] sm:text-xs lg:text-sm text-[#111827] leading-tight truncate">Rahul Patel</h4>
-                    <p className="text-[9px] sm:text-[10px] lg:text-xs text-[#6b7280] truncate">Electrician</p>
+                    <p className="text-[9px] sm:text-[10px] lg:text-xs text-[#6b7280] truncate">{t("customer.categories.2985a030-5e9a-4c21-9ecb-43edae490f00.name", "Electrician")}</p>
                   </div>
                   <div className="text-right shrink-0">
                     <div className="flex items-center gap-0.5 text-[10px] sm:text-xs font-bold text-[#111827] justify-end">
@@ -139,15 +140,15 @@ export function LandingHero() {
               {/* Card 2: SERVICE REQUEST (Right/Middle Overlay) */}
               <div className="absolute top-[48%] -translate-y-1/2 right-1.5 sm:right-2.5 lg:-right-6 w-auto max-w-[130px] sm:max-w-[160px] lg:max-w-xs bg-white/95 backdrop-blur-xs lg:bg-white p-1.5 sm:p-2 lg:p-3.5 rounded-lg sm:rounded-xl shadow-md lg:shadow-lg border border-[#8ed5a5]/50 lg:border-[#e6f0ea] hover:border-[#8ed5a5] transition-all z-20">
                 <div className="flex items-center justify-between gap-1 text-[8px] sm:text-[9px] lg:text-[10px] uppercase font-bold tracking-wider text-[#6b7280]">
-                  <span>SERVICE REQUEST</span>
+                  <span>{t("landing.howItWorks.previewServiceRequest", "SERVICE REQUEST")}</span>
                   <span className="inline-flex items-center gap-0.5 text-[#135e38] text-[8px] sm:text-[9px] lg:text-[11px] font-semibold whitespace-nowrap">
-                    <Check className="w-2.5 h-2.5 sm:w-3 sm:h-3 text-[#135e38]" /> Matched
+                    <Check className="w-2.5 h-2.5 sm:w-3 sm:h-3 text-[#135e38]" /> {t("common.active", "Active")}
                   </span>
                 </div>
                 <div className="mt-0.5 sm:mt-1 lg:mt-1.5">
-                  <h4 className="font-bold text-[11px] sm:text-xs lg:text-sm text-[#111827] leading-tight truncate">Electrical Repair</h4>
+                  <h4 className="font-bold text-[11px] sm:text-xs lg:text-sm text-[#111827] leading-tight truncate">{t("landing.hero.serviceTitle", "Electrical Repair")}</h4>
                   <p className="text-[9px] sm:text-[10px] lg:text-xs text-[#6b7280] flex items-center gap-0.5 mt-0.5 truncate">
-                    <Clock className="w-2.5 h-2.5 sm:w-3 sm:h-3 text-[#135e38] shrink-0" /> Today • 4:00 PM
+                    <Clock className="w-2.5 h-2.5 sm:w-3 sm:h-3 text-[#135e38] shrink-0" /> {t("common.today", "Today")} • 4:00 PM
                   </p>
                 </div>
               </div>
@@ -155,15 +156,15 @@ export function LandingHero() {
               {/* Card 3: BOOKING CONFIRMED (Lower-Left Overlay) */}
               <div className="absolute bottom-1.5 left-1.5 sm:bottom-2.5 sm:left-2.5 lg:-bottom-5 lg:left-10 w-auto max-w-[155px] sm:max-w-[185px] lg:max-w-xs bg-white/95 backdrop-blur-xs lg:bg-white p-1.5 sm:p-2 lg:p-3.5 rounded-lg sm:rounded-xl shadow-md lg:shadow-lg border border-[#8ed5a5]/50 lg:border-[#e6f0ea] hover:border-[#8ed5a5] transition-all z-20">
                 <div className="flex items-center justify-between gap-1 text-[8px] sm:text-[9px] lg:text-[10px] uppercase font-bold tracking-wider text-[#6b7280]">
-                  <span>BOOKING CONFIRMED</span>
+                  <span>{t("status.BOOKING_CONFIRMED", "BOOKING CONFIRMED")}</span>
                   <span className="inline-flex items-center gap-0.5 text-[#135e38] text-[8px] sm:text-[9px] lg:text-[11px] font-semibold">
-                    <ShieldCheck className="w-2.5 h-2.5 sm:w-3 sm:h-3 text-[#135e38]" /> Ready
+                    <ShieldCheck className="w-2.5 h-2.5 sm:w-3 sm:h-3 text-[#135e38]" /> {t("common.verified", "Verified")}
                   </span>
                 </div>
                 <div className="mt-0.5 sm:mt-1 lg:mt-1.5 flex items-center justify-between gap-1.5 sm:gap-2 lg:gap-3">
                   <div className="min-w-0">
-                    <h4 className="font-bold text-[11px] sm:text-xs lg:text-sm text-[#111827] leading-tight truncate">OTP Verification</h4>
-                    <p className="text-[8px] sm:text-[9px] lg:text-[11px] text-[#6b7280] truncate">Secure job handoff at site</p>
+                    <h4 className="font-bold text-[11px] sm:text-xs lg:text-sm text-[#111827] leading-tight truncate">{t("landing.hero.valueOtpVerification", "OTP Verification")}</h4>
+                    <p className="text-[8px] sm:text-[9px] lg:text-[11px] text-[#6b7280] truncate">{t("landing.hero.serviceOtpRequired", "OTP Verification Required")}</p>
                   </div>
                   <span className="px-1.5 py-0.5 sm:px-2 sm:py-0.5 lg:px-2.5 lg:py-1 rounded bg-[#eaf5ee] text-[#004525] font-mono font-bold text-[10px] sm:text-xs shrink-0">
                     4829

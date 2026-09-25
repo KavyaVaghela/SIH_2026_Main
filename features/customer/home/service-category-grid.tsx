@@ -17,6 +17,7 @@ import {
   Layers,
 } from "lucide-react";
 import { Card } from "@/components/ui/card";
+import { useTranslation } from "@/lib/i18n";
 
 export interface ServiceCategoryItem {
   id: string;
@@ -115,34 +116,42 @@ export function ServiceCategoryGrid({
   onCategorySelect,
   filterQuery = "",
 }: ServiceCategoryGridProps) {
-  const filteredCategories = CUSTOMER_SERVICE_CATEGORIES.filter((cat) =>
-    cat.name.toLowerCase().includes(filterQuery.toLowerCase())
-  );
+  const { t } = useTranslation();
+
+  const filteredCategories = CUSTOMER_SERVICE_CATEGORIES.filter((cat) => {
+    const localizedName = t(`customer.categories.${cat.id}.name`, cat.name);
+    return (
+      cat.name.toLowerCase().includes(filterQuery.toLowerCase()) ||
+      localizedName.toLowerCase().includes(filterQuery.toLowerCase())
+    );
+  });
 
   return (
     <div className="space-y-3.5">
       <div className="flex items-center justify-between">
         <div>
           <h2 className="text-lg font-bold text-slate-900 dark:text-slate-100 tracking-tight">
-            Explore Service Categories
+            {t("customer.exploreCategories", "Explore Service Categories")}
           </h2>
           <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
-            Select a verified cooperative trade service
+            {t("customer.selectCategorySubtitle", "Select a verified cooperative trade service")}
           </p>
         </div>
         <span className="text-xs text-slate-500 dark:text-slate-400 font-semibold bg-slate-100 dark:bg-slate-800 px-2.5 py-1 rounded-full">
-          {CUSTOMER_SERVICE_CATEGORIES.length} Categories
+          {t("customer.categoriesCount", { count: CUSTOMER_SERVICE_CATEGORIES.length }, `${CUSTOMER_SERVICE_CATEGORIES.length} Categories`)}
         </span>
       </div>
 
       {filteredCategories.length === 0 ? (
         <Card className="p-6 text-center bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-slate-500 text-sm rounded-xl">
-          No matching service category found for &quot;{filterQuery}&quot;.
+          {t("customer.noCategoryFound", { query: filterQuery }, `No matching service category found for "${filterQuery}".`)}
         </Card>
       ) : (
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
           {filteredCategories.map((category) => {
             const IconComponent = category.icon;
+            const catName = t(`customer.categories.${category.id}.name`, category.name);
+            const catDesc = t(`customer.categories.${category.id}.description`, category.description);
             return (
               <Card
                 key={category.id}
@@ -153,10 +162,10 @@ export function ServiceCategoryGrid({
                   <IconComponent className="w-5 h-5" />
                 </div>
                 <h3 className="font-bold text-sm text-slate-900 dark:text-slate-100 group-hover:text-emerald-600 dark:group-hover:text-emerald-400 transition-colors">
-                  {category.name}
+                  {catName}
                 </h3>
                 <p className="text-[11px] text-slate-500 dark:text-slate-400 line-clamp-1 mt-1 font-normal">
-                  {category.description}
+                  {catDesc}
                 </p>
               </Card>
             );

@@ -2,6 +2,7 @@
 
 import React, { useState } from "react";
 import { ChevronDown, HelpCircle } from "lucide-react";
+import { useTranslation } from "@/lib/i18n";
 
 export interface FAQItem {
   question: string;
@@ -63,11 +64,24 @@ export function LandingFaqAccordion({
   compact?: boolean;
   onSelectQuestion?: () => void;
 }) {
+  const { t } = useTranslation();
   const [openIndex, setOpenIndex] = useState<number | null>(0);
+
+  const items: FAQItem[] = [
+    { question: t("landing.faq.q1", landingFaqs[0].question), answer: t("landing.faq.a1", landingFaqs[0].answer) },
+    { question: t("landing.faq.q2", landingFaqs[1].question), answer: t("landing.faq.a2", landingFaqs[1].answer) },
+    { question: t("landing.faq.q3", landingFaqs[2].question), answer: t("landing.faq.a3", landingFaqs[2].answer) },
+    { question: t("landing.faq.q4", landingFaqs[3].question), answer: t("landing.faq.a4", landingFaqs[3].answer) },
+    { question: t("landing.faq.q5", landingFaqs[4].question), answer: t("landing.faq.a5", landingFaqs[4].answer) },
+    { question: t("landing.faq.q6", landingFaqs[5].question), answer: t("landing.faq.a6", landingFaqs[5].answer) },
+    { question: t("landing.faq.q7", landingFaqs[6].question), answer: t("landing.faq.a7", landingFaqs[6].answer) },
+    { question: t("landing.faq.q8", landingFaqs[7].question), answer: t("landing.faq.a8", landingFaqs[7].answer) },
+    { question: t("landing.faq.q9", landingFaqs[8].question), answer: t("landing.faq.a9", landingFaqs[8].answer) },
+  ];
 
   return (
     <div className={compact ? "space-y-1.5" : "space-y-2.5"}>
-      {landingFaqs.map((faq, index) => {
+      {items.map((faq, index) => {
         const isOpen = openIndex === index;
         const headingId = `faq-heading-${index}`;
         const panelId = `faq-panel-${index}`;
@@ -138,6 +152,8 @@ export function LandingFaqAccordion({
 }
 
 export function LandingFAQ() {
+  const { t } = useTranslation();
+
   return (
     <section className="py-8 sm:py-10 md:py-12 bg-[#f7faf8] border-b border-[#e6f0ea]" id="faq">
       <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -145,13 +161,16 @@ export function LandingFAQ() {
         <div className="text-center mb-6 sm:mb-8">
           <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-[#eaf5ee] text-[#004525] text-xs font-bold border border-[#8ed5a5] mb-2">
             <HelpCircle className="w-3.5 h-3.5 text-[#135e38]" />
-            <span>Frequently Asked Questions</span>
+            <span>{t("landing.faq.title", "Frequently Asked Questions")}</span>
           </div>
           <h2 className="text-2xl sm:text-3xl font-extrabold tracking-tight text-[#111827]">
-            Frequently Asked Questions
+            {t("landing.faq.title", "Frequently Asked Questions")}
           </h2>
           <p className="mt-1.5 text-xs sm:text-sm text-[#374151]">
-            Common questions regarding how the cooperative platform operates for customers and workers.
+            {t(
+              "landing.faq.subtitle",
+              "Common questions regarding how the cooperative platform operates for customers and workers."
+            )}
           </p>
         </div>
 

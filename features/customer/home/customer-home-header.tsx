@@ -3,6 +3,7 @@
 import * as React from "react";
 import { Search, MapPin, SlidersHorizontal, X } from "lucide-react";
 import { Input } from "@/components/ui/input";
+import { useTranslation } from "@/lib/i18n";
 
 export interface CustomerHomeHeaderProps {
   customerName?: string;
@@ -19,6 +20,7 @@ export function CustomerHomeHeader({
   searchQuery,
   onSearchChange,
 }: CustomerHomeHeaderProps) {
+  const { t } = useTranslation();
   const displayGreetingName = customerName || "Prince Patel";
 
   return (
@@ -34,16 +36,14 @@ export function CustomerHomeHeader({
       {/* Hero Greeting & Headline */}
       <div className="pt-0.5">
         <h1 className="text-2xl md:text-3xl font-extrabold tracking-tight text-slate-900 dark:text-white flex items-center gap-2">
-          Good Morning,{" "}
           {isLoadingName || !customerName ? (
             <span className="inline-block h-8 w-36 md:w-44 bg-slate-200 dark:bg-slate-800 animate-pulse rounded-md align-middle" />
           ) : (
-            displayGreetingName
-          )}{" "}
-          👋
+            t("customer.greeting", { name: displayGreetingName }, `Good Morning, ${displayGreetingName} 👋`)
+          )}
         </h1>
         <p className="text-xs md:text-sm text-slate-500 dark:text-slate-400 font-medium mt-1">
-          What service do you need today? Select a category or search verified trade professionals.
+          {t("customer.homeSubtitle", "What service do you need today? Select a category or search verified trade professionals.")}
         </p>
       </div>
 
@@ -52,7 +52,7 @@ export function CustomerHomeHeader({
         <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
         <Input
           type="text"
-          placeholder="Search for a service (e.g. Electrician, Pipe Leakage, Deep Cleaning)..."
+          placeholder={t("customer.searchPlaceholder", "Search for a service (e.g. Electrician, Pipe Leakage, Deep Cleaning)...")}
           value={searchQuery}
           onChange={(e) => onSearchChange(e.target.value)}
           className="w-full pl-10 pr-10 py-2.5 bg-slate-50 dark:bg-slate-950 border-slate-300 dark:border-slate-700 text-slate-900 dark:text-slate-100 placeholder:text-slate-400 rounded-xl focus:ring-2 focus:ring-emerald-600 focus:border-transparent text-xs md:text-sm shadow-xs"

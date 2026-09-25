@@ -9,39 +9,49 @@ import {
   BarChart3,
   Check,
 } from "lucide-react";
+import { useTranslation } from "@/lib/i18n";
 
 export function LandingAiPlatform() {
+  const { t } = useTranslation();
   const aiFeatures = [
     {
       id: "ai-smartserve",
-      title: "SmartServe AI",
-      description:
-        "Analyze customer text or uploaded service images to identify possible faults and suggest the relevant service or trade.",
-      highlight: "Image & Text Based Assistance",
+      title: t("landing.aiPlatform.smartserveTitle", "SmartServe AI"),
+      description: t(
+        "landing.aiPlatform.smartserveDesc",
+        "Analyze customer text or uploaded service images to identify possible faults and suggest the relevant service or trade."
+      ),
+      highlight: t("landing.aiPlatform.smartserveHighlight", "Image & Text Based Assistance"),
       icon: ScanSearch,
     },
     {
       id: "ai-kaushalgrow",
-      title: "KaushalGrow",
-      description:
-        "Help workers identify skill gaps and discover relevant training and upskilling opportunities based on their trade and service experience.",
-      highlight: "Skill Growth & Training",
+      title: t("landing.aiPlatform.kaushalgrowTitle", "KaushalGrow"),
+      description: t(
+        "landing.aiPlatform.kaushalgrowDesc",
+        "Help workers identify skill gaps and discover relevant training and upskilling opportunities based on their trade and service experience."
+      ),
+      highlight: t("landing.aiPlatform.kaushalgrowHighlight", "Skill Growth & Training"),
       icon: GraduationCap,
     },
     {
       id: "ai-smart-matching",
-      title: "Smart Worker Matching",
-      description:
-        "Match customer service requests with suitable verified workers using skills, availability, service requirements and cooperative coordination.",
-      highlight: "Fair Service Matching",
+      title: t("landing.aiPlatform.smartMatchingTitle", "Smart Worker Matching"),
+      description: t(
+        "landing.aiPlatform.smartMatchingDesc",
+        "Match customer service requests with suitable verified workers using skills, availability, service requirements and cooperative coordination."
+      ),
+      highlight: t("landing.aiPlatform.smartMatchingHighlight", "Fair Service Matching"),
       icon: UserCheck,
     },
     {
       id: "ai-demand-intelligence",
-      title: "Demand Intelligence",
-      description:
-        "Use service demand patterns to support workforce planning, improve worker availability and help cooperatives prepare for local demand.",
-      highlight: "Demand-Based Planning",
+      title: t("landing.aiPlatform.demandIntelligenceTitle", "Demand Intelligence"),
+      description: t(
+        "landing.aiPlatform.demandIntelligenceDesc",
+        "Use service demand patterns to support workforce planning, improve worker availability and help cooperatives prepare for local demand."
+      ),
+      highlight: t("landing.aiPlatform.demandIntelligenceHighlight", "Demand-Based Planning"),
       icon: BarChart3,
     },
   ];
@@ -58,14 +68,13 @@ export function LandingAiPlatform() {
           <div className="text-center max-w-2xl mx-auto mb-4 sm:mb-6">
             <div className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-[#eaf5ee] text-[#004525] text-[10px] sm:text-[11px] font-bold border border-[#8ed5a5] mb-1.5 uppercase tracking-wider">
               <Sparkles className="w-3 h-3 text-[#135e38]" />
-              <span>POWERED BY AI</span>
+              <span>{t("landing.aiPlatform.eyebrow", "POWERED BY AI")}</span>
             </div>
             <h2 className="text-xl sm:text-2xl lg:text-3xl font-extrabold tracking-tight text-[#111827]">
-              Smarter Connections Powered by AI
+              {t("landing.aiPlatform.title", "Smarter Connections Powered by AI")}
             </h2>
             <p className="mt-1.5 text-xs sm:text-sm text-[#4b5563] leading-relaxed">
-              Intelligent matching, demand insights, skill verification and
-              accessible service coordination for cooperative operations.
+              {t("landing.aiPlatform.subtitle", "Intelligent matching, demand insights, skill verification and accessible service coordination for cooperative operations.")}
             </p>
           </div>
 

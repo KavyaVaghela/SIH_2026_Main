@@ -3,6 +3,7 @@
 import React, { createContext, useContext, useState, useEffect } from "react";
 import Link from "next/link";
 import { X, Lock, ArrowRight, UserPlus } from "lucide-react";
+import { useTranslation } from "@/lib/i18n";
 
 interface AuthModalContextType {
   isOpen: boolean;
@@ -19,6 +20,7 @@ const AuthModalContext = createContext<AuthModalContextType>({
 export const useAuthModal = () => useContext(AuthModalContext);
 
 export function AuthModalProvider({ children }: { children: React.ReactNode }) {
+  const { t } = useTranslation();
   const [isOpen, setIsOpen] = useState(false);
   const [contextMessage, setContextMessage] = useState<string | null>(null);
 
@@ -80,12 +82,12 @@ export function AuthModalProvider({ children }: { children: React.ReactNode }) {
 
             {/* Title */}
             <h3 id="auth-modal-title" className="text-xl font-extrabold text-[#111827] tracking-tight">
-              Sign in to continue
+              {t("landing.authModal.title", "Sign in to continue")}
             </h3>
 
             {/* Description */}
             <p className="mt-2 text-sm text-[#374151] leading-relaxed">
-              Please sign in or create an account to access the KaushalyaSetu network.
+              {t("landing.authModal.description", "Please sign in or create an account to access the KaushalyaSetu network.")}
             </p>
 
             {contextMessage && (
@@ -101,7 +103,7 @@ export function AuthModalProvider({ children }: { children: React.ReactNode }) {
                 onClick={closeAuthModal}
                 className="flex-1 py-3 px-4 rounded-xl bg-[#135e38] text-white font-bold text-sm hover:bg-[#0c4427] transition-all shadow-sm flex items-center justify-center gap-2"
               >
-                <span>Sign In</span>
+                <span>{t("landing.authModal.signIn", "Sign In")}</span>
                 <ArrowRight className="w-4 h-4" />
               </Link>
               <Link
@@ -110,7 +112,7 @@ export function AuthModalProvider({ children }: { children: React.ReactNode }) {
                 className="flex-1 py-3 px-4 rounded-xl bg-[#eaf5ee] text-[#004525] font-bold text-sm border border-[#8ed5a5] hover:bg-[#8ed5a5] transition-all flex items-center justify-center gap-2"
               >
                 <UserPlus className="w-4 h-4 text-[#135e38]" />
-                <span>Register</span>
+                <span>{t("landing.authModal.register", "Register")}</span>
               </Link>
             </div>
           </div>

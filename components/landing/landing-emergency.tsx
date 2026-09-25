@@ -3,14 +3,16 @@
 import React from "react";
 import { AlertTriangle, Droplets, Zap, Key } from "lucide-react";
 import { useAuthModal } from "./landing-auth-modal";
+import { useTranslation } from "@/lib/i18n";
 
 export function LandingEmergency() {
   const { openAuthModal } = useAuthModal();
+  const { t } = useTranslation();
 
   const urgentTags = [
-    { icon: Droplets, label: "Plumbing Leaks" },
-    { icon: Zap, label: "Electrical Faults" },
-    { icon: Key, label: "Urgent Lockouts" },
+    { icon: Droplets, label: t("landing.emergency.tagPlumbing", "Plumbing Leaks") },
+    { icon: Zap, label: t("landing.emergency.tagElectrical", "Electrical Faults") },
+    { icon: Key, label: t("landing.emergency.tagLockout", "Urgent Lockouts") },
   ];
 
   return (
@@ -30,10 +32,13 @@ export function LandingEmergency() {
 
             <div>
               <div className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-[#135e38] text-[#8ed5a5] text-[11px] font-extrabold uppercase tracking-wider border border-[#8ed5a5]/30 mb-1">
-                <span>{"WHEN A SERVICE CAN'T WAIT"}</span>
+                <span>{t("landing.emergency.eyebrow", "WHEN A SERVICE CAN'T WAIT")}</span>
               </div>
               <p className="text-xs sm:text-sm text-[#eaf5ee] font-medium leading-snug max-w-2xl">
-                Request urgent household assistance and connect with the appropriate local service network.
+                {t(
+                  "landing.emergency.desc",
+                  "Request urgent household assistance and connect with the appropriate local service network."
+                )}
               </p>
               
               {/* Context chips */}
@@ -65,7 +70,7 @@ export function LandingEmergency() {
               id="emergency-request-btn"
               className="w-full sm:w-auto px-6 py-2.5 rounded-full bg-[#8ed5a5] hover:bg-white text-[#004525] font-extrabold text-xs sm:text-sm transition-all duration-200 shadow-md inline-flex items-center justify-center gap-2 group cursor-pointer"
             >
-              <span>Request Emergency Help →</span>
+              <span>{t("landing.emergency.cta", "Request Emergency Help →")}</span>
             </button>
           </div>
         </div>
