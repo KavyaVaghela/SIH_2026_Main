@@ -160,6 +160,9 @@ export class WorkerJobService implements IWorkerJobService {
     }
     const workerEarn = Number(b.worker_earnings || b.workerEarnings) || (totalAmt > 0 ? Math.round(totalAmt * 0.95) : 0);
 
+    const origPlatformEst = (b as any).platformEstimate || (b as any).platform_estimate || (!isNaN(basePrice) && basePrice > 0 ? basePrice : totalAmt);
+    const workerEst = b.workerEstimateAmount !== undefined ? b.workerEstimateAmount : ((b as any).worker_estimate_amount || null);
+
     return {
       id: b.id,
       bookingNumber: b.booking_number || b.bookingNumber || `BK-${b.id.slice(-6).toUpperCase()}`,
@@ -175,7 +178,8 @@ export class WorkerJobService implements IWorkerJobService {
       scheduledEndAt: b.scheduled_end_at || b.scheduledEndAt,
       problemDescription: probDesc || "Bathroom plumbing inspection and repair.",
       problemPhotoUrl: b.problem_photo_url || b.problemPhotoUrl || problemPhotoUrl || null,
-      totalAmount: totalAmt,
+      totalAmount: origPlatformEst,
+      platformEstimate: origPlatformEst,
       estimatedPayout: workerEarn,
       workerEarnings: workerEarn,
       status: b.status,
@@ -183,7 +187,7 @@ export class WorkerJobService implements IWorkerJobService {
       cooperativeName,
       otpCode: b.otp_code || b.otpCode,
       rawBooking: b,
-      workerEstimateAmount: b.workerEstimateAmount || null,
+      workerEstimateAmount: workerEst,
       workerEstimateLabor: b.workerEstimateLabor || null,
       workerEstimateMaterials: b.workerEstimateMaterials || null,
       workerEstimateNotes: b.workerEstimateNotes || null,
@@ -1227,8 +1231,9 @@ export class WorkerJobService implements IWorkerJobService {
       items,
     });
 
-    // Update booking amounts in memory and database
-    booking.totalAmount = invoice.totalAmount;
+    // Update booking amounts in memory and database, preserving historical estimates
+    const origPlatformEstimate = booking.platformEstimate || booking.totalAmount || 450;
+    booking.platformEstimate = origPlatformEstimate;
     booking.platformFee = invoice.platformFee;
     booking.workerEarnings = invoice.totalAmount - invoice.platformFee;
 

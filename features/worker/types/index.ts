@@ -60,6 +60,7 @@ export interface WorkerJobItem {
   problemDescription: string;
   problemPhotoUrl?: string | null;
   totalAmount: number; // Platform initial estimate
+  platformEstimate?: number | null; // Explicit Platform initial estimate
   estimatedPayout?: number; // Alias for backward compatibility
   workerEarnings: number;
   status: WorkerRequestStatus;
